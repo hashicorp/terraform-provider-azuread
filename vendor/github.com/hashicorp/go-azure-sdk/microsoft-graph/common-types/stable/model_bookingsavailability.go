@@ -18,7 +18,8 @@ var _ BookingsAvailability = BaseBookingsAvailabilityImpl{}
 type BaseBookingsAvailabilityImpl struct {
 	AvailabilityType *BookingsServiceAvailabilityType `json:"availabilityType,omitempty"`
 
-	// The hours of operation in a week. This is set to null if the availability type is not customWeeklyHours
+	// The hours of operation in a week. The business hours value is set to null if the availability type isn't
+	// customWeeklyHours.
 	BusinessHours *[]BookingWorkHours `json:"businessHours,omitempty"`
 
 	// The OData ID of this entity

@@ -14,6 +14,7 @@ type IncomingTokenType string
 const (
 	IncomingTokenType_None                IncomingTokenType = "none"
 	IncomingTokenType_PrimaryRefreshToken IncomingTokenType = "primaryRefreshToken"
+	IncomingTokenType_RefreshToken        IncomingTokenType = "refreshToken"
 	IncomingTokenType_RemoteDesktopToken  IncomingTokenType = "remoteDesktopToken"
 	IncomingTokenType_Saml11              IncomingTokenType = "saml11"
 	IncomingTokenType_Saml20              IncomingTokenType = "saml20"
@@ -23,6 +24,7 @@ func PossibleValuesForIncomingTokenType() []string {
 	return []string{
 		string(IncomingTokenType_None),
 		string(IncomingTokenType_PrimaryRefreshToken),
+		string(IncomingTokenType_RefreshToken),
 		string(IncomingTokenType_RemoteDesktopToken),
 		string(IncomingTokenType_Saml11),
 		string(IncomingTokenType_Saml20),
@@ -46,6 +48,7 @@ func parseIncomingTokenType(input string) (*IncomingTokenType, error) {
 	vals := map[string]IncomingTokenType{
 		"none":                IncomingTokenType_None,
 		"primaryrefreshtoken": IncomingTokenType_PrimaryRefreshToken,
+		"refreshtoken":        IncomingTokenType_RefreshToken,
 		"remotedesktoptoken":  IncomingTokenType_RemoteDesktopToken,
 		"saml11":              IncomingTokenType_Saml11,
 		"saml20":              IncomingTokenType_Saml20,

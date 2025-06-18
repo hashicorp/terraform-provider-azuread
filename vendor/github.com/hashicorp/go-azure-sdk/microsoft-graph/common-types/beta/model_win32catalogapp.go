@@ -25,60 +25,76 @@ type Win32CatalogApp struct {
 
 	// Fields inherited from Win32LobApp
 
+	// Indicates whether the uninstall is supported from the company portal for the Win32 app with an available assignment.
 	// When TRUE, indicates that uninstall is supported from the company portal for the Windows app (Win32) with an
-	// Available assignment. When FALSE, indicates that uninstall is not supported for the Windows app (Win32) with an
+	// available assignment. When FALSE, indicates that uninstall is not supported for the Windows app (Win32) with an
 	// Available assignment. Default value is FALSE.
 	AllowAvailableUninstall *bool `json:"allowAvailableUninstall,omitempty"`
+
+	// Indicates the Windows architecture(s) this app should be installed on. The app will be treated as not applicable for
+	// devices with architectures not matching the selected value. When a non-null value is provided for the
+	// allowedArchitectures property, the value of the applicableArchitectures property is set to none. Possible values are:
+	// null, x86, x64, arm64. Possible values are: none, x86, x64, arm, neutral, arm64.
+	AllowedArchitectures *WindowsArchitecture `json:"allowedArchitectures,omitempty"`
 
 	// Contains properties for Windows architecture.
 	ApplicableArchitectures *WindowsArchitecture `json:"applicableArchitectures,omitempty"`
 
-	// The detection rules to detect Win32 Line of Business (LoB) app.
+	// Indicates the detection rules to detect Win32 Line of Business (LoB) app. Possible values are
+	// Win32LobAppPowerShellScriptDetection, Win32LobAppRegistryDetection, Win32LobAppFileSystemDetection,
+	// Win32LobAppProductCodeDetection.
 	DetectionRules *[]Win32LobAppDetection `json:"detectionRules,omitempty"`
 
-	// The version displayed in the UX for this app.
+	// Indicates the version displayed in the UX for this app. Used to set the version of the app. Example: 1.0.3.215.
 	DisplayVersion nullable.Type[string] `json:"displayVersion,omitempty"`
 
-	// The command line to install this app
+	// Indicates the command line to install this app. Used to install the Win32 app. Example: msiexec /i 'Orca.Msi' /qn.
 	InstallCommandLine nullable.Type[string] `json:"installCommandLine,omitempty"`
 
-	// The install experience for this app.
+	// Indicates the install experience for this app.
 	InstallExperience *Win32LobAppInstallExperience `json:"installExperience,omitempty"`
 
-	// The value for the minimum CPU speed which is required to install this app.
+	// Indicates the value for the minimum CPU speed which is required to install this app. Allowed range from 0 to clock
+	// speed from WMI helper.
 	MinimumCpuSpeedInMHz nullable.Type[int64] `json:"minimumCpuSpeedInMHz,omitempty"`
 
-	// The value for the minimum free disk space which is required to install this app.
+	// Indicates the value for the minimum free disk space which is required to install this app. Allowed range from 0 to
+	// driver's maximum available free space.
 	MinimumFreeDiskSpaceInMB nullable.Type[int64] `json:"minimumFreeDiskSpaceInMB,omitempty"`
 
-	// The value for the minimum physical memory which is required to install this app.
+	// Indicates the value for the minimum physical memory which is required to install this app. Allowed range from 0 to
+	// total physical memory from WMI helper.
 	MinimumMemoryInMB nullable.Type[int64] `json:"minimumMemoryInMB,omitempty"`
 
-	// The value for the minimum number of processors which is required to install this app.
+	// Indicates the value for the minimum number of processors which is required to install this app. Minimum value is 0.
 	MinimumNumberOfProcessors nullable.Type[int64] `json:"minimumNumberOfProcessors,omitempty"`
 
-	// The value for the minimum applicable operating system.
+	// Indicates the value for the minimum applicable operating system.
 	MinimumSupportedOperatingSystem *WindowsMinimumOperatingSystem `json:"minimumSupportedOperatingSystem,omitempty"`
 
-	// The value for the minimum supported windows release.
+	// Indicates the value for the minimum supported windows release. Example: Windows11_23H2.
 	MinimumSupportedWindowsRelease nullable.Type[string] `json:"minimumSupportedWindowsRelease,omitempty"`
 
-	// The MSI details if this Win32 app is an MSI app.
+	// Indicates the MSI details if this Win32 app is an MSI app.
 	MsiInformation *Win32LobAppMsiInformation `json:"msiInformation,omitempty"`
 
-	// The requirement rules to detect Win32 Line of Business (LoB) app.
+	// Indicates the requirement rules to detect Win32 Line of Business (LoB) app. Possible values are:
+	// Win32LobAppFileSystemRequirement, Win32LobAppPowerShellScriptRequirement, Win32LobAppRegistryRequirement.
 	RequirementRules *[]Win32LobAppRequirement `json:"requirementRules,omitempty"`
 
-	// The return codes for post installation behavior.
+	// Indicates the return codes for post installation behavior.
 	ReturnCodes *[]Win32LobAppReturnCode `json:"returnCodes,omitempty"`
 
-	// The detection and requirement rules for this app.
+	// Indicates the detection and requirement rules for this app. Possible values are: Win32LobAppFileSystemRule,
+	// Win32LobAppPowerShellScriptRule, Win32LobAppProductCodeRule, Win32LobAppRegistryRule.
 	Rules *[]Win32LobAppRule `json:"rules,omitempty"`
 
-	// The relative path of the setup file in the encrypted Win32LobApp package.
+	// Indicates the relative path of the setup file in the encrypted Win32LobApp package. Example: Intel-SA-00075 Detection
+	// and Mitigation Tool.msi.
 	SetupFilePath nullable.Type[string] `json:"setupFilePath,omitempty"`
 
-	// The command line to uninstall this app
+	// Indicates the command line to uninstall this app. Used to uninstall the app. Example: msiexec /x
+	// '{85F4CBCB-9BBC-4B50-A7D8-E1106771498D}' /qn.
 	UninstallCommandLine nullable.Type[string] `json:"uninstallCommandLine,omitempty"`
 
 	// Fields inherited from MobileLobApp
@@ -103,10 +119,10 @@ type Win32CatalogApp struct {
 	// The list of categories for this app.
 	Categories *[]MobileAppCategory `json:"categories,omitempty"`
 
-	// The date and time the app was created. This property is read-only.
+	// The date and time the app was created.
 	CreatedDateTime *string `json:"createdDateTime,omitempty"`
 
-	// The total number of dependencies the child app has. This property is read-only.
+	// The total number of dependencies the child app has.
 	DependentAppCount *int64 `json:"dependentAppCount,omitempty"`
 
 	// The description of the app.
@@ -121,7 +137,7 @@ type Win32CatalogApp struct {
 	// The more information Url.
 	InformationUrl nullable.Type[string] `json:"informationUrl,omitempty"`
 
-	// The value indicating whether the app is assigned to at least one group. This property is read-only.
+	// The value indicating whether the app is assigned to at least one group.
 	IsAssigned *bool `json:"isAssigned,omitempty"`
 
 	// The value indicating whether the app is marked as featured by the admin.
@@ -130,7 +146,7 @@ type Win32CatalogApp struct {
 	// The large icon, to be displayed in the app details and used for upload of the icon.
 	LargeIcon *MimeContent `json:"largeIcon,omitempty"`
 
-	// The date and time the app was last modified. This property is read-only.
+	// The date and time the app was last modified.
 	LastModifiedDateTime *string `json:"lastModifiedDateTime,omitempty"`
 
 	// Notes for the app.
@@ -148,7 +164,7 @@ type Win32CatalogApp struct {
 	// Indicates the publishing state of an app.
 	PublishingState *MobileAppPublishingState `json:"publishingState,omitempty"`
 
-	// The set of direct relationships for this app.
+	// List of relationships for this mobile app.
 	Relationships *[]MobileAppRelationship `json:"relationships,omitempty"`
 
 	// List of scope tag ids for this mobile app.
@@ -160,7 +176,7 @@ type Win32CatalogApp struct {
 	// The total number of apps this app directly or indirectly supersedes. This property is read-only.
 	SupersedingAppCount *int64 `json:"supersedingAppCount,omitempty"`
 
-	// The upload state. Possible values are: 0 - Not Ready, 1 - Ready, 2 - Processing. This property is read-only.
+	// The upload state.
 	UploadState *int64 `json:"uploadState,omitempty"`
 
 	// Fields inherited from Entity
@@ -181,6 +197,7 @@ type Win32CatalogApp struct {
 func (s Win32CatalogApp) Win32LobApp() BaseWin32LobAppImpl {
 	return BaseWin32LobAppImpl{
 		AllowAvailableUninstall:         s.AllowAvailableUninstall,
+		AllowedArchitectures:            s.AllowedArchitectures,
 		ApplicableArchitectures:         s.ApplicableArchitectures,
 		DetectionRules:                  s.DetectionRules,
 		DisplayVersion:                  s.DisplayVersion,
@@ -335,6 +352,7 @@ func (s *Win32CatalogApp) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
 		MobileAppCatalogPackageId       nullable.Type[string]          `json:"mobileAppCatalogPackageId,omitempty"`
 		AllowAvailableUninstall         *bool                          `json:"allowAvailableUninstall,omitempty"`
+		AllowedArchitectures            *WindowsArchitecture           `json:"allowedArchitectures,omitempty"`
 		ApplicableArchitectures         *WindowsArchitecture           `json:"applicableArchitectures,omitempty"`
 		DisplayVersion                  nullable.Type[string]          `json:"displayVersion,omitempty"`
 		InstallCommandLine              nullable.Type[string]          `json:"installCommandLine,omitempty"`
@@ -384,6 +402,7 @@ func (s *Win32CatalogApp) UnmarshalJSON(bytes []byte) error {
 
 	s.MobileAppCatalogPackageId = decoded.MobileAppCatalogPackageId
 	s.AllowAvailableUninstall = decoded.AllowAvailableUninstall
+	s.AllowedArchitectures = decoded.AllowedArchitectures
 	s.ApplicableArchitectures = decoded.ApplicableArchitectures
 	s.Assignments = decoded.Assignments
 	s.Categories = decoded.Categories

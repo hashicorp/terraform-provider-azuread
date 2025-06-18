@@ -13,8 +13,8 @@ import (
 var _ OutlookItem = Event{}
 
 type Event struct {
-	// true if the meeting organizer allows invitees to propose a new time when responding; otherwise, false. Optional.
-	// Default is true.
+	// true if the meeting organizer allows invitees to propose a new time when responding; otherwise, false. Optional. The
+	// default is true.
 	AllowNewTimeProposals nullable.Type[bool] `json:"allowNewTimeProposals,omitempty"`
 
 	// The collection of FileAttachment, ItemAttachment, and referenceAttachment attachments for the event. Navigation
@@ -27,14 +27,25 @@ type Event struct {
 	// The body of the message associated with the event. It can be in HTML or text format.
 	Body *ItemBody `json:"body,omitempty"`
 
-	// The preview of the message associated with the event. It is in text format.
+	// The preview of the message associated with the event. It's in text format.
 	BodyPreview nullable.Type[string] `json:"bodyPreview,omitempty"`
 
 	// The calendar that contains the event. Navigation property. Read-only.
 	Calendar *Calendar `json:"calendar,omitempty"`
 
+	// Contains occurrenceId property values of canceled instances in a recurring series, if the event is the series master.
+	// Instances in a recurring series that are canceled are called canceled occurences.Returned only on $select in a Get
+	// operation which specifies the ID (seriesMasterId property value) of a series master event.
+	CancelledOccurrences *[]string `json:"cancelledOccurrences,omitempty"`
+
 	// The date, time, and time zone that the event ends. By default, the end time is in UTC.
 	End *DateTimeTimeZone `json:"end,omitempty"`
+
+	// Contains the id property values of the event instances that are exceptions in a recurring series.Exceptions can
+	// differ from other occurrences in a recurring series, such as the subject, start or end times, or attendees.
+	// Exceptions don't include canceled occurrences.Returned only on $select and $expand in a GET operation that specifies
+	// the ID (seriesMasterId property value) of a series master event.
+	ExceptionOccurrences *[]Event `json:"exceptionOccurrences,omitempty"`
 
 	// The collection of open extensions defined for the event. Nullable.
 	Extensions *[]Extension `json:"extensions,omitempty"`
@@ -42,7 +53,7 @@ type Event struct {
 	// Set to true if the event has attachments.
 	HasAttachments nullable.Type[bool] `json:"hasAttachments,omitempty"`
 
-	// When set to true, each attendee only sees themselves in the meeting request and meeting Tracking list. Default is
+	// When set to true, each attendee only sees themselves in the meeting request and meeting Tracking list. The default is
 	// false.
 	HideAttendees nullable.Type[bool] `json:"hideAttendees,omitempty"`
 
@@ -54,29 +65,29 @@ type Event struct {
 	Importance *Importance `json:"importance,omitempty"`
 
 	// The occurrences of a recurring series, if the event is a series master. This property includes occurrences that are
-	// part of the recurrence pattern, and exceptions that have been modified, but does not include occurrences that have
-	// been cancelled from the series. Navigation property. Read-only. Nullable.
+	// part of the recurrence pattern, and exceptions modified, but doesn't include occurrences canceled from the series.
+	// Navigation property. Read-only. Nullable.
 	Instances *[]Event `json:"instances,omitempty"`
 
-	// Set to true if the event lasts all day. If true, regardless of whether it's a single-day or multi-day event, start
-	// and end time must be set to midnight and be in the same time zone.
+	// Set to true if the event lasts all day. If true, regardless of whether it's a single-day or multi-day event, start,
+	// and endtime must be set to midnight and be in the same time zone.
 	IsAllDay nullable.Type[bool] `json:"isAllDay,omitempty"`
 
 	// Set to true if the event has been canceled.
 	IsCancelled nullable.Type[bool] `json:"isCancelled,omitempty"`
 
-	// Set to true if the user has updated the meeting in Outlook but has not sent the updates to attendees. Set to false if
-	// all changes have been sent, or if the event is an appointment without any attendees.
+	// Set to true if the user has updated the meeting in Outlook but hasn't sent the updates to attendees. Set to false if
+	// all changes are sent, or if the event is an appointment without any attendees.
 	IsDraft nullable.Type[bool] `json:"isDraft,omitempty"`
 
 	// True if this event has online meeting information (that is, onlineMeeting points to an onlineMeetingInfo resource),
 	// false otherwise. Default is false (onlineMeeting is null). Optional. After you set isOnlineMeeting to true, Microsoft
-	// Graph initializes onlineMeeting. Subsequently Outlook ignores any further changes to isOnlineMeeting, and the meeting
-	// remains available online.
+	// Graph initializes onlineMeeting. Subsequently, Outlook ignores any further changes to isOnlineMeeting, and the
+	// meeting remains available online.
 	IsOnlineMeeting nullable.Type[bool] `json:"isOnlineMeeting,omitempty"`
 
 	// Set to true if the calendar owner (specified by the owner property of the calendar) is the organizer of the event
-	// (specified by the organizer property of the event). This also applies if a delegate organized the event on behalf of
+	// (specified by the organizer property of the event). It also applies if a delegate organized the event on behalf of
 	// the owner.
 	IsOrganizer nullable.Type[bool] `json:"isOrganizer,omitempty"`
 
@@ -87,22 +98,22 @@ type Event struct {
 	Location Location `json:"location"`
 
 	// The locations where the event is held or attended from. The location and locations properties always correspond with
-	// each other. If you update the location property, any prior locations in the locations collection would be removed and
+	// each other. If you update the location property, any prior locations in the locations collection are removed and
 	// replaced by the new location value.
 	Locations *[]Location `json:"locations,omitempty"`
 
 	// The collection of multi-value extended properties defined for the event. Read-only. Nullable.
 	MultiValueExtendedProperties *[]MultiValueLegacyExtendedProperty `json:"multiValueExtendedProperties,omitempty"`
 
-	// Details for an attendee to join the meeting online. Default is null. Read-only. After you set the isOnlineMeeting and
-	// onlineMeetingProvider properties to enable a meeting online, Microsoft Graph initializes onlineMeeting. When set, the
-	// meeting remains available online, and you cannot change the isOnlineMeeting, onlineMeetingProvider, and onlneMeeting
-	// properties again.
+	// Details for an attendee to join the meeting online. The default is null. Read-only. After you set the isOnlineMeeting
+	// and onlineMeetingProvider properties to enable a meeting online, Microsoft Graph initializes onlineMeeting. When set,
+	// the meeting remains available online, and you can't change the isOnlineMeeting, onlineMeetingProvider, and
+	// onlneMeeting properties again.
 	OnlineMeeting *OnlineMeetingInfo `json:"onlineMeeting,omitempty"`
 
 	// Represents the online meeting service provider. By default, onlineMeetingProvider is unknown. The possible values are
 	// unknown, teamsForBusiness, skypeForBusiness, and skypeForConsumer. Optional. After you set onlineMeetingProvider,
-	// Microsoft Graph initializes onlineMeeting. Subsequently you cannot change onlineMeetingProvider again, and the
+	// Microsoft Graph initializes onlineMeeting. Subsequently, you can't change onlineMeetingProvider again, and the
 	// meeting remains available online.
 	OnlineMeetingProvider *OnlineMeetingProviderType `json:"onlineMeetingProvider,omitempty"`
 
@@ -118,7 +129,7 @@ type Event struct {
 	// legacy custom time zone was set in desktop Outlook.
 	OriginalEndTimeZone nullable.Type[string] `json:"originalEndTimeZone,omitempty"`
 
-	// Represents the start time of an event when it is initially created as an occurrence or exception in a recurring
+	// Represents the start time of an event when it's initially created as an occurrence or exception in a recurring
 	// series. This property is not returned for events that are single instances. Its date and time information is
 	// expressed in ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
 	OriginalStart nullable.Type[string] `json:"originalStart,omitempty"`
@@ -139,7 +150,7 @@ type Event struct {
 	// Indicates the type of response sent in response to an event message.
 	ResponseStatus *ResponseStatus `json:"responseStatus,omitempty"`
 
-	// Possible values are: normal, personal, private, confidential.
+	// Possible values are: normal, personal, private, and confidential.
 	Sensitivity *Sensitivity `json:"sensitivity,omitempty"`
 
 	// The ID for the recurring series master item, if this event is part of a recurring series.
@@ -158,9 +169,9 @@ type Event struct {
 	Subject nullable.Type[string] `json:"subject,omitempty"`
 
 	// A custom identifier specified by a client app for the server to avoid redundant POST operations in case of client
-	// retries to create the same event. This is useful when low network connectivity causes the client to time out before
+	// retries to create the same event. It's useful when low network connectivity causes the client to time out before
 	// receiving a response from the server for the client's prior create-event request. After you set transactionId when
-	// creating an event, you cannot change transactionId in a subsequent update. This property is only returned in a
+	// creating an event, you can't change transactionId in a subsequent update. This property is only returned in a
 	// response payload if an app has set it. Optional.
 	TransactionId nullable.Type[string] `json:"transactionId,omitempty"`
 
@@ -168,7 +179,7 @@ type Event struct {
 	Type *EventType `json:"type,omitempty"`
 
 	// The URL to open the event in Outlook on the web.Outlook on the web opens the event in the browser if you are signed
-	// in to your mailbox. Otherwise, Outlook on the web prompts you to sign in.This URL cannot be accessed from within an
+	// in to your mailbox. Otherwise, Outlook on the web prompts you to sign in.This URL can't be accessed from within an
 	// iFrame.
 	WebLink nullable.Type[string] `json:"webLink,omitempty"`
 
@@ -269,7 +280,9 @@ func (s *Event) UnmarshalJSON(bytes []byte) error {
 		Body                          *ItemBody                            `json:"body,omitempty"`
 		BodyPreview                   nullable.Type[string]                `json:"bodyPreview,omitempty"`
 		Calendar                      *Calendar                            `json:"calendar,omitempty"`
+		CancelledOccurrences          *[]string                            `json:"cancelledOccurrences,omitempty"`
 		End                           *DateTimeTimeZone                    `json:"end,omitempty"`
+		ExceptionOccurrences          *[]Event                             `json:"exceptionOccurrences,omitempty"`
 		HasAttachments                nullable.Type[bool]                  `json:"hasAttachments,omitempty"`
 		HideAttendees                 nullable.Type[bool]                  `json:"hideAttendees,omitempty"`
 		ICalUId                       nullable.Type[string]                `json:"iCalUId,omitempty"`
@@ -318,7 +331,9 @@ func (s *Event) UnmarshalJSON(bytes []byte) error {
 	s.Body = decoded.Body
 	s.BodyPreview = decoded.BodyPreview
 	s.Calendar = decoded.Calendar
+	s.CancelledOccurrences = decoded.CancelledOccurrences
 	s.End = decoded.End
+	s.ExceptionOccurrences = decoded.ExceptionOccurrences
 	s.HasAttachments = decoded.HasAttachments
 	s.HideAttendees = decoded.HideAttendees
 	s.ICalUId = decoded.ICalUId

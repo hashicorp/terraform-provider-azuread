@@ -17,6 +17,9 @@ type TeamworkUserIdentity struct {
 	// personalMicrosoftAccountUser, skypeUser, phoneUser, emailUser and azureCommunicationServicesUser.
 	UserIdentityType *TeamworkUserIdentityType `json:"userIdentityType,omitempty"`
 
+	// User principal name (UPN) of the user.
+	UserPrincipalName nullable.Type[string] `json:"userPrincipalName,omitempty"`
+
 	// Fields inherited from Identity
 
 	// The display name of the identity. This property is read-only.

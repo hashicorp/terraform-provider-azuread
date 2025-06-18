@@ -13,21 +13,24 @@ var _ Entity = UserSettings{}
 type UserSettings struct {
 	// Reflects the organization level setting controlling delegate access to the trending API. When set to true, the
 	// organization doesn't have access to Office Delve. The relevancy of the content displayed in Microsoft 365, for
-	// example in Suggested sites in SharePoint Home and the Discover view in OneDrive for Business is affected for the
-	// whole organization. This setting is read-only and can only be changed by administrators in the SharePoint admin
+	// example in Suggested sites in SharePoint Home and the Discover view in OneDrive for work or school is affected for
+	// the whole organization. This setting is read-only and can only be changed by administrators in the SharePoint admin
 	// center.
 	ContributionToContentDiscoveryAsOrganizationDisabled *bool `json:"contributionToContentDiscoveryAsOrganizationDisabled,omitempty"`
 
 	// When set to true, the delegate access to the user's trending API is disabled. When set to true, documents in the
 	// user's Office Delve are disabled. When set to true, the relevancy of the content displayed in Microsoft 365, for
-	// example in Suggested sites in SharePoint Home and the Discover view in OneDrive for Business is affected. Users can
-	// control this setting in Office Delve.
+	// example in Suggested sites in SharePoint Home and the Discover view in OneDrive for work or school is affected. Users
+	// can control this setting in Office Delve.
 	ContributionToContentDiscoveryDisabled *bool `json:"contributionToContentDiscoveryDisabled,omitempty"`
 
-	ItemInsights     *UserInsightsSettings `json:"itemInsights,omitempty"`
-	ShiftPreferences *ShiftPreferences     `json:"shiftPreferences,omitempty"`
-	Storage          *UserStorage          `json:"storage,omitempty"`
-	Windows          *[]WindowsSetting     `json:"windows,omitempty"`
+	// The user's settings for the visibility of meeting hour insights, and insights derived between a user and other items
+	// in Microsoft 365, such as documents or sites. Get userInsightsSettings through this navigation property.
+	ItemInsights *UserInsightsSettings `json:"itemInsights,omitempty"`
+
+	ShiftPreferences *ShiftPreferences `json:"shiftPreferences,omitempty"`
+	Storage          *UserStorage      `json:"storage,omitempty"`
+	Windows          *[]WindowsSetting `json:"windows,omitempty"`
 
 	// Fields inherited from Entity
 

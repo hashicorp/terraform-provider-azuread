@@ -31,7 +31,7 @@ type X509CertificateRule struct {
 	X509CertificateRequiredAffinityLevel *X509CertificateAffinityLevel `json:"x509CertificateRequiredAffinityLevel,omitempty"`
 
 	// The type of the X.509 certificate mode configuration rule. The possible values are: issuerSubject, policyOID,
-	// unknownFutureValue, issuerSubjectAndPolicyOID. Note that you must use the Prefer: include-unknown-enum-members
-	// request header to get the following values from this evolvable enum: issuerSubjectAndPolicyOID. Required.
+	// unknownFutureValue, issuerSubjectAndPolicyOID. Use the Prefer: include-unknown-enum-members request header to get the
+	// following values from this evolvable enum: issuerSubjectAndPolicyOID. Required.
 	X509CertificateRuleType X509CertificateRuleType `json:"x509CertificateRuleType"`
 }

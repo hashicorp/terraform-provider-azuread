@@ -53,9 +53,9 @@ func (o RemoveOwnerRefsOperationOptions) ToQuery() *client.QueryParams {
 	return &out
 }
 
-// RemoveOwnerRefs - Remove group owner. Use this API to remove an owner from a Microsoft 365 group or a security group
-// through the owners navigation property. When owners are assigned to a group, the last owner (a user object) of the
-// group cannot be removed.
+// RemoveOwnerRefs - Remove group owner. Remove an owner from a Microsoft 365 group or a security group through the
+// owners navigation property. When owners are assigned to a group, the last owner (a user object) of the group cannot
+// be removed.
 func (c OwnerClient) RemoveOwnerRefs(ctx context.Context, id beta.GroupId, options RemoveOwnerRefsOperationOptions) (result RemoveOwnerRefsOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

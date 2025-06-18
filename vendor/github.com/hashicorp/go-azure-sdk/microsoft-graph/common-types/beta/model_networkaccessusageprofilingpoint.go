@@ -4,7 +4,10 @@ package beta
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type NetworkaccessUsageProfilingPoint struct {
-	InternetAccessTrafficCount     *int64 `json:"internetAccessTrafficCount,omitempty"`
+	// The count of traffic requests directed to general internet destinations.
+	InternetAccessTrafficCount *int64 `json:"internetAccessTrafficCount,omitempty"`
+
+	// The count of traffic requests directed to Microsoft 365 services.
 	Microsoft365AccessTrafficCount *int64 `json:"microsoft365AccessTrafficCount,omitempty"`
 
 	// The OData ID of this entity
@@ -13,7 +16,12 @@ type NetworkaccessUsageProfilingPoint struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	PrivateAccessTrafficCount *int64  `json:"privateAccessTrafficCount,omitempty"`
-	TimeStampDateTime         *string `json:"timeStampDateTime,omitempty"`
-	TotalTrafficCount         *int64  `json:"totalTrafficCount,omitempty"`
+	// The count of traffic requests directed to internal private network destinations.
+	PrivateAccessTrafficCount *int64 `json:"privateAccessTrafficCount,omitempty"`
+
+	// The date and time of this data point.
+	TimeStampDateTime *string `json:"timeStampDateTime,omitempty"`
+
+	// The total count of all traffic requests across all access types.
+	TotalTrafficCount *int64 `json:"totalTrafficCount,omitempty"`
 }

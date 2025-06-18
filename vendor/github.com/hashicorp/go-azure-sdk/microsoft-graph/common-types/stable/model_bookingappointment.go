@@ -19,16 +19,26 @@ type BookingAppointment struct {
 	// The URL of the meeting to join anonymously.
 	AnonymousJoinWebUrl nullable.Type[string] `json:"anonymousJoinWebUrl,omitempty"`
 
-	// Custom label that can be stamped on this appointment by users.
+	// The custom label that can be stamped on this appointment by users.
 	AppointmentLabel nullable.Type[string] `json:"appointmentLabel,omitempty"`
 
-	CreatedDateTime      nullable.Type[string] `json:"createdDateTime,omitempty"`
-	CustomerEmailAddress nullable.Type[string] `json:"customerEmailAddress,omitempty"`
-	CustomerName         nullable.Type[string] `json:"customerName,omitempty"`
+	// The date, time, and time zone when the appointment was created. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
+	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
-	// Notes from the customer associated with this appointment.
+	// The SMTP address of the bookingCustomer who books the appointment.
+	CustomerEmailAddress nullable.Type[string] `json:"customerEmailAddress,omitempty"`
+
+	// The customer's name.
+	CustomerName nullable.Type[string] `json:"customerName,omitempty"`
+
+	// Notes from the customer associated with this appointment. You can get the value only when you read this
+	// bookingAppointment by its ID. You can set this property only when you initially create an appointment with a new
+	// customer.
 	CustomerNotes nullable.Type[string] `json:"customerNotes,omitempty"`
 
+	// The customer's phone number.
 	CustomerPhone nullable.Type[string] `json:"customerPhone,omitempty"`
 
 	// The time zone of the customer. For a list of possible values, see dateTimeTimeZone.
@@ -43,17 +53,21 @@ type BookingAppointment struct {
 
 	EndDateTime *DateTimeTimeZone `json:"endDateTime,omitempty"`
 
-	// The current number of customers in the appointment
+	// The current number of customers in the appointment.
 	FilledAttendeesCount *int64 `json:"filledAttendeesCount,omitempty"`
 
+	// Indicates that the customer can manage bookings created by the staff. The default value is false.
 	IsCustomerAllowedToManageBooking nullable.Type[bool] `json:"isCustomerAllowedToManageBooking,omitempty"`
 
-	// If true, indicates that the appointment will be held online. Default value is false.
+	// Indicates that the appointment is held online. The default value is false.
 	IsLocationOnline *bool `json:"isLocationOnline,omitempty"`
 
 	// The URL of the online meeting for the appointment.
 	JoinWebUrl nullable.Type[string] `json:"joinWebUrl,omitempty"`
 
+	// The date, time, and time zone when the booking business was last updated. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
 	LastUpdatedDateTime nullable.Type[string] `json:"lastUpdatedDateTime,omitempty"`
 
 	// The maximum number of customers allowed in an appointment. If maximumAttendeesCount of the service is greater than 1,
@@ -80,9 +94,8 @@ type BookingAppointment struct {
 	// reading this bookingAppointment by its ID.
 	Reminders *[]BookingReminder `json:"reminders,omitempty"`
 
-	// An additional tracking ID for the appointment, if the appointment has been created directly by the customer on the
-	// scheduling page, as opposed to by a staff member on the behalf of the customer. Only supported for appointment if
-	// maxAttendeeCount is 1.
+	// Another tracking ID for the appointment, if the appointment was created directly by the customer on the scheduling
+	// page, as opposed to by a staff member on behalf of the customer.
 	SelfServiceAppointmentId nullable.Type[string] `json:"selfServiceAppointmentId,omitempty"`
 
 	// The ID of the bookingService associated with this appointment.

@@ -14,5 +14,6 @@ type SignUpIdentity struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	SignUpIdentifier nullable.Type[string] `json:"signUpIdentifier,omitempty"`
+	SignUpIdentifier     nullable.Type[string] `json:"signUpIdentifier,omitempty"`
+	SignUpIdentifierType *SignUpIdentifierType `json:"signUpIdentifierType,omitempty"`
 }

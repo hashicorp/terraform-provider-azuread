@@ -11,7 +11,12 @@ import (
 var _ WindowsUpdatesWindowsUpdateFilter = WindowsUpdatesQualityUpdateFilter{}
 
 type WindowsUpdatesQualityUpdateFilter struct {
-	Cadence        *WindowsUpdatesQualityUpdateCadence        `json:"cadence,omitempty"`
+	// Specifies the cadence for publishing quality updates of the filter. The possible values are: monthly, outOfBand,
+	// unknownFutureValue.
+	Cadence *WindowsUpdatesQualityUpdateCadence `json:"cadence,omitempty"`
+
+	// Specifies the quality update classification of the filter. The possible values are: all, security, nonSecurity,
+	// unknownFutureValue.
 	Classification *WindowsUpdatesQualityUpdateClassification `json:"classification,omitempty"`
 
 	// Fields inherited from WindowsUpdatesContentFilter

@@ -13,10 +13,10 @@ import (
 var _ Entity = WorkbookPivotTable{}
 
 type WorkbookPivotTable struct {
-	// Name of the PivotTable.
+	// The name of the pivot table.
 	Name nullable.Type[string] `json:"name,omitempty"`
 
-	// The worksheet containing the current PivotTable. Read-only.
+	// The worksheet that contains the current pivot table. Read-only.
 	Worksheet *WorkbookWorksheet `json:"worksheet,omitempty"`
 
 	// Fields inherited from Entity

@@ -13,9 +13,14 @@ import (
 var _ SecurityAlertEvidence = SecurityNicEvidence{}
 
 type SecurityNicEvidence struct {
-	IPAddress  *SecurityIPEvidence   `json:"ipAddress,omitempty"`
+	// The current IP address of the NIC.
+	IPAddress *SecurityIPEvidence `json:"ipAddress,omitempty"`
+
+	// The MAC address of the NIC.
 	MacAddress nullable.Type[string] `json:"macAddress,omitempty"`
-	Vlans      *[]string             `json:"vlans,omitempty"`
+
+	// The current virtual local area networks of the NIC.
+	Vlans *[]string `json:"vlans,omitempty"`
 
 	// Fields inherited from SecurityAlertEvidence
 

@@ -11,13 +11,22 @@ import (
 var _ Entity = PeopleAdminSettings{}
 
 type PeopleAdminSettings struct {
-	// Represents administrator settings that manage the support for item insights in an organization.
+	// Administrator settings that manage the support for item insights in an organization.
 	ItemInsights *InsightsSettings `json:"itemInsights,omitempty"`
 
-	// Contains a collection of the properties an administrator defined as visible on the Microsoft 365 profile card.
+	// Administrator settings that manage the support of name pronunciation in an organization.
+	NamePronunciation *NamePronunciationSettings `json:"namePronunciation,omitempty"`
+
+	// A collection of the properties an administrator defined as visible on the Microsoft 365 profile card.
 	ProfileCardProperties *[]ProfileCardProperty `json:"profileCardProperties,omitempty"`
 
-	// Represents administrator settings that manage the support of pronouns in an organization.
+	// A collection of profile property configuration settings defined by an administrator for an organization.
+	ProfilePropertySettings *[]ProfilePropertySetting `json:"profilePropertySettings,omitempty"`
+
+	// A collection of profile source settings configured by an administrator in an organization.
+	ProfileSources *[]ProfileSource `json:"profileSources,omitempty"`
+
+	// Administrator settings that manage the support of pronouns in an organization.
 	Pronouns *PronounsSettings `json:"pronouns,omitempty"`
 
 	// Fields inherited from Entity

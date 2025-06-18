@@ -14,7 +14,9 @@ type NetworkaccessAlertType string
 const (
 	NetworkaccessAlertType_CrossTenantAnomaly             NetworkaccessAlertType = "crossTenantAnomaly"
 	NetworkaccessAlertType_DeviceTokenInconsistency       NetworkaccessAlertType = "deviceTokenInconsistency"
+	NetworkaccessAlertType_Dlp                            NetworkaccessAlertType = "dlp"
 	NetworkaccessAlertType_Malware                        NetworkaccessAlertType = "malware"
+	NetworkaccessAlertType_PatientZero                    NetworkaccessAlertType = "patientZero"
 	NetworkaccessAlertType_SuspiciousProcess              NetworkaccessAlertType = "suspiciousProcess"
 	NetworkaccessAlertType_ThreatIntelligenceTransactions NetworkaccessAlertType = "threatIntelligenceTransactions"
 	NetworkaccessAlertType_UnhealthyConnectors            NetworkaccessAlertType = "unhealthyConnectors"
@@ -26,7 +28,9 @@ func PossibleValuesForNetworkaccessAlertType() []string {
 	return []string{
 		string(NetworkaccessAlertType_CrossTenantAnomaly),
 		string(NetworkaccessAlertType_DeviceTokenInconsistency),
+		string(NetworkaccessAlertType_Dlp),
 		string(NetworkaccessAlertType_Malware),
+		string(NetworkaccessAlertType_PatientZero),
 		string(NetworkaccessAlertType_SuspiciousProcess),
 		string(NetworkaccessAlertType_ThreatIntelligenceTransactions),
 		string(NetworkaccessAlertType_UnhealthyConnectors),
@@ -52,7 +56,9 @@ func parseNetworkaccessAlertType(input string) (*NetworkaccessAlertType, error) 
 	vals := map[string]NetworkaccessAlertType{
 		"crosstenantanomaly":             NetworkaccessAlertType_CrossTenantAnomaly,
 		"devicetokeninconsistency":       NetworkaccessAlertType_DeviceTokenInconsistency,
+		"dlp":                            NetworkaccessAlertType_Dlp,
 		"malware":                        NetworkaccessAlertType_Malware,
+		"patientzero":                    NetworkaccessAlertType_PatientZero,
 		"suspiciousprocess":              NetworkaccessAlertType_SuspiciousProcess,
 		"threatintelligencetransactions": NetworkaccessAlertType_ThreatIntelligenceTransactions,
 		"unhealthyconnectors":            NetworkaccessAlertType_UnhealthyConnectors,

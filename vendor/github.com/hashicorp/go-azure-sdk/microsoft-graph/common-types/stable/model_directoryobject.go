@@ -134,6 +134,22 @@ func UnmarshalDirectoryObjectImplementation(input []byte) (DirectoryObject, erro
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.certificateAuthorityDetail") {
+		var out CertificateAuthorityDetail
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CertificateAuthorityDetail: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.certificateBasedAuthPki") {
+		var out CertificateBasedAuthPki
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CertificateBasedAuthPki: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.contract") {
 		var out Contract
 		if err := json.Unmarshal(input, &out); err != nil {

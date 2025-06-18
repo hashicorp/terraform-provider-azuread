@@ -57,6 +57,8 @@ type AccessPackage struct {
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Read-only.
 	ModifiedDateTime nullable.Type[string] `json:"modifiedDateTime,omitempty"`
 
+	UniqueName nullable.Type[string] `json:"uniqueName,omitempty"`
+
 	// Fields inherited from Entity
 
 	// The unique identifier for an entity. Read-only.

@@ -74,8 +74,9 @@ func (p *GetMemberObjectsCustomPager) NextPageLink() *odata.Link {
 }
 
 // GetMemberObjects - Invoke action getMemberObjects. Return all IDs for the groups, administrative units, and directory
-// roles that a user, group, service principal, organizational contact, device, or directory object is a member of. This
-// function is transitive. Note: Only users and role-enabled groups can be members of directory roles.
+// roles that an object of one of the following types is a member of: - user - group - service principal -
+// organizational contact - device - directory object This function is transitive. Only users and role-enabled groups
+// can be members of directory roles.
 func (c ApplicationClient) GetMemberObjects(ctx context.Context, id stable.ApplicationId, input GetMemberObjectsRequest, options GetMemberObjectsOperationOptions) (result GetMemberObjectsOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

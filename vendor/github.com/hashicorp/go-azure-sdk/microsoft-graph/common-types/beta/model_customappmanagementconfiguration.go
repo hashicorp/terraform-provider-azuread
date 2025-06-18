@@ -11,10 +11,11 @@ import (
 var _ AppManagementConfiguration = CustomAppManagementConfiguration{}
 
 type CustomAppManagementConfiguration struct {
+	// Restrictions that are applicable only to application objects to which the policy is attached.
+	ApplicationRestrictions *CustomAppManagementApplicationConfiguration `json:"applicationRestrictions,omitempty"`
 
 	// Fields inherited from AppManagementConfiguration
 
-	// Collection of keyCredential restrictions settings to be applied to an application or service principal.
 	KeyCredentials *[]KeyCredentialConfiguration `json:"keyCredentials,omitempty"`
 
 	// The OData ID of this entity
@@ -23,7 +24,6 @@ type CustomAppManagementConfiguration struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// Collection of password restrictions settings to be applied to an application or service principal.
 	PasswordCredentials *[]PasswordCredentialConfiguration `json:"passwordCredentials,omitempty"`
 
 	// Model Behaviors

@@ -13,9 +13,9 @@ import (
 var _ Entity = ServicePrincipalRiskDetection{}
 
 type ServicePrincipalRiskDetection struct {
-	// Indicates the activity type the detected risk is linked to. The possible values are: signin, servicePrincipal. Note
-	// that you must use the Prefer: include-unknown-enum-members request header to get the following value(s) in this
-	// evolvable enum: servicePrincipal.
+	// Indicates the activity type the detected risk is linked to. The possible values are: signin, servicePrincipal. Use
+	// the Prefer: include-unknown-enum-members request header to get the following value(s) in this evolvable enum:
+	// servicePrincipal.
 	Activity *ActivityType `json:"activity,omitempty"`
 
 	// Date and time when the risky activity occurred. The DateTimeOffset type represents date and time information using
@@ -59,8 +59,8 @@ type ServicePrincipalRiskDetection struct {
 
 	// Details of the detected risk. Note: Details for this property are only available for Workload Identities Premium
 	// customers. Events in tenants without this license will be returned hidden. The possible values are: none, hidden,
-	// adminConfirmedServicePrincipalCompromised, adminDismissedAllRiskForServicePrincipal. Note that you must use the
-	// Prefer: include-unknown-enum-members request header to get the following value(s) in this evolvable enum:
+	// adminConfirmedServicePrincipalCompromised, adminDismissedAllRiskForServicePrincipal. Use the Prefer:
+	// include-unknown-enum-members request header to get the following value(s) in this evolvable enum:
 	// adminConfirmedServicePrincipalCompromised , adminDismissedAllRiskForServicePrincipal.
 	RiskDetail *RiskDetail `json:"riskDetail,omitempty"`
 

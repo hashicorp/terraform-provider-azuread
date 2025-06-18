@@ -141,6 +141,22 @@ func UnmarshalEnrollmentProfileImplementation(input []byte) (EnrollmentProfile, 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.depTvOSEnrollmentProfile") {
+		var out DepTvOSEnrollmentProfile
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DepTvOSEnrollmentProfile: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.depVisionOSEnrollmentProfile") {
+		var out DepVisionOSEnrollmentProfile
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DepVisionOSEnrollmentProfile: %+v", err)
+		}
+		return out, nil
+	}
+
 	var parent BaseEnrollmentProfileImpl
 	if err := json.Unmarshal(input, &parent); err != nil {
 		return nil, fmt.Errorf("unmarshaling into BaseEnrollmentProfileImpl: %+v", err)

@@ -11,6 +11,8 @@ import (
 var _ Entity = UserInsightsSettings{}
 
 type UserInsightsSettings struct {
+	// True if the user's itemInsights and meeting hours insights are enabled; false if the user's itemInsights and meeting
+	// hours insights are disabled. The default value is true. Optional.
 	IsEnabled *bool `json:"isEnabled,omitempty"`
 
 	// Fields inherited from Entity

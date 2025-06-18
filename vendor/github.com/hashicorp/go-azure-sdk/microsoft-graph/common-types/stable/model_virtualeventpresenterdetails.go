@@ -8,9 +8,16 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type VirtualEventPresenterDetails struct {
-	Bio                   *ItemBody             `json:"bio,omitempty"`
-	Company               nullable.Type[string] `json:"company,omitempty"`
-	JobTitle              nullable.Type[string] `json:"jobTitle,omitempty"`
+	// Bio of the presenter.
+	Bio *ItemBody `json:"bio,omitempty"`
+
+	// The presenter's company name.
+	Company nullable.Type[string] `json:"company,omitempty"`
+
+	// The presenter's job title.
+	JobTitle nullable.Type[string] `json:"jobTitle,omitempty"`
+
+	// The presenter's LinkedIn profile URL.
 	LinkedInProfileWebUrl nullable.Type[string] `json:"linkedInProfileWebUrl,omitempty"`
 
 	// The OData ID of this entity
@@ -19,7 +26,12 @@ type VirtualEventPresenterDetails struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	PersonalSiteWebUrl   nullable.Type[string] `json:"personalSiteWebUrl,omitempty"`
-	Photo                nullable.Type[string] `json:"photo,omitempty"`
+	// The presenter's personal website URL.
+	PersonalSiteWebUrl nullable.Type[string] `json:"personalSiteWebUrl,omitempty"`
+
+	// The content stream of the presenter's photo.
+	Photo nullable.Type[string] `json:"photo,omitempty"`
+
+	// The presenter's Twitter profile URL.
 	TwitterProfileWebUrl nullable.Type[string] `json:"twitterProfileWebUrl,omitempty"`
 }

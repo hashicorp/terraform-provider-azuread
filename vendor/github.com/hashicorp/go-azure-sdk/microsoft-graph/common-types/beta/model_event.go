@@ -61,8 +61,8 @@ type Event struct {
 	Importance *Importance `json:"importance,omitempty"`
 
 	// The occurrences of a recurring series, if the event is a series master. This property includes occurrences that are
-	// part of the recurrence pattern, and exceptions that have been modified, but doesn't include occurrences that have
-	// been canceled from the series. Navigation property. Read-only. Nullable.
+	// part of the recurrence pattern and exceptions that have been modified. It doesn't include occurrences that have been
+	// canceled from the series. Navigation property. Read-only. Nullable.
 	Instances *[]Event `json:"instances,omitempty"`
 
 	// Set to true if the event lasts all day. If true, regardless of whether it's a single-day or multi-day event, start
@@ -78,8 +78,8 @@ type Event struct {
 
 	// True if this event has online meeting information (that is, onlineMeeting points to an onlineMeetingInfo resource),
 	// false otherwise. Default is false (onlineMeeting is null). Optional. After you set isOnlineMeeting to true, Microsoft
-	// Graph initializes onlineMeeting. Subsequently Outlook ignores any further changes to isOnlineMeeting, and the meeting
-	// remains available online.
+	// Graph initializes onlineMeeting. Outlook then ignores any further changes to isOnlineMeeting, and the meeting remains
+	// available online.
 	IsOnlineMeeting nullable.Type[bool] `json:"isOnlineMeeting,omitempty"`
 
 	// Set to true if the calendar owner (specified by the owner property of the calendar) is the organizer of the event
@@ -110,14 +110,14 @@ type Event struct {
 
 	// Details for an attendee to join the meeting online. Default is null. Read-only. After you set the isOnlineMeeting and
 	// onlineMeetingProvider properties to enable a meeting online, Microsoft Graph initializes onlineMeeting. When set, the
-	// meeting remains available online, and you cannot change the isOnlineMeeting, onlineMeetingProvider, and onlneMeeting
+	// meeting remains available online, and you can't change the isOnlineMeeting, onlineMeetingProvider, and onlneMeeting
 	// properties again.
 	OnlineMeeting *OnlineMeetingInfo `json:"onlineMeeting,omitempty"`
 
 	// Represents the online meeting service provider. By default, onlineMeetingProvider is unknown. The possible values are
 	// unknown, teamsForBusiness, skypeForBusiness, and skypeForConsumer. Optional. After you set onlineMeetingProvider,
-	// Microsoft Graph initializes onlineMeeting. Subsequently you cannot change onlineMeetingProvider again, and the
-	// meeting remains available online.
+	// Microsoft Graph initializes onlineMeeting. Subsequently you can't change onlineMeetingProvider again, and the meeting
+	// remains available online.
 	OnlineMeetingProvider *OnlineMeetingProviderType `json:"onlineMeetingProvider,omitempty"`
 
 	// A URL for an online meeting. The property is set only when an organizer specifies in Outlook that an event is an
@@ -132,7 +132,7 @@ type Event struct {
 	// legacy custom time zone was set in desktop Outlook.
 	OriginalEndTimeZone nullable.Type[string] `json:"originalEndTimeZone,omitempty"`
 
-	// Represents the start time of an event when it is initially created as an occurrence or exception in a recurring
+	// Represents the start time of an event when it's initially created as an occurrence or exception in a recurring
 	// series. This property isn't returned for events that are single instances. Its date and time information is expressed
 	// in ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
 	OriginalStart nullable.Type[string] `json:"originalStart,omitempty"`
@@ -171,11 +171,11 @@ type Event struct {
 	// The text of the event's subject line.
 	Subject nullable.Type[string] `json:"subject,omitempty"`
 
-	// A custom identifier specified by a client app for the server to avoid redundant POST operations in case of client
-	// retries to create the same event. This is useful when low network connectivity causes the client to time out before
-	// receiving a response from the server for the client's prior create-event request. After you set transactionId when
-	// creating an event, you cannot change transactionId in a subsequent update. This property is only returned in a
-	// response payload if an app has set it. Optional.
+	// A custom identifier specified by a client app for the server to avoid redundant POST operations if the client retries
+	// to create the same event. This is useful when low network connectivity causes the client to time out before receiving
+	// a response from the server for the client's prior create-event request. After you set transactionId when creating an
+	// event, you can't change transactionId in a subsequent update. This property is only returned in a response payload if
+	// an app has set it. Optional.
 	TransactionId nullable.Type[string] `json:"transactionId,omitempty"`
 
 	// The event type. Possible values are: singleInstance, occurrence, exception, seriesMaster. Read-only
@@ -185,8 +185,8 @@ type Event struct {
 	// its occurrences including exceptions.
 	Uid nullable.Type[string] `json:"uid,omitempty"`
 
-	// The URL to open the event in Outlook on the web.Outlook on the web opens the event in the browser if you are signed
-	// in to your mailbox. Otherwise, Outlook on the web prompts you to sign in.This URL cannot be accessed from within an
+	// The URL to open the event in Outlook on the web.Outlook on the web opens the event in the browser if you're signed in
+	// to your mailbox. Otherwise, Outlook on the web prompts you to sign in.This URL can't be accessed from within an
 	// iFrame.
 	WebLink nullable.Type[string] `json:"webLink,omitempty"`
 

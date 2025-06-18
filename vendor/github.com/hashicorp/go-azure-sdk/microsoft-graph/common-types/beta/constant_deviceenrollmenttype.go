@@ -17,6 +17,7 @@ const (
 	DeviceEnrollmentType_AndroidEnterpriseCorporateWorkProfile DeviceEnrollmentType = "androidEnterpriseCorporateWorkProfile"
 	DeviceEnrollmentType_AndroidEnterpriseDedicatedDevice      DeviceEnrollmentType = "androidEnterpriseDedicatedDevice"
 	DeviceEnrollmentType_AndroidEnterpriseFullyManaged         DeviceEnrollmentType = "androidEnterpriseFullyManaged"
+	DeviceEnrollmentType_AppleAccountDrivenUserEnrollment      DeviceEnrollmentType = "appleAccountDrivenUserEnrollment"
 	DeviceEnrollmentType_AppleBulkWithUser                     DeviceEnrollmentType = "appleBulkWithUser"
 	DeviceEnrollmentType_AppleBulkWithoutUser                  DeviceEnrollmentType = "appleBulkWithoutUser"
 	DeviceEnrollmentType_AppleUserEnrollment                   DeviceEnrollmentType = "appleUserEnrollment"
@@ -40,6 +41,7 @@ func PossibleValuesForDeviceEnrollmentType() []string {
 		string(DeviceEnrollmentType_AndroidEnterpriseCorporateWorkProfile),
 		string(DeviceEnrollmentType_AndroidEnterpriseDedicatedDevice),
 		string(DeviceEnrollmentType_AndroidEnterpriseFullyManaged),
+		string(DeviceEnrollmentType_AppleAccountDrivenUserEnrollment),
 		string(DeviceEnrollmentType_AppleBulkWithUser),
 		string(DeviceEnrollmentType_AppleBulkWithoutUser),
 		string(DeviceEnrollmentType_AppleUserEnrollment),
@@ -77,6 +79,7 @@ func parseDeviceEnrollmentType(input string) (*DeviceEnrollmentType, error) {
 		"androidenterprisecorporateworkprofile": DeviceEnrollmentType_AndroidEnterpriseCorporateWorkProfile,
 		"androidenterprisededicateddevice":      DeviceEnrollmentType_AndroidEnterpriseDedicatedDevice,
 		"androidenterprisefullymanaged":         DeviceEnrollmentType_AndroidEnterpriseFullyManaged,
+		"appleaccountdrivenuserenrollment":      DeviceEnrollmentType_AppleAccountDrivenUserEnrollment,
 		"applebulkwithuser":                     DeviceEnrollmentType_AppleBulkWithUser,
 		"applebulkwithoutuser":                  DeviceEnrollmentType_AppleBulkWithoutUser,
 		"appleuserenrollment":                   DeviceEnrollmentType_AppleUserEnrollment,

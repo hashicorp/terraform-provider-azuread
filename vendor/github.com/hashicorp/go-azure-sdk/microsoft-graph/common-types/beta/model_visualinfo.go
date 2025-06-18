@@ -15,6 +15,10 @@ type VisualInfo struct {
 	// activity. Must be a valid hex color
 	BackgroundColor nullable.Type[string] `json:"backgroundColor,omitempty"`
 
+	// Optional. Custom piece of data - JSON object used to provide custom content to render the activity in the Windows
+	// Shell UI
+	Content *Json `json:"content,omitempty"`
+
 	// Optional. Longer text description of the user's unique activity (example: document name, first sentence, and/or
 	// metadata)
 	Description nullable.Type[string] `json:"description,omitempty"`

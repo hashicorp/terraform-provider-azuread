@@ -21,6 +21,8 @@ type CloudPCUserSetting struct {
 	// format and is always in UTC. For example, midnight UTC on Jan 1, 2014 looks like this: '2014-01-01T00:00:00Z'.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
+	// Defines whether the user's Cloud PC enables cross-region disaster recovery and specifies the network for the disaster
+	// recovery.
 	CrossRegionDisasterRecoverySetting *CloudPCCrossRegionDisasterRecoverySetting `json:"crossRegionDisasterRecoverySetting,omitempty"`
 
 	// The setting name displayed in the user interface.
@@ -35,8 +37,11 @@ type CloudPCUserSetting struct {
 	// the setting to true. If the local admin option is enabled, the end user can be an admin of the Cloud PC device.
 	LocalAdminEnabled nullable.Type[bool] `json:"localAdminEnabled,omitempty"`
 
+	// Defines the setting of the Cloud PC notification prompts for the Cloud PC user.
+	NotificationSetting *CloudPCNotificationSetting `json:"notificationSetting,omitempty"`
+
 	// Indicates whether an end user is allowed to reset their Cloud PC. When true, the user is allowed to reset their Cloud
-	// PC. When false, end-user initiated reset is not allowed. The default value is false.
+	// PC. When false, end-user initiated reset isn't allowed. The default value is false.
 	ResetEnabled nullable.Type[bool] `json:"resetEnabled,omitempty"`
 
 	// Defines how frequently a restore point is created that is, a snapshot is taken) for users' provisioned Cloud PCs

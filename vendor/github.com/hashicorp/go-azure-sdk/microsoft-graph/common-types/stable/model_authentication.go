@@ -33,6 +33,9 @@ type Authentication struct {
 	// The phone numbers registered to a user for authentication.
 	PhoneMethods *[]PhoneAuthenticationMethod `json:"phoneMethods,omitempty"`
 
+	// Represents a platform credential instance registered to a user on Mac OS.
+	PlatformCredentialMethods *[]PlatformCredentialAuthenticationMethod `json:"platformCredentialMethods,omitempty"`
+
 	// The software OATH time-based one-time password (TOTP) applications registered to a user for authentication.
 	SoftwareOathMethods *[]SoftwareOathAuthenticationMethod `json:"softwareOathMethods,omitempty"`
 
@@ -101,6 +104,7 @@ func (s *Authentication) UnmarshalJSON(bytes []byte) error {
 		MicrosoftAuthenticatorMethods  *[]MicrosoftAuthenticatorAuthenticationMethod  `json:"microsoftAuthenticatorMethods,omitempty"`
 		PasswordMethods                *[]PasswordAuthenticationMethod                `json:"passwordMethods,omitempty"`
 		PhoneMethods                   *[]PhoneAuthenticationMethod                   `json:"phoneMethods,omitempty"`
+		PlatformCredentialMethods      *[]PlatformCredentialAuthenticationMethod      `json:"platformCredentialMethods,omitempty"`
 		SoftwareOathMethods            *[]SoftwareOathAuthenticationMethod            `json:"softwareOathMethods,omitempty"`
 		TemporaryAccessPassMethods     *[]TemporaryAccessPassAuthenticationMethod     `json:"temporaryAccessPassMethods,omitempty"`
 		WindowsHelloForBusinessMethods *[]WindowsHelloForBusinessAuthenticationMethod `json:"windowsHelloForBusinessMethods,omitempty"`
@@ -117,6 +121,7 @@ func (s *Authentication) UnmarshalJSON(bytes []byte) error {
 	s.MicrosoftAuthenticatorMethods = decoded.MicrosoftAuthenticatorMethods
 	s.PasswordMethods = decoded.PasswordMethods
 	s.PhoneMethods = decoded.PhoneMethods
+	s.PlatformCredentialMethods = decoded.PlatformCredentialMethods
 	s.SoftwareOathMethods = decoded.SoftwareOathMethods
 	s.TemporaryAccessPassMethods = decoded.TemporaryAccessPassMethods
 	s.WindowsHelloForBusinessMethods = decoded.WindowsHelloForBusinessMethods

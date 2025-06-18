@@ -19,6 +19,8 @@ type ExchangeProtectionPolicy struct {
 	// The protection units (mailboxes) that are protected under the Exchange protection policy.
 	MailboxProtectionUnits *[]MailboxProtectionUnit `json:"mailboxProtectionUnits,omitempty"`
 
+	MailboxProtectionUnitsBulkAdditionJobs *[]MailboxProtectionUnitsBulkAdditionJob `json:"mailboxProtectionUnitsBulkAdditionJobs,omitempty"`
+
 	// Fields inherited from ProtectionPolicyBase
 
 	// The identity of person who created the policy.
@@ -112,16 +114,17 @@ var _ json.Unmarshaler = &ExchangeProtectionPolicy{}
 
 func (s *ExchangeProtectionPolicy) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		MailboxInclusionRules  *[]MailboxProtectionRule `json:"mailboxInclusionRules,omitempty"`
-		MailboxProtectionUnits *[]MailboxProtectionUnit `json:"mailboxProtectionUnits,omitempty"`
-		CreatedDateTime        nullable.Type[string]    `json:"createdDateTime,omitempty"`
-		DisplayName            nullable.Type[string]    `json:"displayName,omitempty"`
-		LastModifiedDateTime   nullable.Type[string]    `json:"lastModifiedDateTime,omitempty"`
-		RetentionSettings      *[]RetentionSetting      `json:"retentionSettings,omitempty"`
-		Status                 *ProtectionPolicyStatus  `json:"status,omitempty"`
-		Id                     *string                  `json:"id,omitempty"`
-		ODataId                *string                  `json:"@odata.id,omitempty"`
-		ODataType              *string                  `json:"@odata.type,omitempty"`
+		MailboxInclusionRules                  *[]MailboxProtectionRule                 `json:"mailboxInclusionRules,omitempty"`
+		MailboxProtectionUnits                 *[]MailboxProtectionUnit                 `json:"mailboxProtectionUnits,omitempty"`
+		MailboxProtectionUnitsBulkAdditionJobs *[]MailboxProtectionUnitsBulkAdditionJob `json:"mailboxProtectionUnitsBulkAdditionJobs,omitempty"`
+		CreatedDateTime                        nullable.Type[string]                    `json:"createdDateTime,omitempty"`
+		DisplayName                            nullable.Type[string]                    `json:"displayName,omitempty"`
+		LastModifiedDateTime                   nullable.Type[string]                    `json:"lastModifiedDateTime,omitempty"`
+		RetentionSettings                      *[]RetentionSetting                      `json:"retentionSettings,omitempty"`
+		Status                                 *ProtectionPolicyStatus                  `json:"status,omitempty"`
+		Id                                     *string                                  `json:"id,omitempty"`
+		ODataId                                *string                                  `json:"@odata.id,omitempty"`
+		ODataType                              *string                                  `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -129,6 +132,7 @@ func (s *ExchangeProtectionPolicy) UnmarshalJSON(bytes []byte) error {
 
 	s.MailboxInclusionRules = decoded.MailboxInclusionRules
 	s.MailboxProtectionUnits = decoded.MailboxProtectionUnits
+	s.MailboxProtectionUnitsBulkAdditionJobs = decoded.MailboxProtectionUnitsBulkAdditionJobs
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.DisplayName = decoded.DisplayName
 	s.Id = decoded.Id

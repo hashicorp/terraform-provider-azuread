@@ -13,7 +13,7 @@ import (
 var _ Entity = SchemaExtension{}
 
 type SchemaExtension struct {
-	// Description for the schema extension. Supports $filter (eq).
+	// Description for the schema extension.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
 	// The appId of the application that is the owner of the schema extension. The owner of the schema definition must be

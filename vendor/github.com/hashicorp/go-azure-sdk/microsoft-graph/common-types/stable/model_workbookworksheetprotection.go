@@ -11,10 +11,10 @@ import (
 var _ Entity = WorkbookWorksheetProtection{}
 
 type WorkbookWorksheetProtection struct {
-	// Sheet protection options. Read-only.
+	// Worksheet protection options. Read-only.
 	Options *WorkbookWorksheetProtectionOptions `json:"options,omitempty"`
 
-	// Indicates if the worksheet is protected. Read-only.
+	// Indicates whether the worksheet is protected. Read-only.
 	Protected *bool `json:"protected,omitempty"`
 
 	// Fields inherited from Entity

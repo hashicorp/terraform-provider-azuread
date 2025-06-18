@@ -13,8 +13,8 @@ import (
 var _ Attachment = ReferenceAttachment{}
 
 type ReferenceAttachment struct {
-	// Specifies whether the attachment is a link to a folder. Must set this to true if sourceUrl is a link to a folder.
-	// Optional.
+	// Specifies whether the attachment is a link to a folder. You must set this property to true if sourceUrl is a link to
+	// a folder. Optional.
 	IsFolder nullable.Type[bool] `json:"isFolder,omitempty"`
 
 	// Specifies the permissions granted for the attachment by the type of provider in providerType. Possible values are:
@@ -29,8 +29,8 @@ type ReferenceAttachment struct {
 	// oneDriveConsumer, dropbox. Optional.
 	ProviderType *ReferenceAttachmentProvider `json:"providerType,omitempty"`
 
-	// URL to get the attachment content. If this is a URL to a folder, then for the folder to be displayed correctly in
-	// Outlook or Outlook on the web, set isFolder to true. Required.
+	// URL to get the attachment content. If this value is a URL to a folder, then for the folder to be displayed correctly
+	// in Outlook or Outlook on the web, set isFolder to true. Required.
 	SourceUrl nullable.Type[string] `json:"sourceUrl,omitempty"`
 
 	// Applies to only a reference attachment of an image - URL to get a thumbnail image. Use thumbnailUrl and previewUrl

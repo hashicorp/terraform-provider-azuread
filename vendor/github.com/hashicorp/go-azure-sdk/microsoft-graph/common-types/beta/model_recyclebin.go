@@ -16,6 +16,9 @@ type RecycleBin struct {
 	// List of the recycleBinItems deleted by a user.
 	Items *[]RecycleBinItem `json:"items,omitempty"`
 
+	// Settings of the recycleBin.
+	Settings *RecycleBinSettings `json:"settings,omitempty"`
+
 	// Fields inherited from BaseItem
 
 	// Identity of the user, device, or application that created the item. Read-only.
@@ -124,6 +127,7 @@ var _ json.Unmarshaler = &RecycleBin{}
 func (s *RecycleBin) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
 		Items                *[]RecycleBinItem     `json:"items,omitempty"`
+		Settings             *RecycleBinSettings   `json:"settings,omitempty"`
 		CreatedByUser        *User                 `json:"createdByUser,omitempty"`
 		CreatedDateTime      *string               `json:"createdDateTime,omitempty"`
 		Description          nullable.Type[string] `json:"description,omitempty"`
@@ -142,6 +146,7 @@ func (s *RecycleBin) UnmarshalJSON(bytes []byte) error {
 	}
 
 	s.Items = decoded.Items
+	s.Settings = decoded.Settings
 	s.CreatedByUser = decoded.CreatedByUser
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.Description = decoded.Description

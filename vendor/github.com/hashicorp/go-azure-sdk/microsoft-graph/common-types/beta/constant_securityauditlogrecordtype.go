@@ -12,6 +12,7 @@ import (
 type SecurityAuditLogRecordType string
 
 const (
+	SecurityAuditLogRecordType_AIAppInteraction                              SecurityAuditLogRecordType = "AIAppInteraction"
 	SecurityAuditLogRecordType_AeD                                           SecurityAuditLogRecordType = "AeD"
 	SecurityAuditLogRecordType_AipDiscover                                   SecurityAuditLogRecordType = "AipDiscover"
 	SecurityAuditLogRecordType_AipFileDeleted                                SecurityAuditLogRecordType = "AipFileDeleted"
@@ -47,22 +48,35 @@ const (
 	SecurityAuditLogRecordType_CDPUnifiedFeedback                            SecurityAuditLogRecordType = "CDPUnifiedFeedback"
 	SecurityAuditLogRecordType_CDPUrlClick                                   SecurityAuditLogRecordType = "CDPUrlClick"
 	SecurityAuditLogRecordType_CMImprovementActionChange                     SecurityAuditLogRecordType = "CMImprovementActionChange"
+	SecurityAuditLogRecordType_CPSOperation                                  SecurityAuditLogRecordType = "CPSOperation"
 	SecurityAuditLogRecordType_CRM                                           SecurityAuditLogRecordType = "CRM"
 	SecurityAuditLogRecordType_Campaign                                      SecurityAuditLogRecordType = "Campaign"
 	SecurityAuditLogRecordType_Case                                          SecurityAuditLogRecordType = "Case"
 	SecurityAuditLogRecordType_CaseInvestigation                             SecurityAuditLogRecordType = "CaseInvestigation"
 	SecurityAuditLogRecordType_CdpColdCrawlStatus                            SecurityAuditLogRecordType = "CdpColdCrawlStatus"
+	SecurityAuditLogRecordType_CdpComplianceDLPExchangeClassification        SecurityAuditLogRecordType = "CdpComplianceDLPExchangeClassification"
+	SecurityAuditLogRecordType_CdpComplianceDLPSharePointClassification      SecurityAuditLogRecordType = "CdpComplianceDLPSharePointClassification"
 	SecurityAuditLogRecordType_CdpContentExplorerAggregateRecord             SecurityAuditLogRecordType = "CdpContentExplorerAggregateRecord"
 	SecurityAuditLogRecordType_CdpDlpSensitive                               SecurityAuditLogRecordType = "CdpDlpSensitive"
+	SecurityAuditLogRecordType_CdpOcrBillingRecord                           SecurityAuditLogRecordType = "CdpOcrBillingRecord"
+	SecurityAuditLogRecordType_CdpOcrCostEstimatorRecord                     SecurityAuditLogRecordType = "CdpOcrCostEstimatorRecord"
+	SecurityAuditLogRecordType_CdpResourceScopeChangeEvent                   SecurityAuditLogRecordType = "CdpResourceScopeChangeEvent"
+	SecurityAuditLogRecordType_ComplianceCCExchangeExecutionResult           SecurityAuditLogRecordType = "ComplianceCCExchangeExecutionResult"
 	SecurityAuditLogRecordType_ComplianceConnector                           SecurityAuditLogRecordType = "ComplianceConnector"
+	SecurityAuditLogRecordType_ComplianceDLMExchange                         SecurityAuditLogRecordType = "ComplianceDLMExchange"
+	SecurityAuditLogRecordType_ComplianceDLMSharePoint                       SecurityAuditLogRecordType = "ComplianceDLMSharePoint"
+	SecurityAuditLogRecordType_ComplianceDLPApplications                     SecurityAuditLogRecordType = "ComplianceDLPApplications"
+	SecurityAuditLogRecordType_ComplianceDLPApplicationsClassification       SecurityAuditLogRecordType = "ComplianceDLPApplicationsClassification"
 	SecurityAuditLogRecordType_ComplianceDLPEndpoint                         SecurityAuditLogRecordType = "ComplianceDLPEndpoint"
 	SecurityAuditLogRecordType_ComplianceDLPExchange                         SecurityAuditLogRecordType = "ComplianceDLPExchange"
 	SecurityAuditLogRecordType_ComplianceDLPExchangeClassification           SecurityAuditLogRecordType = "ComplianceDLPExchangeClassification"
+	SecurityAuditLogRecordType_ComplianceDLPExchangeDiscovery                SecurityAuditLogRecordType = "ComplianceDLPExchangeDiscovery"
 	SecurityAuditLogRecordType_ComplianceDLPSharePoint                       SecurityAuditLogRecordType = "ComplianceDLPSharePoint"
 	SecurityAuditLogRecordType_ComplianceDLPSharePointClassification         SecurityAuditLogRecordType = "ComplianceDLPSharePointClassification"
 	SecurityAuditLogRecordType_ComplianceDLPSharePointClassificationExtended SecurityAuditLogRecordType = "ComplianceDLPSharePointClassificationExtended"
 	SecurityAuditLogRecordType_ComplianceSupervisionExchange                 SecurityAuditLogRecordType = "ComplianceSupervisionExchange"
 	SecurityAuditLogRecordType_ConsumptionResource                           SecurityAuditLogRecordType = "ConsumptionResource"
+	SecurityAuditLogRecordType_CopilotInteraction                            SecurityAuditLogRecordType = "CopilotInteraction"
 	SecurityAuditLogRecordType_CoreReportingSettings                         SecurityAuditLogRecordType = "CoreReportingSettings"
 	SecurityAuditLogRecordType_CortanaBriefing                               SecurityAuditLogRecordType = "CortanaBriefing"
 	SecurityAuditLogRecordType_CustomerKeyServiceEncryption                  SecurityAuditLogRecordType = "CustomerKeyServiceEncryption"
@@ -75,6 +89,7 @@ const (
 	SecurityAuditLogRecordType_Discovery                                     SecurityAuditLogRecordType = "Discovery"
 	SecurityAuditLogRecordType_DlpImportResult                               SecurityAuditLogRecordType = "DlpImportResult"
 	SecurityAuditLogRecordType_DlpSensitiveInformationType                   SecurityAuditLogRecordType = "DlpSensitiveInformationType"
+	SecurityAuditLogRecordType_Dynamics365BusinessCentral                    SecurityAuditLogRecordType = "Dynamics365BusinessCentral"
 	SecurityAuditLogRecordType_EHRConnector                                  SecurityAuditLogRecordType = "EHRConnector"
 	SecurityAuditLogRecordType_EduDataLakeDownloadOperation                  SecurityAuditLogRecordType = "EduDataLakeDownloadOperation"
 	SecurityAuditLogRecordType_ExchangeAdmin                                 SecurityAuditLogRecordType = "ExchangeAdmin"
@@ -85,6 +100,8 @@ const (
 	SecurityAuditLogRecordType_ExchangeSearch                                SecurityAuditLogRecordType = "ExchangeSearch"
 	SecurityAuditLogRecordType_FilteringAtpDetonationInfo                    SecurityAuditLogRecordType = "FilteringAtpDetonationInfo"
 	SecurityAuditLogRecordType_FilteringAttachmentInfo                       SecurityAuditLogRecordType = "FilteringAttachmentInfo"
+	SecurityAuditLogRecordType_FilteringBulkSenderInsightData                SecurityAuditLogRecordType = "FilteringBulkSenderInsightData"
+	SecurityAuditLogRecordType_FilteringBulkThresholdInsightData             SecurityAuditLogRecordType = "FilteringBulkThresholdInsightData"
 	SecurityAuditLogRecordType_FilteringDelistingMetadata                    SecurityAuditLogRecordType = "FilteringDelistingMetadata"
 	SecurityAuditLogRecordType_FilteringDocMetadata                          SecurityAuditLogRecordType = "FilteringDocMetadata"
 	SecurityAuditLogRecordType_FilteringDocScan                              SecurityAuditLogRecordType = "FilteringDocScan"
@@ -142,6 +159,7 @@ const (
 	SecurityAuditLogRecordType_MSTIC                                         SecurityAuditLogRecordType = "MSTIC"
 	SecurityAuditLogRecordType_MailSubmission                                SecurityAuditLogRecordType = "MailSubmission"
 	SecurityAuditLogRecordType_ManagedTenants                                SecurityAuditLogRecordType = "ManagedTenants"
+	SecurityAuditLogRecordType_MeshWorlds                                    SecurityAuditLogRecordType = "MeshWorlds"
 	SecurityAuditLogRecordType_Microsoft365Group                             SecurityAuditLogRecordType = "Microsoft365Group"
 	SecurityAuditLogRecordType_MicrosoftDefenderForIdentityAudit             SecurityAuditLogRecordType = "MicrosoftDefenderForIdentityAudit"
 	SecurityAuditLogRecordType_MicrosoftFlow                                 SecurityAuditLogRecordType = "MicrosoftFlow"
@@ -170,11 +188,13 @@ const (
 	SecurityAuditLogRecordType_MultiStageDisposition                         SecurityAuditLogRecordType = "MultiStageDisposition"
 	SecurityAuditLogRecordType_MyAnalyticsSettings                           SecurityAuditLogRecordType = "MyAnalyticsSettings"
 	SecurityAuditLogRecordType_OMEPortal                                     SecurityAuditLogRecordType = "OMEPortal"
+	SecurityAuditLogRecordType_OWAAuth                                       SecurityAuditLogRecordType = "OWAAuth"
 	SecurityAuditLogRecordType_OfficeNative                                  SecurityAuditLogRecordType = "OfficeNative"
 	SecurityAuditLogRecordType_OfficeScriptsRunAction                        SecurityAuditLogRecordType = "OfficeScriptsRunAction"
 	SecurityAuditLogRecordType_OnPremisesFileShareScannerDlp                 SecurityAuditLogRecordType = "OnPremisesFileShareScannerDlp"
 	SecurityAuditLogRecordType_OnPremisesSharePointScannerDlp                SecurityAuditLogRecordType = "OnPremisesSharePointScannerDlp"
 	SecurityAuditLogRecordType_OneDrive                                      SecurityAuditLogRecordType = "OneDrive"
+	SecurityAuditLogRecordType_PeopleAdminSettings                           SecurityAuditLogRecordType = "PeopleAdminSettings"
 	SecurityAuditLogRecordType_PhysicalBadgingSignal                         SecurityAuditLogRecordType = "PhysicalBadgingSignal"
 	SecurityAuditLogRecordType_PlannerCopyPlan                               SecurityAuditLogRecordType = "PlannerCopyPlan"
 	SecurityAuditLogRecordType_PlannerPlan                                   SecurityAuditLogRecordType = "PlannerPlan"
@@ -192,17 +212,20 @@ const (
 	SecurityAuditLogRecordType_PowerPagesSite                                SecurityAuditLogRecordType = "PowerPagesSite"
 	SecurityAuditLogRecordType_PowerPlatformAdminDlp                         SecurityAuditLogRecordType = "PowerPlatformAdminDlp"
 	SecurityAuditLogRecordType_PowerPlatformAdminEnvironment                 SecurityAuditLogRecordType = "PowerPlatformAdminEnvironment"
+	SecurityAuditLogRecordType_PowerPlatformAdministratorActivity            SecurityAuditLogRecordType = "PowerPlatformAdministratorActivity"
 	SecurityAuditLogRecordType_PowerPlatformLockboxResourceAccessRequest     SecurityAuditLogRecordType = "PowerPlatformLockboxResourceAccessRequest"
 	SecurityAuditLogRecordType_PowerPlatformLockboxResourceCommand           SecurityAuditLogRecordType = "PowerPlatformLockboxResourceCommand"
 	SecurityAuditLogRecordType_PowerPlatformServiceActivity                  SecurityAuditLogRecordType = "PowerPlatformServiceActivity"
 	SecurityAuditLogRecordType_PrivacyDataMatch                              SecurityAuditLogRecordType = "PrivacyDataMatch"
 	SecurityAuditLogRecordType_PrivacyDataMinimization                       SecurityAuditLogRecordType = "PrivacyDataMinimization"
 	SecurityAuditLogRecordType_PrivacyDigestEmail                            SecurityAuditLogRecordType = "PrivacyDigestEmail"
+	SecurityAuditLogRecordType_PrivacyOpenAccess                             SecurityAuditLogRecordType = "PrivacyOpenAccess"
 	SecurityAuditLogRecordType_PrivacyPortal                                 SecurityAuditLogRecordType = "PrivacyPortal"
 	SecurityAuditLogRecordType_PrivacyRemediation                            SecurityAuditLogRecordType = "PrivacyRemediation"
 	SecurityAuditLogRecordType_PrivacyRemediationAction                      SecurityAuditLogRecordType = "PrivacyRemediationAction"
 	SecurityAuditLogRecordType_PrivacyTenantAuditHistoryRecord               SecurityAuditLogRecordType = "PrivacyTenantAuditHistoryRecord"
 	SecurityAuditLogRecordType_Project                                       SecurityAuditLogRecordType = "Project"
+	SecurityAuditLogRecordType_ProjectForTheWebAssignedToMeSettings          SecurityAuditLogRecordType = "ProjectForTheWebAssignedToMeSettings"
 	SecurityAuditLogRecordType_ProjectForTheWebProject                       SecurityAuditLogRecordType = "ProjectForTheWebProject"
 	SecurityAuditLogRecordType_ProjectForTheWebProjectSettings               SecurityAuditLogRecordType = "ProjectForTheWebProjectSettings"
 	SecurityAuditLogRecordType_ProjectForTheWebRoadmap                       SecurityAuditLogRecordType = "ProjectForTheWebRoadmap"
@@ -211,6 +234,9 @@ const (
 	SecurityAuditLogRecordType_ProjectForTheWebTask                          SecurityAuditLogRecordType = "ProjectForTheWebTask"
 	SecurityAuditLogRecordType_PublicFolder                                  SecurityAuditLogRecordType = "PublicFolder"
 	SecurityAuditLogRecordType_PurviewDataMapOperation                       SecurityAuditLogRecordType = "PurviewDataMapOperation"
+	SecurityAuditLogRecordType_PurviewMCRecommendation                       SecurityAuditLogRecordType = "PurviewMCRecommendation"
+	SecurityAuditLogRecordType_PurviewMetadataPolicyOperation                SecurityAuditLogRecordType = "PurviewMetadataPolicyOperation"
+	SecurityAuditLogRecordType_PurviewPolicyOperation                        SecurityAuditLogRecordType = "PurviewPolicyOperation"
 	SecurityAuditLogRecordType_Quarantine                                    SecurityAuditLogRecordType = "Quarantine"
 	SecurityAuditLogRecordType_QuarantineMetadata                            SecurityAuditLogRecordType = "QuarantineMetadata"
 	SecurityAuditLogRecordType_RecordsManagement                             SecurityAuditLogRecordType = "RecordsManagement"
@@ -229,6 +255,7 @@ const (
 	SecurityAuditLogRecordType_SharePointAppPermissionOperation              SecurityAuditLogRecordType = "SharePointAppPermissionOperation"
 	SecurityAuditLogRecordType_SharePointCommentOperation                    SecurityAuditLogRecordType = "SharePointCommentOperation"
 	SecurityAuditLogRecordType_SharePointContentTypeOperation                SecurityAuditLogRecordType = "SharePointContentTypeOperation"
+	SecurityAuditLogRecordType_SharePointESignature                          SecurityAuditLogRecordType = "SharePointESignature"
 	SecurityAuditLogRecordType_SharePointFieldOperation                      SecurityAuditLogRecordType = "SharePointFieldOperation"
 	SecurityAuditLogRecordType_SharePointFileOperation                       SecurityAuditLogRecordType = "SharePointFileOperation"
 	SecurityAuditLogRecordType_SharePointListItemOperation                   SecurityAuditLogRecordType = "SharePointListItemOperation"
@@ -252,6 +279,7 @@ const (
 	SecurityAuditLogRecordType_ThreatIntelligenceUrl                         SecurityAuditLogRecordType = "ThreatIntelligenceUrl"
 	SecurityAuditLogRecordType_TimeTravelFilteringDocMetadata                SecurityAuditLogRecordType = "TimeTravelFilteringDocMetadata"
 	SecurityAuditLogRecordType_TimeTravelFilteringDocScan                    SecurityAuditLogRecordType = "TimeTravelFilteringDocScan"
+	SecurityAuditLogRecordType_UAMOperation                                  SecurityAuditLogRecordType = "UAMOperation"
 	SecurityAuditLogRecordType_UnifiedSimulationMatchedItem                  SecurityAuditLogRecordType = "UnifiedSimulationMatchedItem"
 	SecurityAuditLogRecordType_UnifiedSimulationSummary                      SecurityAuditLogRecordType = "UnifiedSimulationSummary"
 	SecurityAuditLogRecordType_UpdateQuarantineMetadata                      SecurityAuditLogRecordType = "UpdateQuarantineMetadata"
@@ -260,14 +288,22 @@ const (
 	SecurityAuditLogRecordType_VfamDeletePolicy                              SecurityAuditLogRecordType = "VfamDeletePolicy"
 	SecurityAuditLogRecordType_VfamUpdatePolicy                              SecurityAuditLogRecordType = "VfamUpdatePolicy"
 	SecurityAuditLogRecordType_VivaGoals                                     SecurityAuditLogRecordType = "VivaGoals"
+	SecurityAuditLogRecordType_VivaLearning                                  SecurityAuditLogRecordType = "VivaLearning"
+	SecurityAuditLogRecordType_VivaLearningAdmin                             SecurityAuditLogRecordType = "VivaLearningAdmin"
+	SecurityAuditLogRecordType_VivaPulseAdmin                                SecurityAuditLogRecordType = "VivaPulseAdmin"
+	SecurityAuditLogRecordType_VivaPulseOrganizer                            SecurityAuditLogRecordType = "VivaPulseOrganizer"
+	SecurityAuditLogRecordType_VivaPulseReport                               SecurityAuditLogRecordType = "VivaPulseReport"
+	SecurityAuditLogRecordType_VivaPulseResponse                             SecurityAuditLogRecordType = "VivaPulseResponse"
 	SecurityAuditLogRecordType_WDATPAlerts                                   SecurityAuditLogRecordType = "WDATPAlerts"
 	SecurityAuditLogRecordType_WebpageActivityEndpoint                       SecurityAuditLogRecordType = "WebpageActivityEndpoint"
+	SecurityAuditLogRecordType_Windows365CustomerLockbox                     SecurityAuditLogRecordType = "Windows365CustomerLockbox"
 	SecurityAuditLogRecordType_WorkplaceAnalytics                            SecurityAuditLogRecordType = "WorkplaceAnalytics"
 	SecurityAuditLogRecordType_Yammer                                        SecurityAuditLogRecordType = "Yammer"
 )
 
 func PossibleValuesForSecurityAuditLogRecordType() []string {
 	return []string{
+		string(SecurityAuditLogRecordType_AIAppInteraction),
 		string(SecurityAuditLogRecordType_AeD),
 		string(SecurityAuditLogRecordType_AipDiscover),
 		string(SecurityAuditLogRecordType_AipFileDeleted),
@@ -303,22 +339,35 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_CDPUnifiedFeedback),
 		string(SecurityAuditLogRecordType_CDPUrlClick),
 		string(SecurityAuditLogRecordType_CMImprovementActionChange),
+		string(SecurityAuditLogRecordType_CPSOperation),
 		string(SecurityAuditLogRecordType_CRM),
 		string(SecurityAuditLogRecordType_Campaign),
 		string(SecurityAuditLogRecordType_Case),
 		string(SecurityAuditLogRecordType_CaseInvestigation),
 		string(SecurityAuditLogRecordType_CdpColdCrawlStatus),
+		string(SecurityAuditLogRecordType_CdpComplianceDLPExchangeClassification),
+		string(SecurityAuditLogRecordType_CdpComplianceDLPSharePointClassification),
 		string(SecurityAuditLogRecordType_CdpContentExplorerAggregateRecord),
 		string(SecurityAuditLogRecordType_CdpDlpSensitive),
+		string(SecurityAuditLogRecordType_CdpOcrBillingRecord),
+		string(SecurityAuditLogRecordType_CdpOcrCostEstimatorRecord),
+		string(SecurityAuditLogRecordType_CdpResourceScopeChangeEvent),
+		string(SecurityAuditLogRecordType_ComplianceCCExchangeExecutionResult),
 		string(SecurityAuditLogRecordType_ComplianceConnector),
+		string(SecurityAuditLogRecordType_ComplianceDLMExchange),
+		string(SecurityAuditLogRecordType_ComplianceDLMSharePoint),
+		string(SecurityAuditLogRecordType_ComplianceDLPApplications),
+		string(SecurityAuditLogRecordType_ComplianceDLPApplicationsClassification),
 		string(SecurityAuditLogRecordType_ComplianceDLPEndpoint),
 		string(SecurityAuditLogRecordType_ComplianceDLPExchange),
 		string(SecurityAuditLogRecordType_ComplianceDLPExchangeClassification),
+		string(SecurityAuditLogRecordType_ComplianceDLPExchangeDiscovery),
 		string(SecurityAuditLogRecordType_ComplianceDLPSharePoint),
 		string(SecurityAuditLogRecordType_ComplianceDLPSharePointClassification),
 		string(SecurityAuditLogRecordType_ComplianceDLPSharePointClassificationExtended),
 		string(SecurityAuditLogRecordType_ComplianceSupervisionExchange),
 		string(SecurityAuditLogRecordType_ConsumptionResource),
+		string(SecurityAuditLogRecordType_CopilotInteraction),
 		string(SecurityAuditLogRecordType_CoreReportingSettings),
 		string(SecurityAuditLogRecordType_CortanaBriefing),
 		string(SecurityAuditLogRecordType_CustomerKeyServiceEncryption),
@@ -331,6 +380,7 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_Discovery),
 		string(SecurityAuditLogRecordType_DlpImportResult),
 		string(SecurityAuditLogRecordType_DlpSensitiveInformationType),
+		string(SecurityAuditLogRecordType_Dynamics365BusinessCentral),
 		string(SecurityAuditLogRecordType_EHRConnector),
 		string(SecurityAuditLogRecordType_EduDataLakeDownloadOperation),
 		string(SecurityAuditLogRecordType_ExchangeAdmin),
@@ -341,6 +391,8 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_ExchangeSearch),
 		string(SecurityAuditLogRecordType_FilteringAtpDetonationInfo),
 		string(SecurityAuditLogRecordType_FilteringAttachmentInfo),
+		string(SecurityAuditLogRecordType_FilteringBulkSenderInsightData),
+		string(SecurityAuditLogRecordType_FilteringBulkThresholdInsightData),
 		string(SecurityAuditLogRecordType_FilteringDelistingMetadata),
 		string(SecurityAuditLogRecordType_FilteringDocMetadata),
 		string(SecurityAuditLogRecordType_FilteringDocScan),
@@ -398,6 +450,7 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_MSTIC),
 		string(SecurityAuditLogRecordType_MailSubmission),
 		string(SecurityAuditLogRecordType_ManagedTenants),
+		string(SecurityAuditLogRecordType_MeshWorlds),
 		string(SecurityAuditLogRecordType_Microsoft365Group),
 		string(SecurityAuditLogRecordType_MicrosoftDefenderForIdentityAudit),
 		string(SecurityAuditLogRecordType_MicrosoftFlow),
@@ -426,11 +479,13 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_MultiStageDisposition),
 		string(SecurityAuditLogRecordType_MyAnalyticsSettings),
 		string(SecurityAuditLogRecordType_OMEPortal),
+		string(SecurityAuditLogRecordType_OWAAuth),
 		string(SecurityAuditLogRecordType_OfficeNative),
 		string(SecurityAuditLogRecordType_OfficeScriptsRunAction),
 		string(SecurityAuditLogRecordType_OnPremisesFileShareScannerDlp),
 		string(SecurityAuditLogRecordType_OnPremisesSharePointScannerDlp),
 		string(SecurityAuditLogRecordType_OneDrive),
+		string(SecurityAuditLogRecordType_PeopleAdminSettings),
 		string(SecurityAuditLogRecordType_PhysicalBadgingSignal),
 		string(SecurityAuditLogRecordType_PlannerCopyPlan),
 		string(SecurityAuditLogRecordType_PlannerPlan),
@@ -448,17 +503,20 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_PowerPagesSite),
 		string(SecurityAuditLogRecordType_PowerPlatformAdminDlp),
 		string(SecurityAuditLogRecordType_PowerPlatformAdminEnvironment),
+		string(SecurityAuditLogRecordType_PowerPlatformAdministratorActivity),
 		string(SecurityAuditLogRecordType_PowerPlatformLockboxResourceAccessRequest),
 		string(SecurityAuditLogRecordType_PowerPlatformLockboxResourceCommand),
 		string(SecurityAuditLogRecordType_PowerPlatformServiceActivity),
 		string(SecurityAuditLogRecordType_PrivacyDataMatch),
 		string(SecurityAuditLogRecordType_PrivacyDataMinimization),
 		string(SecurityAuditLogRecordType_PrivacyDigestEmail),
+		string(SecurityAuditLogRecordType_PrivacyOpenAccess),
 		string(SecurityAuditLogRecordType_PrivacyPortal),
 		string(SecurityAuditLogRecordType_PrivacyRemediation),
 		string(SecurityAuditLogRecordType_PrivacyRemediationAction),
 		string(SecurityAuditLogRecordType_PrivacyTenantAuditHistoryRecord),
 		string(SecurityAuditLogRecordType_Project),
+		string(SecurityAuditLogRecordType_ProjectForTheWebAssignedToMeSettings),
 		string(SecurityAuditLogRecordType_ProjectForTheWebProject),
 		string(SecurityAuditLogRecordType_ProjectForTheWebProjectSettings),
 		string(SecurityAuditLogRecordType_ProjectForTheWebRoadmap),
@@ -467,6 +525,9 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_ProjectForTheWebTask),
 		string(SecurityAuditLogRecordType_PublicFolder),
 		string(SecurityAuditLogRecordType_PurviewDataMapOperation),
+		string(SecurityAuditLogRecordType_PurviewMCRecommendation),
+		string(SecurityAuditLogRecordType_PurviewMetadataPolicyOperation),
+		string(SecurityAuditLogRecordType_PurviewPolicyOperation),
 		string(SecurityAuditLogRecordType_Quarantine),
 		string(SecurityAuditLogRecordType_QuarantineMetadata),
 		string(SecurityAuditLogRecordType_RecordsManagement),
@@ -485,6 +546,7 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_SharePointAppPermissionOperation),
 		string(SecurityAuditLogRecordType_SharePointCommentOperation),
 		string(SecurityAuditLogRecordType_SharePointContentTypeOperation),
+		string(SecurityAuditLogRecordType_SharePointESignature),
 		string(SecurityAuditLogRecordType_SharePointFieldOperation),
 		string(SecurityAuditLogRecordType_SharePointFileOperation),
 		string(SecurityAuditLogRecordType_SharePointListItemOperation),
@@ -508,6 +570,7 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_ThreatIntelligenceUrl),
 		string(SecurityAuditLogRecordType_TimeTravelFilteringDocMetadata),
 		string(SecurityAuditLogRecordType_TimeTravelFilteringDocScan),
+		string(SecurityAuditLogRecordType_UAMOperation),
 		string(SecurityAuditLogRecordType_UnifiedSimulationMatchedItem),
 		string(SecurityAuditLogRecordType_UnifiedSimulationSummary),
 		string(SecurityAuditLogRecordType_UpdateQuarantineMetadata),
@@ -516,8 +579,15 @@ func PossibleValuesForSecurityAuditLogRecordType() []string {
 		string(SecurityAuditLogRecordType_VfamDeletePolicy),
 		string(SecurityAuditLogRecordType_VfamUpdatePolicy),
 		string(SecurityAuditLogRecordType_VivaGoals),
+		string(SecurityAuditLogRecordType_VivaLearning),
+		string(SecurityAuditLogRecordType_VivaLearningAdmin),
+		string(SecurityAuditLogRecordType_VivaPulseAdmin),
+		string(SecurityAuditLogRecordType_VivaPulseOrganizer),
+		string(SecurityAuditLogRecordType_VivaPulseReport),
+		string(SecurityAuditLogRecordType_VivaPulseResponse),
 		string(SecurityAuditLogRecordType_WDATPAlerts),
 		string(SecurityAuditLogRecordType_WebpageActivityEndpoint),
+		string(SecurityAuditLogRecordType_Windows365CustomerLockbox),
 		string(SecurityAuditLogRecordType_WorkplaceAnalytics),
 		string(SecurityAuditLogRecordType_Yammer),
 	}
@@ -538,6 +608,7 @@ func (s *SecurityAuditLogRecordType) UnmarshalJSON(bytes []byte) error {
 
 func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType, error) {
 	vals := map[string]SecurityAuditLogRecordType{
+		"aiappinteraction":                              SecurityAuditLogRecordType_AIAppInteraction,
 		"aed":                                           SecurityAuditLogRecordType_AeD,
 		"aipdiscover":                                   SecurityAuditLogRecordType_AipDiscover,
 		"aipfiledeleted":                                SecurityAuditLogRecordType_AipFileDeleted,
@@ -573,22 +644,35 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"cdpunifiedfeedback":                            SecurityAuditLogRecordType_CDPUnifiedFeedback,
 		"cdpurlclick":                                   SecurityAuditLogRecordType_CDPUrlClick,
 		"cmimprovementactionchange":                     SecurityAuditLogRecordType_CMImprovementActionChange,
+		"cpsoperation":                                  SecurityAuditLogRecordType_CPSOperation,
 		"crm":                                           SecurityAuditLogRecordType_CRM,
 		"campaign":                                      SecurityAuditLogRecordType_Campaign,
 		"case":                                          SecurityAuditLogRecordType_Case,
 		"caseinvestigation":                             SecurityAuditLogRecordType_CaseInvestigation,
 		"cdpcoldcrawlstatus":                            SecurityAuditLogRecordType_CdpColdCrawlStatus,
+		"cdpcompliancedlpexchangeclassification":        SecurityAuditLogRecordType_CdpComplianceDLPExchangeClassification,
+		"cdpcompliancedlpsharepointclassification":      SecurityAuditLogRecordType_CdpComplianceDLPSharePointClassification,
 		"cdpcontentexploreraggregaterecord":             SecurityAuditLogRecordType_CdpContentExplorerAggregateRecord,
 		"cdpdlpsensitive":                               SecurityAuditLogRecordType_CdpDlpSensitive,
+		"cdpocrbillingrecord":                           SecurityAuditLogRecordType_CdpOcrBillingRecord,
+		"cdpocrcostestimatorrecord":                     SecurityAuditLogRecordType_CdpOcrCostEstimatorRecord,
+		"cdpresourcescopechangeevent":                   SecurityAuditLogRecordType_CdpResourceScopeChangeEvent,
+		"complianceccexchangeexecutionresult":           SecurityAuditLogRecordType_ComplianceCCExchangeExecutionResult,
 		"complianceconnector":                           SecurityAuditLogRecordType_ComplianceConnector,
+		"compliancedlmexchange":                         SecurityAuditLogRecordType_ComplianceDLMExchange,
+		"compliancedlmsharepoint":                       SecurityAuditLogRecordType_ComplianceDLMSharePoint,
+		"compliancedlpapplications":                     SecurityAuditLogRecordType_ComplianceDLPApplications,
+		"compliancedlpapplicationsclassification":       SecurityAuditLogRecordType_ComplianceDLPApplicationsClassification,
 		"compliancedlpendpoint":                         SecurityAuditLogRecordType_ComplianceDLPEndpoint,
 		"compliancedlpexchange":                         SecurityAuditLogRecordType_ComplianceDLPExchange,
 		"compliancedlpexchangeclassification":           SecurityAuditLogRecordType_ComplianceDLPExchangeClassification,
+		"compliancedlpexchangediscovery":                SecurityAuditLogRecordType_ComplianceDLPExchangeDiscovery,
 		"compliancedlpsharepoint":                       SecurityAuditLogRecordType_ComplianceDLPSharePoint,
 		"compliancedlpsharepointclassification":         SecurityAuditLogRecordType_ComplianceDLPSharePointClassification,
 		"compliancedlpsharepointclassificationextended": SecurityAuditLogRecordType_ComplianceDLPSharePointClassificationExtended,
 		"compliancesupervisionexchange":                 SecurityAuditLogRecordType_ComplianceSupervisionExchange,
 		"consumptionresource":                           SecurityAuditLogRecordType_ConsumptionResource,
+		"copilotinteraction":                            SecurityAuditLogRecordType_CopilotInteraction,
 		"corereportingsettings":                         SecurityAuditLogRecordType_CoreReportingSettings,
 		"cortanabriefing":                               SecurityAuditLogRecordType_CortanaBriefing,
 		"customerkeyserviceencryption":                  SecurityAuditLogRecordType_CustomerKeyServiceEncryption,
@@ -601,6 +685,7 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"discovery":                                     SecurityAuditLogRecordType_Discovery,
 		"dlpimportresult":                               SecurityAuditLogRecordType_DlpImportResult,
 		"dlpsensitiveinformationtype":                   SecurityAuditLogRecordType_DlpSensitiveInformationType,
+		"dynamics365businesscentral":                    SecurityAuditLogRecordType_Dynamics365BusinessCentral,
 		"ehrconnector":                                  SecurityAuditLogRecordType_EHRConnector,
 		"edudatalakedownloadoperation":                  SecurityAuditLogRecordType_EduDataLakeDownloadOperation,
 		"exchangeadmin":                                 SecurityAuditLogRecordType_ExchangeAdmin,
@@ -611,6 +696,8 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"exchangesearch":                                SecurityAuditLogRecordType_ExchangeSearch,
 		"filteringatpdetonationinfo":                    SecurityAuditLogRecordType_FilteringAtpDetonationInfo,
 		"filteringattachmentinfo":                       SecurityAuditLogRecordType_FilteringAttachmentInfo,
+		"filteringbulksenderinsightdata":                SecurityAuditLogRecordType_FilteringBulkSenderInsightData,
+		"filteringbulkthresholdinsightdata":             SecurityAuditLogRecordType_FilteringBulkThresholdInsightData,
 		"filteringdelistingmetadata":                    SecurityAuditLogRecordType_FilteringDelistingMetadata,
 		"filteringdocmetadata":                          SecurityAuditLogRecordType_FilteringDocMetadata,
 		"filteringdocscan":                              SecurityAuditLogRecordType_FilteringDocScan,
@@ -668,6 +755,7 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"mstic":                                         SecurityAuditLogRecordType_MSTIC,
 		"mailsubmission":                                SecurityAuditLogRecordType_MailSubmission,
 		"managedtenants":                                SecurityAuditLogRecordType_ManagedTenants,
+		"meshworlds":                                    SecurityAuditLogRecordType_MeshWorlds,
 		"microsoft365group":                             SecurityAuditLogRecordType_Microsoft365Group,
 		"microsoftdefenderforidentityaudit":             SecurityAuditLogRecordType_MicrosoftDefenderForIdentityAudit,
 		"microsoftflow":                                 SecurityAuditLogRecordType_MicrosoftFlow,
@@ -696,11 +784,13 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"multistagedisposition":                         SecurityAuditLogRecordType_MultiStageDisposition,
 		"myanalyticssettings":                           SecurityAuditLogRecordType_MyAnalyticsSettings,
 		"omeportal":                                     SecurityAuditLogRecordType_OMEPortal,
+		"owaauth":                                       SecurityAuditLogRecordType_OWAAuth,
 		"officenative":                                  SecurityAuditLogRecordType_OfficeNative,
 		"officescriptsrunaction":                        SecurityAuditLogRecordType_OfficeScriptsRunAction,
 		"onpremisesfilesharescannerdlp":                 SecurityAuditLogRecordType_OnPremisesFileShareScannerDlp,
 		"onpremisessharepointscannerdlp":                SecurityAuditLogRecordType_OnPremisesSharePointScannerDlp,
 		"onedrive":                                      SecurityAuditLogRecordType_OneDrive,
+		"peopleadminsettings":                           SecurityAuditLogRecordType_PeopleAdminSettings,
 		"physicalbadgingsignal":                         SecurityAuditLogRecordType_PhysicalBadgingSignal,
 		"plannercopyplan":                               SecurityAuditLogRecordType_PlannerCopyPlan,
 		"plannerplan":                                   SecurityAuditLogRecordType_PlannerPlan,
@@ -718,17 +808,20 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"powerpagessite":                                SecurityAuditLogRecordType_PowerPagesSite,
 		"powerplatformadmindlp":                         SecurityAuditLogRecordType_PowerPlatformAdminDlp,
 		"powerplatformadminenvironment":                 SecurityAuditLogRecordType_PowerPlatformAdminEnvironment,
+		"powerplatformadministratoractivity":            SecurityAuditLogRecordType_PowerPlatformAdministratorActivity,
 		"powerplatformlockboxresourceaccessrequest":     SecurityAuditLogRecordType_PowerPlatformLockboxResourceAccessRequest,
 		"powerplatformlockboxresourcecommand":           SecurityAuditLogRecordType_PowerPlatformLockboxResourceCommand,
 		"powerplatformserviceactivity":                  SecurityAuditLogRecordType_PowerPlatformServiceActivity,
 		"privacydatamatch":                              SecurityAuditLogRecordType_PrivacyDataMatch,
 		"privacydataminimization":                       SecurityAuditLogRecordType_PrivacyDataMinimization,
 		"privacydigestemail":                            SecurityAuditLogRecordType_PrivacyDigestEmail,
+		"privacyopenaccess":                             SecurityAuditLogRecordType_PrivacyOpenAccess,
 		"privacyportal":                                 SecurityAuditLogRecordType_PrivacyPortal,
 		"privacyremediation":                            SecurityAuditLogRecordType_PrivacyRemediation,
 		"privacyremediationaction":                      SecurityAuditLogRecordType_PrivacyRemediationAction,
 		"privacytenantaudithistoryrecord":               SecurityAuditLogRecordType_PrivacyTenantAuditHistoryRecord,
 		"project":                                       SecurityAuditLogRecordType_Project,
+		"projectforthewebassignedtomesettings":          SecurityAuditLogRecordType_ProjectForTheWebAssignedToMeSettings,
 		"projectforthewebproject":                       SecurityAuditLogRecordType_ProjectForTheWebProject,
 		"projectforthewebprojectsettings":               SecurityAuditLogRecordType_ProjectForTheWebProjectSettings,
 		"projectforthewebroadmap":                       SecurityAuditLogRecordType_ProjectForTheWebRoadmap,
@@ -737,6 +830,9 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"projectforthewebtask":                          SecurityAuditLogRecordType_ProjectForTheWebTask,
 		"publicfolder":                                  SecurityAuditLogRecordType_PublicFolder,
 		"purviewdatamapoperation":                       SecurityAuditLogRecordType_PurviewDataMapOperation,
+		"purviewmcrecommendation":                       SecurityAuditLogRecordType_PurviewMCRecommendation,
+		"purviewmetadatapolicyoperation":                SecurityAuditLogRecordType_PurviewMetadataPolicyOperation,
+		"purviewpolicyoperation":                        SecurityAuditLogRecordType_PurviewPolicyOperation,
 		"quarantine":                                    SecurityAuditLogRecordType_Quarantine,
 		"quarantinemetadata":                            SecurityAuditLogRecordType_QuarantineMetadata,
 		"recordsmanagement":                             SecurityAuditLogRecordType_RecordsManagement,
@@ -755,6 +851,7 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"sharepointapppermissionoperation":              SecurityAuditLogRecordType_SharePointAppPermissionOperation,
 		"sharepointcommentoperation":                    SecurityAuditLogRecordType_SharePointCommentOperation,
 		"sharepointcontenttypeoperation":                SecurityAuditLogRecordType_SharePointContentTypeOperation,
+		"sharepointesignature":                          SecurityAuditLogRecordType_SharePointESignature,
 		"sharepointfieldoperation":                      SecurityAuditLogRecordType_SharePointFieldOperation,
 		"sharepointfileoperation":                       SecurityAuditLogRecordType_SharePointFileOperation,
 		"sharepointlistitemoperation":                   SecurityAuditLogRecordType_SharePointListItemOperation,
@@ -778,6 +875,7 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"threatintelligenceurl":                         SecurityAuditLogRecordType_ThreatIntelligenceUrl,
 		"timetravelfilteringdocmetadata":                SecurityAuditLogRecordType_TimeTravelFilteringDocMetadata,
 		"timetravelfilteringdocscan":                    SecurityAuditLogRecordType_TimeTravelFilteringDocScan,
+		"uamoperation":                                  SecurityAuditLogRecordType_UAMOperation,
 		"unifiedsimulationmatcheditem":                  SecurityAuditLogRecordType_UnifiedSimulationMatchedItem,
 		"unifiedsimulationsummary":                      SecurityAuditLogRecordType_UnifiedSimulationSummary,
 		"updatequarantinemetadata":                      SecurityAuditLogRecordType_UpdateQuarantineMetadata,
@@ -786,8 +884,15 @@ func parseSecurityAuditLogRecordType(input string) (*SecurityAuditLogRecordType,
 		"vfamdeletepolicy":                              SecurityAuditLogRecordType_VfamDeletePolicy,
 		"vfamupdatepolicy":                              SecurityAuditLogRecordType_VfamUpdatePolicy,
 		"vivagoals":                                     SecurityAuditLogRecordType_VivaGoals,
+		"vivalearning":                                  SecurityAuditLogRecordType_VivaLearning,
+		"vivalearningadmin":                             SecurityAuditLogRecordType_VivaLearningAdmin,
+		"vivapulseadmin":                                SecurityAuditLogRecordType_VivaPulseAdmin,
+		"vivapulseorganizer":                            SecurityAuditLogRecordType_VivaPulseOrganizer,
+		"vivapulsereport":                               SecurityAuditLogRecordType_VivaPulseReport,
+		"vivapulseresponse":                             SecurityAuditLogRecordType_VivaPulseResponse,
 		"wdatpalerts":                                   SecurityAuditLogRecordType_WDATPAlerts,
 		"webpageactivityendpoint":                       SecurityAuditLogRecordType_WebpageActivityEndpoint,
+		"windows365customerlockbox":                     SecurityAuditLogRecordType_Windows365CustomerLockbox,
 		"workplaceanalytics":                            SecurityAuditLogRecordType_WorkplaceAnalytics,
 		"yammer":                                        SecurityAuditLogRecordType_Yammer,
 	}

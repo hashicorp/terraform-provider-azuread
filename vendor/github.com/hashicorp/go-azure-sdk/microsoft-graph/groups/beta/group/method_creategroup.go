@@ -47,11 +47,11 @@ func (o CreateGroupOperationOptions) ToQuery() *client.QueryParams {
 	return &out
 }
 
-// CreateGroup - Upsert group. Create a new group object if it doesn't exist, or update the properties of an existing
-// group object. You can create or update the following types of group: By default, this operation returns only a subset
-// of the properties for each group. For a list of properties that are returned by default, see the Properties section
-// of the group resource. To get properties that are not returned by default, do a GET operation and specify the
-// properties in a $select OData query option.
+// CreateGroup - Create group. Create a new group as specified in the request body. You can create one of the following
+// groups: This operation returns by default only a subset of the properties for each group. These default properties
+// are noted in the Properties section. To get properties that are not returned by default, do a GET operation and
+// specify the properties in a $select OData query option. Note: To create a team, first create a group then add a team
+// to it, see create team.
 func (c GroupClient) CreateGroup(ctx context.Context, input beta.Group, options CreateGroupOperationOptions) (result CreateGroupOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

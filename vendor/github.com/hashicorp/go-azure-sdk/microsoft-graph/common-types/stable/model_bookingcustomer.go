@@ -13,10 +13,12 @@ import (
 var _ BookingCustomerBase = BookingCustomer{}
 
 type BookingCustomer struct {
-	// Addresses associated with the customer. The attribute type of physicalAddress is not supported in v1.0. Internally we
+	// Addresses associated with the customer. The attribute type of physicalAddress isn't supported in v1.0. Internally we
 	// map the addresses to the type others.
 	Addresses *[]PhysicalAddress `json:"addresses,omitempty"`
 
+	// The date, time, and time zone when the customer was created. The timestamp type represents date and time information
+	// using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
 	// The name of the customer.
@@ -25,9 +27,12 @@ type BookingCustomer struct {
 	// The SMTP address of the customer.
 	EmailAddress nullable.Type[string] `json:"emailAddress,omitempty"`
 
+	// The date, time, and time zone when the customer was last updated. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
 	LastUpdatedDateTime nullable.Type[string] `json:"lastUpdatedDateTime,omitempty"`
 
-	// Phone numbers associated with the customer, including home, business and mobile numbers.
+	// Phone numbers associated with the customer, including home, business, and mobile numbers.
 	Phones *[]Phone `json:"phones,omitempty"`
 
 	// Fields inherited from Entity

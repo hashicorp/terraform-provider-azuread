@@ -14,10 +14,10 @@ type ChatMessageReactionIdentitySet struct {
 
 	// Fields inherited from IdentitySet
 
-	// Optional. The application associated with this action.
+	// The Identity of the Application. This property is read-only.
 	Application Identity `json:"application"`
 
-	// Optional. The device associated with this action.
+	// The Identity of the Device. This property is read-only.
 	Device Identity `json:"device"`
 
 	// The OData ID of this entity
@@ -26,7 +26,7 @@ type ChatMessageReactionIdentitySet struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// Optional. The user associated with this action.
+	// The Identity of the User. This property is read-only.
 	User Identity `json:"user"`
 
 	// Model Behaviors

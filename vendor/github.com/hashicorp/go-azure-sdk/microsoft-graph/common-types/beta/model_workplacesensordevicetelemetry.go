@@ -16,8 +16,14 @@ type WorkplaceSensorDeviceTelemetry struct {
 	// identifier of the device.
 	DeviceId *string `json:"deviceId,omitempty"`
 
+	// The extra values associated with badge signals.
+	EventValue *WorkplaceSensorEventValue `json:"eventValue,omitempty"`
+
 	// The value of the sensor as an integer. Use it for sensors that report numerical values, such as people count.
 	IntValue nullable.Type[int64] `json:"intValue,omitempty"`
+
+	// The additional information to indicate the location of the device.
+	LocationHint nullable.Type[string] `json:"locationHint,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`

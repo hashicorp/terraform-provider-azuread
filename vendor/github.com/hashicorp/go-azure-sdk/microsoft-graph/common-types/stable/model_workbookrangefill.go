@@ -13,8 +13,8 @@ import (
 var _ Entity = WorkbookRangeFill{}
 
 type WorkbookRangeFill struct {
-	// HTML color code representing the color of the border line, of the form #RRGGBB (for example 'FFA500') or as a named
-	// HTML color (for example 'orange')
+	// HTML color code representing the color of the border line. Can either be of the form #RRGGBB, for example 'FFA500',
+	// or be a named HTML color, for example 'orange'.
 	Color nullable.Type[string] `json:"color,omitempty"`
 
 	// Fields inherited from Entity

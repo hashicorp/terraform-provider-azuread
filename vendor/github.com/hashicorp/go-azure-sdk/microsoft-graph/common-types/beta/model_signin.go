@@ -13,19 +13,25 @@ import (
 var _ Entity = SignIn{}
 
 type SignIn struct {
+	// Represents details about the agentic sign-in. Includes the type of agent as well as parentAppID in some cases
+	Agent *AgenticAgentSignIn `json:"agent,omitempty"`
+
 	// The application name displayed in the Microsoft Entra admin center. Supports $filter (eq, startsWith).
 	AppDisplayName nullable.Type[string] `json:"appDisplayName,omitempty"`
 
 	// The application identifier in Microsoft Entra ID. Supports $filter (eq).
 	AppId nullable.Type[string] `json:"appId,omitempty"`
 
+	// The identifier of the tenant that owns the client application. Supports $filter (eq).
+	AppOwnerTenantId nullable.Type[string] `json:"appOwnerTenantId,omitempty"`
+
 	// Token protection creates a cryptographically secure tie between the token and the device it's issued to. This field
 	// indicates whether the app token was bound to the device.
 	AppTokenProtectionStatus *TokenProtectionStatus `json:"appTokenProtectionStatus,omitempty"`
 
 	// A list of conditional access policies that the corresponding sign-in activity triggers. Apps need more Conditional
-	// Access-related privileges to read the details of this property. For more information, see Viewing applied conditional
-	// access (CA) policies in sign-ins.
+	// Access-related privileges to read the details of this property. For more information, see Permissions for viewing
+	// applied conditional access (CA) policies in sign-ins.
 	AppliedConditionalAccessPolicies *[]AppliedConditionalAccessPolicy `json:"appliedConditionalAccessPolicies,omitempty"`
 
 	// Detailed information about the listeners, such as Azure Logic Apps and Azure Functions, which the corresponding
@@ -54,9 +60,17 @@ type SignIn struct {
 	AuthenticationProcessingDetails *[]KeyValue `json:"authenticationProcessingDetails,omitempty"`
 
 	// Lists the protocol type or grant type used in the authentication. The possible values are: none, oAuth2, ropc,
-	// wsFederation, saml20, deviceCode, unknownFutureValue, authenticationTransfer, nativeAuth. Use none for all
-	// authentications that don't have a specific value in that list. You must use the Prefer: include-unknown-enum-members
-	// request header to get the following values in this evolvable enum: authenticationTransfer, nativeAuth.
+	// wsFederation, saml20, deviceCode, unknownFutureValue, authenticationTransfer, nativeAuth,
+	// implicitAccessTokenAndGetResponseMode, implicitIdTokenAndGetResponseMode, implicitAccessTokenAndPostResponseMode,
+	// implicitIdTokenAndPostResponseMode, authorizationCodeWithoutPkce, authorizationCodeWithPkce, clientCredentials,
+	// refreshTokenGrant, encryptedAuthorizeResponse, directUserGrant, kerberos, prtGrant, seamlessSso, prtBrokerBased,
+	// prtNonBrokerBased, onBehalfOf, samlOnBehalfOf. Use the Prefer: include-unknown-enum-members request header to get the
+	// following values from this {evolvable
+	// enum}(/graph/best-practices-concept#handling-future-members-in-evolvable-enumerations): authenticationTransfer ,
+	// nativeAuth , implicitAccessTokenAndGetResponseMode , implicitIdTokenAndGetResponseMode ,
+	// implicitAccessTokenAndPostResponseMode , implicitIdTokenAndPostResponseMode , authorizationCodeWithoutPkce ,
+	// authorizationCodeWithPkce , clientCredentials , refreshTokenGrant , encryptedAuthorizeResponse , directUserGrant ,
+	// kerberos , prtGrant , seamlessSso , prtBrokerBased , prtNonBrokerBased , onBehalfOf , samlOnBehalfOf.
 	AuthenticationProtocol *ProtocolType `json:"authenticationProtocol,omitempty"`
 
 	// This holds the highest level of authentication needed through all the sign-in steps, for sign-in to succeed. Supports
@@ -83,16 +97,15 @@ type SignIn struct {
 	// federatedIdentityCredential, managedIdentity, certificate, unknownFutureValue.
 	ClientCredentialType *ClientCredentialType `json:"clientCredentialType,omitempty"`
 
-	// A list that indicates the audience that was evaluated by Conditional Access during a sign-in event. Supports $filter
-	// (eq).
-	ConditionalAccessAudiences *[]ConditionalAccessAudience `json:"conditionalAccessAudiences,omitempty"`
+	// A list that indicates the audience that Conditional Access evaluated during a sign-in event. Supports $filter (eq).
+	ConditionalAccessAudiences *[]string `json:"conditionalAccessAudiences,omitempty"`
 
 	// The status of the conditional access policy triggered. Possible values: success, failure, notApplied, or
 	// unknownFutureValue. Supports $filter (eq).
 	ConditionalAccessStatus *ConditionalAccessStatus `json:"conditionalAccessStatus,omitempty"`
 
-	// The identifier the client sends when sign-in is initiated. This is used for troubleshooting the corresponding sign-in
-	// activity when calling for support. Supports $filter (eq).
+	// The identifier the client sends when sign-in is initiated. This property is used for troubleshooting the
+	// corresponding sign-in activity when calling for support. Supports $filter (eq).
 	CorrelationId nullable.Type[string] `json:"correlationId,omitempty"`
 
 	// The date and time the sign-in was initiated. The Timestamp type is always in UTC time. For example, midnight UTC on
@@ -100,9 +113,9 @@ type SignIn struct {
 	CreatedDateTime *string `json:"createdDateTime,omitempty"`
 
 	// Describes the type of cross-tenant access used by the actor to access the resource. Possible values are: none,
-	// b2bCollaboration, b2bDirectConnect, microsoftSupport, serviceProvider, unknownFutureValue, passthrough. Also, you
-	// must use the Prefer: include-unknown-enum-members request header to get the following value or values in this
-	// evolvable enum: passthrough. If the sign in didn't cross tenant boundaries, the value is none.
+	// b2bCollaboration, b2bDirectConnect, microsoftSupport, serviceProvider, unknownFutureValue, passthrough. Use the
+	// Prefer: include-unknown-enum-members request header to get the following value or values in this evolvable enum:
+	// passthrough. If the sign in didn't cross tenant boundaries, the value is none.
 	CrossTenantAccessType *SignInAccessType `json:"crossTenantAccessType,omitempty"`
 
 	// The device information from where the sign-in occurred. Includes information such as deviceId, OS, and browser.
@@ -125,7 +138,7 @@ type SignIn struct {
 	HomeTenantId nullable.Type[string] `json:"homeTenantId,omitempty"`
 
 	// For user sign ins, the identifier of the tenant that the user is a member of. Only populated in cases where the home
-	// tenant has provided affirmative consent to Microsoft Entra ID to show the tenant content.
+	// tenant provides affirmative consent to Microsoft Entra ID to show the tenant content.
 	HomeTenantName nullable.Type[string] `json:"homeTenantName,omitempty"`
 
 	// The IP address of the client from where the sign-in occurred. Supports $filter (eq, startsWith).
@@ -137,11 +150,10 @@ type SignIn struct {
 	IPAddressFromResourceProvider nullable.Type[string] `json:"ipAddressFromResourceProvider,omitempty"`
 
 	// Indicates the token types that were presented to Microsoft Entra ID to authenticate the actor in the sign in. The
-	// possible values are: none, primaryRefreshToken, saml11, saml20, unknownFutureValue, remoteDesktopToken. NOTE
-	// Microsoft Entra ID might have also used token types not listed in this enum type to authenticate the actor. Don't
-	// infer the lack of a token if it isn't one of the types listed. Also, you must use the Prefer:
-	// include-unknown-enum-members request header to get the following value or values in this evolvable enum:
-	// remoteDesktopToken.
+	// possible values are: none, primaryRefreshToken, saml11, saml20, unknownFutureValue, remoteDesktopToken, refreshToken.
+	// NOTE Microsoft Entra ID might have also used token types not listed in this enum type to authenticate the actor.
+	// Don't infer the lack of a token if it isn't one of the types listed. Use the Prefer: include-unknown-enum-members
+	// request header to get the following value or values in this evolvable enum: remoteDesktopToken, refreshToken.
 	IncomingTokenType *IncomingTokenType `json:"incomingTokenType,omitempty"`
 
 	// Indicates whether a user sign in is interactive. In interactive sign in, the user provides an authentication factor
@@ -191,6 +203,9 @@ type SignIn struct {
 	// The identifier of the resource that the user signed in to. Supports $filter (eq).
 	ResourceId nullable.Type[string] `json:"resourceId,omitempty"`
 
+	// The identifier of the owner of the resource. Supports $filter (eq).
+	ResourceOwnerTenantId nullable.Type[string] `json:"resourceOwnerTenantId,omitempty"`
+
 	// The identifier of the service principal representing the target resource in the sign-in event.
 	ResourceServicePrincipalId nullable.Type[string] `json:"resourceServicePrincipalId,omitempty"`
 
@@ -202,7 +217,7 @@ type SignIn struct {
 	// adminConfirmedSigninSafe, aiConfirmedSigninSafe, userPassedMFADrivenByRiskBasedPolicy, adminDismissedAllRiskForUser,
 	// adminConfirmedSigninCompromised, hidden, adminConfirmedUserCompromised, unknownFutureValue,
 	// adminConfirmedServicePrincipalCompromised, adminDismissedAllRiskForServicePrincipal, m365DAdminDismissedDetection,
-	// userChangedPasswordOnPremises, adminDismissedRiskForSignIn, adminConfirmedAccountSafe. You must use the Prefer:
+	// userChangedPasswordOnPremises, adminDismissedRiskForSignIn, adminConfirmedAccountSafe. Use the Prefer:
 	// include-unknown-enum-members request header to get the following value or values in this evolvable enum:
 	// adminConfirmedServicePrincipalCompromised, adminDismissedAllRiskForServicePrincipal, m365DAdminDismissedDetection,
 	// userChangedPasswordOnPremises, adminDismissedRiskForSignIn, adminConfirmedAccountSafe.The value none means that
@@ -245,6 +260,9 @@ type SignIn struct {
 	// $filter (eq, startsWith).
 	ServicePrincipalName nullable.Type[string] `json:"servicePrincipalName,omitempty"`
 
+	// Identifier of the session that was generated during the sign-in.
+	SessionId nullable.Type[string] `json:"sessionId,omitempty"`
+
 	// Any conditional access session management policies that were applied during the sign-in event.
 	SessionLifetimePolicies *[]SessionLifetimePolicy `json:"sessionLifetimePolicies,omitempty"`
 
@@ -252,7 +270,9 @@ type SignIn struct {
 	// or nonInteractiveUser and corresponds to the value for the isInteractive property on the signin resource. For managed
 	// identity sign ins, the category is managedIdentity. For service principal sign-ins, the category is servicePrincipal.
 	// Possible values are: interactiveUser, nonInteractiveUser, servicePrincipal, managedIdentity, unknownFutureValue.
-	// Supports $filter (eq, ne).
+	// Supports $filter (eq, ne). NOTE: Only interactive sign-ins are returned unless you set an explicit filter. For
+	// example, the filter for getting non-interactive sign-ins is
+	// https://graph.microsoft.com/beta/auditLogs/signIns?&$filter=signInEventTypes/any(t: t eq 'nonInteractiveUser').
 	SignInEventTypes *[]string `json:"signInEventTypes,omitempty"`
 
 	// The identification that the user provided to sign in. It can be the userPrincipalName, but is also populated when a
@@ -276,12 +296,14 @@ type SignIn struct {
 	TokenIssuerName nullable.Type[string] `json:"tokenIssuerName,omitempty"`
 
 	// The type of identity provider. The possible values are: AzureAD, ADFederationServices, UnknownFutureValue,
-	// AzureADBackupAuth, ADFederationServicesMFAAdapter, NPSExtension. You must use the Prefer:
-	// include-unknown-enum-members request header to get the following values in this evolvable enum: AzureADBackupAuth ,
-	// ADFederationServicesMFAAdapter , NPSExtension.
+	// AzureADBackupAuth, ADFederationServicesMFAAdapter, NPSExtension. Use the Prefer: include-unknown-enum-members request
+	// header to get the following values in this evolvable enum: AzureADBackupAuth , ADFederationServicesMFAAdapter ,
+	// NPSExtension.
 	TokenIssuerType *TokenIssuerType `json:"tokenIssuerType,omitempty"`
 
-	// A unique base64 encoded request identifier used to track tokens issued by Microsoft Entra ID as they're redeemed at
+	TokenProtectionStatusDetails *TokenProtectionStatusDetails `json:"tokenProtectionStatusDetails,omitempty"`
+
+	// A unique base64-encoded request identifier used to track tokens issued by Microsoft Entra ID as they're redeemed at
 	// resource providers.
 	UniqueTokenIdentifier nullable.Type[string] `json:"uniqueTokenIdentifier,omitempty"`
 

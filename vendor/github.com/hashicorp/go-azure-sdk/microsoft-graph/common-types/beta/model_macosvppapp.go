@@ -43,6 +43,9 @@ type MacOsVppApp struct {
 	// The Apple Id associated with the given Apple Volume Purchase Program Token.
 	VppTokenAppleId nullable.Type[string] `json:"vppTokenAppleId,omitempty"`
 
+	// Display name of the VPP token associated with this app.
+	VppTokenDisplayName nullable.Type[string] `json:"vppTokenDisplayName,omitempty"`
+
 	// Identifier of the VPP token associated with this app.
 	VppTokenId nullable.Type[string] `json:"vppTokenId,omitempty"`
 
@@ -57,10 +60,10 @@ type MacOsVppApp struct {
 	// The list of categories for this app.
 	Categories *[]MobileAppCategory `json:"categories,omitempty"`
 
-	// The date and time the app was created. This property is read-only.
+	// The date and time the app was created.
 	CreatedDateTime *string `json:"createdDateTime,omitempty"`
 
-	// The total number of dependencies the child app has. This property is read-only.
+	// The total number of dependencies the child app has.
 	DependentAppCount *int64 `json:"dependentAppCount,omitempty"`
 
 	// The description of the app.
@@ -75,7 +78,7 @@ type MacOsVppApp struct {
 	// The more information Url.
 	InformationUrl nullable.Type[string] `json:"informationUrl,omitempty"`
 
-	// The value indicating whether the app is assigned to at least one group. This property is read-only.
+	// The value indicating whether the app is assigned to at least one group.
 	IsAssigned *bool `json:"isAssigned,omitempty"`
 
 	// The value indicating whether the app is marked as featured by the admin.
@@ -84,7 +87,7 @@ type MacOsVppApp struct {
 	// The large icon, to be displayed in the app details and used for upload of the icon.
 	LargeIcon *MimeContent `json:"largeIcon,omitempty"`
 
-	// The date and time the app was last modified. This property is read-only.
+	// The date and time the app was last modified.
 	LastModifiedDateTime *string `json:"lastModifiedDateTime,omitempty"`
 
 	// Notes for the app.
@@ -102,7 +105,7 @@ type MacOsVppApp struct {
 	// Indicates the publishing state of an app.
 	PublishingState *MobileAppPublishingState `json:"publishingState,omitempty"`
 
-	// The set of direct relationships for this app.
+	// List of relationships for this mobile app.
 	Relationships *[]MobileAppRelationship `json:"relationships,omitempty"`
 
 	// List of scope tag ids for this mobile app.
@@ -114,7 +117,7 @@ type MacOsVppApp struct {
 	// The total number of apps this app directly or indirectly supersedes. This property is read-only.
 	SupersedingAppCount *int64 `json:"supersedingAppCount,omitempty"`
 
-	// The upload state. Possible values are: 0 - Not Ready, 1 - Ready, 2 - Processing. This property is read-only.
+	// The upload state.
 	UploadState *int64 `json:"uploadState,omitempty"`
 
 	// Fields inherited from Entity
@@ -211,6 +214,7 @@ func (s *MacOsVppApp) UnmarshalJSON(bytes []byte) error {
 		UsedLicenseCount           *int64                                   `json:"usedLicenseCount,omitempty"`
 		VppTokenAccountType        *VppTokenAccountType                     `json:"vppTokenAccountType,omitempty"`
 		VppTokenAppleId            nullable.Type[string]                    `json:"vppTokenAppleId,omitempty"`
+		VppTokenDisplayName        nullable.Type[string]                    `json:"vppTokenDisplayName,omitempty"`
 		VppTokenId                 nullable.Type[string]                    `json:"vppTokenId,omitempty"`
 		VppTokenOrganizationName   nullable.Type[string]                    `json:"vppTokenOrganizationName,omitempty"`
 		Assignments                *[]MobileAppAssignment                   `json:"assignments,omitempty"`
@@ -252,6 +256,7 @@ func (s *MacOsVppApp) UnmarshalJSON(bytes []byte) error {
 	s.UsedLicenseCount = decoded.UsedLicenseCount
 	s.VppTokenAccountType = decoded.VppTokenAccountType
 	s.VppTokenAppleId = decoded.VppTokenAppleId
+	s.VppTokenDisplayName = decoded.VppTokenDisplayName
 	s.VppTokenId = decoded.VppTokenId
 	s.VppTokenOrganizationName = decoded.VppTokenOrganizationName
 	s.Assignments = decoded.Assignments

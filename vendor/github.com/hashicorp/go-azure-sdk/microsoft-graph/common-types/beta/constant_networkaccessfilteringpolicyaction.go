@@ -12,14 +12,18 @@ import (
 type NetworkaccessFilteringPolicyAction string
 
 const (
-	NetworkaccessFilteringPolicyAction_Allow NetworkaccessFilteringPolicyAction = "allow"
-	NetworkaccessFilteringPolicyAction_Block NetworkaccessFilteringPolicyAction = "block"
+	NetworkaccessFilteringPolicyAction_Alert  NetworkaccessFilteringPolicyAction = "alert"
+	NetworkaccessFilteringPolicyAction_Allow  NetworkaccessFilteringPolicyAction = "allow"
+	NetworkaccessFilteringPolicyAction_Block  NetworkaccessFilteringPolicyAction = "block"
+	NetworkaccessFilteringPolicyAction_Bypass NetworkaccessFilteringPolicyAction = "bypass"
 )
 
 func PossibleValuesForNetworkaccessFilteringPolicyAction() []string {
 	return []string{
+		string(NetworkaccessFilteringPolicyAction_Alert),
 		string(NetworkaccessFilteringPolicyAction_Allow),
 		string(NetworkaccessFilteringPolicyAction_Block),
+		string(NetworkaccessFilteringPolicyAction_Bypass),
 	}
 }
 
@@ -38,8 +42,10 @@ func (s *NetworkaccessFilteringPolicyAction) UnmarshalJSON(bytes []byte) error {
 
 func parseNetworkaccessFilteringPolicyAction(input string) (*NetworkaccessFilteringPolicyAction, error) {
 	vals := map[string]NetworkaccessFilteringPolicyAction{
-		"allow": NetworkaccessFilteringPolicyAction_Allow,
-		"block": NetworkaccessFilteringPolicyAction_Block,
+		"alert":  NetworkaccessFilteringPolicyAction_Alert,
+		"allow":  NetworkaccessFilteringPolicyAction_Allow,
+		"block":  NetworkaccessFilteringPolicyAction_Block,
+		"bypass": NetworkaccessFilteringPolicyAction_Bypass,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

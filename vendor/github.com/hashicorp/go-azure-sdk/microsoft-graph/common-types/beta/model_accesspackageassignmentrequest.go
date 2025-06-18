@@ -46,6 +46,8 @@ type AccessPackageAssignmentRequest struct {
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
 	ExpirationDateTime nullable.Type[string] `json:"expirationDateTime,omitempty"`
 
+	History *[]RequestActivity `json:"history,omitempty"`
+
 	// True if the request isn't to be processed for assignment.
 	IsValidationOnly nullable.Type[bool] `json:"isValidationOnly,omitempty"`
 
@@ -144,6 +146,7 @@ func (s *AccessPackageAssignmentRequest) UnmarshalJSON(bytes []byte) error {
 		CustomExtensionCalloutInstances *[]CustomExtensionCalloutInstance `json:"customExtensionCalloutInstances,omitempty"`
 		CustomExtensionHandlerInstances *[]CustomExtensionHandlerInstance `json:"customExtensionHandlerInstances,omitempty"`
 		ExpirationDateTime              nullable.Type[string]             `json:"expirationDateTime,omitempty"`
+		History                         *[]RequestActivity                `json:"history,omitempty"`
 		IsValidationOnly                nullable.Type[bool]               `json:"isValidationOnly,omitempty"`
 		Justification                   nullable.Type[string]             `json:"justification,omitempty"`
 		RequestState                    nullable.Type[string]             `json:"requestState,omitempty"`
@@ -167,6 +170,7 @@ func (s *AccessPackageAssignmentRequest) UnmarshalJSON(bytes []byte) error {
 	s.CustomExtensionCalloutInstances = decoded.CustomExtensionCalloutInstances
 	s.CustomExtensionHandlerInstances = decoded.CustomExtensionHandlerInstances
 	s.ExpirationDateTime = decoded.ExpirationDateTime
+	s.History = decoded.History
 	s.IsValidationOnly = decoded.IsValidationOnly
 	s.Justification = decoded.Justification
 	s.RequestState = decoded.RequestState

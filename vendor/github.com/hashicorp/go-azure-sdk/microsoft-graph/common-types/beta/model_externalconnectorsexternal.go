@@ -9,8 +9,8 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type ExternalConnectorsExternal struct {
-	// Represents an onboarded AWS account, Azure subscription, or GCP project that Microsoft Entra Permissions Management
-	// will collect and analyze permissions and actions on.
+	// Represents an onboarded Amazon Web Services (AWS) account, Azure subscription, or Google Cloud Platform (GCP) project
+	// that Microsoft Entra Permissions Management collects and analyzes permissions and actions on.
 	AuthorizationSystems *[]AuthorizationSystem `json:"authorizationSystems,omitempty"`
 
 	Connections  *[]ExternalConnectorsExternalConnection `json:"connections,omitempty"`

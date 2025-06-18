@@ -21,6 +21,7 @@ type BookingBusiness struct {
 	// All the appointments of this business. Read-only. Nullable.
 	Appointments *[]BookingAppointment `json:"appointments,omitempty"`
 
+	// Settings for the published booking page.
 	BookingPageSettings *BookingPageSettings `json:"bookingPageSettings,omitempty"`
 
 	// The hours of operation for the business.
@@ -32,6 +33,9 @@ type BookingBusiness struct {
 	// The set of appointments of this business in a specified date range. Read-only. Nullable.
 	CalendarView *[]BookingAppointment `json:"calendarView,omitempty"`
 
+	// The date, time, and time zone when the booking business was created. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
 	// All the custom questions of this business. Read-only. Nullable.
@@ -57,6 +61,9 @@ type BookingBusiness struct {
 	// The language of the self-service booking page.
 	LanguageTag nullable.Type[string] `json:"languageTag,omitempty"`
 
+	// The date, time, and time zone when the booking business was last updated. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
 	LastUpdatedDateTime nullable.Type[string] `json:"lastUpdatedDateTime,omitempty"`
 
 	// The telephone number for the business. The phone property, together with address and webSiteUrl, appear in the footer

@@ -19,12 +19,10 @@ type AppScope interface {
 var _ AppScope = BaseAppScopeImpl{}
 
 type BaseAppScopeImpl struct {
-	// Provides the display name of the app-specific resource represented by the app scope. Provided for display purposes
-	// since appScopeId is often an immutable, non-human-readable ID. Read only.
+	// Provides the display name of the app-specific resource represented by the app scope. Read only.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
-	// Describes the type of app-specific resource represented by the app scope. For display purposes, so a user interface
-	// can convey to the user the kind of app specific resource represented by the app scope. Read only.
+	// Describes the type of app-specific resource represented by the app scope. Read-only.
 	Type nullable.Type[string] `json:"type,omitempty"`
 
 	// Fields inherited from Entity
@@ -87,6 +85,8 @@ func (s BaseAppScopeImpl) MarshalJSON() ([]byte, error) {
 	if err = json.Unmarshal(encoded, &decoded); err != nil {
 		return nil, fmt.Errorf("unmarshaling BaseAppScopeImpl: %+v", err)
 	}
+
+	delete(decoded, "type")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.appScope"

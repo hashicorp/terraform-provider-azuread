@@ -12,18 +12,16 @@ import (
 type NetworkaccessThreatSeverity string
 
 const (
-	NetworkaccessThreatSeverity_Critical      NetworkaccessThreatSeverity = "critical"
-	NetworkaccessThreatSeverity_High          NetworkaccessThreatSeverity = "high"
-	NetworkaccessThreatSeverity_Informational NetworkaccessThreatSeverity = "informational"
-	NetworkaccessThreatSeverity_Low           NetworkaccessThreatSeverity = "low"
-	NetworkaccessThreatSeverity_Medium        NetworkaccessThreatSeverity = "medium"
+	NetworkaccessThreatSeverity_Critical NetworkaccessThreatSeverity = "critical"
+	NetworkaccessThreatSeverity_High     NetworkaccessThreatSeverity = "high"
+	NetworkaccessThreatSeverity_Low      NetworkaccessThreatSeverity = "low"
+	NetworkaccessThreatSeverity_Medium   NetworkaccessThreatSeverity = "medium"
 )
 
 func PossibleValuesForNetworkaccessThreatSeverity() []string {
 	return []string{
 		string(NetworkaccessThreatSeverity_Critical),
 		string(NetworkaccessThreatSeverity_High),
-		string(NetworkaccessThreatSeverity_Informational),
 		string(NetworkaccessThreatSeverity_Low),
 		string(NetworkaccessThreatSeverity_Medium),
 	}
@@ -44,11 +42,10 @@ func (s *NetworkaccessThreatSeverity) UnmarshalJSON(bytes []byte) error {
 
 func parseNetworkaccessThreatSeverity(input string) (*NetworkaccessThreatSeverity, error) {
 	vals := map[string]NetworkaccessThreatSeverity{
-		"critical":      NetworkaccessThreatSeverity_Critical,
-		"high":          NetworkaccessThreatSeverity_High,
-		"informational": NetworkaccessThreatSeverity_Informational,
-		"low":           NetworkaccessThreatSeverity_Low,
-		"medium":        NetworkaccessThreatSeverity_Medium,
+		"critical": NetworkaccessThreatSeverity_Critical,
+		"high":     NetworkaccessThreatSeverity_High,
+		"low":      NetworkaccessThreatSeverity_Low,
+		"medium":   NetworkaccessThreatSeverity_Medium,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

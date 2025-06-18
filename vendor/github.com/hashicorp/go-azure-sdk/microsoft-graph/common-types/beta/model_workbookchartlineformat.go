@@ -13,7 +13,7 @@ import (
 var _ Entity = WorkbookChartLineFormat{}
 
 type WorkbookChartLineFormat struct {
-	// HTML color code representing the color of lines in the chart.
+	// The HTML color code that represents the color of lines in the chart.
 	Color nullable.Type[string] `json:"color,omitempty"`
 
 	// Fields inherited from Entity

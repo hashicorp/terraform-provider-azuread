@@ -4,6 +4,8 @@ package stable
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type ConditionalAccessApplications struct {
+	// Filter that defines the dynamic-application-syntax rule to include/exclude cloud applications. A filter can use
+	// custom security attributes to include/exclude applications.
 	ApplicationFilter *ConditionalAccessFilter `json:"applicationFilter,omitempty"`
 
 	// Can be one of the following: The list of client IDs (appId) explicitly excluded from the policy. Office365 - For the

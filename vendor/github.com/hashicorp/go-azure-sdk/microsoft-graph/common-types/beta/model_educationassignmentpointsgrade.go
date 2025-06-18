@@ -13,6 +13,8 @@ import (
 var _ EducationAssignmentGrade = EducationAssignmentPointsGrade{}
 
 type EducationAssignmentPointsGrade struct {
+	// The grade letter from the grading scheme that corresponds to the given number of points.
+	Grade nullable.Type[string] `json:"grade,omitempty"`
 
 	// Fields inherited from EducationAssignmentGrade
 
@@ -74,6 +76,7 @@ var _ json.Unmarshaler = &EducationAssignmentPointsGrade{}
 
 func (s *EducationAssignmentPointsGrade) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
+		Grade          nullable.Type[string] `json:"grade,omitempty"`
 		GradedDateTime nullable.Type[string] `json:"gradedDateTime,omitempty"`
 		ODataId        *string               `json:"@odata.id,omitempty"`
 		ODataType      *string               `json:"@odata.type,omitempty"`
@@ -82,6 +85,7 @@ func (s *EducationAssignmentPointsGrade) UnmarshalJSON(bytes []byte) error {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.Grade = decoded.Grade
 	s.GradedDateTime = decoded.GradedDateTime
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType

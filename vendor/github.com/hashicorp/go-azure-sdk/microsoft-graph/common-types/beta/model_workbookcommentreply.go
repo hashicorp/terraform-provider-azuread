@@ -13,10 +13,10 @@ import (
 var _ Entity = WorkbookCommentReply{}
 
 type WorkbookCommentReply struct {
-	// The content of replied comment.
+	// The content of the reply.
 	Content nullable.Type[string] `json:"content,omitempty"`
 
-	// Indicates the type for the replied comment.
+	// The content type for the reply.
 	ContentType *string `json:"contentType,omitempty"`
 
 	// The task associated with the comment thread.

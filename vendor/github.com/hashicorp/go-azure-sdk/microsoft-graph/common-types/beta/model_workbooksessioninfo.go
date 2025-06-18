@@ -17,6 +17,6 @@ type WorkbookSessionInfo struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// true for persistent session. false for non-persistent session (view mode)
+	// Set to true for persistent session. Set to false for non-persistent session (view mode).
 	PersistChanges nullable.Type[bool] `json:"persistChanges,omitempty"`
 }

@@ -19,14 +19,18 @@ type AuthenticationsMetric struct {
 	// The number of authentication requests made in the specified period. Supports $filter (eq).
 	AttemptsCount *int64 `json:"attemptsCount,omitempty"`
 
+	AuthFlow nullable.Type[string] `json:"authFlow,omitempty"`
+	Browser  nullable.Type[string] `json:"browser,omitempty"`
+
 	// The location where the customers authenticated from. Supports $filter (eq).
 	Country nullable.Type[string] `json:"country,omitempty"`
 
 	// The date of the user insight.
 	FactDate nullable.Type[string] `json:"factDate,omitempty"`
 
-	IdentityProvider nullable.Type[string] `json:"identityProvider,omitempty"`
-	Language         nullable.Type[string] `json:"language,omitempty"`
+	Failures         *[]AuthenticationFailure `json:"failures,omitempty"`
+	IdentityProvider nullable.Type[string]    `json:"identityProvider,omitempty"`
+	Language         nullable.Type[string]    `json:"language,omitempty"`
 
 	// The platform for the device that the customers used. Supports $filter (eq).
 	Os nullable.Type[string] `json:"os,omitempty"`

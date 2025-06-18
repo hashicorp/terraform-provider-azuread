@@ -32,6 +32,9 @@ type UserActivity struct {
 	// installed on the user’s local device.
 	AppDisplayName nullable.Type[string] `json:"appDisplayName,omitempty"`
 
+	// Optional. A custom piece of data - JSON-LD extensible description of content according to schema.org syntax.
+	ContentInfo *Json `json:"contentInfo,omitempty"`
+
 	// Optional. Used in the event the content can be rendered outside of a native or web-based app experience (for example,
 	// a pointer to an item in an RSS feed).
 	ContentUrl nullable.Type[string] `json:"contentUrl,omitempty"`

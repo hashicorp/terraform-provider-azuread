@@ -13,19 +13,19 @@ import (
 var _ Entity = WorkbookChartFont{}
 
 type WorkbookChartFont struct {
-	// Represents the bold status of font.
+	// Indicates whether the fond is bold.
 	Bold nullable.Type[bool] `json:"bold,omitempty"`
 
-	// HTML color code representation of the text color. for example #FF0000 represents Red.
+	// The HTML color code representation of the text color. For example #FF0000 represents Red.
 	Color nullable.Type[string] `json:"color,omitempty"`
 
-	// Represents the italic status of the font.
+	// Indicates whether the fond is italic.
 	Italic nullable.Type[bool] `json:"italic,omitempty"`
 
-	// Font name (for example 'Calibri')
+	// The font name. For example 'Calibri'.
 	Name nullable.Type[string] `json:"name,omitempty"`
 
-	// Type of underline applied to the font. The possible values are: None, Single.
+	// The type of underlining applied to the font. The possible values are: None, Single.
 	Underline nullable.Type[string] `json:"underline,omitempty"`
 
 	// Fields inherited from Entity

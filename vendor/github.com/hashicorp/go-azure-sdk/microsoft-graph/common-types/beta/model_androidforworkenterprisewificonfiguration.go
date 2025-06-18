@@ -65,7 +65,10 @@ type AndroidForWorkEnterpriseWiFiConfiguration struct {
 	// This is the name of the Wi-Fi network that is broadcast to all devices.
 	Ssid *string `json:"ssid,omitempty"`
 
-	// Wi-Fi Security Types for Android.
+	// The possible security types for Android Wi-Fi profiles. Default value 'Open', indicates no authentication required
+	// for the network. The security protocols supported are WEP, WPA and WPA2. 'WpaEnterprise' and 'Wpa2Enterprise' options
+	// are available for Enterprise Wi-Fi profiles. 'Wep' and 'WpaPersonal' (supports WPA and WPA2) options are available
+	// for Basic Wi-Fi profiles.
 	WiFiSecurityType *AndroidWiFiSecurityType `json:"wiFiSecurityType,omitempty"`
 
 	// Fields inherited from DeviceConfiguration

@@ -13,8 +13,13 @@ import (
 var _ RestoreSessionBase = OneDriveForBusinessRestoreSession{}
 
 type OneDriveForBusinessRestoreSession struct {
-	// A collection of restore points and destination details that can be used to restore a OneDrive for Business drive.
+	// A collection of restore points and destination details that can be used to restore a OneDrive for work or school
+	// drive.
 	DriveRestoreArtifacts *[]DriveRestoreArtifact `json:"driveRestoreArtifacts,omitempty"`
+
+	// A collection of user mailboxes and destination details that can be used to restore a OneDrive for work or school
+	// drive.
+	DriveRestoreArtifactsBulkAdditionRequests *[]DriveRestoreArtifactsBulkAdditionRequest `json:"driveRestoreArtifactsBulkAdditionRequests,omitempty"`
 
 	// Fields inherited from RestoreSessionBase
 
@@ -36,8 +41,14 @@ type OneDriveForBusinessRestoreSession struct {
 	// Timestamp of the last modification of the restore session.
 	LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 
+	// Indicates whether the restore session was created normally or by a bulk job.
+	RestoreJobType *RestoreJobType `json:"restoreJobType,omitempty"`
+
+	// The number of metadata artifacts that belong to this restore session.
+	RestoreSessionArtifactCount *RestoreSessionArtifactCount `json:"restoreSessionArtifactCount,omitempty"`
+
 	// Status of the restore session. The value is an aggregated status of the restored artifacts. The possible values are:
-	// draft, activating, active, completedWithError, completed, unknownFutureValue, failed. You must use the Prefer:
+	// draft, activating, active, completedWithError, completed, unknownFutureValue, failed. Use the Prefer:
 	// include-unknown-enum-members request header to get the following value in this evolvable enum: failed.
 	Status *RestoreSessionStatus `json:"status,omitempty"`
 
@@ -58,16 +69,18 @@ type OneDriveForBusinessRestoreSession struct {
 
 func (s OneDriveForBusinessRestoreSession) RestoreSessionBase() BaseRestoreSessionBaseImpl {
 	return BaseRestoreSessionBaseImpl{
-		CompletedDateTime:    s.CompletedDateTime,
-		CreatedBy:            s.CreatedBy,
-		CreatedDateTime:      s.CreatedDateTime,
-		Error:                s.Error,
-		LastModifiedBy:       s.LastModifiedBy,
-		LastModifiedDateTime: s.LastModifiedDateTime,
-		Status:               s.Status,
-		Id:                   s.Id,
-		ODataId:              s.ODataId,
-		ODataType:            s.ODataType,
+		CompletedDateTime:           s.CompletedDateTime,
+		CreatedBy:                   s.CreatedBy,
+		CreatedDateTime:             s.CreatedDateTime,
+		Error:                       s.Error,
+		LastModifiedBy:              s.LastModifiedBy,
+		LastModifiedDateTime:        s.LastModifiedDateTime,
+		RestoreJobType:              s.RestoreJobType,
+		RestoreSessionArtifactCount: s.RestoreSessionArtifactCount,
+		Status:                      s.Status,
+		Id:                          s.Id,
+		ODataId:                     s.ODataId,
+		ODataType:                   s.ODataType,
 	}
 }
 
@@ -110,21 +123,25 @@ var _ json.Unmarshaler = &OneDriveForBusinessRestoreSession{}
 
 func (s *OneDriveForBusinessRestoreSession) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		DriveRestoreArtifacts *[]DriveRestoreArtifact `json:"driveRestoreArtifacts,omitempty"`
-		CompletedDateTime     nullable.Type[string]   `json:"completedDateTime,omitempty"`
-		CreatedDateTime       nullable.Type[string]   `json:"createdDateTime,omitempty"`
-		Error                 *PublicError            `json:"error,omitempty"`
-		LastModifiedDateTime  nullable.Type[string]   `json:"lastModifiedDateTime,omitempty"`
-		Status                *RestoreSessionStatus   `json:"status,omitempty"`
-		Id                    *string                 `json:"id,omitempty"`
-		ODataId               *string                 `json:"@odata.id,omitempty"`
-		ODataType             *string                 `json:"@odata.type,omitempty"`
+		DriveRestoreArtifacts                     *[]DriveRestoreArtifact                     `json:"driveRestoreArtifacts,omitempty"`
+		DriveRestoreArtifactsBulkAdditionRequests *[]DriveRestoreArtifactsBulkAdditionRequest `json:"driveRestoreArtifactsBulkAdditionRequests,omitempty"`
+		CompletedDateTime                         nullable.Type[string]                       `json:"completedDateTime,omitempty"`
+		CreatedDateTime                           nullable.Type[string]                       `json:"createdDateTime,omitempty"`
+		Error                                     *PublicError                                `json:"error,omitempty"`
+		LastModifiedDateTime                      nullable.Type[string]                       `json:"lastModifiedDateTime,omitempty"`
+		RestoreJobType                            *RestoreJobType                             `json:"restoreJobType,omitempty"`
+		RestoreSessionArtifactCount               *RestoreSessionArtifactCount                `json:"restoreSessionArtifactCount,omitempty"`
+		Status                                    *RestoreSessionStatus                       `json:"status,omitempty"`
+		Id                                        *string                                     `json:"id,omitempty"`
+		ODataId                                   *string                                     `json:"@odata.id,omitempty"`
+		ODataType                                 *string                                     `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
 	s.DriveRestoreArtifacts = decoded.DriveRestoreArtifacts
+	s.DriveRestoreArtifactsBulkAdditionRequests = decoded.DriveRestoreArtifactsBulkAdditionRequests
 	s.CompletedDateTime = decoded.CompletedDateTime
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.Error = decoded.Error
@@ -132,6 +149,8 @@ func (s *OneDriveForBusinessRestoreSession) UnmarshalJSON(bytes []byte) error {
 	s.LastModifiedDateTime = decoded.LastModifiedDateTime
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType
+	s.RestoreJobType = decoded.RestoreJobType
+	s.RestoreSessionArtifactCount = decoded.RestoreSessionArtifactCount
 	s.Status = decoded.Status
 
 	var temp map[string]json.RawMessage

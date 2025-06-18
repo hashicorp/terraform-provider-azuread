@@ -39,13 +39,6 @@ type AndroidWorkProfileEnterpriseWiFiConfiguration struct {
 	// used to mask the username of individual users when they attempt to connect to Wi-Fi network.
 	OuterIdentityPrivacyTemporaryValue nullable.Type[string] `json:"outerIdentityPrivacyTemporaryValue,omitempty"`
 
-	// URL of the proxy server automatic configuration script when automatic configuration is selected. This URL is
-	// typically the location of PAC (Proxy Auto Configuration) file.
-	ProxyAutomaticConfigurationUrl nullable.Type[string] `json:"proxyAutomaticConfigurationUrl,omitempty"`
-
-	// Wi-Fi Proxy Settings.
-	ProxySettings *WiFiProxySetting `json:"proxySettings,omitempty"`
-
 	// Trusted Root Certificate for Server Validation when EAP Type is configured to EAP-TLS, EAP-TTLS or PEAP. This is the
 	// certificate presented by the Wi-Fi endpoint when the device attempts to connect to Wi-Fi endpoint. The device (or
 	// user) must accept this certificate to continue the connection attempt.
@@ -58,21 +51,41 @@ type AndroidWorkProfileEnterpriseWiFiConfiguration struct {
 
 	// Fields inherited from AndroidWorkProfileWiFiConfiguration
 
-	// Connect automatically when this network is in range. Setting this to true will skip the user prompt and automatically
-	// connect the device to Wi-Fi network.
+	// When set to true, device will connect automatically to the Wi-Fi network when in range, skipping the user prompt.
+	// When false, user will need to connect manually through Settings on the Android device. Default value is false.
 	ConnectAutomatically *bool `json:"connectAutomatically,omitempty"`
 
 	// When set to true, this profile forces the device to connect to a network that doesn't broadcast its SSID to all
-	// devices.
+	// devices. When false, device will not automatically connect to hidden networks. Default value is false.
 	ConnectWhenNetworkNameIsHidden *bool `json:"connectWhenNetworkNameIsHidden,omitempty"`
 
-	// Network Name
+	// The name of the Wi-Fi network.
 	NetworkName *string `json:"networkName,omitempty"`
+
+	// Specify the pre-shared key for a WEP or WPA personal Wi-Fi network. Restrictions depend on the value set for
+	// wiFiSecurityType. If WEP type security is used, then preSharedKey must be a valid passphrase (5 or 13 characters) or
+	// a valid HEX key (10 or 26 hexidecimal characters). If WPA security type is used, then preSharedKey can be any string
+	// between 8 and 64 characters long.
+	PreSharedKey nullable.Type[string] `json:"preSharedKey,omitempty"`
+
+	// When set to true, indicates that the pre-shared key is configured. When set to false, indicates that pre-shared key
+	// is not configured (any values set for preSharedKey will be ignored). Default value is false.
+	PreSharedKeyIsSet *bool `json:"preSharedKeyIsSet,omitempty"`
+
+	// URL of the proxy server automatic configuration script when automatic configuration is selected. This URL is
+	// typically the location of PAC (Proxy Auto Configuration) file.
+	ProxyAutomaticConfigurationUrl nullable.Type[string] `json:"proxyAutomaticConfigurationUrl,omitempty"`
+
+	// Wi-Fi Proxy Settings.
+	ProxySettings *WiFiProxySetting `json:"proxySettings,omitempty"`
 
 	// This is the name of the Wi-Fi network that is broadcast to all devices.
 	Ssid *string `json:"ssid,omitempty"`
 
-	// Wi-Fi Security Types for Android.
+	// The possible security types for Android Wi-Fi profiles. Default value 'Open', indicates no authentication required
+	// for the network. The security protocols supported are WEP, WPA and WPA2. 'WpaEnterprise' and 'Wpa2Enterprise' options
+	// are available for Enterprise Wi-Fi profiles. 'Wep' and 'WpaPersonal' (supports WPA and WPA2) options are available
+	// for Basic Wi-Fi profiles.
 	WiFiSecurityType *AndroidWiFiSecurityType `json:"wiFiSecurityType,omitempty"`
 
 	// Fields inherited from DeviceConfiguration
@@ -151,6 +164,10 @@ func (s AndroidWorkProfileEnterpriseWiFiConfiguration) AndroidWorkProfileWiFiCon
 		ConnectAutomatically:           s.ConnectAutomatically,
 		ConnectWhenNetworkNameIsHidden: s.ConnectWhenNetworkNameIsHidden,
 		NetworkName:                    s.NetworkName,
+		PreSharedKey:                   s.PreSharedKey,
+		PreSharedKeyIsSet:              s.PreSharedKeyIsSet,
+		ProxyAutomaticConfigurationUrl: s.ProxyAutomaticConfigurationUrl,
+		ProxySettings:                  s.ProxySettings,
 		Ssid:                           s.Ssid,
 		WiFiSecurityType:               s.WiFiSecurityType,
 		Assignments:                    s.Assignments,
@@ -245,13 +262,15 @@ func (s *AndroidWorkProfileEnterpriseWiFiConfiguration) UnmarshalJSON(bytes []by
 		InnerAuthenticationProtocolForEapTtls       *NonEapAuthenticationMethodForEapTtlsType    `json:"innerAuthenticationProtocolForEapTtls,omitempty"`
 		InnerAuthenticationProtocolForPeap          *NonEapAuthenticationMethodForPeap           `json:"innerAuthenticationProtocolForPeap,omitempty"`
 		OuterIdentityPrivacyTemporaryValue          nullable.Type[string]                        `json:"outerIdentityPrivacyTemporaryValue,omitempty"`
-		ProxyAutomaticConfigurationUrl              nullable.Type[string]                        `json:"proxyAutomaticConfigurationUrl,omitempty"`
-		ProxySettings                               *WiFiProxySetting                            `json:"proxySettings,omitempty"`
 		RootCertificateForServerValidation          *AndroidWorkProfileTrustedRootCertificate    `json:"rootCertificateForServerValidation,omitempty"`
 		TrustedServerCertificateNames               *[]string                                    `json:"trustedServerCertificateNames,omitempty"`
 		ConnectAutomatically                        *bool                                        `json:"connectAutomatically,omitempty"`
 		ConnectWhenNetworkNameIsHidden              *bool                                        `json:"connectWhenNetworkNameIsHidden,omitempty"`
 		NetworkName                                 *string                                      `json:"networkName,omitempty"`
+		PreSharedKey                                nullable.Type[string]                        `json:"preSharedKey,omitempty"`
+		PreSharedKeyIsSet                           *bool                                        `json:"preSharedKeyIsSet,omitempty"`
+		ProxyAutomaticConfigurationUrl              nullable.Type[string]                        `json:"proxyAutomaticConfigurationUrl,omitempty"`
+		ProxySettings                               *WiFiProxySetting                            `json:"proxySettings,omitempty"`
 		Ssid                                        *string                                      `json:"ssid,omitempty"`
 		WiFiSecurityType                            *AndroidWiFiSecurityType                     `json:"wiFiSecurityType,omitempty"`
 		Assignments                                 *[]DeviceConfigurationAssignment             `json:"assignments,omitempty"`
@@ -284,8 +303,6 @@ func (s *AndroidWorkProfileEnterpriseWiFiConfiguration) UnmarshalJSON(bytes []by
 	s.InnerAuthenticationProtocolForEapTtls = decoded.InnerAuthenticationProtocolForEapTtls
 	s.InnerAuthenticationProtocolForPeap = decoded.InnerAuthenticationProtocolForPeap
 	s.OuterIdentityPrivacyTemporaryValue = decoded.OuterIdentityPrivacyTemporaryValue
-	s.ProxyAutomaticConfigurationUrl = decoded.ProxyAutomaticConfigurationUrl
-	s.ProxySettings = decoded.ProxySettings
 	s.RootCertificateForServerValidation = decoded.RootCertificateForServerValidation
 	s.TrustedServerCertificateNames = decoded.TrustedServerCertificateNames
 	s.Assignments = decoded.Assignments
@@ -306,6 +323,10 @@ func (s *AndroidWorkProfileEnterpriseWiFiConfiguration) UnmarshalJSON(bytes []by
 	s.NetworkName = decoded.NetworkName
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType
+	s.PreSharedKey = decoded.PreSharedKey
+	s.PreSharedKeyIsSet = decoded.PreSharedKeyIsSet
+	s.ProxyAutomaticConfigurationUrl = decoded.ProxyAutomaticConfigurationUrl
+	s.ProxySettings = decoded.ProxySettings
 	s.RoleScopeTagIds = decoded.RoleScopeTagIds
 	s.Ssid = decoded.Ssid
 	s.SupportsScopeTags = decoded.SupportsScopeTags

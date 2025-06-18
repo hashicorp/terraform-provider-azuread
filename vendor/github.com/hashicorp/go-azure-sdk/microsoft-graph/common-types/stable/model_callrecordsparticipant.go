@@ -14,6 +14,9 @@ type CallRecordsParticipant struct {
 
 	// Fields inherited from CallRecordsParticipantBase
 
+	// List of administrativeUnitInfo objects for the call participant.
+	AdministrativeUnitInfos *[]CallRecordsAdministrativeUnitInfo `json:"administrativeUnitInfos,omitempty"`
+
 	// The identity of the call participant.
 	Identity *CommunicationsIdentitySet `json:"identity,omitempty"`
 
@@ -34,10 +37,11 @@ type CallRecordsParticipant struct {
 
 func (s CallRecordsParticipant) CallRecordsParticipantBase() BaseCallRecordsParticipantBaseImpl {
 	return BaseCallRecordsParticipantBaseImpl{
-		Identity:  s.Identity,
-		Id:        s.Id,
-		ODataId:   s.ODataId,
-		ODataType: s.ODataType,
+		AdministrativeUnitInfos: s.AdministrativeUnitInfos,
+		Identity:                s.Identity,
+		Id:                      s.Id,
+		ODataId:                 s.ODataId,
+		ODataType:               s.ODataType,
 	}
 }
 

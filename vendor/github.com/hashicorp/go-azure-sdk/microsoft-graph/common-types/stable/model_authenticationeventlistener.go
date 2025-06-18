@@ -123,6 +123,22 @@ func UnmarshalAuthenticationEventListenerImplementation(input []byte) (Authentic
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.onAttributeCollectionStartListener") {
+		var out OnAttributeCollectionStartListener
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnAttributeCollectionStartListener: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.onAttributeCollectionSubmitListener") {
+		var out OnAttributeCollectionSubmitListener
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnAttributeCollectionSubmitListener: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.onAuthenticationMethodLoadStartListener") {
 		var out OnAuthenticationMethodLoadStartListener
 		if err := json.Unmarshal(input, &out); err != nil {

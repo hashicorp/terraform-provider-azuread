@@ -13,8 +13,11 @@ import (
 var _ Entity = SecurityNetworkAdapter{}
 
 type SecurityNetworkAdapter struct {
-	IsEnabled nullable.Type[bool]   `json:"isEnabled,omitempty"`
-	Name      nullable.Type[string] `json:"name,omitempty"`
+	// Indicates whether the network adapter is selected for capturing and analyzing network traffic.
+	IsEnabled nullable.Type[bool] `json:"isEnabled,omitempty"`
+
+	// The name of the network adapter.
+	Name nullable.Type[string] `json:"name,omitempty"`
 
 	// Fields inherited from Entity
 

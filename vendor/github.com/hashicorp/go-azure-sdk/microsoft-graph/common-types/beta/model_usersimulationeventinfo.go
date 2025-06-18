@@ -12,6 +12,8 @@ type UserSimulationEventInfo struct {
 	// campaign.
 	Browser nullable.Type[string] `json:"browser,omitempty"`
 
+	ClickSource *ClickSource `json:"clickSource,omitempty"`
+
 	// Date and time of the simulation event by a user in an attack simulation and training campaign.
 	EventDateTime nullable.Type[string] `json:"eventDateTime,omitempty"`
 

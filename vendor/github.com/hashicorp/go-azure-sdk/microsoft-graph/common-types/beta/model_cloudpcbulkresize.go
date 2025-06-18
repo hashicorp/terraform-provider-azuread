@@ -13,7 +13,7 @@ import (
 var _ CloudPCBulkAction = CloudPCBulkResize{}
 
 type CloudPCBulkResize struct {
-	// The target service plan ID of the resize configuration with new vCPU and storage size.
+	// Indicates the target service plan ID of the resize configuration with new vCPU and storage size.
 	TargetServicePlanId *string `json:"targetServicePlanId,omitempty"`
 
 	// Fields inherited from CloudPCBulkAction

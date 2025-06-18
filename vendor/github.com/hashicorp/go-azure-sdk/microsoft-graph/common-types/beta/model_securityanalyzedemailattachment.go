@@ -11,11 +11,20 @@ type SecurityAnalyzedEmailAttachment struct {
 	// The detonation details of the attachment.
 	DetonationDetails *SecurityDetonationDetails `json:"detonationDetails,omitempty"`
 
+	// Extension of the file.
+	FileExtension nullable.Type[string] `json:"fileExtension,omitempty"`
+
 	// The name of the attachment in the email.
 	FileName nullable.Type[string] `json:"fileName,omitempty"`
 
+	// Size of the file.
+	FileSize nullable.Type[int64] `json:"fileSize,omitempty"`
+
 	// The type of the attachment in the email.
 	FileType nullable.Type[string] `json:"fileType,omitempty"`
+
+	// The threat name associated with the threat type.
+	MalwareFamily nullable.Type[string] `json:"malwareFamily,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
@@ -26,8 +35,8 @@ type SecurityAnalyzedEmailAttachment struct {
 	// The SHA256 file hash of the attachment.
 	Sha256 nullable.Type[string] `json:"sha256,omitempty"`
 
-	// The threat name associated with the threat type.
-	ThreatName nullable.Type[string] `json:"threatName,omitempty"`
+	// Details of entries in tenant allow/block list configured by tenant.
+	TenantAllowBlockListDetailInfo nullable.Type[string] `json:"tenantAllowBlockListDetailInfo,omitempty"`
 
 	// The threat type associated with the attachment. The possible values are: unknown, spam, malware, phishing, none,
 	// unknownFutureValue.

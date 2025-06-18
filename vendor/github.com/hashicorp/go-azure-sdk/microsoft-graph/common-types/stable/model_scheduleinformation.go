@@ -10,7 +10,8 @@ import (
 type ScheduleInformation struct {
 	// Represents a merged view of availability of all the items in scheduleItems. The view consists of time slots.
 	// Availability during each time slot is indicated with: 0= free or working elswhere, 1= tentative, 2= busy, 3= out of
-	// office.Note: Working elsewhere is set to 0 instead of 4 for backward compatibility. For details, see the Q&A.
+	// office.Note: Working elsewhere is set to 0 instead of 4 for backward compatibility. For details, see the Q&A and
+	// Exchange 2007 and Exchange 2010 do not use the WorkingElsewhere value.
 	AvailabilityView nullable.Type[string] `json:"availabilityView,omitempty"`
 
 	// Error information from attempting to get the availability of the user, distribution list, or resource.

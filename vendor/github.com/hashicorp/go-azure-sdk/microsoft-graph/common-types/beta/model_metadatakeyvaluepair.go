@@ -16,4 +16,7 @@ type MetaDataKeyValuePair struct {
 
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
+
+	// Value of the metadata. Should be an object.
+	Value *Json `json:"value,omitempty"`
 }

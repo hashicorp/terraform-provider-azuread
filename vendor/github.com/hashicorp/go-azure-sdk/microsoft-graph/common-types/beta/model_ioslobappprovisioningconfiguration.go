@@ -13,7 +13,8 @@ import (
 var _ Entity = IosLobAppProvisioningConfiguration{}
 
 type IosLobAppProvisioningConfiguration struct {
-	// The associated group assignments for IosLobAppProvisioningConfiguration.
+	// The associated group assignments for IosLobAppProvisioningConfiguration, this determines which devices/users the IOS
+	// LOB app provisioning conifguration will be targeted to.
 	Assignments *[]IosLobAppProvisioningConfigurationAssignment `json:"assignments,omitempty"`
 
 	// DateTime the object was created.
@@ -28,7 +29,9 @@ type IosLobAppProvisioningConfiguration struct {
 	// Admin provided name of the device configuration.
 	DisplayName *string `json:"displayName,omitempty"`
 
-	// Optional profile expiration date and time.
+	// Optional profile expiration date and time. The Timestamp type represents date and time information using ISO 8601
+	// format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 would look like this:
+	// '2014-01-01T00:00:00Z'. Returned by default.
 	ExpirationDateTime nullable.Type[string] `json:"expirationDateTime,omitempty"`
 
 	// The associated group assignments.

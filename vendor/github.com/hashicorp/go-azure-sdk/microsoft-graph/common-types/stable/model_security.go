@@ -16,9 +16,11 @@ type Security struct {
 	// A collection of alerts in Microsoft 365 Defender.
 	Alertsv2 *[]SecurityAlert `json:"alerts_v2,omitempty"`
 
-	AttackSimulation *AttackSimulationRoot      `json:"attackSimulation,omitempty"`
-	Cases            *SecurityCasesRoot         `json:"cases,omitempty"`
-	Identities       *SecurityIdentityContainer `json:"identities,omitempty"`
+	AttackSimulation *AttackSimulationRoot `json:"attackSimulation,omitempty"`
+	Cases            *SecurityCasesRoot    `json:"cases,omitempty"`
+
+	// A container for security identities APIs.
+	Identities *SecurityIdentityContainer `json:"identities,omitempty"`
 
 	// A collection of incidents in Microsoft 365 Defender, each of which is a set of correlated alerts and associated
 	// metadata that reflects the story of an attack.

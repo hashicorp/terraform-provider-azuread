@@ -12,14 +12,16 @@ import (
 type CloudPCInaccessibleReportName string
 
 const (
-	CloudPCInaccessibleReportName_InaccessibleCloudPCReports     CloudPCInaccessibleReportName = "inaccessibleCloudPcReports"
-	CloudPCInaccessibleReportName_InaccessibleCloudPCTrendReport CloudPCInaccessibleReportName = "inaccessibleCloudPcTrendReport"
+	CloudPCInaccessibleReportName_InaccessibleCloudPCReports             CloudPCInaccessibleReportName = "inaccessibleCloudPcReports"
+	CloudPCInaccessibleReportName_InaccessibleCloudPCTrendReport         CloudPCInaccessibleReportName = "inaccessibleCloudPcTrendReport"
+	CloudPCInaccessibleReportName_RegionalInaccessibleCloudPCTrendReport CloudPCInaccessibleReportName = "regionalInaccessibleCloudPcTrendReport"
 )
 
 func PossibleValuesForCloudPCInaccessibleReportName() []string {
 	return []string{
 		string(CloudPCInaccessibleReportName_InaccessibleCloudPCReports),
 		string(CloudPCInaccessibleReportName_InaccessibleCloudPCTrendReport),
+		string(CloudPCInaccessibleReportName_RegionalInaccessibleCloudPCTrendReport),
 	}
 }
 
@@ -38,8 +40,9 @@ func (s *CloudPCInaccessibleReportName) UnmarshalJSON(bytes []byte) error {
 
 func parseCloudPCInaccessibleReportName(input string) (*CloudPCInaccessibleReportName, error) {
 	vals := map[string]CloudPCInaccessibleReportName{
-		"inaccessiblecloudpcreports":     CloudPCInaccessibleReportName_InaccessibleCloudPCReports,
-		"inaccessiblecloudpctrendreport": CloudPCInaccessibleReportName_InaccessibleCloudPCTrendReport,
+		"inaccessiblecloudpcreports":             CloudPCInaccessibleReportName_InaccessibleCloudPCReports,
+		"inaccessiblecloudpctrendreport":         CloudPCInaccessibleReportName_InaccessibleCloudPCTrendReport,
+		"regionalinaccessiblecloudpctrendreport": CloudPCInaccessibleReportName_RegionalInaccessibleCloudPCTrendReport,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

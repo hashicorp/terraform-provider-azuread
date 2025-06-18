@@ -16,6 +16,9 @@ type MeetingAttendanceReport struct {
 	// List of attendance records of an attendance report. Read-only.
 	AttendanceRecords *[]AttendanceRecord `json:"attendanceRecords,omitempty"`
 
+	// The external information of a virtual event. Returned only for event organizers or coorganizers. Read-only.
+	ExternalEventInformation *[]VirtualEventExternalInformation `json:"externalEventInformation,omitempty"`
+
 	// UTC time when the meeting ended. Read-only.
 	MeetingEndDateTime nullable.Type[string] `json:"meetingEndDateTime,omitempty"`
 
@@ -64,6 +67,7 @@ func (s MeetingAttendanceReport) MarshalJSON() ([]byte, error) {
 	}
 
 	delete(decoded, "attendanceRecords")
+	delete(decoded, "externalEventInformation")
 	delete(decoded, "meetingEndDateTime")
 	delete(decoded, "meetingStartDateTime")
 	delete(decoded, "totalParticipantCount")

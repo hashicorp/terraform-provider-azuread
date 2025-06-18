@@ -33,30 +33,32 @@ type Device struct {
 	// User-defined property set by Intune to automatically add devices to groups and simplify managing devices.
 	DeviceCategory nullable.Type[string] `json:"deviceCategory,omitempty"`
 
-	// Unique identifier set by Azure Device Registration Service at the time of registration. This is an alternate key that
-	// can be used to reference the device object. Supports $filter (eq, ne, not, startsWith).
+	// Unique identifier set by Azure Device Registration Service at the time of registration. This alternate key can be
+	// used to reference the device object. Supports $filter (eq, ne, not, startsWith).
 	DeviceId nullable.Type[string] `json:"deviceId,omitempty"`
 
 	// For internal use only. Set to null.
 	DeviceMetadata nullable.Type[string] `json:"deviceMetadata,omitempty"`
 
-	// Ownership of the device. This property is set by Intune. Possible values are: unknown, company, personal.
+	// Ownership of the device. Intune sets this property. Possible values are: unknown, company, personal.
 	DeviceOwnership nullable.Type[string] `json:"deviceOwnership,omitempty"`
 
 	// For internal use only.
 	DeviceVersion nullable.Type[int64] `json:"deviceVersion,omitempty"`
 
-	// The display name for the device. Required. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null
-	// values), $search, and $orderby.
+	// The display name for the device. Maximum length is 256 characters. Required. Supports $filter (eq, ne, not, ge, le,
+	// in, startsWith, and eq on null values), $search, and $orderby.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
 	// Enrollment profile applied to the device. For example, Apple Device Enrollment Profile, Device enrollment - Corporate
 	// device identifiers, or Windows Autopilot profile name. This property is set by Intune.
 	EnrollmentProfileName nullable.Type[string] `json:"enrollmentProfileName,omitempty"`
 
-	// Enrollment type of the device. This property is set by Intune. Possible values are: unknown, userEnrollment,
+	// Enrollment type of the device. Intune sets this property. Possible values are: unknown, userEnrollment,
 	// deviceEnrollmentManager, appleBulkWithUser, appleBulkWithoutUser, windowsAzureADJoin, windowsBulkUserless,
-	// windowsAutoEnrollment, windowsBulkAzureDomainJoin, windowsCoManagement.
+	// windowsAutoEnrollment, windowsBulkAzureDomainJoin, windowsCoManagement,
+	// windowsAzureADJoinUsingDeviceAuth,appleUserEnrollment, appleUserEnrollmentWithServiceAccount. NOTE: This property
+	// might return other values apart from those listed.
 	EnrollmentType nullable.Type[string] `json:"enrollmentType,omitempty"`
 
 	// The collection of open extensions defined for the device. Read-only. Nullable.
@@ -70,6 +72,8 @@ type Device struct {
 	// true if the device is managed by a Mobile Device Management (MDM) app; otherwise, false. This can only be updated by
 	// Intune for any device OS type or by an approved MDM app for Windows OS devices. Supports $filter (eq, ne, not).
 	IsManaged nullable.Type[bool] `json:"isManaged,omitempty"`
+
+	IsManagementRestricted nullable.Type[bool] `json:"isManagementRestricted,omitempty"`
 
 	// true if the device is rooted or jail-broken. This property can only be updated by Intune.
 	IsRooted nullable.Type[bool] `json:"isRooted,omitempty"`
@@ -151,8 +155,9 @@ type Device struct {
 	TransitiveMemberOf_ODataBind *[]string `json:"transitiveMemberOf@odata.bind,omitempty"`
 
 	// Type of trust for the joined device. Read-only. Possible values: Workplace (indicates bring your own personal
-	// devices), AzureAd (Cloud only joined devices), ServerAd (on-premises domain joined devices joined to Microsoft Entra
-	// ID). For more details, see Introduction to device management in Microsoft Entra ID.
+	// devices), AzureAd (Cloud-only joined devices), ServerAd (on-premises domain joined devices joined to Microsoft Entra
+	// ID). For more information, see Introduction to device management in Microsoft Entra ID. Supports $filter (eq, ne,
+	// not, in).
 	TrustType nullable.Type[string] `json:"trustType,omitempty"`
 
 	// Fields inherited from DirectoryObject
@@ -253,6 +258,7 @@ func (s *Device) UnmarshalJSON(bytes []byte) error {
 		EnrollmentType                nullable.Type[string]    `json:"enrollmentType,omitempty"`
 		IsCompliant                   nullable.Type[bool]      `json:"isCompliant,omitempty"`
 		IsManaged                     nullable.Type[bool]      `json:"isManaged,omitempty"`
+		IsManagementRestricted        nullable.Type[bool]      `json:"isManagementRestricted,omitempty"`
 		IsRooted                      nullable.Type[bool]      `json:"isRooted,omitempty"`
 		ManagementType                nullable.Type[string]    `json:"managementType,omitempty"`
 		Manufacturer                  nullable.Type[string]    `json:"manufacturer,omitempty"`
@@ -295,6 +301,7 @@ func (s *Device) UnmarshalJSON(bytes []byte) error {
 	s.EnrollmentType = decoded.EnrollmentType
 	s.IsCompliant = decoded.IsCompliant
 	s.IsManaged = decoded.IsManaged
+	s.IsManagementRestricted = decoded.IsManagementRestricted
 	s.IsRooted = decoded.IsRooted
 	s.ManagementType = decoded.ManagementType
 	s.Manufacturer = decoded.Manufacturer

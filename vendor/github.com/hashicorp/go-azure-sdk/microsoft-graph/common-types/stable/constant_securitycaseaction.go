@@ -17,6 +17,8 @@ const (
 	SecurityCaseAction_ContentExport      SecurityCaseAction = "contentExport"
 	SecurityCaseAction_ConvertToPdf       SecurityCaseAction = "convertToPdf"
 	SecurityCaseAction_EstimateStatistics SecurityCaseAction = "estimateStatistics"
+	SecurityCaseAction_ExportReport       SecurityCaseAction = "exportReport"
+	SecurityCaseAction_ExportResult       SecurityCaseAction = "exportResult"
 	SecurityCaseAction_HoldUpdate         SecurityCaseAction = "holdUpdate"
 	SecurityCaseAction_Index              SecurityCaseAction = "index"
 	SecurityCaseAction_PurgeData          SecurityCaseAction = "purgeData"
@@ -29,6 +31,8 @@ func PossibleValuesForSecurityCaseAction() []string {
 		string(SecurityCaseAction_ContentExport),
 		string(SecurityCaseAction_ConvertToPdf),
 		string(SecurityCaseAction_EstimateStatistics),
+		string(SecurityCaseAction_ExportReport),
+		string(SecurityCaseAction_ExportResult),
 		string(SecurityCaseAction_HoldUpdate),
 		string(SecurityCaseAction_Index),
 		string(SecurityCaseAction_PurgeData),
@@ -55,6 +59,8 @@ func parseSecurityCaseAction(input string) (*SecurityCaseAction, error) {
 		"contentexport":      SecurityCaseAction_ContentExport,
 		"converttopdf":       SecurityCaseAction_ConvertToPdf,
 		"estimatestatistics": SecurityCaseAction_EstimateStatistics,
+		"exportreport":       SecurityCaseAction_ExportReport,
+		"exportresult":       SecurityCaseAction_ExportResult,
 		"holdupdate":         SecurityCaseAction_HoldUpdate,
 		"index":              SecurityCaseAction_Index,
 		"purgedata":          SecurityCaseAction_PurgeData,

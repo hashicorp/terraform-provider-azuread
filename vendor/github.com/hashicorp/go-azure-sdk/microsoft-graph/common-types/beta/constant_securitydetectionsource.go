@@ -43,6 +43,7 @@ const (
 	SecurityDetectionSource_MicrosoftInsiderRiskManagement               SecurityDetectionSource = "microsoftInsiderRiskManagement"
 	SecurityDetectionSource_MicrosoftSentinel                            SecurityDetectionSource = "microsoftSentinel"
 	SecurityDetectionSource_MicrosoftThreatExperts                       SecurityDetectionSource = "microsoftThreatExperts"
+	SecurityDetectionSource_MicrosoftThreatIntelligence                  SecurityDetectionSource = "microsoftThreatIntelligence"
 	SecurityDetectionSource_NrtAlerts                                    SecurityDetectionSource = "nrtAlerts"
 	SecurityDetectionSource_ScheduledAlerts                              SecurityDetectionSource = "scheduledAlerts"
 	SecurityDetectionSource_SmartScreen                                  SecurityDetectionSource = "smartScreen"
@@ -82,6 +83,7 @@ func PossibleValuesForSecurityDetectionSource() []string {
 		string(SecurityDetectionSource_MicrosoftInsiderRiskManagement),
 		string(SecurityDetectionSource_MicrosoftSentinel),
 		string(SecurityDetectionSource_MicrosoftThreatExperts),
+		string(SecurityDetectionSource_MicrosoftThreatIntelligence),
 		string(SecurityDetectionSource_NrtAlerts),
 		string(SecurityDetectionSource_ScheduledAlerts),
 		string(SecurityDetectionSource_SmartScreen),
@@ -135,6 +137,7 @@ func parseSecurityDetectionSource(input string) (*SecurityDetectionSource, error
 		"microsoftinsiderriskmanagement":               SecurityDetectionSource_MicrosoftInsiderRiskManagement,
 		"microsoftsentinel":                            SecurityDetectionSource_MicrosoftSentinel,
 		"microsoftthreatexperts":                       SecurityDetectionSource_MicrosoftThreatExperts,
+		"microsoftthreatintelligence":                  SecurityDetectionSource_MicrosoftThreatIntelligence,
 		"nrtalerts":                                    SecurityDetectionSource_NrtAlerts,
 		"scheduledalerts":                              SecurityDetectionSource_ScheduledAlerts,
 		"smartscreen":                                  SecurityDetectionSource_SmartScreen,

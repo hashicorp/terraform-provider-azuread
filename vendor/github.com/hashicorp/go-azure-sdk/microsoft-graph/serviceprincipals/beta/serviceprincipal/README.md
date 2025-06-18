@@ -344,12 +344,7 @@ for _, item := range items {
 ctx := context.TODO()
 id := serviceprincipal.NewServicePrincipalID("servicePrincipalId")
 
-payload := serviceprincipal.RestoreRequest{
-	// ...
-}
-
-
-read, err := client.Restore(ctx, id, payload, serviceprincipal.DefaultRestoreOperationOptions())
+read, err := client.Restore(ctx, id, serviceprincipal.DefaultRestoreOperationOptions())
 if err != nil {
 	// handle the error
 }

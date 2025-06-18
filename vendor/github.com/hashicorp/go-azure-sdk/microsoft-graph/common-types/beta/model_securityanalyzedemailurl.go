@@ -20,6 +20,9 @@ type SecurityAnalyzedEmailUrl struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
+	// Details of entries in tenant allow/block list configured by tenant.
+	TenantAllowBlockListDetailInfo nullable.Type[string] `json:"tenantAllowBlockListDetailInfo,omitempty"`
+
 	// The type of threat associated with the URL. The possible values are: unknown, spam, malware, phishing, none,
 	// unknownFutureValue.
 	ThreatType *SecurityThreatType `json:"threatType,omitempty"`

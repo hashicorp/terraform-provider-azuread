@@ -13,6 +13,7 @@ type SecurityExportFileStructure string
 
 const (
 	SecurityExportFileStructure_Directory SecurityExportFileStructure = "directory"
+	SecurityExportFileStructure_Msg       SecurityExportFileStructure = "msg"
 	SecurityExportFileStructure_None      SecurityExportFileStructure = "none"
 	SecurityExportFileStructure_Pst       SecurityExportFileStructure = "pst"
 )
@@ -20,6 +21,7 @@ const (
 func PossibleValuesForSecurityExportFileStructure() []string {
 	return []string{
 		string(SecurityExportFileStructure_Directory),
+		string(SecurityExportFileStructure_Msg),
 		string(SecurityExportFileStructure_None),
 		string(SecurityExportFileStructure_Pst),
 	}
@@ -41,6 +43,7 @@ func (s *SecurityExportFileStructure) UnmarshalJSON(bytes []byte) error {
 func parseSecurityExportFileStructure(input string) (*SecurityExportFileStructure, error) {
 	vals := map[string]SecurityExportFileStructure{
 		"directory": SecurityExportFileStructure_Directory,
+		"msg":       SecurityExportFileStructure_Msg,
 		"none":      SecurityExportFileStructure_None,
 		"pst":       SecurityExportFileStructure_Pst,
 	}

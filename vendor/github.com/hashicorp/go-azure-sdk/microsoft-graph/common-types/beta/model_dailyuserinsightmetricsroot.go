@@ -23,6 +23,8 @@ type DailyUserInsightMetricsRoot struct {
 	// Insights for MFA usage on apps registered in the tenant for a specified period.
 	MfaCompletions *[]MfaCompletionMetric `json:"mfaCompletions,omitempty"`
 
+	MfaTelecomFraud *[]MfaTelecomFraudMetric `json:"mfaTelecomFraud,omitempty"`
+
 	// Total sign-ups on apps registered in the tenant for a specified period.
 	SignUps *[]UserSignUpMetric `json:"signUps,omitempty"`
 

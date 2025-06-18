@@ -16,7 +16,7 @@ type AllLicensedUsersAssignmentTarget struct {
 
 	// Fields inherited from DeviceAndAppManagementAssignmentTarget
 
-	// The Id of the filter for the target assignment.
+	// The ID of the filter for the target assignment.
 	DeviceAndAppManagementAssignmentFilterId nullable.Type[string] `json:"deviceAndAppManagementAssignmentFilterId,omitempty"`
 
 	// Represents type of the assignment filter.

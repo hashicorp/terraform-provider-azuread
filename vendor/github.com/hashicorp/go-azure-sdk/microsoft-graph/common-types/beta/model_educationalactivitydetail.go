@@ -20,16 +20,16 @@ type EducationalActivityDetail struct {
 	// Short description of the program provided by the user.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
-	// Long-form name of the program that the user has provided.
+	// Long-form name of the program that the user provided.
 	DisplayName *string `json:"displayName,omitempty"`
 
 	// Majors and minors associated with the program. (if applicable)
 	FieldsOfStudy *[]string `json:"fieldsOfStudy,omitempty"`
 
-	// The final grade, class, GPA or score.
+	// The final grade, class, GPA, or score.
 	Grade nullable.Type[string] `json:"grade,omitempty"`
 
-	// Additional notes the user has provided.
+	// More notes the user provided.
 	Notes nullable.Type[string] `json:"notes,omitempty"`
 
 	// The OData ID of this entity

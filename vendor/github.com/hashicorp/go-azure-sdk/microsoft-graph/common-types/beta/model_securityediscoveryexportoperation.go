@@ -13,13 +13,13 @@ import (
 var _ SecurityCaseOperation = SecurityEdiscoveryExportOperation{}
 
 type SecurityEdiscoveryExportOperation struct {
-	// The name of the Azure storage location where the export is stored. This only applies to exports stored in your own
-	// Azure storage location. The azureBlobContainer property is deprecated and will stop returning data on April 30th,
+	// The name of the Azure storage location where the export is stored. This name only applies to exports stored in your
+	// own Azure storage location. The azureBlobContainer property is deprecated and stopped returning data on April 30,
 	// 2023.
 	AzureBlobContainer nullable.Type[string] `json:"azureBlobContainer,omitempty"`
 
-	// The SAS token for the Azure storage location. This only applies to exports stored in your own Azure storage location.
-	// The azureBlobToken property is deprecated and will stop returning data on April 30, 2023.
+	// The SAS token for the Azure storage location. This token only applies to exports stored in your own Azure storage
+	// location. The azureBlobToken property is deprecated and stopped returning data on April 30, 2023.
 	AzureBlobToken nullable.Type[string] `json:"azureBlobToken,omitempty"`
 
 	// The description provided for the export.
@@ -29,16 +29,20 @@ type SecurityEdiscoveryExportOperation struct {
 	// Azure storage location, this property returns empty.
 	ExportFileMetadata *[]SecurityExportFileMetadata `json:"exportFileMetadata,omitempty"`
 
-	// The options provided for the export. For more information, see reviewSet: export. Possible values are: originalFiles,
-	// text, pdfReplacement, fileInfo, tags. The fileInfo member is deprecated and will stop returning data on April 30,
-	// 2023. Going forward, the summary and load file are always included.
+	// The options provided for the export. For more information, see reviewSet: export. The fileInfo member is deprecated
+	// and stopped returning data on April 30, 2023. Going forward, the summary and load files are always included. Possible
+	// values are: originalFiles, text, pdfReplacement, tags, unknownFutureValue, splitSource, includeFolderAndPath,
+	// friendlyName, condensePaths, optimizedPartitionSize. Use the Prefer: include-unknown-enum-members request header to
+	// get the following values from this evolvable enum: splitSource, includeFolderAndPath, friendlyName, condensePaths,
+	// optimizedPartitionSize.
 	ExportOptions *SecurityExportOptions `json:"exportOptions,omitempty"`
 
-	// The options provided that specify the structure of the export. For more information, see reviewSet: export. Possible
-	// values are: none, directory, pst.
+	// The options that specify the structure of the export. For more information, see reviewSet: export. Possible values
+	// are: none, directory, pst, unknownFutureValue, msg. Use the Prefer: include-unknown-enum-members request header to
+	// get the following value from this evolvable enum: msg.
 	ExportStructure *SecurityExportFileStructure `json:"exportStructure,omitempty"`
 
-	// The output folder ID. The outputFolderId property is deprecated and will stop returning data on April 30, 2023.
+	// The output folder ID. The outputFolderId property is deprecated and stopped returning data on April 30, 2023.
 	OutputFolderId nullable.Type[string] `json:"outputFolderId,omitempty"`
 
 	// The name provided for the export.
@@ -53,9 +57,9 @@ type SecurityEdiscoveryExportOperation struct {
 	// Fields inherited from SecurityCaseOperation
 
 	// The type of action the operation represents. Possible values are: contentExport, applyTags, convertToPdf, index,
-	// estimateStatistics, addToReviewSet, holdUpdate, unknownFutureValue, purgeData, exportReport, exportResult. You must
-	// use the Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum:
-	// purgeData, exportReport, exportResult.
+	// estimateStatistics, addToReviewSet, holdUpdate, unknownFutureValue, purgeData, exportReport, exportResult. Use the
+	// Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum: purgeData,
+	// exportReport, exportResult.
 	Action *SecurityCaseAction `json:"action,omitempty"`
 
 	// The date and time the operation was completed.

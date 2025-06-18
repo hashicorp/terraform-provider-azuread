@@ -28,6 +28,8 @@ type SecurityEdiscoveryEstimateOperation struct {
 	// The number of mailboxes that had search hits.
 	SiteCount nullable.Type[int64] `json:"siteCount,omitempty"`
 
+	StatisticsOptions *SecurityStatisticsOptions `json:"statisticsOptions,omitempty"`
+
 	// The estimated count of unindexed items for the collection.
 	UnindexedItemCount nullable.Type[int64] `json:"unindexedItemCount,omitempty"`
 
@@ -36,8 +38,10 @@ type SecurityEdiscoveryEstimateOperation struct {
 
 	// Fields inherited from SecurityCaseOperation
 
-	// The type of action the operation represents. Possible values are:
-	// addToReviewSet,applyTags,contentExport,convertToPdf,estimateStatistics, purgeData
+	// The type of action the operation represents. Possible values are: contentExport, applyTags, convertToPdf, index,
+	// estimateStatistics, addToReviewSet, holdUpdate, unknownFutureValue, purgeData, exportReport, exportResult. Use the
+	// Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum: purgeData,
+	// exportReport, exportResult.
 	Action *SecurityCaseAction `json:"action,omitempty"`
 
 	// The date and time the operation was completed.
@@ -133,6 +137,7 @@ func (s *SecurityEdiscoveryEstimateOperation) UnmarshalJSON(bytes []byte) error 
 		MailboxCount       nullable.Type[int64]         `json:"mailboxCount,omitempty"`
 		Search             *SecurityEdiscoverySearch    `json:"search,omitempty"`
 		SiteCount          nullable.Type[int64]         `json:"siteCount,omitempty"`
+		StatisticsOptions  *SecurityStatisticsOptions   `json:"statisticsOptions,omitempty"`
 		UnindexedItemCount nullable.Type[int64]         `json:"unindexedItemCount,omitempty"`
 		UnindexedItemsSize nullable.Type[int64]         `json:"unindexedItemsSize,omitempty"`
 		Action             *SecurityCaseAction          `json:"action,omitempty"`
@@ -154,6 +159,7 @@ func (s *SecurityEdiscoveryEstimateOperation) UnmarshalJSON(bytes []byte) error 
 	s.MailboxCount = decoded.MailboxCount
 	s.Search = decoded.Search
 	s.SiteCount = decoded.SiteCount
+	s.StatisticsOptions = decoded.StatisticsOptions
 	s.UnindexedItemCount = decoded.UnindexedItemCount
 	s.UnindexedItemsSize = decoded.UnindexedItemsSize
 	s.Action = decoded.Action

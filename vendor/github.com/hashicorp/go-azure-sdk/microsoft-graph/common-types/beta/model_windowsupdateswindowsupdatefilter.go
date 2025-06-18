@@ -130,6 +130,14 @@ func UnmarshalWindowsUpdatesWindowsUpdateFilterImplementation(input []byte) (Win
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.windowsUpdates.remediationUpdateFilter") {
+		var out WindowsUpdatesRemediationUpdateFilter
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into WindowsUpdatesRemediationUpdateFilter: %+v", err)
+		}
+		return out, nil
+	}
+
 	var parent BaseWindowsUpdatesWindowsUpdateFilterImpl
 	if err := json.Unmarshal(input, &parent); err != nil {
 		return nil, fmt.Errorf("unmarshaling into BaseWindowsUpdatesWindowsUpdateFilterImpl: %+v", err)

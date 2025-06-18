@@ -29,7 +29,7 @@ type ServicePrincipal struct {
 	// The description exposed by the associated application.
 	AppDescription nullable.Type[string] `json:"appDescription,omitempty"`
 
-	// The display name exposed by the associated application.
+	// The display name exposed by the associated application. Maximum length is 256 characters.
 	AppDisplayName nullable.Type[string] `json:"appDisplayName,omitempty"`
 
 	// The unique identifier for the associated application (its appId property). Alternate key. Supports $filter (eq, ne,
@@ -73,7 +73,11 @@ type ServicePrincipal struct {
 	CreatedObjects_ODataBind *[]string `json:"createdObjects@odata.bind,omitempty"`
 
 	// An open complex type that holds the value of a custom security attribute that is assigned to a directory object.
-	// Nullable. Returned only on $select. Supports $filter (eq, ne, not, startsWith). Filter value is case sensitive.
+	// Nullable. Returned only on $select. Supports $filter (eq, ne, not, startsWith). Filter value is case sensitive. To
+	// read this property, the calling app must be assigned the CustomSecAttributeAssignment.Read.All permission. To write
+	// this property, the calling app must be assigned the CustomSecAttributeAssignment.ReadWrite.All permissions. To read
+	// or write this property in delegated scenarios, the admin must be assigned the Attribute Assignment Administrator
+	// role.
 	CustomSecurityAttributes *CustomSecurityAttributeValue `json:"customSecurityAttributes,omitempty"`
 
 	DelegatedPermissionClassifications *[]DelegatedPermissionClassification `json:"delegatedPermissionClassifications,omitempty"`
@@ -155,8 +159,8 @@ type ServicePrincipal struct {
 	OwnedObjects_ODataBind *[]string `json:"ownedObjects@odata.bind,omitempty"`
 
 	// Directory objects that are owners of this servicePrincipal. The owners are a set of nonadmin users or
-	// servicePrincipals who are allowed to modify this object. Read-only. Nullable. Supports $expand, $filter (/$count eq
-	// 0, /$count ne 0, /$count eq 1, /$count ne 1), and $select nested in $expand.
+	// servicePrincipals who are allowed to modify this object. Supports $expand, $filter (/$count eq 0, /$count ne 0,
+	// /$count eq 1, /$count ne 1), and $select nested in $expand.
 	Owners *[]DirectoryObject `json:"owners,omitempty"`
 
 	// List of OData IDs for `Owners` to bind to this entity
@@ -167,7 +171,8 @@ type ServicePrincipal struct {
 
 	// Specifies the single sign-on mode configured for this application. Microsoft Entra ID uses the preferred single
 	// sign-on mode to launch the application from Microsoft 365 or the My Apps portal. The supported values are password,
-	// saml, notSupported, and oidc.
+	// saml, notSupported, and oidc. Note: This field might be null for older SAML apps and for OIDC applications where it
+	// isn't set automatically.
 	PreferredSingleSignOnMode nullable.Type[string] `json:"preferredSingleSignOnMode,omitempty"`
 
 	// This property can be used on SAML applications (apps that have preferredSingleSignOnMode set to saml) to control
@@ -303,7 +308,6 @@ func (s ServicePrincipal) MarshalJSON() ([]byte, error) {
 	delete(decoded, "memberOf")
 	delete(decoded, "oauth2PermissionGrants")
 	delete(decoded, "ownedObjects")
-	delete(decoded, "owners")
 	delete(decoded, "resourceSpecificApplicationPermissions")
 	delete(decoded, "signInAudience")
 

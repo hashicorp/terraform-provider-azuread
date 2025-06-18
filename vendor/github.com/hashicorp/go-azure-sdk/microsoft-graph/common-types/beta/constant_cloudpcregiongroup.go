@@ -13,15 +13,19 @@ type CloudPCRegionGroup string
 
 const (
 	CloudPCRegionGroup_Asia            CloudPCRegionGroup = "asia"
+	CloudPCRegionGroup_Australasia     CloudPCRegionGroup = "australasia"
 	CloudPCRegionGroup_Australia       CloudPCRegionGroup = "australia"
 	CloudPCRegionGroup_Canada          CloudPCRegionGroup = "canada"
 	CloudPCRegionGroup_Default         CloudPCRegionGroup = "default"
 	CloudPCRegionGroup_Euap            CloudPCRegionGroup = "euap"
+	CloudPCRegionGroup_Europe          CloudPCRegionGroup = "europe"
 	CloudPCRegionGroup_EuropeUnion     CloudPCRegionGroup = "europeUnion"
 	CloudPCRegionGroup_France          CloudPCRegionGroup = "france"
 	CloudPCRegionGroup_Germany         CloudPCRegionGroup = "germany"
 	CloudPCRegionGroup_India           CloudPCRegionGroup = "india"
 	CloudPCRegionGroup_Japan           CloudPCRegionGroup = "japan"
+	CloudPCRegionGroup_Mexico          CloudPCRegionGroup = "mexico"
+	CloudPCRegionGroup_MiddleEast      CloudPCRegionGroup = "middleEast"
 	CloudPCRegionGroup_Norway          CloudPCRegionGroup = "norway"
 	CloudPCRegionGroup_SouthAmerica    CloudPCRegionGroup = "southAmerica"
 	CloudPCRegionGroup_SouthKorea      CloudPCRegionGroup = "southKorea"
@@ -37,15 +41,19 @@ const (
 func PossibleValuesForCloudPCRegionGroup() []string {
 	return []string{
 		string(CloudPCRegionGroup_Asia),
+		string(CloudPCRegionGroup_Australasia),
 		string(CloudPCRegionGroup_Australia),
 		string(CloudPCRegionGroup_Canada),
 		string(CloudPCRegionGroup_Default),
 		string(CloudPCRegionGroup_Euap),
+		string(CloudPCRegionGroup_Europe),
 		string(CloudPCRegionGroup_EuropeUnion),
 		string(CloudPCRegionGroup_France),
 		string(CloudPCRegionGroup_Germany),
 		string(CloudPCRegionGroup_India),
 		string(CloudPCRegionGroup_Japan),
+		string(CloudPCRegionGroup_Mexico),
+		string(CloudPCRegionGroup_MiddleEast),
 		string(CloudPCRegionGroup_Norway),
 		string(CloudPCRegionGroup_SouthAmerica),
 		string(CloudPCRegionGroup_SouthKorea),
@@ -75,15 +83,19 @@ func (s *CloudPCRegionGroup) UnmarshalJSON(bytes []byte) error {
 func parseCloudPCRegionGroup(input string) (*CloudPCRegionGroup, error) {
 	vals := map[string]CloudPCRegionGroup{
 		"asia":            CloudPCRegionGroup_Asia,
+		"australasia":     CloudPCRegionGroup_Australasia,
 		"australia":       CloudPCRegionGroup_Australia,
 		"canada":          CloudPCRegionGroup_Canada,
 		"default":         CloudPCRegionGroup_Default,
 		"euap":            CloudPCRegionGroup_Euap,
+		"europe":          CloudPCRegionGroup_Europe,
 		"europeunion":     CloudPCRegionGroup_EuropeUnion,
 		"france":          CloudPCRegionGroup_France,
 		"germany":         CloudPCRegionGroup_Germany,
 		"india":           CloudPCRegionGroup_India,
 		"japan":           CloudPCRegionGroup_Japan,
+		"mexico":          CloudPCRegionGroup_Mexico,
+		"middleeast":      CloudPCRegionGroup_MiddleEast,
 		"norway":          CloudPCRegionGroup_Norway,
 		"southamerica":    CloudPCRegionGroup_SouthAmerica,
 		"southkorea":      CloudPCRegionGroup_SouthKorea,

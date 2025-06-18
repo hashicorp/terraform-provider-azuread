@@ -20,9 +20,13 @@ type CloudPCSnapshot struct {
 	// Universal Time (UTC). For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
-	// The date and time when the snapshot expires. The time is shown in ISO 8601 format and Coordinated Universal Time
-	// (UTC) time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
+	// The date and time when the snapshot expires. The timestamp is shown in ISO 8601 format and Coordinated Universal Time
+	// (UTC). For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	ExpirationDateTime nullable.Type[string] `json:"expirationDateTime,omitempty"`
+
+	// Indicates the health check status of the Cloud PC snapshot. Possible values are, unknown, healthy, unhealthy,
+	// unknownFutureValue. The default value is unknown. Read-only. Nullable.
+	HealthCheckStatus *CloudPCSnapshotHealthCheckStatus `json:"healthCheckStatus,omitempty"`
 
 	// The date and time at which the snapshot was last used to restore the Cloud PC device. The timestamp is shown in ISO
 	// 8601 format and Coordinated Universal Time (UTC). For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
@@ -72,6 +76,8 @@ func (s CloudPCSnapshot) MarshalJSON() ([]byte, error) {
 	if err = json.Unmarshal(encoded, &decoded); err != nil {
 		return nil, fmt.Errorf("unmarshaling CloudPCSnapshot: %+v", err)
 	}
+
+	delete(decoded, "healthCheckStatus")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.cloudPcSnapshot"

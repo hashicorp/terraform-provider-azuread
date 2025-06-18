@@ -8,6 +8,9 @@ type ExternalConnectorsDisplayTemplate struct {
 	// characters allowed.
 	Id *string `json:"id,omitempty"`
 
+	// Standard way to represent a Json blob on Graph.
+	Layout *Json `json:"layout,omitempty"`
+
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
 

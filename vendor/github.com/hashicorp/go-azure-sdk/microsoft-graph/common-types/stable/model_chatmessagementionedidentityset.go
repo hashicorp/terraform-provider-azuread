@@ -11,7 +11,7 @@ import (
 var _ IdentitySet = ChatMessageMentionedIdentitySet{}
 
 type ChatMessageMentionedIdentitySet struct {
-	// If present, represents a conversation (for example, team or channel) @mentioned in a message.
+	// If present, represents a conversation (for example, team, channel, or chat) @mentioned in a message.
 	Conversation *TeamworkConversationIdentity `json:"conversation,omitempty"`
 
 	// Fields inherited from IdentitySet

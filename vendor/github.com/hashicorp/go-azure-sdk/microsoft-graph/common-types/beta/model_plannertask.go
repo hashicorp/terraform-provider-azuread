@@ -89,6 +89,9 @@ type BasePlannerTaskImpl struct {
 	// Read-only. The date on which task is added to or removed from MyDay.
 	IsOnMyDayLastModifiedDate nullable.Type[string] `json:"isOnMyDayLastModifiedDate,omitempty"`
 
+	LastModifiedBy       IdentitySet           `json:"lastModifiedBy"`
+	LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
+
 	// The hint used to order items of this type in a list view. For more information, see Using order hints in plannern.
 	OrderHint nullable.Type[string] `json:"orderHint,omitempty"`
 
@@ -118,10 +121,9 @@ type BasePlannerTaskImpl struct {
 	ReferenceCount nullable.Type[int64] `json:"referenceCount,omitempty"`
 
 	// Indicates all the requirements specified on the plannerTask. Possible values are: none, checklistCompletion,
-	// unknownFutureValue, formCompletion, approvalCompletion. Read-only. You must use the Prefer:
-	// include-unknown-enum-members request header to get the following values in this evolvable enum: formCompletion,
-	// approvalCompletion. The plannerTaskCompletionRequirementDetails in plannerTaskDetails has details of the requirements
-	// specified, if any.
+	// unknownFutureValue, formCompletion, approvalCompletion. Read-only. Use the Prefer: include-unknown-enum-members
+	// request header to get the following values in this evolvable enum: formCompletion, approvalCompletion. The
+	// plannerTaskCompletionRequirementDetails in plannerTaskDetails has details of the requirements specified, if any.
 	SpecifiedCompletionRequirements *PlannerTaskCompletionRequirements `json:"specifiedCompletionRequirements,omitempty"`
 
 	// Date and time at which the task starts. The Timestamp type represents date and time information using ISO 8601 format
@@ -250,6 +252,7 @@ func (s *BasePlannerTaskImpl) UnmarshalJSON(bytes []byte) error {
 		IsArchived                      nullable.Type[bool]                   `json:"isArchived,omitempty"`
 		IsOnMyDay                       nullable.Type[bool]                   `json:"isOnMyDay,omitempty"`
 		IsOnMyDayLastModifiedDate       nullable.Type[string]                 `json:"isOnMyDayLastModifiedDate,omitempty"`
+		LastModifiedDateTime            nullable.Type[string]                 `json:"lastModifiedDateTime,omitempty"`
 		OrderHint                       nullable.Type[string]                 `json:"orderHint,omitempty"`
 		PercentComplete                 nullable.Type[int64]                  `json:"percentComplete,omitempty"`
 		PlanId                          nullable.Type[string]                 `json:"planId,omitempty"`
@@ -287,6 +290,7 @@ func (s *BasePlannerTaskImpl) UnmarshalJSON(bytes []byte) error {
 	s.IsArchived = decoded.IsArchived
 	s.IsOnMyDay = decoded.IsOnMyDay
 	s.IsOnMyDayLastModifiedDate = decoded.IsOnMyDayLastModifiedDate
+	s.LastModifiedDateTime = decoded.LastModifiedDateTime
 	s.OrderHint = decoded.OrderHint
 	s.PercentComplete = decoded.PercentComplete
 	s.PlanId = decoded.PlanId
@@ -329,6 +333,14 @@ func (s *BasePlannerTaskImpl) UnmarshalJSON(bytes []byte) error {
 			return fmt.Errorf("unmarshaling field 'CreationSource' for 'BasePlannerTaskImpl': %+v", err)
 		}
 		s.CreationSource = impl
+	}
+
+	if v, ok := temp["lastModifiedBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'LastModifiedBy' for 'BasePlannerTaskImpl': %+v", err)
+		}
+		s.LastModifiedBy = impl
 	}
 
 	return nil

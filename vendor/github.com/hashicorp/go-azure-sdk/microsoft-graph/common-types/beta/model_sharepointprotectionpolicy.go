@@ -19,6 +19,8 @@ type SharePointProtectionPolicy struct {
 	// The protection units (sites) that are protected under the site protection policy.
 	SiteProtectionUnits *[]SiteProtectionUnit `json:"siteProtectionUnits,omitempty"`
 
+	SiteProtectionUnitsBulkAdditionJobs *[]SiteProtectionUnitsBulkAdditionJob `json:"siteProtectionUnitsBulkAdditionJobs,omitempty"`
+
 	// Fields inherited from ProtectionPolicyBase
 
 	// The identity of person who created the policy.
@@ -112,16 +114,17 @@ var _ json.Unmarshaler = &SharePointProtectionPolicy{}
 
 func (s *SharePointProtectionPolicy) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		SiteInclusionRules   *[]SiteProtectionRule   `json:"siteInclusionRules,omitempty"`
-		SiteProtectionUnits  *[]SiteProtectionUnit   `json:"siteProtectionUnits,omitempty"`
-		CreatedDateTime      nullable.Type[string]   `json:"createdDateTime,omitempty"`
-		DisplayName          nullable.Type[string]   `json:"displayName,omitempty"`
-		LastModifiedDateTime nullable.Type[string]   `json:"lastModifiedDateTime,omitempty"`
-		RetentionSettings    *[]RetentionSetting     `json:"retentionSettings,omitempty"`
-		Status               *ProtectionPolicyStatus `json:"status,omitempty"`
-		Id                   *string                 `json:"id,omitempty"`
-		ODataId              *string                 `json:"@odata.id,omitempty"`
-		ODataType            *string                 `json:"@odata.type,omitempty"`
+		SiteInclusionRules                  *[]SiteProtectionRule                 `json:"siteInclusionRules,omitempty"`
+		SiteProtectionUnits                 *[]SiteProtectionUnit                 `json:"siteProtectionUnits,omitempty"`
+		SiteProtectionUnitsBulkAdditionJobs *[]SiteProtectionUnitsBulkAdditionJob `json:"siteProtectionUnitsBulkAdditionJobs,omitempty"`
+		CreatedDateTime                     nullable.Type[string]                 `json:"createdDateTime,omitempty"`
+		DisplayName                         nullable.Type[string]                 `json:"displayName,omitempty"`
+		LastModifiedDateTime                nullable.Type[string]                 `json:"lastModifiedDateTime,omitempty"`
+		RetentionSettings                   *[]RetentionSetting                   `json:"retentionSettings,omitempty"`
+		Status                              *ProtectionPolicyStatus               `json:"status,omitempty"`
+		Id                                  *string                               `json:"id,omitempty"`
+		ODataId                             *string                               `json:"@odata.id,omitempty"`
+		ODataType                           *string                               `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -129,6 +132,7 @@ func (s *SharePointProtectionPolicy) UnmarshalJSON(bytes []byte) error {
 
 	s.SiteInclusionRules = decoded.SiteInclusionRules
 	s.SiteProtectionUnits = decoded.SiteProtectionUnits
+	s.SiteProtectionUnitsBulkAdditionJobs = decoded.SiteProtectionUnitsBulkAdditionJobs
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.DisplayName = decoded.DisplayName
 	s.Id = decoded.Id

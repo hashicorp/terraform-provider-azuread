@@ -76,18 +76,26 @@ func UnmarshalNetworkaccessRelatedResourceImplementation(input []byte) (Networka
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.networkaccess.relatedMalware") {
-		var out NetworkaccessRelatedMalware
+	if strings.EqualFold(value, "#microsoft.graph.networkaccess.relatedFile") {
+		var out NetworkaccessRelatedFile
 		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into NetworkaccessRelatedMalware: %+v", err)
+			return nil, fmt.Errorf("unmarshaling into NetworkaccessRelatedFile: %+v", err)
 		}
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.networkaccess.relatedProcess") {
-		var out NetworkaccessRelatedProcess
+	if strings.EqualFold(value, "#microsoft.graph.networkaccess.relatedFileHash") {
+		var out NetworkaccessRelatedFileHash
 		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into NetworkaccessRelatedProcess: %+v", err)
+			return nil, fmt.Errorf("unmarshaling into NetworkaccessRelatedFileHash: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.networkaccess.relatedMalware") {
+		var out NetworkaccessRelatedMalware
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into NetworkaccessRelatedMalware: %+v", err)
 		}
 		return out, nil
 	}
@@ -120,6 +128,22 @@ func UnmarshalNetworkaccessRelatedResourceImplementation(input []byte) (Networka
 		var out NetworkaccessRelatedToken
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into NetworkaccessRelatedToken: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.networkaccess.relatedTransaction") {
+		var out NetworkaccessRelatedTransaction
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into NetworkaccessRelatedTransaction: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.networkaccess.relatedUrl") {
+		var out NetworkaccessRelatedUrl
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into NetworkaccessRelatedUrl: %+v", err)
 		}
 		return out, nil
 	}

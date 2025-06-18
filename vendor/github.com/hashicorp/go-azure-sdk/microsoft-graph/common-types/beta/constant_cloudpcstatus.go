@@ -19,6 +19,7 @@ const (
 	CloudPCStatus_MovingRegion            CloudPCStatus = "movingRegion"
 	CloudPCStatus_NotProvisioned          CloudPCStatus = "notProvisioned"
 	CloudPCStatus_PendingProvision        CloudPCStatus = "pendingProvision"
+	CloudPCStatus_Preparing               CloudPCStatus = "preparing"
 	CloudPCStatus_Provisioned             CloudPCStatus = "provisioned"
 	CloudPCStatus_ProvisionedWithWarnings CloudPCStatus = "provisionedWithWarnings"
 	CloudPCStatus_Provisioning            CloudPCStatus = "provisioning"
@@ -37,6 +38,7 @@ func PossibleValuesForCloudPCStatus() []string {
 		string(CloudPCStatus_MovingRegion),
 		string(CloudPCStatus_NotProvisioned),
 		string(CloudPCStatus_PendingProvision),
+		string(CloudPCStatus_Preparing),
 		string(CloudPCStatus_Provisioned),
 		string(CloudPCStatus_ProvisionedWithWarnings),
 		string(CloudPCStatus_Provisioning),
@@ -69,6 +71,7 @@ func parseCloudPCStatus(input string) (*CloudPCStatus, error) {
 		"movingregion":            CloudPCStatus_MovingRegion,
 		"notprovisioned":          CloudPCStatus_NotProvisioned,
 		"pendingprovision":        CloudPCStatus_PendingProvision,
+		"preparing":               CloudPCStatus_Preparing,
 		"provisioned":             CloudPCStatus_Provisioned,
 		"provisionedwithwarnings": CloudPCStatus_ProvisionedWithWarnings,
 		"provisioning":            CloudPCStatus_Provisioning,

@@ -17,7 +17,7 @@ type ArchivedPrintJob struct {
 	// The dateTimeOffset when the job was acquired by the printer, if any. Read-only.
 	AcquiredDateTime nullable.Type[string] `json:"acquiredDateTime,omitempty"`
 
-	// The dateTimeOffset when the job was completed, canceled or aborted. Read-only.
+	// The dateTimeOffset when the job was completed, canceled, or aborted. Read-only.
 	CompletionDateTime nullable.Type[string] `json:"completionDateTime,omitempty"`
 
 	// The number of copies that were printed. Read-only.

@@ -19,8 +19,14 @@ type PrintDocument struct {
 	// The document's name. Read-only.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
+	// The time the document was downloaded. Read-only
+	DownloadedDateTime nullable.Type[string] `json:"downloadedDateTime,omitempty"`
+
 	// The document's size in bytes. Read-only.
 	Size *int64 `json:"size,omitempty"`
+
+	// The time the document was uploaded. Read-only
+	UploadedDateTime nullable.Type[string] `json:"uploadedDateTime,omitempty"`
 
 	// Fields inherited from Entity
 

@@ -57,11 +57,11 @@ type RiskDetection struct {
 	RequestId nullable.Type[string] `json:"requestId,omitempty"`
 
 	// Details of the detected risk. The possible values are: none, adminGeneratedTemporaryPassword,
-	// userPerformedSecuredPasswordChange, userPerformedSecuredPasswordReset, adminConfirmedSigninSafe,
-	// aiConfirmedSigninSafe, userPassedMFADrivenByRiskBasedPolicy, adminDismissedAllRiskForUser,
+	// userChangedPasswordOnPremises, userPerformedSecuredPasswordChange, userPerformedSecuredPasswordReset,
+	// adminConfirmedSigninSafe, aiConfirmedSigninSafe, userPassedMFADrivenByRiskBasedPolicy, adminDismissedAllRiskForUser,
 	// adminConfirmedSigninCompromised, hidden, adminConfirmedUserCompromised, unknownFutureValue,
-	// m365DAdminDismissedDetection. Note that you must use the Prefer: include - unknown -enum-members request header to
-	// get the following value(s) in this evolvable enum: m365DAdminDismissedDetection.
+	// m365DAdminDismissedDetection. Use the Prefer: include - unknown -enum-members request header to get the following
+	// value(s) in this evolvable enum: m365DAdminDismissedDetection.
 	RiskDetail *RiskDetail `json:"riskDetail,omitempty"`
 
 	// The type of risk event detected. The possible values are adminConfirmedUserCompromised, anomalousToken,

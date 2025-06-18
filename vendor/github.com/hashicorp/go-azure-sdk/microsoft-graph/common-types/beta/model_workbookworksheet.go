@@ -13,25 +13,25 @@ import (
 var _ Entity = WorkbookWorksheet{}
 
 type WorkbookWorksheet struct {
-	// Returns collection of charts that are part of the worksheet. Read-only.
+	// The list of charts that are part of the worksheet. Read-only.
 	Charts *[]WorkbookChart `json:"charts,omitempty"`
 
 	// The display name of the worksheet.
 	Name nullable.Type[string] `json:"name,omitempty"`
 
-	// Returns collection of names that are associated with the worksheet. Read-only.
+	// The list of names that are associated with the worksheet. Read-only.
 	Names *[]WorkbookNamedItem `json:"names,omitempty"`
 
-	// Collection of PivotTables that are part of the worksheet.
+	// The list of piot tables that are part of the worksheet.
 	PivotTables *[]WorkbookPivotTable `json:"pivotTables,omitempty"`
 
 	// The zero-based position of the worksheet within the workbook.
 	Position *int64 `json:"position,omitempty"`
 
-	// Returns sheet protection object for a worksheet. Read-only.
+	// The sheet protection object for a worksheet. Read-only.
 	Protection *WorkbookWorksheetProtection `json:"protection,omitempty"`
 
-	// Collection of tables that are part of the worksheet. Read-only.
+	// The list of tables that are part of the worksheet. Read-only.
 	Tables *[]WorkbookTable `json:"tables,omitempty"`
 
 	// Collection of document tasks on this worksheet. Read-only.

@@ -19,6 +19,9 @@ type PlannerTeamsPublicationInfo struct {
 	// The identifier of the publication. Read-only.
 	PublicationId nullable.Type[string] `json:"publicationId,omitempty"`
 
+	// The name of the published task list. Read-only.
+	PublicationName nullable.Type[string] `json:"publicationName,omitempty"`
+
 	// The identifier of the plannerPlan this task was originally placed in. Read-only.
 	PublishedToPlanId nullable.Type[string] `json:"publishedToPlanId,omitempty"`
 
@@ -75,6 +78,7 @@ func (s PlannerTeamsPublicationInfo) MarshalJSON() ([]byte, error) {
 
 	delete(decoded, "lastModifiedDateTime")
 	delete(decoded, "publicationId")
+	delete(decoded, "publicationName")
 	delete(decoded, "publishedToPlanId")
 	delete(decoded, "publishingTeamId")
 	delete(decoded, "publishingTeamName")

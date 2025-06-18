@@ -13,11 +13,16 @@ import (
 var _ ChangeTrackedEntity = WorkforceIntegration{}
 
 type WorkforceIntegration struct {
-	// API version for the call back URL. Start with 1.
+	// API version for the callback URL. Start with 1.
 	ApiVersion nullable.Type[int64] `json:"apiVersion,omitempty"`
 
 	// Name of the workforce integration.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
+
+	// Support to view eligibility-filtered results. Possible values are: none, swapRequest, offerShiftRequest,
+	// unknownFutureValue, timeOffReason. Use the Prefer: include-unknown-enum-members request header to get the following
+	// value in this evolvable enum: timeOffReason.
+	EligibilityFilteringEnabledEntities *EligibilityFilteringEnabledEntities `json:"eligibilityFilteringEnabledEntities,omitempty"`
 
 	// The workforce integration encryption resource.
 	Encryption *WorkforceIntegrationEncryption `json:"encryption,omitempty"`
@@ -25,16 +30,21 @@ type WorkforceIntegration struct {
 	// Indicates whether this workforce integration is currently active and available.
 	IsActive nullable.Type[bool] `json:"isActive,omitempty"`
 
-	// The Shifts entities supported for synchronous change notifications. Shifts will make a call back to the url provided
-	// on client changes on those entities added here. By default, no entities are supported for change notifications.
-	// Possible values are: none, shift, swapRequest, userShiftPreferences, openshift, openShiftRequest, offerShiftRequest,
-	// unknownFutureValue.
+	// The Shifts entities supported for synchronous change notifications. Shifts call back to the provided URL when client
+	// changes occur to the entities specified in this property. By default, no entities are supported for change
+	// notifications. Possible values are: none, shift, swapRequest, userShiftPreferences, openShift, openShiftRequest,
+	// offerShiftRequest, unknownFutureValue, timeCard, timeOffReason, timeOff, timeOffRequest. Use the Prefer:
+	// include-unknown-enum-members request header to get the following values in this evolvable enum: timeCard ,
+	// timeOffReason , timeOff , timeOffRequest.
 	SupportedEntities *WorkforceIntegrationSupportedEntities `json:"supportedEntities,omitempty"`
 
 	// Workforce Integration URL for callbacks from the Shifts service.
 	Url nullable.Type[string] `json:"url,omitempty"`
 
 	// Fields inherited from ChangeTrackedEntity
+
+	// Identity of the creator of the entity.
+	CreatedBy IdentitySet `json:"createdBy"`
 
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
@@ -64,6 +74,7 @@ type WorkforceIntegration struct {
 
 func (s WorkforceIntegration) ChangeTrackedEntity() BaseChangeTrackedEntityImpl {
 	return BaseChangeTrackedEntityImpl{
+		CreatedBy:            s.CreatedBy,
 		CreatedDateTime:      s.CreatedDateTime,
 		LastModifiedBy:       s.LastModifiedBy,
 		LastModifiedDateTime: s.LastModifiedDateTime,
@@ -112,17 +123,18 @@ var _ json.Unmarshaler = &WorkforceIntegration{}
 
 func (s *WorkforceIntegration) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		ApiVersion           nullable.Type[int64]                   `json:"apiVersion,omitempty"`
-		DisplayName          nullable.Type[string]                  `json:"displayName,omitempty"`
-		Encryption           *WorkforceIntegrationEncryption        `json:"encryption,omitempty"`
-		IsActive             nullable.Type[bool]                    `json:"isActive,omitempty"`
-		SupportedEntities    *WorkforceIntegrationSupportedEntities `json:"supportedEntities,omitempty"`
-		Url                  nullable.Type[string]                  `json:"url,omitempty"`
-		CreatedDateTime      nullable.Type[string]                  `json:"createdDateTime,omitempty"`
-		LastModifiedDateTime nullable.Type[string]                  `json:"lastModifiedDateTime,omitempty"`
-		Id                   *string                                `json:"id,omitempty"`
-		ODataId              *string                                `json:"@odata.id,omitempty"`
-		ODataType            *string                                `json:"@odata.type,omitempty"`
+		ApiVersion                          nullable.Type[int64]                   `json:"apiVersion,omitempty"`
+		DisplayName                         nullable.Type[string]                  `json:"displayName,omitempty"`
+		EligibilityFilteringEnabledEntities *EligibilityFilteringEnabledEntities   `json:"eligibilityFilteringEnabledEntities,omitempty"`
+		Encryption                          *WorkforceIntegrationEncryption        `json:"encryption,omitempty"`
+		IsActive                            nullable.Type[bool]                    `json:"isActive,omitempty"`
+		SupportedEntities                   *WorkforceIntegrationSupportedEntities `json:"supportedEntities,omitempty"`
+		Url                                 nullable.Type[string]                  `json:"url,omitempty"`
+		CreatedDateTime                     nullable.Type[string]                  `json:"createdDateTime,omitempty"`
+		LastModifiedDateTime                nullable.Type[string]                  `json:"lastModifiedDateTime,omitempty"`
+		Id                                  *string                                `json:"id,omitempty"`
+		ODataId                             *string                                `json:"@odata.id,omitempty"`
+		ODataType                           *string                                `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -130,6 +142,7 @@ func (s *WorkforceIntegration) UnmarshalJSON(bytes []byte) error {
 
 	s.ApiVersion = decoded.ApiVersion
 	s.DisplayName = decoded.DisplayName
+	s.EligibilityFilteringEnabledEntities = decoded.EligibilityFilteringEnabledEntities
 	s.Encryption = decoded.Encryption
 	s.IsActive = decoded.IsActive
 	s.SupportedEntities = decoded.SupportedEntities
@@ -143,6 +156,14 @@ func (s *WorkforceIntegration) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling WorkforceIntegration into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["createdBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'WorkforceIntegration': %+v", err)
+		}
+		s.CreatedBy = impl
 	}
 
 	if v, ok := temp["lastModifiedBy"]; ok {

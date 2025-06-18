@@ -11,12 +11,13 @@ import (
 var _ Entity = WorkbookTableSort{}
 
 type WorkbookTableSort struct {
+	// The list of the current conditions last used to sort the table. Read-only.
 	Fields *[]WorkbookSortField `json:"fields,omitempty"`
 
-	// Represents whether the casing impacted the last sort of the table. Read-only.
+	// Indicates whether the casing impacted the last sort of the table. Read-only.
 	MatchCase *bool `json:"matchCase,omitempty"`
 
-	// Represents Chinese character ordering method last used to sort the table. Possible values are: PinYin, StrokeCount.
+	// The Chinese character ordering method last used to sort the table. The possible values are: PinYin, StrokeCount.
 	// Read-only.
 	Method *string `json:"method,omitempty"`
 
@@ -58,6 +59,7 @@ func (s WorkbookTableSort) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling WorkbookTableSort: %+v", err)
 	}
 
+	delete(decoded, "fields")
 	delete(decoded, "matchCase")
 	delete(decoded, "method")
 

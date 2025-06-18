@@ -16,7 +16,7 @@ type ActionResultPart interface {
 var _ ActionResultPart = BaseActionResultPartImpl{}
 
 type BaseActionResultPartImpl struct {
-	// The error that occurred, if any, during the course of the bulk operation.
+	// The error that occurred, if any, during the bulk operation.
 	Error *PublicError `json:"error,omitempty"`
 
 	// The OData ID of this entity

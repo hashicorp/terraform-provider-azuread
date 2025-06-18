@@ -47,6 +47,12 @@ type AndroidDeviceOwnerEnterpriseWiFiConfiguration struct {
 	// user) must accept this certificate to continue the connection attempt.
 	RootCertificateForServerValidation *AndroidDeviceOwnerTrustedRootCertificate `json:"rootCertificateForServerValidation,omitempty"`
 
+	// Trusted Root Certificates for Server Validation when EAP Type is configured to EAP-TLS, EAP-TTLS or PEAP. This is the
+	// certificate presented by the Wi-Fi endpoint when the device attempts to connect to Wi-Fi endpoint. The device (or
+	// user) must accept this certificate to continue the connection attempt. This collection can contain a maximum of 500
+	// elements.
+	RootCertificatesForServerValidation *[]AndroidDeviceOwnerTrustedRootCertificate `json:"rootCertificatesForServerValidation,omitempty"`
+
 	// Trusted server certificate names when EAP Type is configured to EAP-TLS/TTLS/FAST or PEAP. This is the common name
 	// used in the certificates issued by your trusted certificate authority (CA). If you provide this information, you can
 	// bypass the dynamic trust dialog that is displayed on end users' devices when they connect to this Wi-Fi network.
@@ -276,6 +282,7 @@ func (s *AndroidDeviceOwnerEnterpriseWiFiConfiguration) UnmarshalJSON(bytes []by
 		InnerAuthenticationProtocolForPeap          *NonEapAuthenticationMethodForPeap           `json:"innerAuthenticationProtocolForPeap,omitempty"`
 		OuterIdentityPrivacyTemporaryValue          nullable.Type[string]                        `json:"outerIdentityPrivacyTemporaryValue,omitempty"`
 		RootCertificateForServerValidation          *AndroidDeviceOwnerTrustedRootCertificate    `json:"rootCertificateForServerValidation,omitempty"`
+		RootCertificatesForServerValidation         *[]AndroidDeviceOwnerTrustedRootCertificate  `json:"rootCertificatesForServerValidation,omitempty"`
 		TrustedServerCertificateNames               *[]string                                    `json:"trustedServerCertificateNames,omitempty"`
 		ConnectAutomatically                        nullable.Type[bool]                          `json:"connectAutomatically,omitempty"`
 		ConnectWhenNetworkNameIsHidden              nullable.Type[bool]                          `json:"connectWhenNetworkNameIsHidden,omitempty"`
@@ -322,6 +329,7 @@ func (s *AndroidDeviceOwnerEnterpriseWiFiConfiguration) UnmarshalJSON(bytes []by
 	s.InnerAuthenticationProtocolForPeap = decoded.InnerAuthenticationProtocolForPeap
 	s.OuterIdentityPrivacyTemporaryValue = decoded.OuterIdentityPrivacyTemporaryValue
 	s.RootCertificateForServerValidation = decoded.RootCertificateForServerValidation
+	s.RootCertificatesForServerValidation = decoded.RootCertificatesForServerValidation
 	s.TrustedServerCertificateNames = decoded.TrustedServerCertificateNames
 	s.Assignments = decoded.Assignments
 	s.ConnectAutomatically = decoded.ConnectAutomatically

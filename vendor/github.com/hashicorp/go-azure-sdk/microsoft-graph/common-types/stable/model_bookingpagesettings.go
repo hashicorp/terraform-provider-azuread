@@ -6,29 +6,28 @@ package stable
 type BookingPageSettings struct {
 	AccessControl *BookingPageAccessControl `json:"accessControl,omitempty"`
 
-	// Custom color for bookings page. Value should be in Hex format. Example: `#123456`.
+	// Custom color for the booking page. The value should be in Hex format. For example, #123456.
 	BookingPageColorCode *string `json:"bookingPageColorCode,omitempty"`
 
-	// The time zone of the customer. For a list of possible values, see
-	// [dateTimeTimeZone](https://learn.microsoft.com/en-us/graph/api/resources/datetimetimezone?view=graph-rest-beta).
+	// The time zone of the customer. For a list of possible values, see dateTimeTimeZone.
 	BusinessTimeZone *string `json:"businessTimeZone,omitempty"`
 
-	// Customer consent message that is displayed in the Booking page.
+	// The personal data collection and usage consent message in the booking page.
 	CustomerConsentMessage *string `json:"customerConsentMessage,omitempty"`
 
-	// Enforcing One Time Password (OTP) during appointment creation.
+	// Determines whether the one-time password is required to create an appointment. The default value is false.
 	EnforceOneTimePassword *bool `json:"enforceOneTimePassword,omitempty"`
 
-	// Enable display of business logo display on the Bookings page.
+	// Indicates whether the business logo is displayed on the booking page. The default value is false.
 	IsBusinessLogoDisplayEnabled *bool `json:"isBusinessLogoDisplayEnabled,omitempty"`
 
-	// Enforces customer consent on the customer consent message before appointment is booked.
+	// Enables personal data collection and the usage consent toggle on the booking page. The default value is false.
 	IsCustomerConsentEnabled *bool `json:"isCustomerConsentEnabled,omitempty"`
 
-	// Disable booking page to be indexed by search engines. False by default.
+	// Indicates whether web crawlers index this page. The defaults value is false.
 	IsSearchEngineIndexabilityDisabled *bool `json:"isSearchEngineIndexabilityDisabled,omitempty"`
 
-	// If business time zone the default value for the time slots that we show in the bookings page. False by default.
+	// Indicates whether the time zone of the time slot is set to the time zone of the business. The default value is false.
 	IsTimeSlotTimeZoneSetToBusinessTimeZone *bool `json:"isTimeSlotTimeZoneSetToBusinessTimeZone,omitempty"`
 
 	// The OData ID of this entity
@@ -37,9 +36,11 @@ type BookingPageSettings struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// The URL of the business' Privacy Policy.
+	// URL of a webpage that provides the terms and conditions of the business. If a privacy policy isn't included, the
+	// following text appears on the booking page as default: 'The policies and practices of {bookingbusinessname} apply to
+	// the use of your data.'
 	PrivacyPolicyWebUrl *string `json:"privacyPolicyWebUrl,omitempty"`
 
-	// The URL of the business' Terms and Conditions.
+	// URL of a webpage that provides the terms and conditions of the business.
 	TermsAndConditionsWebUrl *string `json:"termsAndConditionsWebUrl,omitempty"`
 }

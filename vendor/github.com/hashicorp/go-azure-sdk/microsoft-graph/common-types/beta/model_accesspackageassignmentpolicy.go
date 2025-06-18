@@ -21,6 +21,9 @@ type AccessPackageAssignmentPolicy struct {
 	// Identifier of the access package.
 	AccessPackageId nullable.Type[string] `json:"accessPackageId,omitempty"`
 
+	// Represents the settings for email notifications for requests to an access package.
+	AccessPackageNotificationSettings *AccessPackageNotificationSettings `json:"accessPackageNotificationSettings,omitempty"`
+
 	// Who must review, and how often, the assignments to the access package from this policy. This property is null if
 	// reviews aren't required.
 	AccessReviewSettings *AssignmentReviewSettings `json:"accessReviewSettings,omitempty"`
@@ -129,27 +132,28 @@ var _ json.Unmarshaler = &AccessPackageAssignmentPolicy{}
 
 func (s *AccessPackageAssignmentPolicy) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		AccessPackage                *AccessPackage                 `json:"accessPackage,omitempty"`
-		AccessPackageCatalog         *AccessPackageCatalog          `json:"accessPackageCatalog,omitempty"`
-		AccessPackageId              nullable.Type[string]          `json:"accessPackageId,omitempty"`
-		AccessReviewSettings         *AssignmentReviewSettings      `json:"accessReviewSettings,omitempty"`
-		CanExtend                    nullable.Type[bool]            `json:"canExtend,omitempty"`
-		CreatedBy                    nullable.Type[string]          `json:"createdBy,omitempty"`
-		CreatedDateTime              nullable.Type[string]          `json:"createdDateTime,omitempty"`
-		CustomExtensionHandlers      *[]CustomExtensionHandler      `json:"customExtensionHandlers,omitempty"`
-		CustomExtensionStageSettings *[]CustomExtensionStageSetting `json:"customExtensionStageSettings,omitempty"`
-		Description                  nullable.Type[string]          `json:"description,omitempty"`
-		DisplayName                  nullable.Type[string]          `json:"displayName,omitempty"`
-		DurationInDays               nullable.Type[int64]           `json:"durationInDays,omitempty"`
-		ExpirationDateTime           nullable.Type[string]          `json:"expirationDateTime,omitempty"`
-		ModifiedBy                   nullable.Type[string]          `json:"modifiedBy,omitempty"`
-		ModifiedDateTime             nullable.Type[string]          `json:"modifiedDateTime,omitempty"`
-		RequestApprovalSettings      *ApprovalSettings              `json:"requestApprovalSettings,omitempty"`
-		RequestorSettings            *RequestorSettings             `json:"requestorSettings,omitempty"`
-		VerifiableCredentialSettings *VerifiableCredentialSettings  `json:"verifiableCredentialSettings,omitempty"`
-		Id                           *string                        `json:"id,omitempty"`
-		ODataId                      *string                        `json:"@odata.id,omitempty"`
-		ODataType                    *string                        `json:"@odata.type,omitempty"`
+		AccessPackage                     *AccessPackage                     `json:"accessPackage,omitempty"`
+		AccessPackageCatalog              *AccessPackageCatalog              `json:"accessPackageCatalog,omitempty"`
+		AccessPackageId                   nullable.Type[string]              `json:"accessPackageId,omitempty"`
+		AccessPackageNotificationSettings *AccessPackageNotificationSettings `json:"accessPackageNotificationSettings,omitempty"`
+		AccessReviewSettings              *AssignmentReviewSettings          `json:"accessReviewSettings,omitempty"`
+		CanExtend                         nullable.Type[bool]                `json:"canExtend,omitempty"`
+		CreatedBy                         nullable.Type[string]              `json:"createdBy,omitempty"`
+		CreatedDateTime                   nullable.Type[string]              `json:"createdDateTime,omitempty"`
+		CustomExtensionHandlers           *[]CustomExtensionHandler          `json:"customExtensionHandlers,omitempty"`
+		CustomExtensionStageSettings      *[]CustomExtensionStageSetting     `json:"customExtensionStageSettings,omitempty"`
+		Description                       nullable.Type[string]              `json:"description,omitempty"`
+		DisplayName                       nullable.Type[string]              `json:"displayName,omitempty"`
+		DurationInDays                    nullable.Type[int64]               `json:"durationInDays,omitempty"`
+		ExpirationDateTime                nullable.Type[string]              `json:"expirationDateTime,omitempty"`
+		ModifiedBy                        nullable.Type[string]              `json:"modifiedBy,omitempty"`
+		ModifiedDateTime                  nullable.Type[string]              `json:"modifiedDateTime,omitempty"`
+		RequestApprovalSettings           *ApprovalSettings                  `json:"requestApprovalSettings,omitempty"`
+		RequestorSettings                 *RequestorSettings                 `json:"requestorSettings,omitempty"`
+		VerifiableCredentialSettings      *VerifiableCredentialSettings      `json:"verifiableCredentialSettings,omitempty"`
+		Id                                *string                            `json:"id,omitempty"`
+		ODataId                           *string                            `json:"@odata.id,omitempty"`
+		ODataType                         *string                            `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -158,6 +162,7 @@ func (s *AccessPackageAssignmentPolicy) UnmarshalJSON(bytes []byte) error {
 	s.AccessPackage = decoded.AccessPackage
 	s.AccessPackageCatalog = decoded.AccessPackageCatalog
 	s.AccessPackageId = decoded.AccessPackageId
+	s.AccessPackageNotificationSettings = decoded.AccessPackageNotificationSettings
 	s.AccessReviewSettings = decoded.AccessReviewSettings
 	s.CanExtend = decoded.CanExtend
 	s.CreatedBy = decoded.CreatedBy

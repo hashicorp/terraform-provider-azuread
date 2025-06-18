@@ -11,6 +11,9 @@ import (
 var _ Entity = EmployeeExperienceUser{}
 
 type EmployeeExperienceUser struct {
+	// Represents the collection of Viva Engage roles assigned to a user.
+	AssignedRoles *[]EngagementRole `json:"assignedRoles,omitempty"`
+
 	LearningCourseActivities *[]LearningCourseActivity `json:"learningCourseActivities,omitempty"`
 
 	// Fields inherited from Entity
@@ -67,14 +70,16 @@ var _ json.Unmarshaler = &EmployeeExperienceUser{}
 
 func (s *EmployeeExperienceUser) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		Id        *string `json:"id,omitempty"`
-		ODataId   *string `json:"@odata.id,omitempty"`
-		ODataType *string `json:"@odata.type,omitempty"`
+		AssignedRoles *[]EngagementRole `json:"assignedRoles,omitempty"`
+		Id            *string           `json:"id,omitempty"`
+		ODataId       *string           `json:"@odata.id,omitempty"`
+		ODataType     *string           `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.AssignedRoles = decoded.AssignedRoles
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType

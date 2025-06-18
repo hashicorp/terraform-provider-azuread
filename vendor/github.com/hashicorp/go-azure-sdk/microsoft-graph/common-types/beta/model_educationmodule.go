@@ -26,8 +26,12 @@ type EducationModule struct {
 	// Name of the module.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
-	// Indicates whether the module is pinned or not.
+	// Indicates whether the module is pinned.
 	IsPinned nullable.Type[bool] `json:"isPinned,omitempty"`
+
+	// Specifies the language in which UI notifications for the assignment are displayed. If languageTag isn't provided, the
+	// default language is en-US. Optional.
+	LanguageTag nullable.Type[string] `json:"languageTag,omitempty"`
 
 	// The last user that modified the module.
 	LastModifiedBy *IdentitySet `json:"lastModifiedBy,omitempty"`
@@ -110,6 +114,7 @@ func (s *EducationModule) UnmarshalJSON(bytes []byte) error {
 		Description          nullable.Type[string]      `json:"description,omitempty"`
 		DisplayName          nullable.Type[string]      `json:"displayName,omitempty"`
 		IsPinned             nullable.Type[bool]        `json:"isPinned,omitempty"`
+		LanguageTag          nullable.Type[string]      `json:"languageTag,omitempty"`
 		LastModifiedDateTime nullable.Type[string]      `json:"lastModifiedDateTime,omitempty"`
 		Resources            *[]EducationModuleResource `json:"resources,omitempty"`
 		ResourcesFolderUrl   nullable.Type[string]      `json:"resourcesFolderUrl,omitempty"`
@@ -126,6 +131,7 @@ func (s *EducationModule) UnmarshalJSON(bytes []byte) error {
 	s.Description = decoded.Description
 	s.DisplayName = decoded.DisplayName
 	s.IsPinned = decoded.IsPinned
+	s.LanguageTag = decoded.LanguageTag
 	s.LastModifiedDateTime = decoded.LastModifiedDateTime
 	s.Resources = decoded.Resources
 	s.ResourcesFolderUrl = decoded.ResourcesFolderUrl

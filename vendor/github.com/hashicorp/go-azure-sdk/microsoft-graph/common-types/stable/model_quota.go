@@ -20,7 +20,7 @@ type Quota struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// Total space remaining before reaching the quota limit, in bytes. Read-only.
+	// Total space remaining before reaching the capacity limit, in bytes. Read-only.
 	Remaining nullable.Type[int64] `json:"remaining,omitempty"`
 
 	// Enumeration value that indicates the state of the storage space. Read-only.

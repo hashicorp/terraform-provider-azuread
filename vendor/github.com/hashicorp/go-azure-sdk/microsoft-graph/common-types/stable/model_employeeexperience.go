@@ -9,6 +9,12 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type EmployeeExperience struct {
+	// A collection of communities in Viva Engage.
+	Communities *[]Community `json:"communities,omitempty"`
+
+	// A collection of long-running, asynchronous operations related to Viva Engage.
+	EngagementAsyncOperations *[]EngagementAsyncOperation `json:"engagementAsyncOperations,omitempty"`
+
 	LearningCourseActivities *[]LearningCourseActivity `json:"learningCourseActivities,omitempty"`
 
 	// A collection of learning providers.
@@ -25,14 +31,18 @@ var _ json.Unmarshaler = &EmployeeExperience{}
 
 func (s *EmployeeExperience) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		LearningProviders *[]LearningProvider `json:"learningProviders,omitempty"`
-		ODataId           *string             `json:"@odata.id,omitempty"`
-		ODataType         *string             `json:"@odata.type,omitempty"`
+		Communities               *[]Community                `json:"communities,omitempty"`
+		EngagementAsyncOperations *[]EngagementAsyncOperation `json:"engagementAsyncOperations,omitempty"`
+		LearningProviders         *[]LearningProvider         `json:"learningProviders,omitempty"`
+		ODataId                   *string                     `json:"@odata.id,omitempty"`
+		ODataType                 *string                     `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.Communities = decoded.Communities
+	s.EngagementAsyncOperations = decoded.EngagementAsyncOperations
 	s.LearningProviders = decoded.LearningProviders
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType

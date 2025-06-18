@@ -13,7 +13,7 @@ import (
 var _ Entity = ColumnDefinition{}
 
 type ColumnDefinition struct {
-	// This column stores boolean values.
+	// This column stores Boolean values.
 	Boolean *BooleanColumn `json:"boolean,omitempty"`
 
 	// This column's data is calculated based on other columns.

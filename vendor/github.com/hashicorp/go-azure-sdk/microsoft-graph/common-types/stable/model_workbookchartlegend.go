@@ -16,14 +16,14 @@ type WorkbookChartLegend struct {
 	// Represents the formatting of a chart legend, which includes fill and font formatting. Read-only.
 	Format *WorkbookChartLegendFormat `json:"format,omitempty"`
 
-	// Boolean value for whether the chart legend should overlap with the main body of the chart.
+	// Indicates whether the chart legend should overlap with the main body of the chart.
 	Overlay nullable.Type[bool] `json:"overlay,omitempty"`
 
 	// Represents the position of the legend on the chart. The possible values are: Top, Bottom, Left, Right, Corner,
 	// Custom.
 	Position nullable.Type[string] `json:"position,omitempty"`
 
-	// A boolean value the represents the visibility of a ChartLegend object.
+	// Indicates whether the chart legend is visible.
 	Visible *bool `json:"visible,omitempty"`
 
 	// Fields inherited from Entity

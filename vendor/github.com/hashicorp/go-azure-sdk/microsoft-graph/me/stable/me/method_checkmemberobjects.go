@@ -73,8 +73,8 @@ func (p *CheckMemberObjectsCustomPager) NextPageLink() *odata.Link {
 }
 
 // CheckMemberObjects - Invoke action checkMemberObjects. Check for membership in a list of group IDs, administrative
-// unit IDs, or directory role IDs, for the IDs of the specified user, group, service principal, organizational contact,
-// device, or directory object. This method is transitive.
+// unit IDs, or directory role IDs, for the IDs of the specified - user - group - service principal - organizational
+// contact - device - directory object. This method is transitive.
 func (c MeClient) CheckMemberObjects(ctx context.Context, input CheckMemberObjectsRequest, options CheckMemberObjectsOperationOptions) (result CheckMemberObjectsOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

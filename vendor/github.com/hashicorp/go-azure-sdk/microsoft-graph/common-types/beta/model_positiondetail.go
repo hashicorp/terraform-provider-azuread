@@ -8,16 +8,16 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type PositionDetail struct {
-	// Detail about the company or employer.
+	// Information about the company or employer.
 	Company *CompanyDetail `json:"company,omitempty"`
 
-	// Description of the position in question.
+	// A description for the position in question.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
-	// When the position ended.
+	// The date when the position ended.
 	EndMonthYear nullable.Type[string] `json:"endMonthYear,omitempty"`
 
-	// The title held when in that position.
+	// The title of the position.
 	JobTitle nullable.Type[string] `json:"jobTitle,omitempty"`
 
 	// The place where the employee is within the organizational hierarchy.
@@ -35,12 +35,15 @@ type PositionDetail struct {
 	// The role the position entailed.
 	Role nullable.Type[string] `json:"role,omitempty"`
 
+	// An optional job title for the position.
 	SecondaryJobTitle nullable.Type[string] `json:"secondaryJobTitle,omitempty"`
-	SecondaryRole     nullable.Type[string] `json:"secondaryRole,omitempty"`
 
-	// The start month and year of the position.
+	// An optional role for the position entailed.
+	SecondaryRole nullable.Type[string] `json:"secondaryRole,omitempty"`
+
+	// The start date of the position.
 	StartMonthYear nullable.Type[string] `json:"startMonthYear,omitempty"`
 
-	// summary of the position.
+	// The summary of the position.
 	Summary nullable.Type[string] `json:"summary,omitempty"`
 }

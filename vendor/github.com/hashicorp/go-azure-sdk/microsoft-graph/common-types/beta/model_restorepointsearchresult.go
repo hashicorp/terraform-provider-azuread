@@ -1,9 +1,16 @@
 package beta
 
+import (
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+)
+
 // Copyright (c) HashiCorp Inc. All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type RestorePointSearchResult struct {
+	// Total number of artifacts restored.
+	ArtifactHitCount nullable.Type[int64] `json:"artifactHitCount,omitempty"`
+
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
 

@@ -19,16 +19,32 @@ type PrinterBase interface {
 var _ PrinterBase = BasePrinterBaseImpl{}
 
 type BasePrinterBaseImpl struct {
-	Capabilities    *PrinterCapabilities  `json:"capabilities,omitempty"`
-	Defaults        *PrinterDefaults      `json:"defaults,omitempty"`
-	DisplayName     *string               `json:"displayName,omitempty"`
-	IsAcceptingJobs nullable.Type[bool]   `json:"isAcceptingJobs,omitempty"`
-	Jobs            *[]PrintJob           `json:"jobs,omitempty"`
-	Location        *PrinterLocation      `json:"location,omitempty"`
-	Manufacturer    nullable.Type[string] `json:"manufacturer,omitempty"`
-	Model           nullable.Type[string] `json:"model,omitempty"`
-	Name            nullable.Type[string] `json:"name,omitempty"`
-	Status          *PrinterStatus        `json:"status,omitempty"`
+	// The capabilities of the printer/printerShare.
+	Capabilities *PrinterCapabilities `json:"capabilities,omitempty"`
+
+	// The default print settings of printer/printerShare.
+	Defaults *PrinterDefaults `json:"defaults,omitempty"`
+
+	// The name of the printer/printerShare.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Specifies whether the printer/printerShare is currently accepting new print jobs.
+	IsAcceptingJobs nullable.Type[bool] `json:"isAcceptingJobs,omitempty"`
+
+	// The list of jobs that are queued for printing by the printer/printerShare.
+	Jobs *[]PrintJob `json:"jobs,omitempty"`
+
+	// The physical and/or organizational location of the printer/printerShare.
+	Location *PrinterLocation `json:"location,omitempty"`
+
+	// The manufacturer of the printer/printerShare.
+	Manufacturer nullable.Type[string] `json:"manufacturer,omitempty"`
+
+	// The model name of the printer/printerShare.
+	Model nullable.Type[string] `json:"model,omitempty"`
+
+	Name   nullable.Type[string] `json:"name,omitempty"`
+	Status *PrinterStatus        `json:"status,omitempty"`
 
 	// Fields inherited from Entity
 

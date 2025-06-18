@@ -11,7 +11,7 @@ import (
 var _ Entity = ServiceLevelAgreementRoot{}
 
 type ServiceLevelAgreementRoot struct {
-	// Collects the Microsoft Entra SLA attainment for each month for a Microsoft Entra tenant.
+	// Collects the monthly Microsoft Entra Health SLA attainment metrics for a Microsoft Entra tenant.
 	AzureADAuthentication *AzureADAuthentication `json:"azureADAuthentication,omitempty"`
 
 	// Fields inherited from Entity

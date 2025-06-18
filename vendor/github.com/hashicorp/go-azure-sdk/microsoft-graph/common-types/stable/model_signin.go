@@ -20,8 +20,8 @@ type SignIn struct {
 	AppId nullable.Type[string] `json:"appId,omitempty"`
 
 	// Provides a list of conditional access policies that the corresponding sign-in activity triggers. Apps need more
-	// Conditional Access-related privileges to read the details of this property. For more information, see Viewing applied
-	// conditional access (CA) policies in sign-ins.
+	// Conditional Access-related privileges to read the details of this property. For more information, see Permissions for
+	// viewing applied conditional access (CA) policies in sign-ins.
 	AppliedConditionalAccessPolicies *[]AppliedConditionalAccessPolicy `json:"appliedConditionalAccessPolicies,omitempty"`
 
 	// Identifies the client used for the sign-in activity. Modern authentication clients include Browser, modern clients.
@@ -66,7 +66,7 @@ type SignIn struct {
 	// adminConfirmedSigninSafe, aiConfirmedSigninSafe, userPassedMFADrivenByRiskBasedPolicy, adminDismissedAllRiskForUser,
 	// adminConfirmedSigninCompromised, hidden, adminConfirmedUserCompromised, unknownFutureValue,
 	// adminConfirmedServicePrincipalCompromised, adminDismissedAllRiskForServicePrincipal, m365DAdminDismissedDetection,
-	// userChangedPasswordOnPremises, adminDismissedRiskForSignIn, adminConfirmedAccountSafe. You must use the Prefer:
+	// userChangedPasswordOnPremises, adminDismissedRiskForSignIn, adminConfirmedAccountSafe. Use the Prefer:
 	// include-unknown-enum-members request header to get the following value or values in this evolvable enum:
 	// adminConfirmedServicePrincipalCompromised, adminDismissedAllRiskForServicePrincipal, m365DAdminDismissedDetection,
 	// userChangedPasswordOnPremises, adminDismissedRiskForSignIn, adminConfirmedAccountSafe.The value none means that

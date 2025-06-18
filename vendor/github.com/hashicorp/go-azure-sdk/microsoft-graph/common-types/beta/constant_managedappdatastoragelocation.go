@@ -13,6 +13,8 @@ type ManagedAppDataStorageLocation string
 
 const (
 	ManagedAppDataStorageLocation_Box                 ManagedAppDataStorageLocation = "box"
+	ManagedAppDataStorageLocation_Egnyte              ManagedAppDataStorageLocation = "egnyte"
+	ManagedAppDataStorageLocation_IManage             ManagedAppDataStorageLocation = "iManage"
 	ManagedAppDataStorageLocation_LocalStorage        ManagedAppDataStorageLocation = "localStorage"
 	ManagedAppDataStorageLocation_OneDriveForBusiness ManagedAppDataStorageLocation = "oneDriveForBusiness"
 	ManagedAppDataStorageLocation_PhotoLibrary        ManagedAppDataStorageLocation = "photoLibrary"
@@ -22,6 +24,8 @@ const (
 func PossibleValuesForManagedAppDataStorageLocation() []string {
 	return []string{
 		string(ManagedAppDataStorageLocation_Box),
+		string(ManagedAppDataStorageLocation_Egnyte),
+		string(ManagedAppDataStorageLocation_IManage),
 		string(ManagedAppDataStorageLocation_LocalStorage),
 		string(ManagedAppDataStorageLocation_OneDriveForBusiness),
 		string(ManagedAppDataStorageLocation_PhotoLibrary),
@@ -45,6 +49,8 @@ func (s *ManagedAppDataStorageLocation) UnmarshalJSON(bytes []byte) error {
 func parseManagedAppDataStorageLocation(input string) (*ManagedAppDataStorageLocation, error) {
 	vals := map[string]ManagedAppDataStorageLocation{
 		"box":                 ManagedAppDataStorageLocation_Box,
+		"egnyte":              ManagedAppDataStorageLocation_Egnyte,
+		"imanage":             ManagedAppDataStorageLocation_IManage,
 		"localstorage":        ManagedAppDataStorageLocation_LocalStorage,
 		"onedriveforbusiness": ManagedAppDataStorageLocation_OneDriveForBusiness,
 		"photolibrary":        ManagedAppDataStorageLocation_PhotoLibrary,

@@ -26,6 +26,8 @@ type AuthenticationMethodsPolicy struct {
 	// The date and time of the last update to the policy.
 	LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 
+	MicrosoftAuthenticatorPlatformSettings *MicrosoftAuthenticatorPlatformSettings `json:"microsoftAuthenticatorPlatformSettings,omitempty"`
+
 	// The state of migration of the authentication methods policy from the legacy multifactor authentication and
 	// self-service password reset (SSPR) policies. The possible values are: premigration - means the authentication methods
 	// policy is used for authentication only, legacy policies are respected. migrationInProgress - means the authentication
@@ -105,18 +107,19 @@ var _ json.Unmarshaler = &AuthenticationMethodsPolicy{}
 
 func (s *AuthenticationMethodsPolicy) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		Description                      nullable.Type[string]                      `json:"description,omitempty"`
-		DisplayName                      nullable.Type[string]                      `json:"displayName,omitempty"`
-		LastModifiedDateTime             nullable.Type[string]                      `json:"lastModifiedDateTime,omitempty"`
-		PolicyMigrationState             *AuthenticationMethodsPolicyMigrationState `json:"policyMigrationState,omitempty"`
-		PolicyVersion                    nullable.Type[string]                      `json:"policyVersion,omitempty"`
-		ReconfirmationInDays             nullable.Type[int64]                       `json:"reconfirmationInDays,omitempty"`
-		RegistrationEnforcement          *RegistrationEnforcement                   `json:"registrationEnforcement,omitempty"`
-		ReportSuspiciousActivitySettings *ReportSuspiciousActivitySettings          `json:"reportSuspiciousActivitySettings,omitempty"`
-		SystemCredentialPreferences      *SystemCredentialPreferences               `json:"systemCredentialPreferences,omitempty"`
-		Id                               *string                                    `json:"id,omitempty"`
-		ODataId                          *string                                    `json:"@odata.id,omitempty"`
-		ODataType                        *string                                    `json:"@odata.type,omitempty"`
+		Description                            nullable.Type[string]                      `json:"description,omitempty"`
+		DisplayName                            nullable.Type[string]                      `json:"displayName,omitempty"`
+		LastModifiedDateTime                   nullable.Type[string]                      `json:"lastModifiedDateTime,omitempty"`
+		MicrosoftAuthenticatorPlatformSettings *MicrosoftAuthenticatorPlatformSettings    `json:"microsoftAuthenticatorPlatformSettings,omitempty"`
+		PolicyMigrationState                   *AuthenticationMethodsPolicyMigrationState `json:"policyMigrationState,omitempty"`
+		PolicyVersion                          nullable.Type[string]                      `json:"policyVersion,omitempty"`
+		ReconfirmationInDays                   nullable.Type[int64]                       `json:"reconfirmationInDays,omitempty"`
+		RegistrationEnforcement                *RegistrationEnforcement                   `json:"registrationEnforcement,omitempty"`
+		ReportSuspiciousActivitySettings       *ReportSuspiciousActivitySettings          `json:"reportSuspiciousActivitySettings,omitempty"`
+		SystemCredentialPreferences            *SystemCredentialPreferences               `json:"systemCredentialPreferences,omitempty"`
+		Id                                     *string                                    `json:"id,omitempty"`
+		ODataId                                *string                                    `json:"@odata.id,omitempty"`
+		ODataType                              *string                                    `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -125,6 +128,7 @@ func (s *AuthenticationMethodsPolicy) UnmarshalJSON(bytes []byte) error {
 	s.Description = decoded.Description
 	s.DisplayName = decoded.DisplayName
 	s.LastModifiedDateTime = decoded.LastModifiedDateTime
+	s.MicrosoftAuthenticatorPlatformSettings = decoded.MicrosoftAuthenticatorPlatformSettings
 	s.PolicyMigrationState = decoded.PolicyMigrationState
 	s.PolicyVersion = decoded.PolicyVersion
 	s.ReconfirmationInDays = decoded.ReconfirmationInDays

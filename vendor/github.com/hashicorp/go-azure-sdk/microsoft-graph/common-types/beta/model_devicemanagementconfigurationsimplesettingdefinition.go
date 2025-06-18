@@ -36,25 +36,25 @@ type BaseDeviceManagementConfigurationSimpleSettingDefinitionImpl struct {
 
 	AccessTypes *DeviceManagementConfigurationSettingAccessTypes `json:"accessTypes,omitempty"`
 
-	// Details which device setting is applicable on
+	// Details which device setting is applicable on. Supports: $filters.
 	Applicability DeviceManagementConfigurationSettingApplicability `json:"applicability"`
 
 	// Base CSP Path
 	BaseUri nullable.Type[string] `json:"baseUri,omitempty"`
 
-	// Specifies the area group under which the setting is configured in a specified configuration service provider (CSP)
+	// Specify category in which the setting is under. Support $filters.
 	CategoryId nullable.Type[string] `json:"categoryId,omitempty"`
 
-	// Description of the item
+	// Description of the setting.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
-	// Display name of the item
+	// Name of the setting. For example: Allow Toast.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
-	// Help text of the item
+	// Help text of the setting. Give more details of the setting.
 	HelpText nullable.Type[string] `json:"helpText,omitempty"`
 
-	// List of links more info for the setting can be found at
+	// List of links more info for the setting can be found at.
 	InfoUrls *[]string `json:"infoUrls,omitempty"`
 
 	// Tokens which to search settings on
@@ -72,7 +72,10 @@ type BaseDeviceManagementConfigurationSimpleSettingDefinitionImpl struct {
 	// List of referred setting information.
 	ReferredSettingInformationList *[]DeviceManagementConfigurationReferredSettingInformation `json:"referredSettingInformationList,omitempty"`
 
-	// Root setting definition if the setting is a child setting.
+	// Setting RiskLevel
+	RiskLevel *DeviceManagementConfigurationSettingRiskLevel `json:"riskLevel,omitempty"`
+
+	// Root setting definition id if the setting is a child setting.
 	RootDefinitionId nullable.Type[string] `json:"rootDefinitionId,omitempty"`
 
 	// Supported setting types
@@ -121,6 +124,7 @@ func (s BaseDeviceManagementConfigurationSimpleSettingDefinitionImpl) DeviceMana
 		Occurrence:                     s.Occurrence,
 		OffsetUri:                      s.OffsetUri,
 		ReferredSettingInformationList: s.ReferredSettingInformationList,
+		RiskLevel:                      s.RiskLevel,
 		RootDefinitionId:               s.RootDefinitionId,
 		SettingUsage:                   s.SettingUsage,
 		UxBehavior:                     s.UxBehavior,
@@ -208,6 +212,7 @@ func (s *BaseDeviceManagementConfigurationSimpleSettingDefinitionImpl) Unmarshal
 		Occurrence                     *DeviceManagementConfigurationSettingOccurrence            `json:"occurrence,omitempty"`
 		OffsetUri                      nullable.Type[string]                                      `json:"offsetUri,omitempty"`
 		ReferredSettingInformationList *[]DeviceManagementConfigurationReferredSettingInformation `json:"referredSettingInformationList,omitempty"`
+		RiskLevel                      *DeviceManagementConfigurationSettingRiskLevel             `json:"riskLevel,omitempty"`
 		RootDefinitionId               nullable.Type[string]                                      `json:"rootDefinitionId,omitempty"`
 		SettingUsage                   *DeviceManagementConfigurationSettingUsage                 `json:"settingUsage,omitempty"`
 		UxBehavior                     *DeviceManagementConfigurationControlType                  `json:"uxBehavior,omitempty"`
@@ -238,6 +243,7 @@ func (s *BaseDeviceManagementConfigurationSimpleSettingDefinitionImpl) Unmarshal
 	s.Occurrence = decoded.Occurrence
 	s.OffsetUri = decoded.OffsetUri
 	s.ReferredSettingInformationList = decoded.ReferredSettingInformationList
+	s.RiskLevel = decoded.RiskLevel
 	s.RootDefinitionId = decoded.RootDefinitionId
 	s.SettingUsage = decoded.SettingUsage
 	s.UxBehavior = decoded.UxBehavior

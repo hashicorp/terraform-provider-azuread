@@ -13,7 +13,11 @@ import (
 var _ Entity = Schedule{}
 
 type Schedule struct {
-	// Indicates whether copied shifts should include the activities.
+	// Indicates whether copied shifts should include the activities. This property will be removed by November 20, 2027.
+	// Use isActivitiesIncludedWhenCopyingShiftsEnabled instead. activitiesIncludedWhenCopyingShiftsEnabled and
+	// isActivitiesIncludedWhenCopyingShiftsEnabled always have the same value, so setting one automatically sets the value
+	// for the other. If both are included in the request with different values, the value for
+	// isActivitiesIncludedWhenCopyingShiftsEnabled takes precedence.
 	ActivitiesIncludedWhenCopyingShiftsEnabled nullable.Type[bool] `json:"activitiesIncludedWhenCopyingShiftsEnabled,omitempty"`
 
 	// The day notes in the schedule.
@@ -21,6 +25,9 @@ type Schedule struct {
 
 	// Indicates whether the schedule is enabled for the team. Required.
 	Enabled nullable.Type[bool] `json:"enabled,omitempty"`
+
+	// Indicates whether copied shifts include activities from the original shift.
+	IsActivitiesIncludedWhenCopyingShiftsEnabled nullable.Type[bool] `json:"isActivitiesIncludedWhenCopyingShiftsEnabled,omitempty"`
 
 	// Indicates whether approval is required by a manager of this schedule for cross location shift requests.
 	IsCrossLocationShiftRequestApprovalRequired nullable.Type[bool] `json:"isCrossLocationShiftRequestApprovalRequired,omitempty"`
@@ -152,35 +159,36 @@ var _ json.Unmarshaler = &Schedule{}
 
 func (s *Schedule) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		ActivitiesIncludedWhenCopyingShiftsEnabled  nullable.Type[bool]        `json:"activitiesIncludedWhenCopyingShiftsEnabled,omitempty"`
-		DayNotes                                    *[]DayNote                 `json:"dayNotes,omitempty"`
-		Enabled                                     nullable.Type[bool]        `json:"enabled,omitempty"`
-		IsCrossLocationShiftRequestApprovalRequired nullable.Type[bool]        `json:"isCrossLocationShiftRequestApprovalRequired,omitempty"`
-		IsCrossLocationShiftsEnabled                nullable.Type[bool]        `json:"isCrossLocationShiftsEnabled,omitempty"`
-		OfferShiftRequestsEnabled                   nullable.Type[bool]        `json:"offerShiftRequestsEnabled,omitempty"`
-		OpenShiftChangeRequests                     *[]OpenShiftChangeRequest  `json:"openShiftChangeRequests,omitempty"`
-		OpenShifts                                  *[]OpenShift               `json:"openShifts,omitempty"`
-		OpenShiftsEnabled                           nullable.Type[bool]        `json:"openShiftsEnabled,omitempty"`
-		ProvisionStatus                             *OperationStatus           `json:"provisionStatus,omitempty"`
-		ProvisionStatusCode                         nullable.Type[string]      `json:"provisionStatusCode,omitempty"`
-		SchedulingGroups                            *[]SchedulingGroup         `json:"schedulingGroups,omitempty"`
-		Shifts                                      *[]Shift                   `json:"shifts,omitempty"`
-		ShiftsRoleDefinitions                       *[]ShiftsRoleDefinition    `json:"shiftsRoleDefinitions,omitempty"`
-		StartDayOfWeek                              *DayOfWeek                 `json:"startDayOfWeek,omitempty"`
-		SwapShiftsChangeRequests                    *[]SwapShiftsChangeRequest `json:"swapShiftsChangeRequests,omitempty"`
-		SwapShiftsRequestsEnabled                   nullable.Type[bool]        `json:"swapShiftsRequestsEnabled,omitempty"`
-		TimeCards                                   *[]TimeCard                `json:"timeCards,omitempty"`
-		TimeClockEnabled                            nullable.Type[bool]        `json:"timeClockEnabled,omitempty"`
-		TimeClockSettings                           *TimeClockSettings         `json:"timeClockSettings,omitempty"`
-		TimeOffReasons                              *[]TimeOffReason           `json:"timeOffReasons,omitempty"`
-		TimeOffRequests                             *[]TimeOffRequest          `json:"timeOffRequests,omitempty"`
-		TimeOffRequestsEnabled                      nullable.Type[bool]        `json:"timeOffRequestsEnabled,omitempty"`
-		TimeZone                                    nullable.Type[string]      `json:"timeZone,omitempty"`
-		TimesOff                                    *[]TimeOff                 `json:"timesOff,omitempty"`
-		WorkforceIntegrationIds                     *[]string                  `json:"workforceIntegrationIds,omitempty"`
-		Id                                          *string                    `json:"id,omitempty"`
-		ODataId                                     *string                    `json:"@odata.id,omitempty"`
-		ODataType                                   *string                    `json:"@odata.type,omitempty"`
+		ActivitiesIncludedWhenCopyingShiftsEnabled   nullable.Type[bool]        `json:"activitiesIncludedWhenCopyingShiftsEnabled,omitempty"`
+		DayNotes                                     *[]DayNote                 `json:"dayNotes,omitempty"`
+		Enabled                                      nullable.Type[bool]        `json:"enabled,omitempty"`
+		IsActivitiesIncludedWhenCopyingShiftsEnabled nullable.Type[bool]        `json:"isActivitiesIncludedWhenCopyingShiftsEnabled,omitempty"`
+		IsCrossLocationShiftRequestApprovalRequired  nullable.Type[bool]        `json:"isCrossLocationShiftRequestApprovalRequired,omitempty"`
+		IsCrossLocationShiftsEnabled                 nullable.Type[bool]        `json:"isCrossLocationShiftsEnabled,omitempty"`
+		OfferShiftRequestsEnabled                    nullable.Type[bool]        `json:"offerShiftRequestsEnabled,omitempty"`
+		OpenShiftChangeRequests                      *[]OpenShiftChangeRequest  `json:"openShiftChangeRequests,omitempty"`
+		OpenShifts                                   *[]OpenShift               `json:"openShifts,omitempty"`
+		OpenShiftsEnabled                            nullable.Type[bool]        `json:"openShiftsEnabled,omitempty"`
+		ProvisionStatus                              *OperationStatus           `json:"provisionStatus,omitempty"`
+		ProvisionStatusCode                          nullable.Type[string]      `json:"provisionStatusCode,omitempty"`
+		SchedulingGroups                             *[]SchedulingGroup         `json:"schedulingGroups,omitempty"`
+		Shifts                                       *[]Shift                   `json:"shifts,omitempty"`
+		ShiftsRoleDefinitions                        *[]ShiftsRoleDefinition    `json:"shiftsRoleDefinitions,omitempty"`
+		StartDayOfWeek                               *DayOfWeek                 `json:"startDayOfWeek,omitempty"`
+		SwapShiftsChangeRequests                     *[]SwapShiftsChangeRequest `json:"swapShiftsChangeRequests,omitempty"`
+		SwapShiftsRequestsEnabled                    nullable.Type[bool]        `json:"swapShiftsRequestsEnabled,omitempty"`
+		TimeCards                                    *[]TimeCard                `json:"timeCards,omitempty"`
+		TimeClockEnabled                             nullable.Type[bool]        `json:"timeClockEnabled,omitempty"`
+		TimeClockSettings                            *TimeClockSettings         `json:"timeClockSettings,omitempty"`
+		TimeOffReasons                               *[]TimeOffReason           `json:"timeOffReasons,omitempty"`
+		TimeOffRequests                              *[]TimeOffRequest          `json:"timeOffRequests,omitempty"`
+		TimeOffRequestsEnabled                       nullable.Type[bool]        `json:"timeOffRequestsEnabled,omitempty"`
+		TimeZone                                     nullable.Type[string]      `json:"timeZone,omitempty"`
+		TimesOff                                     *[]TimeOff                 `json:"timesOff,omitempty"`
+		WorkforceIntegrationIds                      *[]string                  `json:"workforceIntegrationIds,omitempty"`
+		Id                                           *string                    `json:"id,omitempty"`
+		ODataId                                      *string                    `json:"@odata.id,omitempty"`
+		ODataType                                    *string                    `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -189,6 +197,7 @@ func (s *Schedule) UnmarshalJSON(bytes []byte) error {
 	s.ActivitiesIncludedWhenCopyingShiftsEnabled = decoded.ActivitiesIncludedWhenCopyingShiftsEnabled
 	s.DayNotes = decoded.DayNotes
 	s.Enabled = decoded.Enabled
+	s.IsActivitiesIncludedWhenCopyingShiftsEnabled = decoded.IsActivitiesIncludedWhenCopyingShiftsEnabled
 	s.IsCrossLocationShiftRequestApprovalRequired = decoded.IsCrossLocationShiftRequestApprovalRequired
 	s.IsCrossLocationShiftsEnabled = decoded.IsCrossLocationShiftsEnabled
 	s.OfferShiftRequestsEnabled = decoded.OfferShiftRequestsEnabled

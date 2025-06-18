@@ -14,6 +14,9 @@ type Win32CatalogAppAssignmentSettings struct {
 
 	// Fields inherited from Win32LobAppAssignmentSettings
 
+	// The auto-update settings to apply for this app assignment.
+	AutoUpdateSettings *Win32LobAppAutoUpdateSettings `json:"autoUpdateSettings,omitempty"`
+
 	// Contains value for delivery optimization priority.
 	DeliveryOptimizationPriority *Win32LobAppDeliveryOptimizationPriority `json:"deliveryOptimizationPriority,omitempty"`
 
@@ -40,6 +43,7 @@ type Win32CatalogAppAssignmentSettings struct {
 
 func (s Win32CatalogAppAssignmentSettings) Win32LobAppAssignmentSettings() BaseWin32LobAppAssignmentSettingsImpl {
 	return BaseWin32LobAppAssignmentSettingsImpl{
+		AutoUpdateSettings:           s.AutoUpdateSettings,
 		DeliveryOptimizationPriority: s.DeliveryOptimizationPriority,
 		InstallTimeSettings:          s.InstallTimeSettings,
 		Notifications:                s.Notifications,

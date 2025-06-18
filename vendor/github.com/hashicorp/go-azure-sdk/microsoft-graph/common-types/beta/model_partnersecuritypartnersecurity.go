@@ -11,9 +11,12 @@ import (
 var _ Entity = PartnerSecurityPartnerSecurity{}
 
 type PartnerSecurityPartnerSecurity struct {
-	// The security alerts or a vulnerability of a CSP partner's customer that the partner must be made aware of for further
-	// action.
+	// The security alerts or a vulnerability of a Cloud Solution Provider (CSP) partner's customer that the partner must be
+	// made aware of for further action.
 	SecurityAlerts *[]PartnerSecurityPartnerSecurityAlert `json:"securityAlerts,omitempty"`
+
+	// The security score calculated for the CSP partner and their customers.
+	SecurityScore *PartnerSecurityPartnerSecurityScore `json:"securityScore,omitempty"`
 
 	// Fields inherited from Entity
 

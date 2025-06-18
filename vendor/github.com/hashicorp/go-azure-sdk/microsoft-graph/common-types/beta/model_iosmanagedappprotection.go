@@ -20,7 +20,7 @@ type IosManagedAppProtection struct {
 	AllowedIosDeviceModels nullable.Type[string] `json:"allowedIosDeviceModels,omitempty"`
 
 	// Defines a managed app behavior, either block or warn, if the user is clocked out (non-working time). Possible values
-	// are: block, wipe, warn.
+	// are: block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfAccountIsClockedOut *ManagedAppRemediationAction `json:"appActionIfAccountIsClockedOut,omitempty"`
 
 	// An admin initiated action to be applied on a managed app.
@@ -32,8 +32,7 @@ type IosManagedAppProtection struct {
 	// List of apps to which the policy is deployed.
 	Apps *[]ManagedMobileApp `json:"apps,omitempty"`
 
-	// A custom browser protocol to open weblink on iOS. When this property is configured, ManagedBrowserToOpenLinksRequired
-	// should be true.
+	// A custom browser protocol to open weblink on iOS.
 	CustomBrowserProtocol nullable.Type[string] `json:"customBrowserProtocol,omitempty"`
 
 	// Protocol of a custom dialer app to click-to-open a phone number on iOS, for example, skype:.
@@ -132,7 +131,7 @@ type IosManagedAppProtection struct {
 
 	// If set, it will specify what action to take in the case where the user is unable to checkin because their
 	// authentication token is invalid. This happens when the user is deleted or disabled in AAD. Possible values are:
-	// block, wipe, warn.
+	// block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfUnableToAuthenticateUser *ManagedAppRemediationAction `json:"appActionIfUnableToAuthenticateUser,omitempty"`
 
 	// Indicates whether a user can bring data into org documents.

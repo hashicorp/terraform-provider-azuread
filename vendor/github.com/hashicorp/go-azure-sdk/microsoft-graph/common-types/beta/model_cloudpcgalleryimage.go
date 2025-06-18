@@ -38,6 +38,9 @@ type CloudPCGalleryImage struct {
 	// The offer name of this gallery image that is passed to ARM to retrieve the image resource. Read-only.
 	OfferName nullable.Type[string] `json:"offerName,omitempty"`
 
+	// The operating system version of this gallery image. For example, 10.0.22000.296. Read-only.
+	OsVersionNumber nullable.Type[string] `json:"osVersionNumber,omitempty"`
+
 	// The publisher name of this gallery image that is passed to ARM to retrieve the image resource. Read-only. The
 	// publisher property is deprecated and will stop returning data on January 31, 2024. Going forward, use the
 	// publisherName property.
@@ -114,6 +117,7 @@ func (s CloudPCGalleryImage) MarshalJSON() ([]byte, error) {
 	delete(decoded, "expirationDate")
 	delete(decoded, "offer")
 	delete(decoded, "offerName")
+	delete(decoded, "osVersionNumber")
 	delete(decoded, "publisher")
 	delete(decoded, "publisherName")
 	delete(decoded, "recommendedSku")

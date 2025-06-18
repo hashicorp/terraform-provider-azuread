@@ -11,8 +11,7 @@ import (
 var _ WindowsUpdatesUpdatableAsset = WindowsUpdatesAzureADDevice{}
 
 type WindowsUpdatesAzureADDevice struct {
-	// Specifies areas of the service in which the device is enrolled. Read-only. Returned by default.
-	Enrollments *[]WindowsUpdatesUpdatableAssetEnrollment `json:"enrollments,omitempty"`
+	Enrollment *WindowsUpdatesUpdateManagementEnrollment `json:"enrollment,omitempty"`
 
 	// Specifies any errors that prevent the device from being enrolled in update management or receving deployed content.
 	// Read-only. Returned by default.
@@ -64,7 +63,6 @@ func (s WindowsUpdatesAzureADDevice) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling WindowsUpdatesAzureADDevice: %+v", err)
 	}
 
-	delete(decoded, "enrollments")
 	delete(decoded, "errors")
 
 	if !s.OmitDiscriminatedValue {
@@ -83,14 +81,16 @@ var _ json.Unmarshaler = &WindowsUpdatesAzureADDevice{}
 
 func (s *WindowsUpdatesAzureADDevice) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		Id        *string `json:"id,omitempty"`
-		ODataId   *string `json:"@odata.id,omitempty"`
-		ODataType *string `json:"@odata.type,omitempty"`
+		Enrollment *WindowsUpdatesUpdateManagementEnrollment `json:"enrollment,omitempty"`
+		Id         *string                                   `json:"id,omitempty"`
+		ODataId    *string                                   `json:"@odata.id,omitempty"`
+		ODataType  *string                                   `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.Enrollment = decoded.Enrollment
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType
@@ -98,23 +98,6 @@ func (s *WindowsUpdatesAzureADDevice) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling WindowsUpdatesAzureADDevice into map[string]json.RawMessage: %+v", err)
-	}
-
-	if v, ok := temp["enrollments"]; ok {
-		var listTemp []json.RawMessage
-		if err := json.Unmarshal(v, &listTemp); err != nil {
-			return fmt.Errorf("unmarshaling Enrollments into list []json.RawMessage: %+v", err)
-		}
-
-		output := make([]WindowsUpdatesUpdatableAssetEnrollment, 0)
-		for i, val := range listTemp {
-			impl, err := UnmarshalWindowsUpdatesUpdatableAssetEnrollmentImplementation(val)
-			if err != nil {
-				return fmt.Errorf("unmarshaling index %d field 'Enrollments' for 'WindowsUpdatesAzureADDevice': %+v", i, err)
-			}
-			output = append(output, impl)
-		}
-		s.Enrollments = &output
 	}
 
 	if v, ok := temp["errors"]; ok {

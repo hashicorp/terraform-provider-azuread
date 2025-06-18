@@ -18,9 +18,14 @@ type ClassifcationErrorBase interface {
 var _ ClassifcationErrorBase = BaseClassifcationErrorBaseImpl{}
 
 type BaseClassifcationErrorBaseImpl struct {
-	Code       nullable.Type[string]     `json:"code,omitempty"`
+	// A service-defined error code string.
+	Code nullable.Type[string] `json:"code,omitempty"`
+
+	// Contains more specific, potentially internal error details.
 	InnerError *ClassificationInnerError `json:"innerError,omitempty"`
-	Message    nullable.Type[string]     `json:"message,omitempty"`
+
+	// A human-readable representation of the error.
+	Message nullable.Type[string] `json:"message,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
@@ -28,6 +33,7 @@ type BaseClassifcationErrorBaseImpl struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
+	// The target of the error (for example, the specific property or item causing the issue).
 	Target nullable.Type[string] `json:"target,omitempty"`
 
 	// Model Behaviors

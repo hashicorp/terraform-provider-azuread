@@ -32,9 +32,17 @@ type FileStorageContainer struct {
 	// The drive of the resource fileStorageContainer. Read-only.
 	Drive *Drive `json:"drive,omitempty"`
 
+	// Indicates the lock state of the fileStorageContainer. The possible values are unlocked and lockedReadOnly. Read-only.
+	LockState *SiteLockState `json:"lockState,omitempty"`
+
 	// The set of permissions for users in the fileStorageContainer. Permission for each user is set by the roles property.
 	// The possible values are: reader, writer, manager, and owner. Read-write.
 	Permissions *[]Permission `json:"permissions,omitempty"`
+
+	// Recycle bin of the fileStorageContainer. Read-only.
+	RecycleBin *RecycleBin `json:"recycleBin,omitempty"`
+
+	Settings *FileStorageContainerSettings `json:"settings,omitempty"`
 
 	// Status of the fileStorageContainer. Containers are created as inactive and require activation. Inactive containers
 	// are subjected to automatic deletion in 24 hours. The possible values are: inactive, active. Read-only.
@@ -84,6 +92,8 @@ func (s FileStorageContainer) MarshalJSON() ([]byte, error) {
 	delete(decoded, "containerTypeId")
 	delete(decoded, "createdDateTime")
 	delete(decoded, "drive")
+	delete(decoded, "lockState")
+	delete(decoded, "recycleBin")
 	delete(decoded, "status")
 	delete(decoded, "viewpoint")
 

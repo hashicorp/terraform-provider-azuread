@@ -20,6 +20,7 @@ const (
 	AuthenticationMethodModes_HardwareOath                AuthenticationMethodModes = "hardwareOath"
 	AuthenticationMethodModes_MicrosoftAuthenticatorPush  AuthenticationMethodModes = "microsoftAuthenticatorPush"
 	AuthenticationMethodModes_Password                    AuthenticationMethodModes = "password"
+	AuthenticationMethodModes_QrCodePin                   AuthenticationMethodModes = "qrCodePin"
 	AuthenticationMethodModes_Sms                         AuthenticationMethodModes = "sms"
 	AuthenticationMethodModes_SoftwareOath                AuthenticationMethodModes = "softwareOath"
 	AuthenticationMethodModes_TemporaryAccessPassMultiUse AuthenticationMethodModes = "temporaryAccessPassMultiUse"
@@ -40,6 +41,7 @@ func PossibleValuesForAuthenticationMethodModes() []string {
 		string(AuthenticationMethodModes_HardwareOath),
 		string(AuthenticationMethodModes_MicrosoftAuthenticatorPush),
 		string(AuthenticationMethodModes_Password),
+		string(AuthenticationMethodModes_QrCodePin),
 		string(AuthenticationMethodModes_Sms),
 		string(AuthenticationMethodModes_SoftwareOath),
 		string(AuthenticationMethodModes_TemporaryAccessPassMultiUse),
@@ -74,6 +76,7 @@ func parseAuthenticationMethodModes(input string) (*AuthenticationMethodModes, e
 		"hardwareoath":                AuthenticationMethodModes_HardwareOath,
 		"microsoftauthenticatorpush":  AuthenticationMethodModes_MicrosoftAuthenticatorPush,
 		"password":                    AuthenticationMethodModes_Password,
+		"qrcodepin":                   AuthenticationMethodModes_QrCodePin,
 		"sms":                         AuthenticationMethodModes_Sms,
 		"softwareoath":                AuthenticationMethodModes_SoftwareOath,
 		"temporaryaccesspassmultiuse": AuthenticationMethodModes_TemporaryAccessPassMultiUse,

@@ -50,8 +50,8 @@ func (o DeleteGroupOperationOptions) ToQuery() *client.QueryParams {
 	return &out
 }
 
-// DeleteGroup - Delete group. Deletes a group. When deleted, Microsoft 365 groups are moved to a temporary container
-// and can be restored within 30 days. After that time, they are permanently deleted. This isn't applicable to Security
+// DeleteGroup - Delete group. Delete a group. When deleted, Microsoft 365 groups are moved to a temporary container and
+// can be restored within 30 days. After that time, they are permanently deleted. This isn't applicable to Security
 // groups and Distribution groups that are permanently deleted immediately. To learn more, see deletedItems.
 func (c GroupClient) DeleteGroup(ctx context.Context, id beta.GroupId, options DeleteGroupOperationOptions) (result DeleteGroupOperationResponse, err error) {
 	opts := client.RequestOptions{

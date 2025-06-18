@@ -15,6 +15,7 @@ type SecurityIdentityContainer struct {
 	// for Identity identified.
 	HealthIssues *[]SecurityHealthIssue `json:"healthIssues,omitempty"`
 
+	// Represents a customer's Microsoft Defender for Identity sensors.
 	Sensors *[]SecuritySensor `json:"sensors,omitempty"`
 
 	// Fields inherited from Entity

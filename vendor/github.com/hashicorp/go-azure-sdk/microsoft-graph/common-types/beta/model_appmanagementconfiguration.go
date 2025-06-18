@@ -16,7 +16,6 @@ type AppManagementConfiguration interface {
 var _ AppManagementConfiguration = BaseAppManagementConfigurationImpl{}
 
 type BaseAppManagementConfigurationImpl struct {
-	// Collection of keyCredential restrictions settings to be applied to an application or service principal.
 	KeyCredentials *[]KeyCredentialConfiguration `json:"keyCredentials,omitempty"`
 
 	// The OData ID of this entity
@@ -25,7 +24,6 @@ type BaseAppManagementConfigurationImpl struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// Collection of password restrictions settings to be applied to an application or service principal.
 	PasswordCredentials *[]PasswordCredentialConfiguration `json:"passwordCredentials,omitempty"`
 
 	// Model Behaviors

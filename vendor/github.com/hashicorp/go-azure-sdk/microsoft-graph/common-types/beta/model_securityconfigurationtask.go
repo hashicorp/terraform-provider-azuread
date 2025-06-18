@@ -28,7 +28,7 @@ type SecurityConfigurationTask struct {
 	// The intended settings and their values.
 	IntendedSettings *[]KeyValuePair `json:"intendedSettings,omitempty"`
 
-	// The number of vulnerable devices. Valid values 0 to 65536
+	// The number of vulnerable devices.
 	ManagedDeviceCount *int64 `json:"managedDeviceCount,omitempty"`
 
 	// The vulnerable managed devices.

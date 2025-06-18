@@ -13,16 +13,22 @@ import (
 var _ ChangeTrackedEntity = OpenShift{}
 
 type OpenShift struct {
-	// An unpublished open shift.
+	// Draft changes in the openShift are only visible to managers until they're shared.
 	DraftOpenShift *OpenShiftItem `json:"draftOpenShift,omitempty"`
 
-	// ID for the scheduling group that the open shift belongs to.
+	// The openShift is marked for deletion, a process that is finalized when the schedule is shared.
+	IsStagedForDeletion nullable.Type[bool] `json:"isStagedForDeletion,omitempty"`
+
+	// The ID of the schedulingGroup that contains the openShift.
 	SchedulingGroupId nullable.Type[string] `json:"schedulingGroupId,omitempty"`
 
-	// A published open shift.
+	// The shared version of this openShift that is viewable by both employees and managers.
 	SharedOpenShift *OpenShiftItem `json:"sharedOpenShift,omitempty"`
 
 	// Fields inherited from ChangeTrackedEntity
+
+	// Identity of the creator of the entity.
+	CreatedBy IdentitySet `json:"createdBy"`
 
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
@@ -52,6 +58,7 @@ type OpenShift struct {
 
 func (s OpenShift) ChangeTrackedEntity() BaseChangeTrackedEntityImpl {
 	return BaseChangeTrackedEntityImpl{
+		CreatedBy:            s.CreatedBy,
 		CreatedDateTime:      s.CreatedDateTime,
 		LastModifiedBy:       s.LastModifiedBy,
 		LastModifiedDateTime: s.LastModifiedDateTime,
@@ -101,6 +108,7 @@ var _ json.Unmarshaler = &OpenShift{}
 func (s *OpenShift) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
 		DraftOpenShift       *OpenShiftItem        `json:"draftOpenShift,omitempty"`
+		IsStagedForDeletion  nullable.Type[bool]   `json:"isStagedForDeletion,omitempty"`
 		SchedulingGroupId    nullable.Type[string] `json:"schedulingGroupId,omitempty"`
 		SharedOpenShift      *OpenShiftItem        `json:"sharedOpenShift,omitempty"`
 		CreatedDateTime      nullable.Type[string] `json:"createdDateTime,omitempty"`
@@ -114,6 +122,7 @@ func (s *OpenShift) UnmarshalJSON(bytes []byte) error {
 	}
 
 	s.DraftOpenShift = decoded.DraftOpenShift
+	s.IsStagedForDeletion = decoded.IsStagedForDeletion
 	s.SchedulingGroupId = decoded.SchedulingGroupId
 	s.SharedOpenShift = decoded.SharedOpenShift
 	s.CreatedDateTime = decoded.CreatedDateTime
@@ -125,6 +134,14 @@ func (s *OpenShift) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling OpenShift into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["createdBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'OpenShift': %+v", err)
+		}
+		s.CreatedBy = impl
 	}
 
 	if v, ok := temp["lastModifiedBy"]; ok {

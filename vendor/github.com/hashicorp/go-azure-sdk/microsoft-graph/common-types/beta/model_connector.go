@@ -22,7 +22,7 @@ type Connector struct {
 
 	Status *ConnectorStatus `json:"status,omitempty"`
 
-	// The version of the connector.
+	// The version of the connector. Read-only.
 	Version *string `json:"version,omitempty"`
 
 	// Fields inherited from Entity
@@ -65,6 +65,7 @@ func (s Connector) MarshalJSON() ([]byte, error) {
 
 	delete(decoded, "externalIp")
 	delete(decoded, "memberOf")
+	delete(decoded, "version")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.connector"

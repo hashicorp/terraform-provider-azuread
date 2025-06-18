@@ -17,22 +17,30 @@ type BookingStaffMember struct {
 	// availability in their personal calendar in Microsoft 365, before making a booking.
 	AvailabilityIsAffectedByPersonalCalendar *bool `json:"availabilityIsAffectedByPersonalCalendar,omitempty"`
 
+	// The date, time, and time zone when the staff member was created. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
 	// The name of the staff member, as displayed to customers. Required.
 	DisplayName string `json:"displayName"`
 
-	// The email address of the staff member. This can be in the same Microsoft 365 tenant as the business, or in a
-	// different email domain. This email address can be used if the sendConfirmationsToOwner property is set to true in the
-	// scheduling policy of the business. Required.
+	// The email address of the staff member. This email address can be in the same Microsoft 365 tenant as the business, or
+	// in a different email domain. This email address can be used if the sendConfirmationsToOwner property is set to true
+	// in the scheduling policy of the business. Required.
 	EmailAddress nullable.Type[string] `json:"emailAddress,omitempty"`
 
-	// True indicates that a staff member will be notified via email when a booking assigned to them is created or changed.
+	// Indicates that a staff member is notified via email when a booking assigned to them is created or changed. The
+	// default value is true.
 	IsEmailNotificationEnabled *bool `json:"isEmailNotificationEnabled,omitempty"`
 
-	LastUpdatedDateTime nullable.Type[string]         `json:"lastUpdatedDateTime,omitempty"`
-	MembershipStatus    *BookingStaffMembershipStatus `json:"membershipStatus,omitempty"`
-	Role                *BookingStaffRole             `json:"role,omitempty"`
+	// The date, time, and time zone when the staff member was last updated. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
+	LastUpdatedDateTime nullable.Type[string] `json:"lastUpdatedDateTime,omitempty"`
+
+	MembershipStatus *BookingStaffMembershipStatus `json:"membershipStatus,omitempty"`
+	Role             *BookingStaffRole             `json:"role,omitempty"`
 
 	// The time zone of the staff member. For a list of possible values, see dateTimeTimeZone.
 	TimeZone nullable.Type[string] `json:"timeZone,omitempty"`
@@ -41,7 +49,7 @@ type BookingStaffMember struct {
 	// the availability is determined by the staff member's workingHours property setting.
 	UseBusinessHours *bool `json:"useBusinessHours,omitempty"`
 
-	// The range of hours each day of the week that the staff member is available for booking. By default, they are
+	// The range of hours each day of the week that the staff member is available for booking. By default, they're
 	// initialized to be the same as the businessHours property of the business.
 	WorkingHours *[]BookingWorkHours `json:"workingHours,omitempty"`
 

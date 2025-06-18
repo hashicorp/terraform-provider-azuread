@@ -21,26 +21,34 @@ type VirtualEventRegistration struct {
 	// Email address of the registrant.
 	Email nullable.Type[string] `json:"email,omitempty"`
 
+	// The external information for a virtual event registration.
+	ExternalRegistrationInformation *VirtualEventExternalRegistrationInformation `json:"externalRegistrationInformation,omitempty"`
+
 	// First name of the registrant.
 	FirstName nullable.Type[string] `json:"firstName,omitempty"`
 
 	// Last name of the registrant.
 	LastName nullable.Type[string] `json:"lastName,omitempty"`
 
+	// The registrant's preferred language.
 	PreferredLanguage nullable.Type[string] `json:"preferredLanguage,omitempty"`
+
+	// The registrant's time zone details.
 	PreferredTimezone nullable.Type[string] `json:"preferredTimezone,omitempty"`
 
 	// Date and time when the registrant registers for the virtual event. The Timestamp type represents date and time
-	// information using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
 	// 2014-01-01T00:00:00Z.
 	RegistrationDateTime nullable.Type[string] `json:"registrationDateTime,omitempty"`
 
 	// The registrant's answer to the registration questions.
 	RegistrationQuestionAnswers *[]VirtualEventRegistrationQuestionAnswer `json:"registrationQuestionAnswers,omitempty"`
 
+	// Sessions for a registration.
 	Sessions *[]VirtualEventSession `json:"sessions,omitempty"`
 
-	// Registration status of the registrant. Read-only.
+	// Registration status of the registrant. Read-only. Possible values are registered, canceled, waitlisted,
+	// pendingApproval, rejectedByOrganizer, and unknownFutureValue.
 	Status *VirtualEventAttendeeRegistrationStatus `json:"status,omitempty"`
 
 	// The registrant's ID in Microsoft Entra ID. Only appears when the registrant is registered in Microsoft Entra ID.

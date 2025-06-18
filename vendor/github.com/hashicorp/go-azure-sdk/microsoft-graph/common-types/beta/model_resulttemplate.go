@@ -8,6 +8,9 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type ResultTemplate struct {
+	// JSON schema of the result template.
+	Body *Json `json:"body,omitempty"`
+
 	// Name of the result template.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 

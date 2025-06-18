@@ -13,6 +13,9 @@ import (
 var _ SecurityCase = SecurityEdiscoveryCase{}
 
 type SecurityEdiscoveryCase struct {
+	// Returns a list of ediscoveryCaseMember objects associated to this case.
+	CaseMembers *[]SecurityEdiscoveryCaseMember `json:"caseMembers,omitempty"`
+
 	// The user who closed the case.
 	ClosedBy IdentitySet `json:"closedBy"`
 
@@ -124,6 +127,7 @@ var _ json.Unmarshaler = &SecurityEdiscoveryCase{}
 
 func (s *SecurityEdiscoveryCase) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
+		CaseMembers             *[]SecurityEdiscoveryCaseMember             `json:"caseMembers,omitempty"`
 		ClosedDateTime          nullable.Type[string]                       `json:"closedDateTime,omitempty"`
 		Custodians              *[]SecurityEdiscoveryCustodian              `json:"custodians,omitempty"`
 		ExternalId              nullable.Type[string]                       `json:"externalId,omitempty"`
@@ -146,6 +150,7 @@ func (s *SecurityEdiscoveryCase) UnmarshalJSON(bytes []byte) error {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.CaseMembers = decoded.CaseMembers
 	s.ClosedDateTime = decoded.ClosedDateTime
 	s.Custodians = decoded.Custodians
 	s.ExternalId = decoded.ExternalId

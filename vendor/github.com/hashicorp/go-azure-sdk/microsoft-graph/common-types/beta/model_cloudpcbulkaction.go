@@ -134,6 +134,22 @@ func UnmarshalCloudPCBulkActionImplementation(input []byte) (CloudPCBulkAction, 
 		value = fmt.Sprintf("%v", v)
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkCreateSnapshot") {
+		var out CloudPCBulkCreateSnapshot
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkCreateSnapshot: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkDisasterRecovery") {
+		var out CloudPCBulkDisasterRecovery
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkDisasterRecovery: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkDisasterRecoveryFailback") {
 		var out CloudPCBulkDisasterRecoveryFailback
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -158,6 +174,14 @@ func UnmarshalCloudPCBulkActionImplementation(input []byte) (CloudPCBulkAction, 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkMove") {
+		var out CloudPCBulkMove
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkMove: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkPowerOff") {
 		var out CloudPCBulkPowerOff
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -170,6 +194,14 @@ func UnmarshalCloudPCBulkActionImplementation(input []byte) (CloudPCBulkAction, 
 		var out CloudPCBulkPowerOn
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CloudPCBulkPowerOn: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkReinstallAgent") {
+		var out CloudPCBulkReinstallAgent
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkReinstallAgent: %+v", err)
 		}
 		return out, nil
 	}
@@ -202,6 +234,14 @@ func UnmarshalCloudPCBulkActionImplementation(input []byte) (CloudPCBulkAction, 
 		var out CloudPCBulkRestore
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CloudPCBulkRestore: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkSetReviewStatus") {
+		var out CloudPCBulkSetReviewStatus
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkSetReviewStatus: %+v", err)
 		}
 		return out, nil
 	}

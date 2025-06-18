@@ -78,6 +78,9 @@ type DeviceAppManagement struct {
 	// The Managed Device Mobile Application Configurations.
 	MobileAppConfigurations *[]ManagedDeviceMobileAppConfiguration `json:"mobileAppConfigurations,omitempty"`
 
+	// List mobileAppRelationship objects for mobile applications.
+	MobileAppRelationships *[]MobileAppRelationship `json:"mobileAppRelationships,omitempty"`
+
 	// The mobile apps.
 	MobileApps *[]MobileApp `json:"mobileApps,omitempty"`
 
@@ -345,6 +348,23 @@ func (s *DeviceAppManagement) UnmarshalJSON(bytes []byte) error {
 			output = append(output, impl)
 		}
 		s.MobileAppConfigurations = &output
+	}
+
+	if v, ok := temp["mobileAppRelationships"]; ok {
+		var listTemp []json.RawMessage
+		if err := json.Unmarshal(v, &listTemp); err != nil {
+			return fmt.Errorf("unmarshaling MobileAppRelationships into list []json.RawMessage: %+v", err)
+		}
+
+		output := make([]MobileAppRelationship, 0)
+		for i, val := range listTemp {
+			impl, err := UnmarshalMobileAppRelationshipImplementation(val)
+			if err != nil {
+				return fmt.Errorf("unmarshaling index %d field 'MobileAppRelationships' for 'DeviceAppManagement': %+v", i, err)
+			}
+			output = append(output, impl)
+		}
+		s.MobileAppRelationships = &output
 	}
 
 	if v, ok := temp["mobileApps"]; ok {

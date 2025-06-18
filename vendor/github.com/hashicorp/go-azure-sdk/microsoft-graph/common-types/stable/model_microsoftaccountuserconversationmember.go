@@ -21,10 +21,10 @@ type MicrosoftAccountUserConversationMember struct {
 	// The display name of the user.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
-	// The roles for that user. This property contains additional qualifiers only when relevant - for example, if the member
-	// has owner privileges, the roles property contains owner as one of the values. Similarly, if the member is an
-	// in-tenant guest, the roles property contains guest as one of the values. A basic member should not have any values
-	// specified in the roles property. An Out-of-tenant external member is assigned the owner role.
+	// The roles for that user. This property contains more qualifiers only when relevant - for example, if the member has
+	// owner privileges, the roles property contains owner as one of the values. Similarly, if the member is an in-tenant
+	// guest, the roles property contains guest as one of the values. A basic member shouldn't have any values specified in
+	// the roles property. An Out-of-tenant external member is assigned the owner role.
 	Roles *[]string `json:"roles,omitempty"`
 
 	// The timestamp denoting how far back a conversation's history is shared with the conversation member. This property is

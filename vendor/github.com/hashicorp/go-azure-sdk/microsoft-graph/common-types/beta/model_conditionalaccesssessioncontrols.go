@@ -13,7 +13,7 @@ type ConditionalAccessSessionControls struct {
 	ApplicationEnforcedRestrictions *ApplicationEnforcedRestrictionsSessionControl `json:"applicationEnforcedRestrictions,omitempty"`
 
 	// Session control to apply cloud app security.
-	CloudAppSecurity *CloudAppSecuritySessionControl `json:"cloudAppSecurity"`
+	CloudAppSecurity *CloudAppSecuritySessionControl `json:"cloudAppSecurity,omitempty"`
 
 	// Session control for continuous access evaluation settings.
 	ContinuousAccessEvaluation *ContinuousAccessEvaluationSessionControl `json:"continuousAccessEvaluation,omitempty"`
@@ -21,6 +21,9 @@ type ConditionalAccessSessionControls struct {
 	// Session control that determines whether it's acceptable for Microsoft Entra ID to extend existing sessions based on
 	// information collected prior to an outage or not.
 	DisableResilienceDefaults nullable.Type[bool] `json:"disableResilienceDefaults,omitempty"`
+
+	// Session control to link to Global Secure Access security profiles or filtering profiles.
+	GlobalSecureAccessFilteringProfile *GlobalSecureAccessFilteringProfileSessionControl `json:"globalSecureAccessFilteringProfile,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`

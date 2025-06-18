@@ -24,14 +24,14 @@ type Calendar struct {
 	CalendarView *[]Event `json:"calendarView,omitempty"`
 
 	// true if the user can write to the calendar, false otherwise. This property is true for the user who created the
-	// calendar. This property is also true for a user who has been shared a calendar and granted write access.
+	// calendar. This property is also true for a user who shared a calendar and granted write access.
 	CanEdit nullable.Type[bool] `json:"canEdit,omitempty"`
 
-	// true if the user has the permission to share the calendar, false otherwise. Only the user who created the calendar
-	// can share it.
+	// true if the user has permission to share the calendar, false otherwise. Only the user who created the calendar can
+	// share it.
 	CanShare nullable.Type[bool] `json:"canShare,omitempty"`
 
-	// true if the user can read calendar items that have been marked private, false otherwise.
+	// If true, the user can read calendar items that have been marked private, false otherwise.
 	CanViewPrivateItems nullable.Type[bool] `json:"canViewPrivateItems,omitempty"`
 
 	// Identifies the version of the calendar object. Every time the calendar is changed, changeKey changes as well. This

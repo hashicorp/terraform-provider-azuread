@@ -42,6 +42,8 @@ type DriveProtectionUnit struct {
 	// The unique identifier of the protection policy based on which protection unit was created.
 	PolicyId nullable.Type[string] `json:"policyId,omitempty"`
 
+	ProtectionSources *ProtectionSource `json:"protectionSources,omitempty"`
+
 	// The status of the protection unit. The possible values are: protectRequested, protected, unprotectRequested,
 	// unprotected, removeRequested, unknownFutureValue.
 	Status *ProtectionUnitStatus `json:"status,omitempty"`
@@ -69,6 +71,7 @@ func (s DriveProtectionUnit) ProtectionUnitBase() BaseProtectionUnitBaseImpl {
 		LastModifiedBy:       s.LastModifiedBy,
 		LastModifiedDateTime: s.LastModifiedDateTime,
 		PolicyId:             s.PolicyId,
+		ProtectionSources:    s.ProtectionSources,
 		Status:               s.Status,
 		Id:                   s.Id,
 		ODataId:              s.ODataId,
@@ -125,6 +128,7 @@ func (s *DriveProtectionUnit) UnmarshalJSON(bytes []byte) error {
 		Error                *PublicError          `json:"error,omitempty"`
 		LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 		PolicyId             nullable.Type[string] `json:"policyId,omitempty"`
+		ProtectionSources    *ProtectionSource     `json:"protectionSources,omitempty"`
 		Status               *ProtectionUnitStatus `json:"status,omitempty"`
 		Id                   *string               `json:"id,omitempty"`
 		ODataId              *string               `json:"@odata.id,omitempty"`
@@ -144,6 +148,7 @@ func (s *DriveProtectionUnit) UnmarshalJSON(bytes []byte) error {
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType
 	s.PolicyId = decoded.PolicyId
+	s.ProtectionSources = decoded.ProtectionSources
 	s.Status = decoded.Status
 
 	var temp map[string]json.RawMessage

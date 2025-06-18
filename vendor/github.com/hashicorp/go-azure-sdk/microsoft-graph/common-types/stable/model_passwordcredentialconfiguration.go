@@ -8,9 +8,9 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type PasswordCredentialConfiguration struct {
-	// Value that can be used as the maximum number for setting password expiration time in days, hours, minutes or seconds.
-	// Defined in ISO 8601 format for Durations. For example, 'P4DT12H30M5S' represents a duration of four days, twelve
-	// hours, thirty minutes, and five seconds. This property is required when restriction type is set to passwordLifetime.
+	// String value that indicates the maximum lifetime for password expiration, defined as an ISO 8601 duration. For
+	// example, P4DT12H30M5S represents four days, 12 hours, 30 minutes, and five seconds. This property is required when
+	// restrictionType is set to passwordLifetime.
 	MaxLifetime nullable.Type[string] `json:"maxLifetime,omitempty"`
 
 	// The OData ID of this entity
@@ -19,12 +19,14 @@ type PasswordCredentialConfiguration struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// Enforces the policy for an app created on or after the enforcement date. For existing applications, the enforcement
-	// date would be back dated. To apply to all applications, enforcement datetime would be null.
+	// Specifies the date from which the policy restriction applies to newly created applications. For existing
+	// applications, the enforcement date can be retroactively applied.
 	RestrictForAppsCreatedAfterDateTime nullable.Type[string] `json:"restrictForAppsCreatedAfterDateTime,omitempty"`
 
 	// The type of restriction being applied. The possible values are: passwordAddition, passwordLifetime,
-	// symmetricKeyAddition, symmetricKeyLifetime,customPasswordAddition, unknownFutureValue. Each value of restrictionType
-	// can be used only once per policy.
+	// symmetricKeyAddition, symmetricKeyLifetime, customPasswordAddition, and unknownFutureValue. Each value of
+	// restrictionType can be used only once per policy.
 	RestrictionType *AppCredentialRestrictionType `json:"restrictionType,omitempty"`
+
+	State *AppManagementRestrictionState `json:"state,omitempty"`
 }

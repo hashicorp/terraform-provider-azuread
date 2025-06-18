@@ -13,8 +13,13 @@ import (
 var _ RestoreSessionBase = ExchangeRestoreSession{}
 
 type ExchangeRestoreSession struct {
+	GranularMailboxRestoreArtifacts *[]GranularMailboxRestoreArtifact `json:"granularMailboxRestoreArtifacts,omitempty"`
+
 	// A collection of restore points and destination details that can be used to restore Exchange mailboxes.
 	MailboxRestoreArtifacts *[]MailboxRestoreArtifact `json:"mailboxRestoreArtifacts,omitempty"`
+
+	// A collection of user mailboxes and destination details that can be used to restore Exchange mailboxes.
+	MailboxRestoreArtifactsBulkAdditionRequests *[]MailboxRestoreArtifactsBulkAdditionRequest `json:"mailboxRestoreArtifactsBulkAdditionRequests,omitempty"`
 
 	// Fields inherited from RestoreSessionBase
 
@@ -36,8 +41,14 @@ type ExchangeRestoreSession struct {
 	// Timestamp of the last modification of the restore session.
 	LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 
+	// Indicates whether the restore session was created normally or by a bulk job.
+	RestoreJobType *RestoreJobType `json:"restoreJobType,omitempty"`
+
+	// The number of metadata artifacts that belong to this restore session.
+	RestoreSessionArtifactCount *RestoreSessionArtifactCount `json:"restoreSessionArtifactCount,omitempty"`
+
 	// Status of the restore session. The value is an aggregated status of the restored artifacts. The possible values are:
-	// draft, activating, active, completedWithError, completed, unknownFutureValue, failed. You must use the Prefer:
+	// draft, activating, active, completedWithError, completed, unknownFutureValue, failed. Use the Prefer:
 	// include-unknown-enum-members request header to get the following value in this evolvable enum: failed.
 	Status *RestoreSessionStatus `json:"status,omitempty"`
 
@@ -58,16 +69,18 @@ type ExchangeRestoreSession struct {
 
 func (s ExchangeRestoreSession) RestoreSessionBase() BaseRestoreSessionBaseImpl {
 	return BaseRestoreSessionBaseImpl{
-		CompletedDateTime:    s.CompletedDateTime,
-		CreatedBy:            s.CreatedBy,
-		CreatedDateTime:      s.CreatedDateTime,
-		Error:                s.Error,
-		LastModifiedBy:       s.LastModifiedBy,
-		LastModifiedDateTime: s.LastModifiedDateTime,
-		Status:               s.Status,
-		Id:                   s.Id,
-		ODataId:              s.ODataId,
-		ODataType:            s.ODataType,
+		CompletedDateTime:           s.CompletedDateTime,
+		CreatedBy:                   s.CreatedBy,
+		CreatedDateTime:             s.CreatedDateTime,
+		Error:                       s.Error,
+		LastModifiedBy:              s.LastModifiedBy,
+		LastModifiedDateTime:        s.LastModifiedDateTime,
+		RestoreJobType:              s.RestoreJobType,
+		RestoreSessionArtifactCount: s.RestoreSessionArtifactCount,
+		Status:                      s.Status,
+		Id:                          s.Id,
+		ODataId:                     s.ODataId,
+		ODataType:                   s.ODataType,
 	}
 }
 
@@ -110,21 +123,25 @@ var _ json.Unmarshaler = &ExchangeRestoreSession{}
 
 func (s *ExchangeRestoreSession) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		MailboxRestoreArtifacts *[]MailboxRestoreArtifact `json:"mailboxRestoreArtifacts,omitempty"`
-		CompletedDateTime       nullable.Type[string]     `json:"completedDateTime,omitempty"`
-		CreatedDateTime         nullable.Type[string]     `json:"createdDateTime,omitempty"`
-		Error                   *PublicError              `json:"error,omitempty"`
-		LastModifiedDateTime    nullable.Type[string]     `json:"lastModifiedDateTime,omitempty"`
-		Status                  *RestoreSessionStatus     `json:"status,omitempty"`
-		Id                      *string                   `json:"id,omitempty"`
-		ODataId                 *string                   `json:"@odata.id,omitempty"`
-		ODataType               *string                   `json:"@odata.type,omitempty"`
+		GranularMailboxRestoreArtifacts             *[]GranularMailboxRestoreArtifact             `json:"granularMailboxRestoreArtifacts,omitempty"`
+		MailboxRestoreArtifactsBulkAdditionRequests *[]MailboxRestoreArtifactsBulkAdditionRequest `json:"mailboxRestoreArtifactsBulkAdditionRequests,omitempty"`
+		CompletedDateTime                           nullable.Type[string]                         `json:"completedDateTime,omitempty"`
+		CreatedDateTime                             nullable.Type[string]                         `json:"createdDateTime,omitempty"`
+		Error                                       *PublicError                                  `json:"error,omitempty"`
+		LastModifiedDateTime                        nullable.Type[string]                         `json:"lastModifiedDateTime,omitempty"`
+		RestoreJobType                              *RestoreJobType                               `json:"restoreJobType,omitempty"`
+		RestoreSessionArtifactCount                 *RestoreSessionArtifactCount                  `json:"restoreSessionArtifactCount,omitempty"`
+		Status                                      *RestoreSessionStatus                         `json:"status,omitempty"`
+		Id                                          *string                                       `json:"id,omitempty"`
+		ODataId                                     *string                                       `json:"@odata.id,omitempty"`
+		ODataType                                   *string                                       `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
-	s.MailboxRestoreArtifacts = decoded.MailboxRestoreArtifacts
+	s.GranularMailboxRestoreArtifacts = decoded.GranularMailboxRestoreArtifacts
+	s.MailboxRestoreArtifactsBulkAdditionRequests = decoded.MailboxRestoreArtifactsBulkAdditionRequests
 	s.CompletedDateTime = decoded.CompletedDateTime
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.Error = decoded.Error
@@ -132,6 +149,8 @@ func (s *ExchangeRestoreSession) UnmarshalJSON(bytes []byte) error {
 	s.LastModifiedDateTime = decoded.LastModifiedDateTime
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType
+	s.RestoreJobType = decoded.RestoreJobType
+	s.RestoreSessionArtifactCount = decoded.RestoreSessionArtifactCount
 	s.Status = decoded.Status
 
 	var temp map[string]json.RawMessage
@@ -153,6 +172,23 @@ func (s *ExchangeRestoreSession) UnmarshalJSON(bytes []byte) error {
 			return fmt.Errorf("unmarshaling field 'LastModifiedBy' for 'ExchangeRestoreSession': %+v", err)
 		}
 		s.LastModifiedBy = impl
+	}
+
+	if v, ok := temp["mailboxRestoreArtifacts"]; ok {
+		var listTemp []json.RawMessage
+		if err := json.Unmarshal(v, &listTemp); err != nil {
+			return fmt.Errorf("unmarshaling MailboxRestoreArtifacts into list []json.RawMessage: %+v", err)
+		}
+
+		output := make([]MailboxRestoreArtifact, 0)
+		for i, val := range listTemp {
+			impl, err := UnmarshalMailboxRestoreArtifactImplementation(val)
+			if err != nil {
+				return fmt.Errorf("unmarshaling index %d field 'MailboxRestoreArtifacts' for 'ExchangeRestoreSession': %+v", i, err)
+			}
+			output = append(output, impl)
+		}
+		s.MailboxRestoreArtifacts = &output
 	}
 
 	return nil

@@ -12,7 +12,8 @@ import (
 
 type SiteCollection struct {
 	// Represents whether the site collection is recently archived, fully archived, or reactivating. Possible values are:
-	// recentlyArchived, fullyArchived, reactivating, unknownFutureValue.
+	// recentlyArchived, fullyArchived, reactivating, unknownFutureValue. To update this property, use the site: archive or
+	// site: unarchive APIs.
 	ArchivalDetails *SiteArchivalDetails `json:"archivalDetails,omitempty"`
 
 	// The geographic region code for where this site collection resides. Only present for multi-geo tenants. Read-only.

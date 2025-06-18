@@ -15,7 +15,9 @@ const (
 	ProtectionRuleStatus_Active              ProtectionRuleStatus = "active"
 	ProtectionRuleStatus_Completed           ProtectionRuleStatus = "completed"
 	ProtectionRuleStatus_CompletedWithErrors ProtectionRuleStatus = "completedWithErrors"
+	ProtectionRuleStatus_DeleteRequested     ProtectionRuleStatus = "deleteRequested"
 	ProtectionRuleStatus_Draft               ProtectionRuleStatus = "draft"
+	ProtectionRuleStatus_UpdateRequested     ProtectionRuleStatus = "updateRequested"
 )
 
 func PossibleValuesForProtectionRuleStatus() []string {
@@ -23,7 +25,9 @@ func PossibleValuesForProtectionRuleStatus() []string {
 		string(ProtectionRuleStatus_Active),
 		string(ProtectionRuleStatus_Completed),
 		string(ProtectionRuleStatus_CompletedWithErrors),
+		string(ProtectionRuleStatus_DeleteRequested),
 		string(ProtectionRuleStatus_Draft),
+		string(ProtectionRuleStatus_UpdateRequested),
 	}
 }
 
@@ -45,7 +49,9 @@ func parseProtectionRuleStatus(input string) (*ProtectionRuleStatus, error) {
 		"active":              ProtectionRuleStatus_Active,
 		"completed":           ProtectionRuleStatus_Completed,
 		"completedwitherrors": ProtectionRuleStatus_CompletedWithErrors,
+		"deleterequested":     ProtectionRuleStatus_DeleteRequested,
 		"draft":               ProtectionRuleStatus_Draft,
+		"updaterequested":     ProtectionRuleStatus_UpdateRequested,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

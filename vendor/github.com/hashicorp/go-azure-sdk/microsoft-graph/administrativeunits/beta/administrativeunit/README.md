@@ -260,12 +260,7 @@ for _, item := range items {
 ctx := context.TODO()
 id := administrativeunit.NewAdministrativeUnitID("administrativeUnitId")
 
-payload := administrativeunit.RestoreRequest{
-	// ...
-}
-
-
-read, err := client.Restore(ctx, id, payload, administrativeunit.DefaultRestoreOperationOptions())
+read, err := client.Restore(ctx, id, administrativeunit.DefaultRestoreOperationOptions())
 if err != nil {
 	// handle the error
 }

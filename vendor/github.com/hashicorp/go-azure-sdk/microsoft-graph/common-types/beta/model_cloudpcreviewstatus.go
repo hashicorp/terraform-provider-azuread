@@ -8,6 +8,10 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type CloudPCReviewStatus struct {
+	// The blob access tier of the Azure Storage account in which the Cloud PC snapshot is saved with. Possible values are
+	// hot, cool, cold, and archive, default value is hot.
+	AccessTier *CloudPCBlobAccessTier `json:"accessTier,omitempty"`
+
 	// The resource ID of the Azure Storage account in which the Cloud PC snapshot is being saved.
 	AzureStorageAccountId nullable.Type[string] `json:"azureStorageAccountId,omitempty"`
 

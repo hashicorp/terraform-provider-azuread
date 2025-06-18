@@ -24,8 +24,8 @@ type SubjectRightsRequestHistory struct {
 	ODataType *string `json:"@odata.type,omitempty"`
 
 	// The stage when the entity was changed. Possible values are: contentRetrieval, contentReview, generateReport,
-	// contentDeletion, caseResolved, unknownFutureValue, approval. Note that you must use the Prefer:
-	// include-unknown-enum-members request header to get the following value(s) in this evolvable enum: approval.
+	// contentDeletion, caseResolved, unknownFutureValue, approval. Use the Prefer: include-unknown-enum-members request
+	// header to get the following value(s) in this evolvable enum: approval.
 	Stage *SubjectRightsRequestStage `json:"stage,omitempty"`
 
 	// The status of the stage when the entity was changed. Possible values are: notStarted, current, completed, failed,

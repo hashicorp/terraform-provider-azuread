@@ -33,6 +33,7 @@ type CompanyDetail struct {
 	// Pronunciation guide for the company name.
 	Pronunciation nullable.Type[string] `json:"pronunciation,omitempty"`
 
+	// Secondary Department Name within a company.
 	SecondaryDepartment nullable.Type[string] `json:"secondaryDepartment,omitempty"`
 
 	// Link to the company home page.

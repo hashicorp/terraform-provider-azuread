@@ -55,18 +55,19 @@ type RiskDetection struct {
 	// aiConfirmedSigninSafe, userPassedMFADrivenByRiskBasedPolicy, adminDismissedAllRiskForUser,
 	// adminConfirmedSigninCompromised, hidden, adminConfirmedUserCompromised, unknownFutureValue,
 	// adminConfirmedServicePrincipalCompromised, adminDismissedAllRiskForServicePrincipal, m365DAdminDismissedDetection.
-	// Note that you must use the Prefer: include - unknown -enum-members request header to get the following value(s) in
-	// this evolvable enum: adminConfirmedServicePrincipalCompromised , adminDismissedAllRiskForServicePrincipal ,
-	// m365DAdminDismissedDetection. Note: Details for this property are only available for Microsoft Entra ID P2 customers.
-	// P1 customers will be returned hidden.
+	// Use the Prefer: include - unknown -enum-members request header to get the following value(s) in this evolvable enum:
+	// adminConfirmedServicePrincipalCompromised , adminDismissedAllRiskForServicePrincipal , m365DAdminDismissedDetection.
+	// Note: Details for this property are only available for Microsoft Entra ID P2 customers. P1 customers will be returned
+	// hidden.
 	RiskDetail *RiskDetail `json:"riskDetail,omitempty"`
 
 	// The type of risk event detected. The possible values are adminConfirmedUserCompromised, anomalousUserActivity,
-	// anonymizedIPAddress,attackerinTheMiddle,attemptedPRTAccess, generic, investigationsThreatIntelligence,
-	// investigationsThreatIntelligenceSigninLinked,leakedCredentials, maliciousIPAddress,
+	// anomalousToken, anonymizedIPAddress,attackerinTheMiddle,attemptedPRTAccess, generic,
+	// investigationsThreatIntelligence, investigationsThreatIntelligenceSigninLinked,leakedCredentials, maliciousIPAddress,
 	// maliciousIPAddressValidCredentialsBlockedIP, malwareInfectedIPAddress,
-	// mcasImpossibleTravel,mcasFinSuspiciousFileAccess, mcasSuspiciousInboxManipulationRules,nationStateIP,
-	// suspiciousAPITraffic, suspiciousIPAddress,suspiciousSendingPatterns, unfamiliarFeatures, unlikelyTravel,
+	// mcasImpossibleTravel,mcasFinSuspiciousFileAccess, mcasSuspiciousInboxManipulationRules,nationStateIP, newCountry,
+	// passwordSpray, riskyIPAddress, suspiciousAPITraffic, suspiciousBrowser, suspiciousInboxForwarding,
+	// suspiciousIPAddress,suspiciousSendingPatterns, tokenIssuerAnomaly, unfamiliarFeatures, unlikelyTravel,
 	// userReportedSuspiciousActivity. For more information about each value, see Risk types and detection.
 	RiskEventType nullable.Type[string] `json:"riskEventType,omitempty"`
 

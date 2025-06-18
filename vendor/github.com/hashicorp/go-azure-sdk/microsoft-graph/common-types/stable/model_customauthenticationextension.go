@@ -190,6 +190,22 @@ func UnmarshalCustomAuthenticationExtensionImplementation(input []byte) (CustomA
 		value = fmt.Sprintf("%v", v)
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.onAttributeCollectionStartCustomExtension") {
+		var out OnAttributeCollectionStartCustomExtension
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnAttributeCollectionStartCustomExtension: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.onAttributeCollectionSubmitCustomExtension") {
+		var out OnAttributeCollectionSubmitCustomExtension
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnAttributeCollectionSubmitCustomExtension: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.onTokenIssuanceStartCustomExtension") {
 		var out OnTokenIssuanceStartCustomExtension
 		if err := json.Unmarshal(input, &out); err != nil {

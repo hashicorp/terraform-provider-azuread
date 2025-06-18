@@ -19,7 +19,7 @@ type WorkbookChartAxisTitle struct {
 	// Represents the axis title.
 	Text nullable.Type[string] `json:"text,omitempty"`
 
-	// A boolean that specifies the visibility of an axis title.
+	// A Boolean that specifies the visibility of an axis title.
 	Visible *bool `json:"visible,omitempty"`
 
 	// Fields inherited from Entity

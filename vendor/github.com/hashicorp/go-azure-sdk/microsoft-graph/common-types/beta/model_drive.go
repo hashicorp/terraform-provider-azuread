@@ -46,7 +46,7 @@ type Drive struct {
 	// Collection of common folders available in OneDrive. Read-only. Nullable.
 	Special *[]DriveItem `json:"special,omitempty"`
 
-	// If present, indicates that this is a system-managed drive. Read-only.
+	// If present, indicates that it's a system-managed drive. Read-only.
 	System *SystemFacet `json:"system,omitempty"`
 
 	// Fields inherited from BaseItem

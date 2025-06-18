@@ -15,7 +15,9 @@ const (
 	Platform_Android       Platform = "android"
 	Platform_Ios           Platform = "ios"
 	Platform_MacOS         Platform = "macOS"
+	Platform_TvOS          Platform = "tvOS"
 	Platform_Unknown       Platform = "unknown"
+	Platform_VisionOS      Platform = "visionOS"
 	Platform_Windows       Platform = "windows"
 	Platform_WindowsMobile Platform = "windowsMobile"
 )
@@ -25,7 +27,9 @@ func PossibleValuesForPlatform() []string {
 		string(Platform_Android),
 		string(Platform_Ios),
 		string(Platform_MacOS),
+		string(Platform_TvOS),
 		string(Platform_Unknown),
+		string(Platform_VisionOS),
 		string(Platform_Windows),
 		string(Platform_WindowsMobile),
 	}
@@ -49,7 +53,9 @@ func parsePlatform(input string) (*Platform, error) {
 		"android":       Platform_Android,
 		"ios":           Platform_Ios,
 		"macos":         Platform_MacOS,
+		"tvos":          Platform_TvOS,
 		"unknown":       Platform_Unknown,
+		"visionos":      Platform_VisionOS,
 		"windows":       Platform_Windows,
 		"windowsmobile": Platform_WindowsMobile,
 	}

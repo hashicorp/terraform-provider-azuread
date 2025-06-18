@@ -15,6 +15,8 @@ type CrossTenantIdentitySyncPolicyPartner struct {
 	// easily identify the policy. Optional.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
+	ExternalCloudAuthorizedApplicationId nullable.Type[string] `json:"externalCloudAuthorizedApplicationId,omitempty"`
+
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
 

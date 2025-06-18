@@ -20,9 +20,11 @@ type CloudPCDeviceImage struct {
 	// The error code of the status of the image that indicates why the upload failed, if applicable. Possible values are:
 	// internalServerError, sourceImageNotFound, osVersionNotSupported, sourceImageInvalid, sourceImageNotGeneralized,
 	// unknownFutureValue, vmAlreadyAzureAdJoined, paidSourceImageNotSupport, sourceImageNotSupportCustomizeVMName,
-	// sourceImageSizeExceedsLimitation. Note that you must use the Prefer: include-unknown-enum-members request header to
-	// get the following values from this evolvable enum: vmAlreadyAzureAdJoined, paidSourceImageNotSupport,
-	// sourceImageNotSupportCustomizeVMName, sourceImageSizeExceedsLimitation. Read-only.
+	// sourceImageSizeExceedsLimitation, sourceImageWithDataDiskNotSupported, sourceImageWithDiskEncryptionSetNotSupported.
+	// Use the Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum:
+	// vmAlreadyAzureAdJoined, paidSourceImageNotSupport, sourceImageNotSupportCustomizeVMName,
+	// sourceImageSizeExceedsLimitation, sourceImageWithDataDiskNotSupported, sourceImageWithDiskEncryptionSetNotSupported.
+	// Read-only.
 	ErrorCode *CloudPCDeviceImageErrorCode `json:"errorCode,omitempty"`
 
 	// The date when the image became unavailable. Read-only.
@@ -42,21 +44,26 @@ type CloudPCDeviceImage struct {
 	// default value is unknown. Read-only.
 	OsStatus *CloudPCDeviceImageOsStatus `json:"osStatus,omitempty"`
 
-	ScopeIds *[]string `json:"scopeIds,omitempty"`
+	// The operating system version of this image. For example, 10.0.22000.296. Read-only.
+	OsVersionNumber nullable.Type[string] `json:"osVersionNumber,omitempty"`
+
+	ScopeIds *[]string            `json:"scopeIds,omitempty"`
+	SizeInGB nullable.Type[int64] `json:"sizeInGB,omitempty"`
 
 	// The unique identifier (ID) of the source image resource on Azure. The required ID format is:
 	// '/subscriptions/{subscription-id}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/images/{imageName}'.
 	// Read-only.
 	SourceImageResourceId nullable.Type[string] `json:"sourceImageResourceId,omitempty"`
 
-	// The status of the image on the Cloud PC. Possible values are: pending, ready, failed, unknownFutureValue. Read-only.
+	// The status of the image on the Cloud PC. Possible values are: pending, ready, warning, failed, unknownFutureValue.
+	// Read-only.
 	Status *CloudPCDeviceImageStatus `json:"status,omitempty"`
 
 	// The details of the status of the image that indicates why the upload failed, if applicable. Possible values are:
 	// internalServerError, sourceImageNotFound, osVersionNotSupported, sourceImageInvalid, sourceImageNotGeneralized,
 	// unknownFutureValue, vmAlreadyAzureAdJoined, paidSourceImageNotSupport, sourceImageNotSupportCustomizeVMName,
-	// sourceImageSizeExceedsLimitation. Note that you must use the Prefer: include-unknown-enum-members request header to
-	// get the following values from this evolvable enum: vmAlreadyAzureAdJoined, paidSourceImageNotSupport,
+	// sourceImageSizeExceedsLimitation. Use the Prefer: include-unknown-enum-members request header to get the following
+	// values from this evolvable enum: vmAlreadyAzureAdJoined, paidSourceImageNotSupport,
 	// sourceImageNotSupportCustomizeVMName, sourceImageSizeExceedsLimitation. Read-only. The statusDetails property is
 	// deprecated and will stop returning data on January 31, 2024. Going forward, use the errorCode property.
 	StatusDetails *CloudPCDeviceImageStatusDetails `json:"statusDetails,omitempty"`
@@ -109,6 +116,7 @@ func (s CloudPCDeviceImage) MarshalJSON() ([]byte, error) {
 	delete(decoded, "operatingSystem")
 	delete(decoded, "osBuildNumber")
 	delete(decoded, "osStatus")
+	delete(decoded, "osVersionNumber")
 	delete(decoded, "sourceImageResourceId")
 	delete(decoded, "status")
 	delete(decoded, "statusDetails")

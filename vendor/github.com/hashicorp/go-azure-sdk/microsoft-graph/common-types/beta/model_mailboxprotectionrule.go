@@ -27,7 +27,7 @@ type MailboxProtectionRule struct {
 	// Contains error details if an operation on a rule fails.
 	Error *PublicError `json:"error,omitempty"`
 
-	// Indicates whether the protection rule is static or dynamic.
+	// true indicates that the protection rule is dynamic; false that it's static.
 	IsAutoApplyEnabled nullable.Type[bool] `json:"isAutoApplyEnabled,omitempty"`
 
 	// The identity of the person who last modified the rule.
@@ -37,7 +37,9 @@ type MailboxProtectionRule struct {
 	LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 
 	// The status of the protection rule. The possible values are: draft, active, completed, completedWithErrors,
-	// unknownFutureValue.
+	// unknownFutureValue, updateRequested, deleteRequested. Use the Prefer: include-unknown-enum-members request header to
+	// get the following values in this evolvable enum: updateRequested , deleteRequested. The draft member is currently
+	// unsupported.
 	Status *ProtectionRuleStatus `json:"status,omitempty"`
 
 	// Fields inherited from Entity

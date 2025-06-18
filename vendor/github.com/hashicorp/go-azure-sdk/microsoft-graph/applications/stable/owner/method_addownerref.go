@@ -47,7 +47,8 @@ func (o AddOwnerRefOperationOptions) ToQuery() *client.QueryParams {
 	return &out
 }
 
-// AddOwnerRef - Add owner. Add an owner to an application by posting to the owners collection.
+// AddOwnerRef - Add owner. Add an owner to an application. Application owners can be individual users, the associated
+// service principal, or another service principal.
 func (c OwnerClient) AddOwnerRef(ctx context.Context, id stable.ApplicationId, input stable.ReferenceCreate, options AddOwnerRefOperationOptions) (result AddOwnerRefOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

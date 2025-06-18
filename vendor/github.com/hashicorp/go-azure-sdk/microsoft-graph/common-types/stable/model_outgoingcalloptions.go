@@ -22,6 +22,9 @@ type OutgoingCallOptions struct {
 	// Indicates whether content sharing notifications should be enabled for the call.
 	IsContentSharingNotificationEnabled nullable.Type[bool] `json:"isContentSharingNotificationEnabled,omitempty"`
 
+	// Indicates whether delta roster is enabled for the call.
+	IsDeltaRosterEnabled nullable.Type[bool] `json:"isDeltaRosterEnabled,omitempty"`
+
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
 
@@ -36,6 +39,7 @@ func (s OutgoingCallOptions) CallOptions() BaseCallOptionsImpl {
 	return BaseCallOptionsImpl{
 		HideBotAfterEscalation:              s.HideBotAfterEscalation,
 		IsContentSharingNotificationEnabled: s.IsContentSharingNotificationEnabled,
+		IsDeltaRosterEnabled:                s.IsDeltaRosterEnabled,
 		ODataId:                             s.ODataId,
 		ODataType:                           s.ODataType,
 	}

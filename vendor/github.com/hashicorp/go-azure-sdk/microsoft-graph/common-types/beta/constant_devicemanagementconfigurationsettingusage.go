@@ -12,9 +12,10 @@ import (
 type DeviceManagementConfigurationSettingUsage string
 
 const (
-	DeviceManagementConfigurationSettingUsage_Compliance    DeviceManagementConfigurationSettingUsage = "compliance"
-	DeviceManagementConfigurationSettingUsage_Configuration DeviceManagementConfigurationSettingUsage = "configuration"
-	DeviceManagementConfigurationSettingUsage_None          DeviceManagementConfigurationSettingUsage = "none"
+	DeviceManagementConfigurationSettingUsage_Compliance      DeviceManagementConfigurationSettingUsage = "compliance"
+	DeviceManagementConfigurationSettingUsage_Configuration   DeviceManagementConfigurationSettingUsage = "configuration"
+	DeviceManagementConfigurationSettingUsage_None            DeviceManagementConfigurationSettingUsage = "none"
+	DeviceManagementConfigurationSettingUsage_ReusableSetting DeviceManagementConfigurationSettingUsage = "reusableSetting"
 )
 
 func PossibleValuesForDeviceManagementConfigurationSettingUsage() []string {
@@ -22,6 +23,7 @@ func PossibleValuesForDeviceManagementConfigurationSettingUsage() []string {
 		string(DeviceManagementConfigurationSettingUsage_Compliance),
 		string(DeviceManagementConfigurationSettingUsage_Configuration),
 		string(DeviceManagementConfigurationSettingUsage_None),
+		string(DeviceManagementConfigurationSettingUsage_ReusableSetting),
 	}
 }
 
@@ -40,9 +42,10 @@ func (s *DeviceManagementConfigurationSettingUsage) UnmarshalJSON(bytes []byte) 
 
 func parseDeviceManagementConfigurationSettingUsage(input string) (*DeviceManagementConfigurationSettingUsage, error) {
 	vals := map[string]DeviceManagementConfigurationSettingUsage{
-		"compliance":    DeviceManagementConfigurationSettingUsage_Compliance,
-		"configuration": DeviceManagementConfigurationSettingUsage_Configuration,
-		"none":          DeviceManagementConfigurationSettingUsage_None,
+		"compliance":      DeviceManagementConfigurationSettingUsage_Compliance,
+		"configuration":   DeviceManagementConfigurationSettingUsage_Configuration,
+		"none":            DeviceManagementConfigurationSettingUsage_None,
+		"reusablesetting": DeviceManagementConfigurationSettingUsage_ReusableSetting,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

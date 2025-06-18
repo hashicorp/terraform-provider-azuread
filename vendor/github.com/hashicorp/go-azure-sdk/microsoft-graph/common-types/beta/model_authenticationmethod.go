@@ -19,6 +19,9 @@ type AuthenticationMethod interface {
 var _ AuthenticationMethod = BaseAuthenticationMethodImpl{}
 
 type BaseAuthenticationMethodImpl struct {
+	// The date and time the authentication method was registered to the user. Read-only. Optional. This optional value is
+	// null if the authentication method doesn't populate it. The timestamp type represents date and time information using
+	// ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
 	// Fields inherited from Entity
@@ -82,6 +85,8 @@ func (s BaseAuthenticationMethodImpl) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling BaseAuthenticationMethodImpl: %+v", err)
 	}
 
+	delete(decoded, "createdDateTime")
+
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.authenticationMethod"
 	}
@@ -125,6 +130,14 @@ func UnmarshalAuthenticationMethodImplementation(input []byte) (AuthenticationMe
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.hardwareOathAuthenticationMethod") {
+		var out HardwareOathAuthenticationMethod
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HardwareOathAuthenticationMethod: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod") {
 		var out MicrosoftAuthenticatorAuthenticationMethod
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -161,6 +174,14 @@ func UnmarshalAuthenticationMethodImplementation(input []byte) (AuthenticationMe
 		var out PlatformCredentialAuthenticationMethod
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into PlatformCredentialAuthenticationMethod: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.qrCodePinAuthenticationMethod") {
+		var out QrCodePinAuthenticationMethod
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into QrCodePinAuthenticationMethod: %+v", err)
 		}
 		return out, nil
 	}
