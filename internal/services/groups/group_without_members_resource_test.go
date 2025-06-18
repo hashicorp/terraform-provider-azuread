@@ -537,7 +537,7 @@ resource "azuread_group_without_members" "test" {
   display_name     = "acctestGroup-%[1]d"
   types            = ["Unified"]
   mail_enabled     = true
-  mail_nickname    = "acctestGroup-%[1]d"
+  mail_nickname    = "acctest.Group-%[1]d"
   security_enabled = false
 }
 `, data.RandomInteger)
