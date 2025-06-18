@@ -37,8 +37,8 @@ type RiskyUserHistoryItem struct {
 	// userPassedMFADrivenByRiskBasedPolicy, adminDismissedAllRiskForUser, adminConfirmedSigninCompromised, hidden,
 	// adminConfirmedUserCompromised, unknownFutureValue, adminConfirmedServicePrincipalCompromised,
 	// adminDismissedAllRiskForServicePrincipal, m365DAdminDismissedDetection, userChangedPasswordOnPremises,
-	// adminDismissedRiskForSignIn, adminConfirmedAccountSafe. You must use the Prefer: include-unknown-enum-members request
-	// header to get the following value(s) in this evolvable enum: adminConfirmedServicePrincipalCompromised,
+	// adminDismissedRiskForSignIn, adminConfirmedAccountSafe. Use the Prefer: include-unknown-enum-members request header
+	// to get the following value(s) in this evolvable enum: adminConfirmedServicePrincipalCompromised,
 	// adminDismissedAllRiskForServicePrincipal, m365DAdminDismissedDetection, userChangedPasswordOnPremises,
 	// adminDismissedRiskForSignIn, adminConfirmedAccountSafe.
 	RiskDetail *RiskDetail `json:"riskDetail,omitempty"`

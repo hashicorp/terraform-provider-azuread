@@ -11,6 +11,9 @@ import (
 var _ Entity = NetworkaccessLogs{}
 
 type NetworkaccessLogs struct {
+	// An aggregated log entry that contains comprehensive information about network traffic events.
+	Connections *[]NetworkaccessConnection `json:"connections,omitempty"`
+
 	// A collection of remote network health events.
 	RemoteNetworks *[]NetworkaccessRemoteNetworkHealthEvent `json:"remoteNetworks,omitempty"`
 

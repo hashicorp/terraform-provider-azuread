@@ -19,8 +19,9 @@ type GetManagerRefOperationResponse struct {
 }
 
 type GetManagerRefOperationOptions struct {
-	Metadata  *odata.Metadata
-	RetryFunc client.RequestRetryFunc
+	ConsistencyLevel *odata.ConsistencyLevel
+	Metadata         *odata.Metadata
+	RetryFunc        client.RequestRetryFunc
 }
 
 func DefaultGetManagerRefOperationOptions() GetManagerRefOperationOptions {
@@ -35,6 +36,9 @@ func (o GetManagerRefOperationOptions) ToHeaders() *client.Headers {
 
 func (o GetManagerRefOperationOptions) ToOData() *odata.Query {
 	out := odata.Query{}
+	if o.ConsistencyLevel != nil {
+		out.ConsistencyLevel = *o.ConsistencyLevel
+	}
 	if o.Metadata != nil {
 		out.Metadata = *o.Metadata
 	}

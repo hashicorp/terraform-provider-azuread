@@ -17,7 +17,6 @@ const (
 	EnrollmentTimeDeviceMembershipTargetValidationErrorCode_NotStaticSecurityGroup        EnrollmentTimeDeviceMembershipTargetValidationErrorCode = "notStaticSecurityGroup"
 	EnrollmentTimeDeviceMembershipTargetValidationErrorCode_SecurityGroupNotFound         EnrollmentTimeDeviceMembershipTargetValidationErrorCode = "securityGroupNotFound"
 	EnrollmentTimeDeviceMembershipTargetValidationErrorCode_SecurityGroupNotInCallerScope EnrollmentTimeDeviceMembershipTargetValidationErrorCode = "securityGroupNotInCallerScope"
-	EnrollmentTimeDeviceMembershipTargetValidationErrorCode_Unknown                       EnrollmentTimeDeviceMembershipTargetValidationErrorCode = "unknown"
 )
 
 func PossibleValuesForEnrollmentTimeDeviceMembershipTargetValidationErrorCode() []string {
@@ -27,7 +26,6 @@ func PossibleValuesForEnrollmentTimeDeviceMembershipTargetValidationErrorCode() 
 		string(EnrollmentTimeDeviceMembershipTargetValidationErrorCode_NotStaticSecurityGroup),
 		string(EnrollmentTimeDeviceMembershipTargetValidationErrorCode_SecurityGroupNotFound),
 		string(EnrollmentTimeDeviceMembershipTargetValidationErrorCode_SecurityGroupNotInCallerScope),
-		string(EnrollmentTimeDeviceMembershipTargetValidationErrorCode_Unknown),
 	}
 }
 
@@ -51,7 +49,6 @@ func parseEnrollmentTimeDeviceMembershipTargetValidationErrorCode(input string) 
 		"notstaticsecuritygroup":        EnrollmentTimeDeviceMembershipTargetValidationErrorCode_NotStaticSecurityGroup,
 		"securitygroupnotfound":         EnrollmentTimeDeviceMembershipTargetValidationErrorCode_SecurityGroupNotFound,
 		"securitygroupnotincallerscope": EnrollmentTimeDeviceMembershipTargetValidationErrorCode_SecurityGroupNotInCallerScope,
-		"unknown":                       EnrollmentTimeDeviceMembershipTargetValidationErrorCode_Unknown,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

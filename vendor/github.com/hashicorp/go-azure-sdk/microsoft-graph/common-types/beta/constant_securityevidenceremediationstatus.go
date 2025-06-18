@@ -12,20 +12,32 @@ import (
 type SecurityEvidenceRemediationStatus string
 
 const (
-	SecurityEvidenceRemediationStatus_Blocked    SecurityEvidenceRemediationStatus = "blocked"
-	SecurityEvidenceRemediationStatus_None       SecurityEvidenceRemediationStatus = "none"
-	SecurityEvidenceRemediationStatus_NotFound   SecurityEvidenceRemediationStatus = "notFound"
-	SecurityEvidenceRemediationStatus_Prevented  SecurityEvidenceRemediationStatus = "prevented"
-	SecurityEvidenceRemediationStatus_Remediated SecurityEvidenceRemediationStatus = "remediated"
+	SecurityEvidenceRemediationStatus_Active              SecurityEvidenceRemediationStatus = "active"
+	SecurityEvidenceRemediationStatus_Blocked             SecurityEvidenceRemediationStatus = "blocked"
+	SecurityEvidenceRemediationStatus_Declined            SecurityEvidenceRemediationStatus = "declined"
+	SecurityEvidenceRemediationStatus_None                SecurityEvidenceRemediationStatus = "none"
+	SecurityEvidenceRemediationStatus_NotFound            SecurityEvidenceRemediationStatus = "notFound"
+	SecurityEvidenceRemediationStatus_PartiallyRemediated SecurityEvidenceRemediationStatus = "partiallyRemediated"
+	SecurityEvidenceRemediationStatus_PendingApproval     SecurityEvidenceRemediationStatus = "pendingApproval"
+	SecurityEvidenceRemediationStatus_Prevented           SecurityEvidenceRemediationStatus = "prevented"
+	SecurityEvidenceRemediationStatus_Remediated          SecurityEvidenceRemediationStatus = "remediated"
+	SecurityEvidenceRemediationStatus_Running             SecurityEvidenceRemediationStatus = "running"
+	SecurityEvidenceRemediationStatus_Unremediated        SecurityEvidenceRemediationStatus = "unremediated"
 )
 
 func PossibleValuesForSecurityEvidenceRemediationStatus() []string {
 	return []string{
+		string(SecurityEvidenceRemediationStatus_Active),
 		string(SecurityEvidenceRemediationStatus_Blocked),
+		string(SecurityEvidenceRemediationStatus_Declined),
 		string(SecurityEvidenceRemediationStatus_None),
 		string(SecurityEvidenceRemediationStatus_NotFound),
+		string(SecurityEvidenceRemediationStatus_PartiallyRemediated),
+		string(SecurityEvidenceRemediationStatus_PendingApproval),
 		string(SecurityEvidenceRemediationStatus_Prevented),
 		string(SecurityEvidenceRemediationStatus_Remediated),
+		string(SecurityEvidenceRemediationStatus_Running),
+		string(SecurityEvidenceRemediationStatus_Unremediated),
 	}
 }
 
@@ -44,11 +56,17 @@ func (s *SecurityEvidenceRemediationStatus) UnmarshalJSON(bytes []byte) error {
 
 func parseSecurityEvidenceRemediationStatus(input string) (*SecurityEvidenceRemediationStatus, error) {
 	vals := map[string]SecurityEvidenceRemediationStatus{
-		"blocked":    SecurityEvidenceRemediationStatus_Blocked,
-		"none":       SecurityEvidenceRemediationStatus_None,
-		"notfound":   SecurityEvidenceRemediationStatus_NotFound,
-		"prevented":  SecurityEvidenceRemediationStatus_Prevented,
-		"remediated": SecurityEvidenceRemediationStatus_Remediated,
+		"active":              SecurityEvidenceRemediationStatus_Active,
+		"blocked":             SecurityEvidenceRemediationStatus_Blocked,
+		"declined":            SecurityEvidenceRemediationStatus_Declined,
+		"none":                SecurityEvidenceRemediationStatus_None,
+		"notfound":            SecurityEvidenceRemediationStatus_NotFound,
+		"partiallyremediated": SecurityEvidenceRemediationStatus_PartiallyRemediated,
+		"pendingapproval":     SecurityEvidenceRemediationStatus_PendingApproval,
+		"prevented":           SecurityEvidenceRemediationStatus_Prevented,
+		"remediated":          SecurityEvidenceRemediationStatus_Remediated,
+		"running":             SecurityEvidenceRemediationStatus_Running,
+		"unremediated":        SecurityEvidenceRemediationStatus_Unremediated,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

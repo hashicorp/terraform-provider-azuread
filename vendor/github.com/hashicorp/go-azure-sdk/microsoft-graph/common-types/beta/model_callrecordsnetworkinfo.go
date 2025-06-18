@@ -8,7 +8,9 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type CallRecordsNetworkInfo struct {
-	// The wireless LAN basic service set identifier of the media endpoint used to connect to the network.
+	// The wireless LAN basic service set identifier of the media endpoint used to connect to the network. This property
+	// isn't available if the user disables precise location sharing in their operating system or Microsoft Teams app
+	// settings.
 	BasicServiceSetIdentifier nullable.Type[string] `json:"basicServiceSetIdentifier,omitempty"`
 
 	ConnectionType *CallRecordsNetworkConnectionType `json:"connectionType,omitempty"`

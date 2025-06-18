@@ -15,7 +15,7 @@ type ShiftActivity struct {
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
 	// The end date and time for the shiftActivity. The Timestamp type represents date and time information using ISO 8601
-	// format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Required.
+	// format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Required.
 	EndDateTime nullable.Type[string] `json:"endDateTime,omitempty"`
 
 	// Indicates whether the microsoft.graph.user should be paid for the activity during their shift. Required.
@@ -28,7 +28,7 @@ type ShiftActivity struct {
 	ODataType *string `json:"@odata.type,omitempty"`
 
 	// The start date and time for the shiftActivity. The Timestamp type represents date and time information using ISO 8601
-	// format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Required.
+	// format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Required.
 	StartDateTime nullable.Type[string] `json:"startDateTime,omitempty"`
 
 	Theme *ScheduleEntityTheme `json:"theme,omitempty"`

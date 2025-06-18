@@ -11,16 +11,16 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type BookingSchedulingPolicy struct {
-	// True if to allow customers to choose a specific person for the booking.
+	// True to allow customers to choose a specific person for the booking.
 	AllowStaffSelection *bool `json:"allowStaffSelection,omitempty"`
 
-	// collection of custom availabilities for a given time range.
+	// Custom availability of the service in a given time frame.
 	CustomAvailabilities *[]BookingsAvailabilityWindow `json:"customAvailabilities,omitempty"`
 
-	// General availability
+	// General availability of the service defined by the scheduling policy.
 	GeneralAvailability BookingsAvailability `json:"generalAvailability"`
 
-	// Enable sending meeting invite to customers. False by default.
+	// Indicates whether the meeting invite is sent to the customers. The default value is false.
 	IsMeetingInviteToCustomersEnabled nullable.Type[bool] `json:"isMeetingInviteToCustomersEnabled,omitempty"`
 
 	// Maximum number of days in advance that a booking can be made. It follows the ISO 8601 format.

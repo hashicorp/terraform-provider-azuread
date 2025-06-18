@@ -45,16 +45,16 @@ type PolicyRoot struct {
 	// application.
 	ClaimsMappingPolicies *[]ClaimsMappingPolicy `json:"claimsMappingPolicies,omitempty"`
 
-	// The custom rules that define an access scenario.
-	ConditionalAccessPolicies *[]ConditionalAccessPolicy `json:"conditionalAccessPolicies,omitempty"`
-
 	// The custom rules that define an access scenario when interacting with external Microsoft Entra tenants.
 	CrossTenantAccessPolicy *CrossTenantAccessPolicy `json:"crossTenantAccessPolicy,omitempty"`
 
 	// The tenant-wide policy that enforces app management restrictions for all applications and service principals.
 	DefaultAppManagementPolicy *TenantAppManagementPolicy `json:"defaultAppManagementPolicy,omitempty"`
 
-	DeviceRegistrationPolicy        *DeviceRegistrationPolicy        `json:"deviceRegistrationPolicy,omitempty"`
+	// Represents the policy scope that controls quota restrictions, additional authentication, and authorization policies
+	// to register device identities to your organization.
+	DeviceRegistrationPolicy *DeviceRegistrationPolicy `json:"deviceRegistrationPolicy,omitempty"`
+
 	DirectoryRoleAccessReviewPolicy *DirectoryRoleAccessReviewPolicy `json:"directoryRoleAccessReviewPolicy,omitempty"`
 
 	// Represents the tenant-wide policy that controls whether guests can leave a Microsoft Entra tenant via self-service
@@ -147,101 +147,4 @@ func (s PolicyRoot) MarshalJSON() ([]byte, error) {
 	}
 
 	return encoded, nil
-}
-
-var _ json.Unmarshaler = &PolicyRoot{}
-
-func (s *PolicyRoot) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		AccessReviewPolicy                        *AccessReviewPolicy                        `json:"accessReviewPolicy,omitempty"`
-		ActivityBasedTimeoutPolicies              *[]ActivityBasedTimeoutPolicy              `json:"activityBasedTimeoutPolicies,omitempty"`
-		AdminConsentRequestPolicy                 *AdminConsentRequestPolicy                 `json:"adminConsentRequestPolicy,omitempty"`
-		AppManagementPolicies                     *[]AppManagementPolicy                     `json:"appManagementPolicies,omitempty"`
-		AuthenticationFlowsPolicy                 *AuthenticationFlowsPolicy                 `json:"authenticationFlowsPolicy,omitempty"`
-		AuthenticationMethodsPolicy               *AuthenticationMethodsPolicy               `json:"authenticationMethodsPolicy,omitempty"`
-		AuthenticationStrengthPolicies            *[]AuthenticationStrengthPolicy            `json:"authenticationStrengthPolicies,omitempty"`
-		AuthorizationPolicy                       *[]AuthorizationPolicy                     `json:"authorizationPolicy,omitempty"`
-		B2cAuthenticationMethodsPolicy            *B2cAuthenticationMethodsPolicy            `json:"b2cAuthenticationMethodsPolicy,omitempty"`
-		ClaimsMappingPolicies                     *[]ClaimsMappingPolicy                     `json:"claimsMappingPolicies,omitempty"`
-		CrossTenantAccessPolicy                   *CrossTenantAccessPolicy                   `json:"crossTenantAccessPolicy,omitempty"`
-		DefaultAppManagementPolicy                *TenantAppManagementPolicy                 `json:"defaultAppManagementPolicy,omitempty"`
-		DeviceRegistrationPolicy                  *DeviceRegistrationPolicy                  `json:"deviceRegistrationPolicy,omitempty"`
-		DirectoryRoleAccessReviewPolicy           *DirectoryRoleAccessReviewPolicy           `json:"directoryRoleAccessReviewPolicy,omitempty"`
-		ExternalIdentitiesPolicy                  *ExternalIdentitiesPolicy                  `json:"externalIdentitiesPolicy,omitempty"`
-		FeatureRolloutPolicies                    *[]FeatureRolloutPolicy                    `json:"featureRolloutPolicies,omitempty"`
-		FederatedTokenValidationPolicy            *FederatedTokenValidationPolicy            `json:"federatedTokenValidationPolicy,omitempty"`
-		HomeRealmDiscoveryPolicies                *[]HomeRealmDiscoveryPolicy                `json:"homeRealmDiscoveryPolicies,omitempty"`
-		IdentitySecurityDefaultsEnforcementPolicy *IdentitySecurityDefaultsEnforcementPolicy `json:"identitySecurityDefaultsEnforcementPolicy,omitempty"`
-		MobileAppManagementPolicies               *[]MobilityManagementPolicy                `json:"mobileAppManagementPolicies,omitempty"`
-		MobileDeviceManagementPolicies            *[]MobilityManagementPolicy                `json:"mobileDeviceManagementPolicies,omitempty"`
-		PermissionGrantPolicies                   *[]PermissionGrantPolicy                   `json:"permissionGrantPolicies,omitempty"`
-		PermissionGrantPreApprovalPolicies        *[]PermissionGrantPreApprovalPolicy        `json:"permissionGrantPreApprovalPolicies,omitempty"`
-		RoleManagementPolicies                    *[]UnifiedRoleManagementPolicy             `json:"roleManagementPolicies,omitempty"`
-		RoleManagementPolicyAssignments           *[]UnifiedRoleManagementPolicyAssignment   `json:"roleManagementPolicyAssignments,omitempty"`
-		ServicePrincipalCreationPolicies          *[]ServicePrincipalCreationPolicy          `json:"servicePrincipalCreationPolicies,omitempty"`
-		TokenIssuancePolicies                     *[]TokenIssuancePolicy                     `json:"tokenIssuancePolicies,omitempty"`
-		TokenLifetimePolicies                     *[]TokenLifetimePolicy                     `json:"tokenLifetimePolicies,omitempty"`
-		Id                                        *string                                    `json:"id,omitempty"`
-		ODataId                                   *string                                    `json:"@odata.id,omitempty"`
-		ODataType                                 *string                                    `json:"@odata.type,omitempty"`
-	}
-	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
-	}
-
-	s.AccessReviewPolicy = decoded.AccessReviewPolicy
-	s.ActivityBasedTimeoutPolicies = decoded.ActivityBasedTimeoutPolicies
-	s.AdminConsentRequestPolicy = decoded.AdminConsentRequestPolicy
-	s.AppManagementPolicies = decoded.AppManagementPolicies
-	s.AuthenticationFlowsPolicy = decoded.AuthenticationFlowsPolicy
-	s.AuthenticationMethodsPolicy = decoded.AuthenticationMethodsPolicy
-	s.AuthenticationStrengthPolicies = decoded.AuthenticationStrengthPolicies
-	s.AuthorizationPolicy = decoded.AuthorizationPolicy
-	s.B2cAuthenticationMethodsPolicy = decoded.B2cAuthenticationMethodsPolicy
-	s.ClaimsMappingPolicies = decoded.ClaimsMappingPolicies
-	s.CrossTenantAccessPolicy = decoded.CrossTenantAccessPolicy
-	s.DefaultAppManagementPolicy = decoded.DefaultAppManagementPolicy
-	s.DeviceRegistrationPolicy = decoded.DeviceRegistrationPolicy
-	s.DirectoryRoleAccessReviewPolicy = decoded.DirectoryRoleAccessReviewPolicy
-	s.ExternalIdentitiesPolicy = decoded.ExternalIdentitiesPolicy
-	s.FeatureRolloutPolicies = decoded.FeatureRolloutPolicies
-	s.FederatedTokenValidationPolicy = decoded.FederatedTokenValidationPolicy
-	s.HomeRealmDiscoveryPolicies = decoded.HomeRealmDiscoveryPolicies
-	s.IdentitySecurityDefaultsEnforcementPolicy = decoded.IdentitySecurityDefaultsEnforcementPolicy
-	s.MobileAppManagementPolicies = decoded.MobileAppManagementPolicies
-	s.MobileDeviceManagementPolicies = decoded.MobileDeviceManagementPolicies
-	s.PermissionGrantPolicies = decoded.PermissionGrantPolicies
-	s.PermissionGrantPreApprovalPolicies = decoded.PermissionGrantPreApprovalPolicies
-	s.RoleManagementPolicies = decoded.RoleManagementPolicies
-	s.RoleManagementPolicyAssignments = decoded.RoleManagementPolicyAssignments
-	s.ServicePrincipalCreationPolicies = decoded.ServicePrincipalCreationPolicies
-	s.TokenIssuancePolicies = decoded.TokenIssuancePolicies
-	s.TokenLifetimePolicies = decoded.TokenLifetimePolicies
-	s.Id = decoded.Id
-	s.ODataId = decoded.ODataId
-	s.ODataType = decoded.ODataType
-
-	var temp map[string]json.RawMessage
-	if err := json.Unmarshal(bytes, &temp); err != nil {
-		return fmt.Errorf("unmarshaling PolicyRoot into map[string]json.RawMessage: %+v", err)
-	}
-
-	if v, ok := temp["conditionalAccessPolicies"]; ok {
-		var listTemp []json.RawMessage
-		if err := json.Unmarshal(v, &listTemp); err != nil {
-			return fmt.Errorf("unmarshaling ConditionalAccessPolicies into list []json.RawMessage: %+v", err)
-		}
-
-		output := make([]ConditionalAccessPolicy, 0)
-		for i, val := range listTemp {
-			impl, err := UnmarshalConditionalAccessPolicyImplementation(val)
-			if err != nil {
-				return fmt.Errorf("unmarshaling index %d field 'ConditionalAccessPolicies' for 'PolicyRoot': %+v", i, err)
-			}
-			output = append(output, impl)
-		}
-		s.ConditionalAccessPolicies = &output
-	}
-
-	return nil
 }

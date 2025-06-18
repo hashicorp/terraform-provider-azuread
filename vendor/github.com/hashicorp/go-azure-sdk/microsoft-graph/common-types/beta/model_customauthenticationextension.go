@@ -20,6 +20,8 @@ type CustomAuthenticationExtension interface {
 var _ CustomAuthenticationExtension = BaseCustomAuthenticationExtensionImpl{}
 
 type BaseCustomAuthenticationExtensionImpl struct {
+	// The behaviour on error for the custom authentication extension.
+	BehaviorOnError CustomExtensionBehaviorOnError `json:"behaviorOnError"`
 
 	// Fields inherited from CustomCalloutExtension
 
@@ -164,6 +166,14 @@ func (s *BaseCustomAuthenticationExtensionImpl) UnmarshalJSON(bytes []byte) erro
 		s.AuthenticationConfiguration = impl
 	}
 
+	if v, ok := temp["behaviorOnError"]; ok {
+		impl, err := UnmarshalCustomExtensionBehaviorOnErrorImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'BehaviorOnError' for 'BaseCustomAuthenticationExtensionImpl': %+v", err)
+		}
+		s.BehaviorOnError = impl
+	}
+
 	if v, ok := temp["endpointConfiguration"]; ok {
 		impl, err := UnmarshalCustomExtensionEndpointConfigurationImplementation(v)
 		if err != nil {
@@ -202,6 +212,14 @@ func UnmarshalCustomAuthenticationExtensionImplementation(input []byte) (CustomA
 		var out OnAttributeCollectionSubmitCustomExtension
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into OnAttributeCollectionSubmitCustomExtension: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.onOtpSendCustomExtension") {
+		var out OnOtpSendCustomExtension
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnOtpSendCustomExtension: %+v", err)
 		}
 		return out, nil
 	}

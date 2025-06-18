@@ -46,7 +46,7 @@ func (o UpdateAdministrativeUnitOperationOptions) ToQuery() *client.QueryParams 
 	return &out
 }
 
-// UpdateAdministrativeUnit - Update administrativeunit. Update the properties of an administrativeUnit object.
+// UpdateAdministrativeUnit - Update administrativeUnit. Update the properties of an administrativeUnit object.
 func (c AdministrativeUnitClient) UpdateAdministrativeUnit(ctx context.Context, id beta.AdministrativeUnitId, input beta.AdministrativeUnit, options UpdateAdministrativeUnitOperationOptions) (result UpdateAdministrativeUnitOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

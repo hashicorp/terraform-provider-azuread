@@ -27,6 +27,14 @@ type AndroidDeviceOwnerEnrollmentProfile struct {
 	// Description for the enrollment profile.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
+	// Indicates the device name template used for the enrolled Android devices. The maximum length allowed for this
+	// property is 63 characters. The template expression contains normal text and tokens, including the serial number of
+	// the device, user name, device type, upn prefix, or a randomly generated number. Supported Tokens for device name
+	// templates are: (for device naming template expression): {{SERIAL}}, {{SERIALLAST4DIGITS}}, {{ENROLLMENTDATETIME}},
+	// {{USERNAME}}, {{DEVICETYPE}}, {{UPNPREFIX}}, {{rand:x}}. Supports: $select, $top, $skip. $Search, $orderBy and
+	// $filter are not supported.
+	DeviceNameTemplate nullable.Type[string] `json:"deviceNameTemplate,omitempty"`
+
 	// Display name for the enrollment profile.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 

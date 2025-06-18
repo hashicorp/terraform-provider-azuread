@@ -13,7 +13,7 @@ import (
 var _ IndustryDataProvisioningFlow = IndustryDataUserProvisioningFlow{}
 
 type IndustryDataUserProvisioningFlow struct {
-	// A boolean choice indicating whether unmatched users should be created or ignored.
+	// A Boolean choice indicating whether unmatched users should be created or ignored.
 	CreateUnmatchedUsers nullable.Type[bool] `json:"createUnmatchedUsers,omitempty"`
 
 	// The different management choices for the new users to be provisioned.

@@ -17,6 +17,9 @@ type Authentication struct {
 	// Represents the FIDO2 security keys registered to a user for authentication.
 	Fido2Methods *[]Fido2AuthenticationMethod `json:"fido2Methods,omitempty"`
 
+	// The hardware OATH time-based one-time password (TOTP) devices assigned to a user for authentication.
+	HardwareOathMethods *[]HardwareOathAuthenticationMethod `json:"hardwareOathMethods,omitempty"`
+
 	// Represents all authentication methods registered to a user.
 	Methods *[]AuthenticationMethod `json:"methods,omitempty"`
 
@@ -35,7 +38,11 @@ type Authentication struct {
 	// Represents the phone registered to a user for authentication.
 	PhoneMethods *[]PhoneAuthenticationMethod `json:"phoneMethods,omitempty"`
 
+	// Represents a platform credential instance registered to a user on Mac OS.
 	PlatformCredentialMethods *[]PlatformCredentialAuthenticationMethod `json:"platformCredentialMethods,omitempty"`
+
+	// Represents a QR code authentication method registered to a user for authentication.
+	QrCodePinMethod *QrCodePinAuthenticationMethod `json:"qrCodePinMethod,omitempty"`
 
 	// The settings and preferences for per-user Microsoft Entra multifactor authentication.
 	Requirements *StrongAuthenticationRequirements `json:"requirements,omitempty"`
@@ -109,11 +116,13 @@ func (s *Authentication) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
 		EmailMethods                              *[]EmailAuthenticationMethod                              `json:"emailMethods,omitempty"`
 		Fido2Methods                              *[]Fido2AuthenticationMethod                              `json:"fido2Methods,omitempty"`
+		HardwareOathMethods                       *[]HardwareOathAuthenticationMethod                       `json:"hardwareOathMethods,omitempty"`
 		MicrosoftAuthenticatorMethods             *[]MicrosoftAuthenticatorAuthenticationMethod             `json:"microsoftAuthenticatorMethods,omitempty"`
 		PasswordMethods                           *[]PasswordAuthenticationMethod                           `json:"passwordMethods,omitempty"`
 		PasswordlessMicrosoftAuthenticatorMethods *[]PasswordlessMicrosoftAuthenticatorAuthenticationMethod `json:"passwordlessMicrosoftAuthenticatorMethods,omitempty"`
 		PhoneMethods                              *[]PhoneAuthenticationMethod                              `json:"phoneMethods,omitempty"`
 		PlatformCredentialMethods                 *[]PlatformCredentialAuthenticationMethod                 `json:"platformCredentialMethods,omitempty"`
+		QrCodePinMethod                           *QrCodePinAuthenticationMethod                            `json:"qrCodePinMethod,omitempty"`
 		Requirements                              *StrongAuthenticationRequirements                         `json:"requirements,omitempty"`
 		SignInPreferences                         *SignInPreferences                                        `json:"signInPreferences,omitempty"`
 		SoftwareOathMethods                       *[]SoftwareOathAuthenticationMethod                       `json:"softwareOathMethods,omitempty"`
@@ -129,11 +138,13 @@ func (s *Authentication) UnmarshalJSON(bytes []byte) error {
 
 	s.EmailMethods = decoded.EmailMethods
 	s.Fido2Methods = decoded.Fido2Methods
+	s.HardwareOathMethods = decoded.HardwareOathMethods
 	s.MicrosoftAuthenticatorMethods = decoded.MicrosoftAuthenticatorMethods
 	s.PasswordMethods = decoded.PasswordMethods
 	s.PasswordlessMicrosoftAuthenticatorMethods = decoded.PasswordlessMicrosoftAuthenticatorMethods
 	s.PhoneMethods = decoded.PhoneMethods
 	s.PlatformCredentialMethods = decoded.PlatformCredentialMethods
+	s.QrCodePinMethod = decoded.QrCodePinMethod
 	s.Requirements = decoded.Requirements
 	s.SignInPreferences = decoded.SignInPreferences
 	s.SoftwareOathMethods = decoded.SoftwareOathMethods

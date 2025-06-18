@@ -11,14 +11,14 @@ import (
 var _ Entity = WorkbookTableSort{}
 
 type WorkbookTableSort struct {
-	// Represents the current conditions used to last sort the table. Read-only.
+	// The list of the current conditions last used to sort the table. Read-only.
 	Fields *[]WorkbookSortField `json:"fields,omitempty"`
 
-	// Represents whether the casing impacted the last sort of the table. Read-only.
+	// Indicates whether the casing impacted the last sort of the table. Read-only.
 	MatchCase *bool `json:"matchCase,omitempty"`
 
-	// Represents Chinese character ordering method last used to sort the table. The possible values are: PinYin,
-	// StrokeCount. Read-only.
+	// The Chinese character ordering method last used to sort the table. The possible values are: PinYin, StrokeCount.
+	// Read-only.
 	Method *string `json:"method,omitempty"`
 
 	// Fields inherited from Entity

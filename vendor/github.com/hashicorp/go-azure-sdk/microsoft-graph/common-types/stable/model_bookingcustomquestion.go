@@ -19,11 +19,17 @@ type BookingCustomQuestion struct {
 	// List of possible answer values.
 	AnswerOptions *[]string `json:"answerOptions,omitempty"`
 
+	// The date, time, and time zone when the custom question was created. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
 	// The question.
 	DisplayName *string `json:"displayName,omitempty"`
 
+	// The date, time, and time zone when the custom question was last updated. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
 	LastUpdatedDateTime nullable.Type[string] `json:"lastUpdatedDateTime,omitempty"`
 
 	// Fields inherited from Entity

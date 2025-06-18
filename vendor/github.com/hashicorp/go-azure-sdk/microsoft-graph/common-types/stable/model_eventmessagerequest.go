@@ -42,7 +42,7 @@ type EventMessageRequest struct {
 
 	IsAllDay nullable.Type[bool] `json:"isAllDay,omitempty"`
 
-	// True if this meeting request is accessible to a delegate, false otherwise. Default is false.
+	// True if this meeting request is accessible to a delegate, false otherwise. The default is false.
 	IsDelegated nullable.Type[bool] `json:"isDelegated,omitempty"`
 
 	IsOutOfDate nullable.Type[bool] `json:"isOutOfDate,omitempty"`
@@ -82,7 +82,7 @@ type EventMessageRequest struct {
 	// The collection of open extensions defined for the message. Nullable.
 	Extensions *[]Extension `json:"extensions,omitempty"`
 
-	// The flag value that indicates the status, start date, due date, or completion date for the message.
+	// Indicates the status, start date, due date, or completion date for the message.
 	Flag *FollowupFlag `json:"flag,omitempty"`
 
 	// The owner of the mailbox from which the message is sent. In most cases, this value is the same as the sender
@@ -135,10 +135,10 @@ type EventMessageRequest struct {
 	// The email addresses to use when replying.
 	ReplyTo *[]Recipient `json:"replyTo,omitempty"`
 
-	// The account that is actually used to generate the message. In most cases, this value is the same as the from
-	// property. You can set this property to a different value when sending a message from a shared mailbox, for a shared
-	// calendar, or as a delegate. In any case, the value must correspond to the actual mailbox used. Find out more about
-	// setting the from and sender properties of a message.
+	// The account that is used to generate the message. In most cases, this value is the same as the from property. You can
+	// set this property to a different value when sending a message from a shared mailbox, for a shared calendar, or as a
+	// delegate. In any case, the value must correspond to the actual mailbox used. Find out more about setting the from and
+	// sender properties of a message.
 	Sender Recipient `json:"sender"`
 
 	// The date and time the message was sent. The date and time information uses ISO 8601 format and is always in UTC time.

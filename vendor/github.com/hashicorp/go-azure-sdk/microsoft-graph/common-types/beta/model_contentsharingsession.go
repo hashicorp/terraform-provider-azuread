@@ -3,6 +3,8 @@ package beta
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 )
 
 // Copyright (c) HashiCorp Inc. All rights reserved.
@@ -11,6 +13,8 @@ import (
 var _ Entity = ContentSharingSession{}
 
 type ContentSharingSession struct {
+	PngOfCurrentSlide      nullable.Type[string] `json:"pngOfCurrentSlide,omitempty"`
+	PresenterParticipantId nullable.Type[string] `json:"presenterParticipantId,omitempty"`
 
 	// Fields inherited from Entity
 

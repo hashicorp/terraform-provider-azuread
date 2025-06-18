@@ -14,8 +14,8 @@ type ServiceStatus struct {
 	// The type of consumer. The possible values are: unknown, firstparty, thirdparty, unknownFutureValue.
 	BackupServiceConsumer *BackupServiceConsumer `json:"backupServiceConsumer,omitempty"`
 
-	// The reason the service is disabled. The possible values are: none, invalidBillingProfile, userRequested,
-	// unknownFutureValue.
+	// The reason the service is disabled. The possible values are: none, controllerServiceAppDeleted,
+	// invalidBillingProfile, userRequested, unknownFutureValue.
 	DisableReason *DisableReason `json:"disableReason,omitempty"`
 
 	// The expiration time of the grace period.

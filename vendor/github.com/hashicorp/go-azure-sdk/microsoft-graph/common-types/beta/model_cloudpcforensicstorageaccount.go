@@ -13,10 +13,18 @@ import (
 var _ Entity = CloudPCForensicStorageAccount{}
 
 type CloudPCForensicStorageAccount struct {
-	// The ID of the storage account.
+	// Indicates the access tier of the storage account. Possible values are hot, cool, premium, cold, and
+	// unknownFutureValue. Default value is hot. Read-only.
+	AccessTier *CloudPCStorageAccountAccessTier `json:"accessTier,omitempty"`
+
+	// Indicates whether immutability policies are configured for the storage account. When true, the storage account only
+	// accepts hot as the snapshot access tier. When false, the storage account accepts all valid access tiers. Read-Only.
+	ImmutableStorage nullable.Type[bool] `json:"immutableStorage,omitempty"`
+
+	// Indicates the ID of the storage account. Read-only.
 	StorageAccountId nullable.Type[string] `json:"storageAccountId,omitempty"`
 
-	// The name of the storage account.
+	// Indicates the name of the storage account. Read-only.
 	StorageAccountName nullable.Type[string] `json:"storageAccountName,omitempty"`
 
 	// Fields inherited from Entity
@@ -56,6 +64,10 @@ func (s CloudPCForensicStorageAccount) MarshalJSON() ([]byte, error) {
 	if err = json.Unmarshal(encoded, &decoded); err != nil {
 		return nil, fmt.Errorf("unmarshaling CloudPCForensicStorageAccount: %+v", err)
 	}
+
+	delete(decoded, "accessTier")
+	delete(decoded, "storageAccountId")
+	delete(decoded, "storageAccountName")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.cloudPcForensicStorageAccount"

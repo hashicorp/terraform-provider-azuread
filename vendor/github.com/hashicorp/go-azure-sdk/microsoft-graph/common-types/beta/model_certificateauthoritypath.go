@@ -15,6 +15,9 @@ type CertificateAuthorityPath struct {
 	// tenant.
 	CertificateBasedApplicationConfigurations *[]CertificateBasedApplicationConfiguration `json:"certificateBasedApplicationConfigurations,omitempty"`
 
+	// Defines the trusted certificate authorities for certificates that can be added to Internet of Things (IoT) devices.
+	MutualTlsOauthConfigurations *[]MutualTlsOauthConfiguration `json:"mutualTlsOauthConfigurations,omitempty"`
+
 	// Fields inherited from Entity
 
 	// The unique identifier for an entity. Read-only.

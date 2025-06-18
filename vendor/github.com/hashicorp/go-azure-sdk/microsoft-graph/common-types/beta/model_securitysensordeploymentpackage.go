@@ -4,6 +4,7 @@ package beta
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type SecuritySensorDeploymentPackage struct {
+	// URL to download the sensor deployment package.
 	DownloadUrl *string `json:"downloadUrl,omitempty"`
 
 	// The OData ID of this entity
@@ -12,5 +13,6 @@ type SecuritySensorDeploymentPackage struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
+	// Version of the sensor.
 	Version *string `json:"version,omitempty"`
 }

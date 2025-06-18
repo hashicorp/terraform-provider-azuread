@@ -21,7 +21,8 @@ type VideoNewsLinkPage struct {
 	// Fields inherited from BaseSitePage
 
 	// The name of the page layout of the page. The possible values are: microsoftReserved, article, home,
-	// unknownFutureValue.
+	// unknownFutureValue, newsLink. Use the Prefer: include-unknown-enum-members request header to get the following value
+	// in this evolvable enum: newsLink.
 	PageLayout *PageLayoutType `json:"pageLayout,omitempty"`
 
 	// The publishing status and the MM.mm version of the page.

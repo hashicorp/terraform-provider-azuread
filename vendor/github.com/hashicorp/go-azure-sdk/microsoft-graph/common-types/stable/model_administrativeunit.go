@@ -16,12 +16,14 @@ type AdministrativeUnit struct {
 	// An optional description for the administrative unit. Supports $filter (eq, ne, in, startsWith), $search.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
-	// Display name for the administrative unit. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null
-	// values), $search, and $orderby.
+	// Display name for the administrative unit. Maximum length is 256 characters. Supports $filter (eq, ne, not, ge, le,
+	// in, startsWith, and eq on null values), $search, and $orderby.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
 	// The collection of open extensions defined for this administrative unit. Nullable.
 	Extensions *[]Extension `json:"extensions,omitempty"`
+
+	IsMemberManagementRestricted nullable.Type[bool] `json:"isMemberManagementRestricted,omitempty"`
 
 	// Users and groups that are members of this administrative unit. Supports $expand.
 	Members *[]DirectoryObject `json:"members,omitempty"`
@@ -29,12 +31,24 @@ type AdministrativeUnit struct {
 	// List of OData IDs for `Members` to bind to this entity
 	Members_ODataBind *[]string `json:"members@odata.bind,omitempty"`
 
+	// The dynamic membership rule for the administrative unit. For more information about the rules you can use for dynamic
+	// administrative units and dynamic groups, see Manage rules for dynamic membership groups in Microsoft Entra ID.
+	MembershipRule nullable.Type[string] `json:"membershipRule,omitempty"`
+
+	// Controls whether the dynamic membership rule is actively processed. Set to On to activate the dynamic membership
+	// rule, or Paused to stop updating membership dynamically.
+	MembershipRuleProcessingState nullable.Type[string] `json:"membershipRuleProcessingState,omitempty"`
+
+	// Indicates the membership type for the administrative unit. The possible values are: dynamic, assigned. If not set,
+	// the default value is null and the default behavior is assigned.
+	MembershipType nullable.Type[string] `json:"membershipType,omitempty"`
+
 	// Scoped-role members of this administrative unit.
 	ScopedRoleMembers *[]ScopedRoleMembership `json:"scopedRoleMembers,omitempty"`
 
 	// Controls whether the administrative unit and its members are hidden or public. Can be set to HiddenMembership. If not
-	// set (value is null), the default behavior is public. When set to HiddenMembership, only members of the administrative
-	// unit can list other members of the administrative unit.
+	// set, the default value is null and the default behavior is public. When set to HiddenMembership, only members of the
+	// administrative unit can list other members of the administrative unit.
 	Visibility nullable.Type[string] `json:"visibility,omitempty"`
 
 	// Fields inherited from DirectoryObject
@@ -105,15 +119,19 @@ var _ json.Unmarshaler = &AdministrativeUnit{}
 
 func (s *AdministrativeUnit) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		Description       nullable.Type[string]   `json:"description,omitempty"`
-		DisplayName       nullable.Type[string]   `json:"displayName,omitempty"`
-		Members_ODataBind *[]string               `json:"members@odata.bind,omitempty"`
-		ScopedRoleMembers *[]ScopedRoleMembership `json:"scopedRoleMembers,omitempty"`
-		Visibility        nullable.Type[string]   `json:"visibility,omitempty"`
-		DeletedDateTime   nullable.Type[string]   `json:"deletedDateTime,omitempty"`
-		Id                *string                 `json:"id,omitempty"`
-		ODataId           *string                 `json:"@odata.id,omitempty"`
-		ODataType         *string                 `json:"@odata.type,omitempty"`
+		Description                   nullable.Type[string]   `json:"description,omitempty"`
+		DisplayName                   nullable.Type[string]   `json:"displayName,omitempty"`
+		IsMemberManagementRestricted  nullable.Type[bool]     `json:"isMemberManagementRestricted,omitempty"`
+		Members_ODataBind             *[]string               `json:"members@odata.bind,omitempty"`
+		MembershipRule                nullable.Type[string]   `json:"membershipRule,omitempty"`
+		MembershipRuleProcessingState nullable.Type[string]   `json:"membershipRuleProcessingState,omitempty"`
+		MembershipType                nullable.Type[string]   `json:"membershipType,omitempty"`
+		ScopedRoleMembers             *[]ScopedRoleMembership `json:"scopedRoleMembers,omitempty"`
+		Visibility                    nullable.Type[string]   `json:"visibility,omitempty"`
+		DeletedDateTime               nullable.Type[string]   `json:"deletedDateTime,omitempty"`
+		Id                            *string                 `json:"id,omitempty"`
+		ODataId                       *string                 `json:"@odata.id,omitempty"`
+		ODataType                     *string                 `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -121,7 +139,11 @@ func (s *AdministrativeUnit) UnmarshalJSON(bytes []byte) error {
 
 	s.Description = decoded.Description
 	s.DisplayName = decoded.DisplayName
+	s.IsMemberManagementRestricted = decoded.IsMemberManagementRestricted
 	s.Members_ODataBind = decoded.Members_ODataBind
+	s.MembershipRule = decoded.MembershipRule
+	s.MembershipRuleProcessingState = decoded.MembershipRuleProcessingState
+	s.MembershipType = decoded.MembershipType
 	s.ScopedRoleMembers = decoded.ScopedRoleMembers
 	s.Visibility = decoded.Visibility
 	s.DeletedDateTime = decoded.DeletedDateTime

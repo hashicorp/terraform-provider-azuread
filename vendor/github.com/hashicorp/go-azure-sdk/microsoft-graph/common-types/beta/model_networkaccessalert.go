@@ -16,12 +16,12 @@ type NetworkaccessAlert struct {
 	Actions             *[]NetworkaccessAlertAction     `json:"actions,omitempty"`
 	AlertType           *NetworkaccessAlertType         `json:"alertType,omitempty"`
 	CreationDateTime    *string                         `json:"creationDateTime,omitempty"`
-	Description         *string                         `json:"description,omitempty"`
+	Description         nullable.Type[string]           `json:"description,omitempty"`
 	DetectionTechnology nullable.Type[string]           `json:"detectionTechnology,omitempty"`
 	DisplayName         *string                         `json:"displayName,omitempty"`
 	Policy              *NetworkaccessFilteringPolicy   `json:"policy,omitempty"`
 	RelatedResources    *[]NetworkaccessRelatedResource `json:"relatedResources,omitempty"`
-	Severity            *NetworkaccessThreatSeverity    `json:"severity,omitempty"`
+	Severity            *NetworkaccessAlertSeverity     `json:"severity,omitempty"`
 	VendorName          *string                         `json:"vendorName,omitempty"`
 
 	// Fields inherited from Entity
@@ -81,11 +81,11 @@ func (s *NetworkaccessAlert) UnmarshalJSON(bytes []byte) error {
 		Actions             *[]NetworkaccessAlertAction   `json:"actions,omitempty"`
 		AlertType           *NetworkaccessAlertType       `json:"alertType,omitempty"`
 		CreationDateTime    *string                       `json:"creationDateTime,omitempty"`
-		Description         *string                       `json:"description,omitempty"`
+		Description         nullable.Type[string]         `json:"description,omitempty"`
 		DetectionTechnology nullable.Type[string]         `json:"detectionTechnology,omitempty"`
 		DisplayName         *string                       `json:"displayName,omitempty"`
 		Policy              *NetworkaccessFilteringPolicy `json:"policy,omitempty"`
-		Severity            *NetworkaccessThreatSeverity  `json:"severity,omitempty"`
+		Severity            *NetworkaccessAlertSeverity   `json:"severity,omitempty"`
 		VendorName          *string                       `json:"vendorName,omitempty"`
 		Id                  *string                       `json:"id,omitempty"`
 		ODataId             *string                       `json:"@odata.id,omitempty"`

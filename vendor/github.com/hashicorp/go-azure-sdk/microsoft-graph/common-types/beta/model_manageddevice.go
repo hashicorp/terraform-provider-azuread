@@ -108,7 +108,7 @@ type BaseManagedDeviceImpl struct {
 	// Results of device health scripts that ran for this device. Default is empty list. This property is read-only.
 	DeviceHealthScriptStates *[]DeviceHealthScriptPolicyState `json:"deviceHealthScriptStates,omitempty"`
 
-	// Name of the device. This property is read-only.
+	// Name of the device. Supports $filter operator 'eq' and 'contains'. This property is read-only.
 	DeviceName nullable.Type[string] `json:"deviceName,omitempty"`
 
 	// Device registration status.

@@ -21,6 +21,9 @@ type Chat struct {
 	// A collection of all the apps in the chat. Nullable.
 	InstalledApps *[]TeamsAppInstallation `json:"installedApps,omitempty"`
 
+	// Indicates whether the chat is hidden for all its members. Read-only.
+	IsHiddenForAllMembers nullable.Type[bool] `json:"isHiddenForAllMembers,omitempty"`
+
 	// Preview of the last message sent in the chat. Null if no messages were sent in the chat. Currently, only the list
 	// chats operation supports this property.
 	LastMessagePreview *ChatMessageInfo `json:"lastMessagePreview,omitempty"`
@@ -99,6 +102,7 @@ func (s Chat) MarshalJSON() ([]byte, error) {
 	}
 
 	delete(decoded, "createdDateTime")
+	delete(decoded, "isHiddenForAllMembers")
 	delete(decoded, "lastUpdatedDateTime")
 	delete(decoded, "onlineMeetingInfo")
 	delete(decoded, "tenantId")
@@ -120,22 +124,23 @@ var _ json.Unmarshaler = &Chat{}
 
 func (s *Chat) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		ChatType            *ChatType                          `json:"chatType,omitempty"`
-		CreatedDateTime     nullable.Type[string]              `json:"createdDateTime,omitempty"`
-		LastMessagePreview  *ChatMessageInfo                   `json:"lastMessagePreview,omitempty"`
-		LastUpdatedDateTime nullable.Type[string]              `json:"lastUpdatedDateTime,omitempty"`
-		Messages            *[]ChatMessage                     `json:"messages,omitempty"`
-		OnlineMeetingInfo   *TeamworkOnlineMeetingInfo         `json:"onlineMeetingInfo,omitempty"`
-		PermissionGrants    *[]ResourceSpecificPermissionGrant `json:"permissionGrants,omitempty"`
-		PinnedMessages      *[]PinnedChatMessageInfo           `json:"pinnedMessages,omitempty"`
-		Tabs                *[]TeamsTab                        `json:"tabs,omitempty"`
-		TenantId            nullable.Type[string]              `json:"tenantId,omitempty"`
-		Topic               nullable.Type[string]              `json:"topic,omitempty"`
-		Viewpoint           *ChatViewpoint                     `json:"viewpoint,omitempty"`
-		WebUrl              nullable.Type[string]              `json:"webUrl,omitempty"`
-		Id                  *string                            `json:"id,omitempty"`
-		ODataId             *string                            `json:"@odata.id,omitempty"`
-		ODataType           *string                            `json:"@odata.type,omitempty"`
+		ChatType              *ChatType                          `json:"chatType,omitempty"`
+		CreatedDateTime       nullable.Type[string]              `json:"createdDateTime,omitempty"`
+		IsHiddenForAllMembers nullable.Type[bool]                `json:"isHiddenForAllMembers,omitempty"`
+		LastMessagePreview    *ChatMessageInfo                   `json:"lastMessagePreview,omitempty"`
+		LastUpdatedDateTime   nullable.Type[string]              `json:"lastUpdatedDateTime,omitempty"`
+		Messages              *[]ChatMessage                     `json:"messages,omitempty"`
+		OnlineMeetingInfo     *TeamworkOnlineMeetingInfo         `json:"onlineMeetingInfo,omitempty"`
+		PermissionGrants      *[]ResourceSpecificPermissionGrant `json:"permissionGrants,omitempty"`
+		PinnedMessages        *[]PinnedChatMessageInfo           `json:"pinnedMessages,omitempty"`
+		Tabs                  *[]TeamsTab                        `json:"tabs,omitempty"`
+		TenantId              nullable.Type[string]              `json:"tenantId,omitempty"`
+		Topic                 nullable.Type[string]              `json:"topic,omitempty"`
+		Viewpoint             *ChatViewpoint                     `json:"viewpoint,omitempty"`
+		WebUrl                nullable.Type[string]              `json:"webUrl,omitempty"`
+		Id                    *string                            `json:"id,omitempty"`
+		ODataId               *string                            `json:"@odata.id,omitempty"`
+		ODataType             *string                            `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -143,6 +148,7 @@ func (s *Chat) UnmarshalJSON(bytes []byte) error {
 
 	s.ChatType = decoded.ChatType
 	s.CreatedDateTime = decoded.CreatedDateTime
+	s.IsHiddenForAllMembers = decoded.IsHiddenForAllMembers
 	s.LastMessagePreview = decoded.LastMessagePreview
 	s.LastUpdatedDateTime = decoded.LastUpdatedDateTime
 	s.Messages = decoded.Messages

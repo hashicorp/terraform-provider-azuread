@@ -25,6 +25,12 @@ type DepOnboardingSetting struct {
 	// Default MacOs Enrollment Profile
 	DefaultMacOsEnrollmentProfile *DepMacOSEnrollmentProfile `json:"defaultMacOsEnrollmentProfile,omitempty"`
 
+	// Default TvOS Enrollment Profile
+	DefaultTvOSEnrollmentProfile *DepTvOSEnrollmentProfile `json:"defaultTvOSEnrollmentProfile,omitempty"`
+
+	// Default VisionOS Enrollment Profile
+	DefaultVisionOSEnrollmentProfile *DepVisionOSEnrollmentProfile `json:"defaultVisionOSEnrollmentProfile,omitempty"`
+
 	// The enrollment profiles.
 	EnrollmentProfiles *[]EnrollmentProfile `json:"enrollmentProfiles,omitempty"`
 
@@ -114,23 +120,25 @@ var _ json.Unmarshaler = &DepOnboardingSetting{}
 
 func (s *DepOnboardingSetting) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		AppleIdentifier                     nullable.Type[string]      `json:"appleIdentifier,omitempty"`
-		DataSharingConsentGranted           *bool                      `json:"dataSharingConsentGranted,omitempty"`
-		DefaultIosEnrollmentProfile         *DepIOSEnrollmentProfile   `json:"defaultIosEnrollmentProfile,omitempty"`
-		DefaultMacOsEnrollmentProfile       *DepMacOSEnrollmentProfile `json:"defaultMacOsEnrollmentProfile,omitempty"`
-		LastModifiedDateTime                *string                    `json:"lastModifiedDateTime,omitempty"`
-		LastSuccessfulSyncDateTime          *string                    `json:"lastSuccessfulSyncDateTime,omitempty"`
-		LastSyncErrorCode                   *int64                     `json:"lastSyncErrorCode,omitempty"`
-		LastSyncTriggeredDateTime           *string                    `json:"lastSyncTriggeredDateTime,omitempty"`
-		RoleScopeTagIds                     *[]string                  `json:"roleScopeTagIds,omitempty"`
-		ShareTokenWithSchoolDataSyncService *bool                      `json:"shareTokenWithSchoolDataSyncService,omitempty"`
-		SyncedDeviceCount                   *int64                     `json:"syncedDeviceCount,omitempty"`
-		TokenExpirationDateTime             *string                    `json:"tokenExpirationDateTime,omitempty"`
-		TokenName                           nullable.Type[string]      `json:"tokenName,omitempty"`
-		TokenType                           *DepTokenType              `json:"tokenType,omitempty"`
-		Id                                  *string                    `json:"id,omitempty"`
-		ODataId                             *string                    `json:"@odata.id,omitempty"`
-		ODataType                           *string                    `json:"@odata.type,omitempty"`
+		AppleIdentifier                     nullable.Type[string]         `json:"appleIdentifier,omitempty"`
+		DataSharingConsentGranted           *bool                         `json:"dataSharingConsentGranted,omitempty"`
+		DefaultIosEnrollmentProfile         *DepIOSEnrollmentProfile      `json:"defaultIosEnrollmentProfile,omitempty"`
+		DefaultMacOsEnrollmentProfile       *DepMacOSEnrollmentProfile    `json:"defaultMacOsEnrollmentProfile,omitempty"`
+		DefaultTvOSEnrollmentProfile        *DepTvOSEnrollmentProfile     `json:"defaultTvOSEnrollmentProfile,omitempty"`
+		DefaultVisionOSEnrollmentProfile    *DepVisionOSEnrollmentProfile `json:"defaultVisionOSEnrollmentProfile,omitempty"`
+		LastModifiedDateTime                *string                       `json:"lastModifiedDateTime,omitempty"`
+		LastSuccessfulSyncDateTime          *string                       `json:"lastSuccessfulSyncDateTime,omitempty"`
+		LastSyncErrorCode                   *int64                        `json:"lastSyncErrorCode,omitempty"`
+		LastSyncTriggeredDateTime           *string                       `json:"lastSyncTriggeredDateTime,omitempty"`
+		RoleScopeTagIds                     *[]string                     `json:"roleScopeTagIds,omitempty"`
+		ShareTokenWithSchoolDataSyncService *bool                         `json:"shareTokenWithSchoolDataSyncService,omitempty"`
+		SyncedDeviceCount                   *int64                        `json:"syncedDeviceCount,omitempty"`
+		TokenExpirationDateTime             *string                       `json:"tokenExpirationDateTime,omitempty"`
+		TokenName                           nullable.Type[string]         `json:"tokenName,omitempty"`
+		TokenType                           *DepTokenType                 `json:"tokenType,omitempty"`
+		Id                                  *string                       `json:"id,omitempty"`
+		ODataId                             *string                       `json:"@odata.id,omitempty"`
+		ODataType                           *string                       `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -140,6 +148,8 @@ func (s *DepOnboardingSetting) UnmarshalJSON(bytes []byte) error {
 	s.DataSharingConsentGranted = decoded.DataSharingConsentGranted
 	s.DefaultIosEnrollmentProfile = decoded.DefaultIosEnrollmentProfile
 	s.DefaultMacOsEnrollmentProfile = decoded.DefaultMacOsEnrollmentProfile
+	s.DefaultTvOSEnrollmentProfile = decoded.DefaultTvOSEnrollmentProfile
+	s.DefaultVisionOSEnrollmentProfile = decoded.DefaultVisionOSEnrollmentProfile
 	s.LastModifiedDateTime = decoded.LastModifiedDateTime
 	s.LastSuccessfulSyncDateTime = decoded.LastSuccessfulSyncDateTime
 	s.LastSyncErrorCode = decoded.LastSyncErrorCode

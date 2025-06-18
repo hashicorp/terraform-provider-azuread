@@ -13,10 +13,10 @@ import (
 var _ Entity = CloudPCSubscription{}
 
 type CloudPCSubscription struct {
-	// The ID of the subscription.
+	// Indicates the ID of the subscription.
 	SubscriptionId nullable.Type[string] `json:"subscriptionId,omitempty"`
 
-	// The name of the subscription.
+	// Indicates the name of the subscription.
 	SubscriptionName nullable.Type[string] `json:"subscriptionName,omitempty"`
 
 	// Fields inherited from Entity

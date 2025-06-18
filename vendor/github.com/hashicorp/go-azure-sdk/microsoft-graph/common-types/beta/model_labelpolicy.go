@@ -8,7 +8,10 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type LabelPolicy struct {
-	Id   *string               `json:"id,omitempty"`
+	// The unique identifier of the label policy.
+	Id *string `json:"id,omitempty"`
+
+	// The display name of the label policy.
 	Name nullable.Type[string] `json:"name,omitempty"`
 
 	// The OData ID of this entity

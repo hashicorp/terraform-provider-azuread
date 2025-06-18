@@ -32,6 +32,9 @@ type BaseVirtualEventImpl struct {
 	// Windows. For details on how to get all available time zones using PowerShell, see Get-TimeZone.
 	EndDateTime *DateTimeTimeZone `json:"endDateTime,omitempty"`
 
+	// The external information of a virtual event. Returned only for event organizers or coorganizers; otherwise, null.
+	ExternalEventInformation *[]VirtualEventExternalInformation `json:"externalEventInformation,omitempty"`
+
 	// The virtual event presenters.
 	Presenters *[]VirtualEventPresenter `json:"presenters,omitempty"`
 

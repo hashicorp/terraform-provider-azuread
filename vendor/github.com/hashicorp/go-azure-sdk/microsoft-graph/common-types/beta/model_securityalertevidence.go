@@ -429,6 +429,14 @@ func UnmarshalSecurityAlertEvidenceImplementation(input []byte) (SecurityAlertEv
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.security.teamsMessageEvidence") {
+		var out SecurityTeamsMessageEvidence
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityTeamsMessageEvidence: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.security.urlEvidence") {
 		var out SecurityUrlEvidence
 		if err := json.Unmarshal(input, &out); err != nil {

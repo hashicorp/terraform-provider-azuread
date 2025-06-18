@@ -13,19 +13,19 @@ import (
 var _ Entity = WorkbookRangeBorder{}
 
 type WorkbookRangeBorder struct {
-	// HTML color code representing the color of the border line, of the form #RRGGBB (for example 'FFA500') or as a named
-	// HTML color (for example 'orange').
+	// The HTML color code that represents the color of the border line. Can either be of the form #RRGGBB, for example
+	// 'FFA500', or a named HTML color, for example 'orange'.
 	Color nullable.Type[string] `json:"color,omitempty"`
 
-	// Constant value that indicates the specific side of the border. The possible values are: EdgeTop, EdgeBottom,
-	// EdgeLeft, EdgeRight, InsideVertical, InsideHorizontal, DiagonalDown, DiagonalUp. Read-only.
+	// Indicates the specific side of the border. The possible values are: EdgeTop, EdgeBottom, EdgeLeft, EdgeRight,
+	// InsideVertical, InsideHorizontal, DiagonalDown, DiagonalUp. Read-only.
 	SideIndex nullable.Type[string] `json:"sideIndex,omitempty"`
 
-	// One of the constants of line style specifying the line style for the border. The possible values are: None,
-	// Continuous, Dash, DashDot, DashDotDot, Dot, Double, SlantDashDot.
+	// Indicates the line style for the border. The possible values are: None, Continuous, Dash, DashDot, DashDotDot, Dot,
+	// Double, SlantDashDot.
 	Style nullable.Type[string] `json:"style,omitempty"`
 
-	// Specifies the weight of the border around a range. The possible values are: Hairline, Thin, Medium, Thick.
+	// The weight of the border around a range. The possible values are: Hairline, Thin, Medium, Thick.
 	Weight nullable.Type[string] `json:"weight,omitempty"`
 
 	// Fields inherited from Entity

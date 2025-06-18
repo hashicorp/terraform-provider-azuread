@@ -26,6 +26,6 @@ type TextColumn struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// The type of text being stored. Must be one of plain or richText
+	// The type of text being stored. Must be one of plain or richText.
 	TextType nullable.Type[string] `json:"textType,omitempty"`
 }

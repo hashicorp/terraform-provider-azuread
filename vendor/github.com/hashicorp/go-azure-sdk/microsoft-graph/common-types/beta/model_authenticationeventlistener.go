@@ -148,10 +148,26 @@ func UnmarshalAuthenticationEventListenerImplementation(input []byte) (Authentic
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.onEmailOtpSendListener") {
+		var out OnEmailOtpSendListener
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnEmailOtpSendListener: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.onInteractiveAuthFlowStartListener") {
 		var out OnInteractiveAuthFlowStartListener
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into OnInteractiveAuthFlowStartListener: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.onPhoneMethodLoadStartListener") {
+		var out OnPhoneMethodLoadStartListener
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnPhoneMethodLoadStartListener: %+v", err)
 		}
 		return out, nil
 	}

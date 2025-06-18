@@ -14,6 +14,7 @@ var _ Entity = WorkbookFunctionResult{}
 
 type WorkbookFunctionResult struct {
 	Error nullable.Type[string] `json:"error,omitempty"`
+	Value *Json                 `json:"value,omitempty"`
 
 	// Fields inherited from Entity
 

@@ -12,6 +12,7 @@ import (
 type WorkplaceSensorType string
 
 const (
+	WorkplaceSensorType_Badge             WorkplaceSensorType = "badge"
 	WorkplaceSensorType_Heartbeat         WorkplaceSensorType = "heartbeat"
 	WorkplaceSensorType_InferredOccupancy WorkplaceSensorType = "inferredOccupancy"
 	WorkplaceSensorType_Occupancy         WorkplaceSensorType = "occupancy"
@@ -20,6 +21,7 @@ const (
 
 func PossibleValuesForWorkplaceSensorType() []string {
 	return []string{
+		string(WorkplaceSensorType_Badge),
 		string(WorkplaceSensorType_Heartbeat),
 		string(WorkplaceSensorType_InferredOccupancy),
 		string(WorkplaceSensorType_Occupancy),
@@ -42,6 +44,7 @@ func (s *WorkplaceSensorType) UnmarshalJSON(bytes []byte) error {
 
 func parseWorkplaceSensorType(input string) (*WorkplaceSensorType, error) {
 	vals := map[string]WorkplaceSensorType{
+		"badge":             WorkplaceSensorType_Badge,
 		"heartbeat":         WorkplaceSensorType_Heartbeat,
 		"inferredoccupancy": WorkplaceSensorType_InferredOccupancy,
 		"occupancy":         WorkplaceSensorType_Occupancy,

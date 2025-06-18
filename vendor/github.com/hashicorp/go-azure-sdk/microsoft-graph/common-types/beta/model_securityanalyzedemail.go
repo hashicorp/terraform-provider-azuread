@@ -19,14 +19,14 @@ type SecurityAnalyzedEmail struct {
 	// A collection of the attachments in the email.
 	Attachments *[]SecurityAnalyzedEmailAttachment `json:"attachments,omitempty"`
 
-	// The number of attachments in the email.
-	AttachmentsCount nullable.Type[int64] `json:"attachmentsCount,omitempty"`
-
 	// The authentication details associated with the email.
 	AuthenticationDetails *SecurityAnalyzedEmailAuthenticationDetail `json:"authenticationDetails,omitempty"`
 
 	// The bulk complaint level of the email. A higher level is more likely to be spam.
 	BulkComplaintLevel nullable.Type[string] `json:"bulkComplaintLevel,omitempty"`
+
+	// Shows the type of client that sent the message (for example, REST).
+	ClientType nullable.Type[string] `json:"clientType,omitempty"`
 
 	// Provides context of the email.
 	Contexts *[]string `json:"contexts,omitempty"`
@@ -40,11 +40,20 @@ type SecurityAnalyzedEmail struct {
 	// The distribution list details to which the email was sent.
 	DistributionList nullable.Type[string] `json:"distributionList,omitempty"`
 
+	// Data loss prevention rules configured in purview.
+	DlpRules *[]SecurityAnalyzedEmailDlpRuleInfo `json:"dlpRules,omitempty"`
+
 	// The identifier for the group of similar emails clustered based on heuristic analysis of their content.
 	EmailClusterId nullable.Type[string] `json:"emailClusterId,omitempty"`
 
 	// The name of the Exchange transport rules (ETRs) associated with the email.
 	ExchangeTransportRules *[]SecurityAnalyzedEmailExchangeTransportRuleInfo `json:"exchangeTransportRules,omitempty"`
+
+	// Email smtp forwarding details.
+	ForwardingDetail nullable.Type[string] `json:"forwardingDetail,omitempty"`
+
+	// Custom instructions name that defines organizational mail flow and how the email was routed.
+	InboundConnectorFormattedName nullable.Type[string] `json:"inboundConnectorFormattedName,omitempty"`
 
 	// A public-facing identifier for the email that is sent. The message ID is in the format specified by RFC2822.
 	InternetMessageId nullable.Type[string] `json:"internetMessageId,omitempty"`
@@ -76,6 +85,16 @@ type SecurityAnalyzedEmail struct {
 	// The action taken on the email based on the configured policy.
 	PolicyAction nullable.Type[string] `json:"policyAction,omitempty"`
 
+	// Type of policy configured that defines the delivery action on email.
+	PolicyType nullable.Type[string] `json:"policyType,omitempty"`
+
+	// Shows the organization or user setting that altered the intended delivery location of the message (allowed instead of
+	// blocked, or blocked instead of allowed).
+	PrimaryOverrideSource nullable.Type[string] `json:"primaryOverrideSource,omitempty"`
+
+	// Details of the recipients.
+	RecipientDetail *SecurityAnalyzedEmailRecipientDetail `json:"recipientDetail,omitempty"`
+
 	// Contains the email address of the recipient.
 	RecipientEmailAddress nullable.Type[string] `json:"recipientEmailAddress,omitempty"`
 
@@ -94,14 +113,17 @@ type SecurityAnalyzedEmail struct {
 	// Subject of the email.
 	Subject nullable.Type[string] `json:"subject,omitempty"`
 
+	// Information about threats detected in the email.
+	ThreatDetectionDetails *[]SecurityThreatDetectionDetail `json:"threatDetectionDetails,omitempty"`
+
 	// Indicates the threat types. The possible values are: unknown, spam, malware, phish, none, unknownFutureValue.
 	ThreatTypes *[]SecurityThreatType `json:"threatTypes,omitempty"`
 
+	// Delivery and post-delivery events that happened to the email.
+	TimelineEvents *[]SecurityTimelineEvent `json:"timelineEvents,omitempty"`
+
 	// A collection of the URLs in the email.
 	Urls *[]SecurityAnalyzedEmailUrl `json:"urls,omitempty"`
-
-	// The number of URLs in the email.
-	UrlsCount nullable.Type[int64] `json:"urlsCount,omitempty"`
 
 	// Fields inherited from Entity
 

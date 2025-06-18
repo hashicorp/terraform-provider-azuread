@@ -13,9 +13,12 @@ import (
 var _ ChangeTrackedEntity = TimeOff{}
 
 type TimeOff struct {
-	// The draft version of this timeOff item that is viewable by managers. It must be shared before it is visible to team
+	// The draft version of this timeOff item that is viewable by managers. It must be shared before it's visible to team
 	// members. Required.
 	DraftTimeOff TimeOffItem `json:"draftTimeOff"`
+
+	// The timeOff is marked for deletion, a process that is finalized when the schedule is shared.
+	IsStagedForDeletion nullable.Type[bool] `json:"isStagedForDeletion,omitempty"`
 
 	// The shared version of this timeOff that is viewable by both employees and managers. Updates to the sharedTimeOff
 	// property send notifications to users in the Teams client. Required.
@@ -25,6 +28,9 @@ type TimeOff struct {
 	UserId nullable.Type[string] `json:"userId,omitempty"`
 
 	// Fields inherited from ChangeTrackedEntity
+
+	// Identity of the creator of the entity.
+	CreatedBy IdentitySet `json:"createdBy"`
 
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
@@ -54,6 +60,7 @@ type TimeOff struct {
 
 func (s TimeOff) ChangeTrackedEntity() BaseChangeTrackedEntityImpl {
 	return BaseChangeTrackedEntityImpl{
+		CreatedBy:            s.CreatedBy,
 		CreatedDateTime:      s.CreatedDateTime,
 		LastModifiedBy:       s.LastModifiedBy,
 		LastModifiedDateTime: s.LastModifiedDateTime,
@@ -103,6 +110,7 @@ var _ json.Unmarshaler = &TimeOff{}
 func (s *TimeOff) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
 		DraftTimeOff         TimeOffItem           `json:"draftTimeOff"`
+		IsStagedForDeletion  nullable.Type[bool]   `json:"isStagedForDeletion,omitempty"`
 		SharedTimeOff        TimeOffItem           `json:"sharedTimeOff"`
 		UserId               nullable.Type[string] `json:"userId,omitempty"`
 		CreatedDateTime      nullable.Type[string] `json:"createdDateTime,omitempty"`
@@ -116,6 +124,7 @@ func (s *TimeOff) UnmarshalJSON(bytes []byte) error {
 	}
 
 	s.DraftTimeOff = decoded.DraftTimeOff
+	s.IsStagedForDeletion = decoded.IsStagedForDeletion
 	s.SharedTimeOff = decoded.SharedTimeOff
 	s.UserId = decoded.UserId
 	s.CreatedDateTime = decoded.CreatedDateTime
@@ -127,6 +136,14 @@ func (s *TimeOff) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling TimeOff into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["createdBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'TimeOff': %+v", err)
+		}
+		s.CreatedBy = impl
 	}
 
 	if v, ok := temp["lastModifiedBy"]; ok {

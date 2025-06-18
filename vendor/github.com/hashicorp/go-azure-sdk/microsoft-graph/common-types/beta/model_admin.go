@@ -15,6 +15,12 @@ type Admin struct {
 	// A container for Microsoft Edge resources. Read-only.
 	Edge *Edge `json:"edge,omitempty"`
 
+	// A container for Microsoft Entra resources. Read-only.
+	Entra *Entra `json:"entra,omitempty"`
+
+	// A container for the Exchange admin functionality. Read-only.
+	Exchange *ExchangeAdmin `json:"exchange,omitempty"`
+
 	Forms *AdminForms `json:"forms,omitempty"`
 
 	// A container for the Microsoft 365 apps admin functionality.
@@ -36,7 +42,11 @@ type Admin struct {
 	ServiceAnnouncement *ServiceAnnouncement `json:"serviceAnnouncement,omitempty"`
 
 	Sharepoint *Sharepoint `json:"sharepoint,omitempty"`
-	Todo       *AdminTodo  `json:"todo,omitempty"`
+
+	// Represents a collection of user configurations.
+	Teams *TeamsAdministrationTeamsAdminRoot `json:"teams,omitempty"`
+
+	Todo *AdminTodo `json:"todo,omitempty"`
 
 	// A container for all Windows administrator functionalities. Read-only.
 	Windows *AdminWindows `json:"windows,omitempty"`
@@ -58,6 +68,8 @@ func (s Admin) MarshalJSON() ([]byte, error) {
 	}
 
 	delete(decoded, "edge")
+	delete(decoded, "entra")
+	delete(decoded, "exchange")
 	delete(decoded, "serviceAnnouncement")
 	delete(decoded, "windows")
 

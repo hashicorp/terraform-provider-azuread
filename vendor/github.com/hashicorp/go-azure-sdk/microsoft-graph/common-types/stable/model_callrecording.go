@@ -13,12 +13,22 @@ import (
 var _ Entity = CallRecording{}
 
 type CallRecording struct {
+	// The unique identifier for the call that is related to this recording. Read-only.
+	CallId nullable.Type[string] `json:"callId,omitempty"`
+
 	// The content of the recording. Read-only.
 	Content nullable.Type[string] `json:"content,omitempty"`
+
+	// The unique identifier that links the transcript with its corresponding recording. Read-only.
+	ContentCorrelationId nullable.Type[string] `json:"contentCorrelationId,omitempty"`
 
 	// Date and time at which the recording was created. The timestamp type represents date and time information using ISO
 	// 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Read-only.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
+
+	// Date and time at which the recording ends. The timestamp type represents date and time information using ISO 8601
+	// format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Read-only.
+	EndDateTime nullable.Type[string] `json:"endDateTime,omitempty"`
 
 	// The unique identifier of the onlineMeeting related to this recording. Read-only.
 	MeetingId nullable.Type[string] `json:"meetingId,omitempty"`
@@ -67,8 +77,11 @@ func (s CallRecording) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling CallRecording: %+v", err)
 	}
 
+	delete(decoded, "callId")
 	delete(decoded, "content")
+	delete(decoded, "contentCorrelationId")
 	delete(decoded, "createdDateTime")
+	delete(decoded, "endDateTime")
 	delete(decoded, "meetingId")
 	delete(decoded, "meetingOrganizer")
 	delete(decoded, "recordingContentUrl")
@@ -89,20 +102,26 @@ var _ json.Unmarshaler = &CallRecording{}
 
 func (s *CallRecording) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		Content             nullable.Type[string] `json:"content,omitempty"`
-		CreatedDateTime     nullable.Type[string] `json:"createdDateTime,omitempty"`
-		MeetingId           nullable.Type[string] `json:"meetingId,omitempty"`
-		RecordingContentUrl nullable.Type[string] `json:"recordingContentUrl,omitempty"`
-		Id                  *string               `json:"id,omitempty"`
-		ODataId             *string               `json:"@odata.id,omitempty"`
-		ODataType           *string               `json:"@odata.type,omitempty"`
+		CallId               nullable.Type[string] `json:"callId,omitempty"`
+		Content              nullable.Type[string] `json:"content,omitempty"`
+		ContentCorrelationId nullable.Type[string] `json:"contentCorrelationId,omitempty"`
+		CreatedDateTime      nullable.Type[string] `json:"createdDateTime,omitempty"`
+		EndDateTime          nullable.Type[string] `json:"endDateTime,omitempty"`
+		MeetingId            nullable.Type[string] `json:"meetingId,omitempty"`
+		RecordingContentUrl  nullable.Type[string] `json:"recordingContentUrl,omitempty"`
+		Id                   *string               `json:"id,omitempty"`
+		ODataId              *string               `json:"@odata.id,omitempty"`
+		ODataType            *string               `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.CallId = decoded.CallId
 	s.Content = decoded.Content
+	s.ContentCorrelationId = decoded.ContentCorrelationId
 	s.CreatedDateTime = decoded.CreatedDateTime
+	s.EndDateTime = decoded.EndDateTime
 	s.MeetingId = decoded.MeetingId
 	s.RecordingContentUrl = decoded.RecordingContentUrl
 	s.Id = decoded.Id

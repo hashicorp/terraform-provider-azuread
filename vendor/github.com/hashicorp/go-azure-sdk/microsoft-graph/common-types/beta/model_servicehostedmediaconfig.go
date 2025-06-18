@@ -13,6 +13,8 @@ import (
 var _ MediaConfig = ServiceHostedMediaConfig{}
 
 type ServiceHostedMediaConfig struct {
+	LiveCaptionOptions *LiveCaptionOptions `json:"liveCaptionOptions,omitempty"`
+
 	// The list of media to prefetch.
 	PreFetchMedia *[]MediaInfo `json:"preFetchMedia,omitempty"`
 

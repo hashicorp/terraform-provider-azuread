@@ -13,11 +13,11 @@ import (
 var _ Entity = OutlookCategory{}
 
 type OutlookCategory struct {
-	// A pre-set color constant that characterizes a category, and that is mapped to one of 25 predefined colors. For more
-	// details, see the following note.
+	// A preset color constant that characterizes a category, and that is mapped to one of 25 predefined colors. For more
+	// information, see the following note.
 	Color *CategoryColor `json:"color,omitempty"`
 
-	// A unique name that identifies a category in the user's mailbox. After a category is created, the name cannot be
+	// A unique name that identifies a category in the user's mailbox. After a category is created, the name can't be
 	// changed. Read-only.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 

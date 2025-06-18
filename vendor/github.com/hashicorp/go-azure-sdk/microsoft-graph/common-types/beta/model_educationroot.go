@@ -13,7 +13,7 @@ type EducationRoot struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	Schools                 *[]EducationSchool                 `json:"schools,omitempty"`
-	SynchronizationProfiles *[]EducationSynchronizationProfile `json:"synchronizationProfiles,omitempty"`
-	Users                   *[]EducationUser                   `json:"users,omitempty"`
+	Reports *ReportsRoot       `json:"reports,omitempty"`
+	Schools *[]EducationSchool `json:"schools,omitempty"`
+	Users   *[]EducationUser   `json:"users,omitempty"`
 }

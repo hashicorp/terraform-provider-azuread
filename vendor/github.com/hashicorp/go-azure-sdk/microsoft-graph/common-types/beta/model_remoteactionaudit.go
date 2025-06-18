@@ -21,6 +21,9 @@ type RemoteActionAudit struct {
 	// BulkAction ID
 	BulkDeviceActionId nullable.Type[string] `json:"bulkDeviceActionId,omitempty"`
 
+	// Enum type used for DeviceActionCategory
+	DeviceActionCategory *DeviceActionCategory `json:"deviceActionCategory,omitempty"`
+
 	// Intune device name.
 	DeviceDisplayName nullable.Type[string] `json:"deviceDisplayName,omitempty"`
 

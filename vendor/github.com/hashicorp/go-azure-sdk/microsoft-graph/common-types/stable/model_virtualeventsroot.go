@@ -11,9 +11,13 @@ import (
 var _ Entity = VirtualEventsRoot{}
 
 type VirtualEventsRoot struct {
-	Events    *[]VirtualEvent         `json:"events,omitempty"`
+	Events *[]VirtualEvent `json:"events,omitempty"`
+
+	// A collection of town halls. Nullable.
 	Townhalls *[]VirtualEventTownhall `json:"townhalls,omitempty"`
-	Webinars  *[]VirtualEventWebinar  `json:"webinars,omitempty"`
+
+	// A collection of webinars. Nullable.
+	Webinars *[]VirtualEventWebinar `json:"webinars,omitempty"`
 
 	// Fields inherited from Entity
 

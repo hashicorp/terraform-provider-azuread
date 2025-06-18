@@ -18,6 +18,7 @@ const (
 	BaseAuthenticationMethod_HardwareOath            BaseAuthenticationMethod = "hardwareOath"
 	BaseAuthenticationMethod_MicrosoftAuthenticator  BaseAuthenticationMethod = "microsoftAuthenticator"
 	BaseAuthenticationMethod_Password                BaseAuthenticationMethod = "password"
+	BaseAuthenticationMethod_QrCodePin               BaseAuthenticationMethod = "qrCodePin"
 	BaseAuthenticationMethod_Sms                     BaseAuthenticationMethod = "sms"
 	BaseAuthenticationMethod_SoftwareOath            BaseAuthenticationMethod = "softwareOath"
 	BaseAuthenticationMethod_TemporaryAccessPass     BaseAuthenticationMethod = "temporaryAccessPass"
@@ -34,6 +35,7 @@ func PossibleValuesForBaseAuthenticationMethod() []string {
 		string(BaseAuthenticationMethod_HardwareOath),
 		string(BaseAuthenticationMethod_MicrosoftAuthenticator),
 		string(BaseAuthenticationMethod_Password),
+		string(BaseAuthenticationMethod_QrCodePin),
 		string(BaseAuthenticationMethod_Sms),
 		string(BaseAuthenticationMethod_SoftwareOath),
 		string(BaseAuthenticationMethod_TemporaryAccessPass),
@@ -64,6 +66,7 @@ func parseBaseAuthenticationMethod(input string) (*BaseAuthenticationMethod, err
 		"hardwareoath":            BaseAuthenticationMethod_HardwareOath,
 		"microsoftauthenticator":  BaseAuthenticationMethod_MicrosoftAuthenticator,
 		"password":                BaseAuthenticationMethod_Password,
+		"qrcodepin":               BaseAuthenticationMethod_QrCodePin,
 		"sms":                     BaseAuthenticationMethod_Sms,
 		"softwareoath":            BaseAuthenticationMethod_SoftwareOath,
 		"temporaryaccesspass":     BaseAuthenticationMethod_TemporaryAccessPass,

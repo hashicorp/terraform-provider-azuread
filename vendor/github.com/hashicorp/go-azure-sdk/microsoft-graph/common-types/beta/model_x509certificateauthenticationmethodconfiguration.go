@@ -15,6 +15,10 @@ type X509CertificateAuthenticationMethodConfiguration struct {
 	// different rules for strong authentication bindings.
 	AuthenticationModeConfiguration *X509CertificateAuthenticationModeConfiguration `json:"authenticationModeConfiguration,omitempty"`
 
+	// Defines configuration to allow a group of users to use certificates from specific issuing certificate authorities to
+	// successfully authenticate.
+	CertificateAuthorityScopes *[]X509CertificateAuthorityScope `json:"certificateAuthorityScopes,omitempty"`
+
 	// Defines fields in the X.509 certificate that map to attributes of the Microsoft Entra user object in order to bind
 	// the certificate to the user. The priority of the object determines the order in which the binding is carried out. The
 	// first binding that matches will be used and the rest ignored.
@@ -100,6 +104,7 @@ var _ json.Unmarshaler = &X509CertificateAuthenticationMethodConfiguration{}
 func (s *X509CertificateAuthenticationMethodConfiguration) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
 		AuthenticationModeConfiguration *X509CertificateAuthenticationModeConfiguration `json:"authenticationModeConfiguration,omitempty"`
+		CertificateAuthorityScopes      *[]X509CertificateAuthorityScope                `json:"certificateAuthorityScopes,omitempty"`
 		CertificateUserBindings         *[]X509CertificateUserBinding                   `json:"certificateUserBindings,omitempty"`
 		IssuerHintsConfiguration        *X509CertificateIssuerHintsConfiguration        `json:"issuerHintsConfiguration,omitempty"`
 		ExcludeTargets                  *[]ExcludeTarget                                `json:"excludeTargets,omitempty"`
@@ -113,6 +118,7 @@ func (s *X509CertificateAuthenticationMethodConfiguration) UnmarshalJSON(bytes [
 	}
 
 	s.AuthenticationModeConfiguration = decoded.AuthenticationModeConfiguration
+	s.CertificateAuthorityScopes = decoded.CertificateAuthorityScopes
 	s.CertificateUserBindings = decoded.CertificateUserBindings
 	s.IssuerHintsConfiguration = decoded.IssuerHintsConfiguration
 	s.ExcludeTargets = decoded.ExcludeTargets

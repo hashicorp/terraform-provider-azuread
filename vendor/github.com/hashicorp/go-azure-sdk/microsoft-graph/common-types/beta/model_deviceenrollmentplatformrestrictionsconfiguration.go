@@ -13,28 +13,34 @@ import (
 var _ DeviceEnrollmentConfiguration = DeviceEnrollmentPlatformRestrictionsConfiguration{}
 
 type DeviceEnrollmentPlatformRestrictionsConfiguration struct {
-	// Android for work restrictions based on platform, platform operating system version, and device ownership
+	// Indicates restrictions for Android For Work platform.
 	AndroidForWorkRestriction *DeviceEnrollmentPlatformRestriction `json:"androidForWorkRestriction,omitempty"`
 
-	// Android restrictions based on platform, platform operating system version, and device ownership
+	// Indicates restrictions for Android platform.
 	AndroidRestriction *DeviceEnrollmentPlatformRestriction `json:"androidRestriction,omitempty"`
 
-	// Ios restrictions based on platform, platform operating system version, and device ownership
+	// Indicates restrictions for IOS platform.
 	IosRestriction *DeviceEnrollmentPlatformRestriction `json:"iosRestriction,omitempty"`
 
-	// Mac restrictions based on platform, platform operating system version, and device ownership
+	// Indicates restrictions for MacOS platform.
 	MacOSRestriction *DeviceEnrollmentPlatformRestriction `json:"macOSRestriction,omitempty"`
 
-	// Mac restrictions based on platform, platform operating system version, and device ownership
+	// Indicates restrictions for Mac platform.
 	MacRestriction *DeviceEnrollmentPlatformRestriction `json:"macRestriction,omitempty"`
 
-	// Windows Home Sku restrictions based on platform, platform operating system version, and device ownership
+	// Indicates restrictions for TvOS platform.
+	TvosRestriction *DeviceEnrollmentPlatformRestriction `json:"tvosRestriction,omitempty"`
+
+	// Indicates restrictions for VisionOS platform.
+	VisionOSRestriction *DeviceEnrollmentPlatformRestriction `json:"visionOSRestriction,omitempty"`
+
+	// Indicates restrictions for Windows HomeSku platform.
 	WindowsHomeSkuRestriction *DeviceEnrollmentPlatformRestriction `json:"windowsHomeSkuRestriction,omitempty"`
 
-	// Windows mobile restrictions based on platform, platform operating system version, and device ownership
+	// Indicates restrictions for Windows Mobile platform.
 	WindowsMobileRestriction *DeviceEnrollmentPlatformRestriction `json:"windowsMobileRestriction,omitempty"`
 
-	// Windows restrictions based on platform, platform operating system version, and device ownership
+	// Indicates restrictions for Windows platform.
 	WindowsRestriction *DeviceEnrollmentPlatformRestriction `json:"windowsRestriction,omitempty"`
 
 	// Fields inherited from DeviceEnrollmentConfiguration

@@ -71,6 +71,14 @@ func UnmarshalActionResultPartImplementation(input []byte) (ActionResultPart, er
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.forwardToChatResult") {
+		var out ForwardToChatResult
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ForwardToChatResult: %+v", err)
+		}
+		return out, nil
+	}
+
 	var parent BaseActionResultPartImpl
 	if err := json.Unmarshal(input, &parent); err != nil {
 		return nil, fmt.Errorf("unmarshaling into BaseActionResultPartImpl: %+v", err)

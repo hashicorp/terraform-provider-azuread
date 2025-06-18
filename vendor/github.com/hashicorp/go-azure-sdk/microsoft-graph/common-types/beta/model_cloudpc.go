@@ -37,7 +37,7 @@ type CloudPC struct {
 	// The disaster recovery status of the Cloud PC, including the primary region, secondary region, and capability type.
 	// The default value is null that indicates that the disaster recovery setting is disabled. To receive a response with
 	// the disasterRecoveryCapability property, $select and $filter it by disasterRecoveryCapability/{subProperty} in the
-	// request URL. For more details, see Example 4: List Cloud PCs filtered by disaster recovery capability type.
+	// request URL. For more information, see Example 3: List Cloud PCs filtered by disaster recovery capability type.
 	// Read-only.
 	DisasterRecoveryCapability *CloudPCDisasterRecoveryCapability `json:"disasterRecoveryCapability,omitempty"`
 
@@ -47,6 +47,10 @@ type CloudPC struct {
 
 	// The display name of the Cloud PC.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
+
+	// The current availability of a frontline assigned Cloud PC. Possible values: notApplicable, available,notAvailable and
+	// unknownFutureValue. Default value is notApplicable. Read Only.
+	FrontlineCloudPCAvailability *FrontlineCloudPCAvailability `json:"frontlineCloudPcAvailability,omitempty"`
 
 	// The date and time when the grace period ends and reprovisioning or deprovisioning happens. Required only if the
 	// status is inGracePeriod. The timestamp is shown in ISO 8601 format and Coordinated Universal Time (UTC). For example,
@@ -87,6 +91,13 @@ type CloudPC struct {
 	// shift work Cloud PCs.
 	PowerState *CloudPCPowerState `json:"powerState,omitempty"`
 
+	// The product type of the Cloud PC. The possible values are: enterprise, frontline, devBox, powerAutomate, business,
+	// unknownFutureValue. For the available service plans and pricing for enterprise, frontline, and business, see Windows
+	// 365 for business. For pricing information for devBox, see Microsoft Dev Box pricing. For the available plans and
+	// pricing for powerAutomate, see Power Automate pricing. The default value is enterprise. Supports $filter and $select.
+	// For more information, see Example 4: List Cloud PCs filtered by product type. Read-only.
+	ProductType *CloudPCProductType `json:"productType,omitempty"`
+
 	// The provisioning policy ID of the Cloud PC.
 	ProvisioningPolicyId nullable.Type[string] `json:"provisioningPolicyId,omitempty"`
 
@@ -94,10 +105,10 @@ type CloudPC struct {
 	ProvisioningPolicyName nullable.Type[string] `json:"provisioningPolicyName,omitempty"`
 
 	// The type of licenses to be used when provisioning Cloud PCs using this policy. Possible values are: dedicated,
-	// shared, unknownFutureValue,sharedByUser, sharedByEntraGroup. You must use the Prefer: include-unknown-enum-members
-	// request header to get the following values from this evolvable enum: sharedByUser, sharedByEntraGroup. The default
-	// value is dedicated. CAUTION: The shared member is deprecated and will stop returning on April 30, 2027； in the
-	// future, use the sharedByUser member.
+	// shared, unknownFutureValue,sharedByUser, sharedByEntraGroup. Use the Prefer: include-unknown-enum-members request
+	// header to get the following values from this evolvable enum: sharedByUser, sharedByEntraGroup. The default value is
+	// dedicated. CAUTION: The shared member is deprecated and will stop returning on April 30, 2027； in the future, use
+	// the sharedByUser member.
 	ProvisioningType *CloudPCProvisioningType `json:"provisioningType,omitempty"`
 
 	ScopeIds *[]string `json:"scopeIds,omitempty"`
@@ -171,6 +182,7 @@ func (s CloudPC) MarshalJSON() ([]byte, error) {
 	delete(decoded, "allotmentDisplayName")
 	delete(decoded, "deviceRegionName")
 	delete(decoded, "disasterRecoveryCapability")
+	delete(decoded, "productType")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.cloudPC"

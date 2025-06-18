@@ -13,17 +13,24 @@ import (
 var _ Entity = SensitivityLabel{}
 
 type SensitivityLabel struct {
+	ActionSource                *LabelActionSource      `json:"actionSource,omitempty"`
 	ApplicableTo                *SensitivityLabelTarget `json:"applicableTo,omitempty"`
 	ApplicationMode             *ApplicationMode        `json:"applicationMode,omitempty"`
 	AssignedPolicies            *[]LabelPolicy          `json:"assignedPolicies,omitempty"`
 	AutoLabeling                *AutoLabeling           `json:"autoLabeling,omitempty"`
+	AutoTooltip                 nullable.Type[string]   `json:"autoTooltip,omitempty"`
+	Color                       nullable.Type[string]   `json:"color,omitempty"`
 	Description                 nullable.Type[string]   `json:"description,omitempty"`
 	DisplayName                 nullable.Type[string]   `json:"displayName,omitempty"`
 	IsDefault                   nullable.Type[bool]     `json:"isDefault,omitempty"`
+	IsEnabled                   nullable.Type[bool]     `json:"isEnabled,omitempty"`
 	IsEndpointProtectionEnabled nullable.Type[bool]     `json:"isEndpointProtectionEnabled,omitempty"`
+	IsScopedToUser              nullable.Type[bool]     `json:"isScopedToUser,omitempty"`
 	LabelActions                *[]LabelActionBase      `json:"labelActions,omitempty"`
+	Locale                      nullable.Type[string]   `json:"locale,omitempty"`
 	Name                        nullable.Type[string]   `json:"name,omitempty"`
 	Priority                    nullable.Type[int64]    `json:"priority,omitempty"`
+	Rights                      *UsageRightsIncluded    `json:"rights,omitempty"`
 	Sublabels                   *[]SensitivityLabel     `json:"sublabels,omitempty"`
 	ToolTip                     nullable.Type[string]   `json:"toolTip,omitempty"`
 
@@ -81,16 +88,23 @@ var _ json.Unmarshaler = &SensitivityLabel{}
 
 func (s *SensitivityLabel) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
+		ActionSource                *LabelActionSource      `json:"actionSource,omitempty"`
 		ApplicableTo                *SensitivityLabelTarget `json:"applicableTo,omitempty"`
 		ApplicationMode             *ApplicationMode        `json:"applicationMode,omitempty"`
 		AssignedPolicies            *[]LabelPolicy          `json:"assignedPolicies,omitempty"`
 		AutoLabeling                *AutoLabeling           `json:"autoLabeling,omitempty"`
+		AutoTooltip                 nullable.Type[string]   `json:"autoTooltip,omitempty"`
+		Color                       nullable.Type[string]   `json:"color,omitempty"`
 		Description                 nullable.Type[string]   `json:"description,omitempty"`
 		DisplayName                 nullable.Type[string]   `json:"displayName,omitempty"`
 		IsDefault                   nullable.Type[bool]     `json:"isDefault,omitempty"`
+		IsEnabled                   nullable.Type[bool]     `json:"isEnabled,omitempty"`
 		IsEndpointProtectionEnabled nullable.Type[bool]     `json:"isEndpointProtectionEnabled,omitempty"`
+		IsScopedToUser              nullable.Type[bool]     `json:"isScopedToUser,omitempty"`
+		Locale                      nullable.Type[string]   `json:"locale,omitempty"`
 		Name                        nullable.Type[string]   `json:"name,omitempty"`
 		Priority                    nullable.Type[int64]    `json:"priority,omitempty"`
+		Rights                      *UsageRightsIncluded    `json:"rights,omitempty"`
 		Sublabels                   *[]SensitivityLabel     `json:"sublabels,omitempty"`
 		ToolTip                     nullable.Type[string]   `json:"toolTip,omitempty"`
 		Id                          *string                 `json:"id,omitempty"`
@@ -101,16 +115,23 @@ func (s *SensitivityLabel) UnmarshalJSON(bytes []byte) error {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.ActionSource = decoded.ActionSource
 	s.ApplicableTo = decoded.ApplicableTo
 	s.ApplicationMode = decoded.ApplicationMode
 	s.AssignedPolicies = decoded.AssignedPolicies
 	s.AutoLabeling = decoded.AutoLabeling
+	s.AutoTooltip = decoded.AutoTooltip
+	s.Color = decoded.Color
 	s.Description = decoded.Description
 	s.DisplayName = decoded.DisplayName
 	s.IsDefault = decoded.IsDefault
+	s.IsEnabled = decoded.IsEnabled
 	s.IsEndpointProtectionEnabled = decoded.IsEndpointProtectionEnabled
+	s.IsScopedToUser = decoded.IsScopedToUser
+	s.Locale = decoded.Locale
 	s.Name = decoded.Name
 	s.Priority = decoded.Priority
+	s.Rights = decoded.Rights
 	s.Sublabels = decoded.Sublabels
 	s.ToolTip = decoded.ToolTip
 	s.Id = decoded.Id

@@ -146,6 +146,14 @@ func UnmarshalAuthenticationMethodImplementation(input []byte) (AuthenticationMe
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.platformCredentialAuthenticationMethod") {
+		var out PlatformCredentialAuthenticationMethod
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PlatformCredentialAuthenticationMethod: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.softwareOathAuthenticationMethod") {
 		var out SoftwareOathAuthenticationMethod
 		if err := json.Unmarshal(input, &out); err != nil {

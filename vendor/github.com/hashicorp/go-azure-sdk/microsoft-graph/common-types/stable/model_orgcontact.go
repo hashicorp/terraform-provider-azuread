@@ -31,8 +31,8 @@ type OrgContact struct {
 	// List of OData IDs for `DirectReports` to bind to this entity
 	DirectReports_ODataBind *[]string `json:"directReports@odata.bind,omitempty"`
 
-	// Display name for this organizational contact. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq for null
-	// values), $search, and $orderby.
+	// Display name for this organizational contact. Maximum length is 256 characters. Supports $filter (eq, ne, not, ge,
+	// le, in, startsWith, and eq for null values), $search, and $orderby.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
 	// First name for this organizational contact. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq for null

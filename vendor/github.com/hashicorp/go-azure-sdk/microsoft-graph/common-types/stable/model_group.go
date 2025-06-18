@@ -28,10 +28,11 @@ type Group struct {
 	AppRoleAssignments *[]AppRoleAssignment `json:"appRoleAssignments,omitempty"`
 
 	// The list of sensitivity label pairs (label ID, label name) associated with a Microsoft 365 group. Returned only on
-	// $select.
+	// $select. This property can be updated only in delegated scenarios where the caller requires both the Microsoft Graph
+	// permission and a supported administrator role.
 	AssignedLabels *[]AssignedLabel `json:"assignedLabels,omitempty"`
 
-	// The licenses that are assigned to the group. Returned only on $select. Supports $filter (eq).Read-only.
+	// The licenses that are assigned to the group. Returned only on $select. Supports $filter (eq). Read-only.
 	AssignedLicenses *[]AssignedLicense `json:"assignedLicenses,omitempty"`
 
 	// Indicates if new members added to the group are autosubscribed to receive email notifications. You can set this
@@ -107,7 +108,7 @@ type Group struct {
 	HasMembersWithLicenseErrors nullable.Type[bool] `json:"hasMembersWithLicenseErrors,omitempty"`
 
 	// True if the group isn't displayed in certain parts of the Outlook UI: the Address Book, address lists for selecting
-	// message recipients, and the Browse Groups dialog for searching groups; otherwise, false. Default value is false.
+	// message recipients, and the Browse Groups dialog for searching groups; otherwise, false. The default value is false.
 	// Returned only on $select. Supported only on the Get group API (GET /groups/{ID}).
 	HideFromAddressLists nullable.Type[bool] `json:"hideFromAddressLists,omitempty"`
 
@@ -128,6 +129,8 @@ type Group struct {
 	// membership of such groups. For more, see Using a group to manage Microsoft Entra role assignmentsUsing this feature
 	// requires a Microsoft Entra ID P1 license. Returned by default. Supports $filter (eq, ne, not).
 	IsAssignableToRole nullable.Type[bool] `json:"isAssignableToRole,omitempty"`
+
+	IsManagementRestricted nullable.Type[bool] `json:"isManagementRestricted,omitempty"`
 
 	// Indicates whether the signed-in user is subscribed to receive email conversations. The default value is true.
 	// Returned only on $select. Supported only on the Get group API (GET /groups/{ID}).
@@ -181,6 +184,9 @@ type Group struct {
 	// default. Supports $filter (eq, ne, not, in).
 	MembershipRuleProcessingState nullable.Type[string] `json:"membershipRuleProcessingState,omitempty"`
 
+	// Contains the on-premises domain FQDN, also called dnsDomainName synchronized from the on-premises directory. The
+	// property is only populated for customers synchronizing their on-premises directory to Microsoft Entra ID via
+	// Microsoft Entra Connect.Returned by default. Read-only.
 	OnPremisesDomainName nullable.Type[string] `json:"onPremisesDomainName,omitempty"`
 
 	// Indicates the last time at which the group was synced with the on-premises directory. The Timestamp type represents
@@ -188,6 +194,9 @@ type Group struct {
 	// 2014 is 2014-01-01T00:00:00Z. Returned by default. Read-only. Supports $filter (eq, ne, not, ge, le, in).
 	OnPremisesLastSyncDateTime nullable.Type[string] `json:"onPremisesLastSyncDateTime,omitempty"`
 
+	// Contains the on-premises netBios name synchronized from the on-premises directory. The property is only populated for
+	// customers synchronizing their on-premises directory to Microsoft Entra ID via Microsoft Entra Connect.Returned by
+	// default. Read-only.
 	OnPremisesNetBiosName nullable.Type[string] `json:"onPremisesNetBiosName,omitempty"`
 
 	// Errors when using Microsoft synchronization product during provisioning. Returned by default. Supports $filter (eq,
@@ -210,9 +219,12 @@ type Group struct {
 
 	Onenote *Onenote `json:"onenote,omitempty"`
 
-	// The owners of the group. Limited to 100 owners. Nullable. If this property isn't specified when creating a Microsoft
-	// 365 group, the calling user is automatically assigned as the group owner. Supports $filter (/$count eq 0, /$count ne
-	// 0, /$count eq 1, /$count ne 1). Supports $expand including nested $select. For example,
+	// The owners of the group who can be users or service principals. Limited to 100 owners. Nullable. If this property
+	// isn't specified when creating a Microsoft 365 group the calling user (admin or non-admin) is automatically assigned
+	// as the group owner. A non-admin user can't explicitly add themselves to this collection when they're creating the
+	// group. For more information, see the related known issue. For security groups, the admin user isn't automatically
+	// added to this collection. For more information, see the related known issue. Supports $filter (/$count eq 0, /$count
+	// ne 0, /$count eq 1, /$count ne 1); Supports $expand including nested $select. For example,
 	// /groups?$filter=startsWith(displayName,'Role')&$select=id,displayName&$expand=owners($select=id,userPrincipalName,displayName).
 	Owners *[]DirectoryObject `json:"owners,omitempty"`
 
@@ -364,6 +376,7 @@ func (s Group) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling Group: %+v", err)
 	}
 
+	delete(decoded, "assignedLicenses")
 	delete(decoded, "calendar")
 	delete(decoded, "calendarView")
 	delete(decoded, "createdDateTime")
@@ -377,7 +390,9 @@ func (s Group) MarshalJSON() ([]byte, error) {
 	delete(decoded, "mail")
 	delete(decoded, "memberOf")
 	delete(decoded, "membersWithLicenseErrors")
+	delete(decoded, "onPremisesDomainName")
 	delete(decoded, "onPremisesLastSyncDateTime")
+	delete(decoded, "onPremisesNetBiosName")
 	delete(decoded, "onPremisesSamAccountName")
 	delete(decoded, "onPremisesSecurityIdentifier")
 	delete(decoded, "onPremisesSyncEnabled")
@@ -428,6 +443,7 @@ func (s *Group) UnmarshalJSON(bytes []byte) error {
 		HideFromOutlookClients             nullable.Type[bool]                `json:"hideFromOutlookClients,omitempty"`
 		IsArchived                         nullable.Type[bool]                `json:"isArchived,omitempty"`
 		IsAssignableToRole                 nullable.Type[bool]                `json:"isAssignableToRole,omitempty"`
+		IsManagementRestricted             nullable.Type[bool]                `json:"isManagementRestricted,omitempty"`
 		IsSubscribedByMail                 nullable.Type[bool]                `json:"isSubscribedByMail,omitempty"`
 		LicenseProcessingState             *LicenseProcessingState            `json:"licenseProcessingState,omitempty"`
 		Mail                               nullable.Type[string]              `json:"mail,omitempty"`
@@ -502,6 +518,7 @@ func (s *Group) UnmarshalJSON(bytes []byte) error {
 	s.HideFromOutlookClients = decoded.HideFromOutlookClients
 	s.IsArchived = decoded.IsArchived
 	s.IsAssignableToRole = decoded.IsAssignableToRole
+	s.IsManagementRestricted = decoded.IsManagementRestricted
 	s.IsSubscribedByMail = decoded.IsSubscribedByMail
 	s.LicenseProcessingState = decoded.LicenseProcessingState
 	s.Mail = decoded.Mail

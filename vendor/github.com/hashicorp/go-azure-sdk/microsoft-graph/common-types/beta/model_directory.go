@@ -17,6 +17,10 @@ type Directory struct {
 	// Group of related custom security attribute definitions.
 	AttributeSets *[]AttributeSet `json:"attributeSets,omitempty"`
 
+	// Exposes the hardware OATH method in the directory.
+	AuthenticationMethodDevices *AuthenticationMethodDevice `json:"authenticationMethodDevices,omitempty"`
+
+	// Container for certificate authorities-related configurations for applications in the tenant.
 	CertificateAuthorities *CertificateAuthorityPath `json:"certificateAuthorities,omitempty"`
 
 	// Schema of a custom security attributes (key-value pairs).
@@ -53,6 +57,12 @@ type Directory struct {
 	// Collection of pending external user profiles representing collaborators in the directory that are unredeemed.
 	PendingExternalUserProfiles *[]PendingExternalUserProfile `json:"pendingExternalUserProfiles,omitempty"`
 
+	// The collection of public key infrastructure instances for the certificate-based authentication feature for users in a
+	// Microsoft Entra tenant.
+	PublicKeyInfrastructure *PublicKeyInfrastructureRoot `json:"publicKeyInfrastructure,omitempty"`
+
+	RecommendationConfiguration *RecommendationConfiguration `json:"recommendationConfiguration,omitempty"`
+
 	// List of recommended improvements to improve tenant posture.
 	Recommendations *[]Recommendation `json:"recommendations,omitempty"`
 
@@ -60,6 +70,9 @@ type Directory struct {
 
 	// List of commercial subscriptions that an organization has.
 	Subscriptions *[]CompanySubscription `json:"subscriptions,omitempty"`
+
+	// A container for templates, such as device templates used for onboarding devices in Microsoft Entra ID.
+	Templates *Template `json:"templates,omitempty"`
 
 	// Fields inherited from Entity
 
@@ -130,9 +143,12 @@ func (s *Directory) UnmarshalJSON(bytes []byte) error {
 		OnPremisesSynchronization          *[]OnPremisesDirectorySynchronization `json:"onPremisesSynchronization,omitempty"`
 		OutboundSharedUserProfiles         *[]OutboundSharedUserProfile          `json:"outboundSharedUserProfiles,omitempty"`
 		PendingExternalUserProfiles        *[]PendingExternalUserProfile         `json:"pendingExternalUserProfiles,omitempty"`
+		PublicKeyInfrastructure            *PublicKeyInfrastructureRoot          `json:"publicKeyInfrastructure,omitempty"`
+		RecommendationConfiguration        *RecommendationConfiguration          `json:"recommendationConfiguration,omitempty"`
 		Recommendations                    *[]Recommendation                     `json:"recommendations,omitempty"`
 		SharedEmailDomains                 *[]SharedEmailDomain                  `json:"sharedEmailDomains,omitempty"`
 		Subscriptions                      *[]CompanySubscription                `json:"subscriptions,omitempty"`
+		Templates                          *Template                             `json:"templates,omitempty"`
 		Id                                 *string                               `json:"id,omitempty"`
 		ODataId                            *string                               `json:"@odata.id,omitempty"`
 		ODataType                          *string                               `json:"@odata.type,omitempty"`
@@ -154,9 +170,12 @@ func (s *Directory) UnmarshalJSON(bytes []byte) error {
 	s.OnPremisesSynchronization = decoded.OnPremisesSynchronization
 	s.OutboundSharedUserProfiles = decoded.OutboundSharedUserProfiles
 	s.PendingExternalUserProfiles = decoded.PendingExternalUserProfiles
+	s.PublicKeyInfrastructure = decoded.PublicKeyInfrastructure
+	s.RecommendationConfiguration = decoded.RecommendationConfiguration
 	s.Recommendations = decoded.Recommendations
 	s.SharedEmailDomains = decoded.SharedEmailDomains
 	s.Subscriptions = decoded.Subscriptions
+	s.Templates = decoded.Templates
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType
@@ -164,6 +183,14 @@ func (s *Directory) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling Directory into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["authenticationMethodDevices"]; ok {
+		impl, err := UnmarshalAuthenticationMethodDeviceImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'AuthenticationMethodDevices' for 'Directory': %+v", err)
+		}
+		s.AuthenticationMethodDevices = &impl
 	}
 
 	if v, ok := temp["deletedItems"]; ok {

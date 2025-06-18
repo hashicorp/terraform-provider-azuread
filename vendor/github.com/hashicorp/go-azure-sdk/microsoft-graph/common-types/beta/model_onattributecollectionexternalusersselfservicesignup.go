@@ -11,7 +11,7 @@ import (
 var _ OnAttributeCollectionHandler = OnAttributeCollectionExternalUsersSelfServiceSignUp{}
 
 type OnAttributeCollectionExternalUsersSelfServiceSignUp struct {
-	// Required. The configuration for how attributes are displayed in the sign up experience defined by a user flow, like
+	// Required. The configuration for how attributes are displayed in the sign-up experience defined by a user flow, like
 	// the externalUsersSelfServiceSignupEventsFlow, specifically on the attribute collection page.
 	AttributeCollectionPage AuthenticationAttributeCollectionPage `json:"attributeCollectionPage"`
 

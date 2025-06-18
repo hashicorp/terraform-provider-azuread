@@ -14,6 +14,6 @@ type DeviceManagementConfigurationReferredSettingInformation struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// Setting definition id that is being referred to a setting. Applicable for reusable setting.
+	// Setting definition id that is being referred to a setting. Applicable for reusable setting
 	SettingDefinitionId nullable.Type[string] `json:"settingDefinitionId,omitempty"`
 }

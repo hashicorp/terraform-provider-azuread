@@ -14,6 +14,11 @@ var _ CustomAuthenticationExtension = OnAttributeCollectionStartCustomExtension{
 
 type OnAttributeCollectionStartCustomExtension struct {
 
+	// Fields inherited from CustomAuthenticationExtension
+
+	// The behaviour on error for the custom authentication extension.
+	BehaviorOnError CustomExtensionBehaviorOnError `json:"behaviorOnError"`
+
 	// Fields inherited from CustomCalloutExtension
 
 	// Configuration for securing the API call to the logic app. For example, using OAuth client credentials flow.
@@ -49,6 +54,7 @@ type OnAttributeCollectionStartCustomExtension struct {
 
 func (s OnAttributeCollectionStartCustomExtension) CustomAuthenticationExtension() BaseCustomAuthenticationExtensionImpl {
 	return BaseCustomAuthenticationExtensionImpl{
+		BehaviorOnError:             s.BehaviorOnError,
 		AuthenticationConfiguration: s.AuthenticationConfiguration,
 		ClientConfiguration:         s.ClientConfiguration,
 		Description:                 s.Description,
@@ -141,6 +147,14 @@ func (s *OnAttributeCollectionStartCustomExtension) UnmarshalJSON(bytes []byte) 
 			return fmt.Errorf("unmarshaling field 'AuthenticationConfiguration' for 'OnAttributeCollectionStartCustomExtension': %+v", err)
 		}
 		s.AuthenticationConfiguration = impl
+	}
+
+	if v, ok := temp["behaviorOnError"]; ok {
+		impl, err := UnmarshalCustomExtensionBehaviorOnErrorImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'BehaviorOnError' for 'OnAttributeCollectionStartCustomExtension': %+v", err)
+		}
+		s.BehaviorOnError = impl
 	}
 
 	if v, ok := temp["endpointConfiguration"]; ok {

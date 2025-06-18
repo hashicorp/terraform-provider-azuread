@@ -4,8 +4,8 @@ package beta
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type ExternalConnectorsConfiguration struct {
-	// A collection of application IDs for registered Microsoft Entra apps that are allowed to manage the externalConnection
-	// and to index content in the externalConnection.
+	// A collection of application IDs for registered Microsoft Entra apps allowed to manage the externalConnection and
+	// index content in the externalConnection.
 	AuthorizedAppIds *[]string `json:"authorizedAppIds,omitempty"`
 
 	// The OData ID of this entity

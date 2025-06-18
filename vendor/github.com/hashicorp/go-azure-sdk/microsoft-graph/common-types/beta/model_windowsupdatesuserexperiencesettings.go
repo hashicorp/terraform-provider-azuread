@@ -12,6 +12,8 @@ type WindowsUpdatesUserExperienceSettings struct {
 	// device restarts.
 	DaysUntilForcedReboot nullable.Type[int64] `json:"daysUntilForcedReboot,omitempty"`
 
+	// Specifies whether the update is offered as a hotpatch. It can only be set to true on automatic policies that target
+	// monthly security updates.
 	IsHotpatchEnabled nullable.Type[bool] `json:"isHotpatchEnabled,omitempty"`
 
 	// The OData ID of this entity

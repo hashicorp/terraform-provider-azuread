@@ -11,6 +11,8 @@ import (
 var _ Entity = RemoteDesktopSecurityConfiguration{}
 
 type RemoteDesktopSecurityConfiguration struct {
+	ApprovedClientApps *[]ApprovedClientApp `json:"approvedClientApps,omitempty"`
+
 	// Determines if Microsoft Entra ID RDS authentication protocol for RDP is enabled.
 	IsRemoteDesktopProtocolEnabled *bool `json:"isRemoteDesktopProtocolEnabled,omitempty"`
 

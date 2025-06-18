@@ -43,6 +43,9 @@ type SecurityAlert struct {
 	// Time when Microsoft 365 Defender created the alert.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
+	// User defined custom fields with string values.
+	CustomDetails *SecurityDictionary `json:"customDetails,omitempty"`
+
 	// String value describing each alert.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
@@ -54,13 +57,13 @@ type SecurityAlert struct {
 	// microsoftDefenderForServers, microsoftDefenderForStorage, microsoftDefenderForDNS, microsoftDefenderForDatabases,
 	// microsoftDefenderForContainers, microsoftDefenderForNetwork, microsoftDefenderForAppService,
 	// microsoftDefenderForKeyVault, microsoftDefenderForResourceManager, microsoftDefenderForApiManagement,
-	// microsoftSentinel, nrtAlerts, scheduledAlerts, microsoftDefenderThreatIntelligenceAnalytics, builtInMl. You must use
-	// the Prefer: include-unknown-enum-members request header to get the following value(s) in this evolvable enum:
-	// microsoftDefenderForCloud, microsoftDefenderForIoT, microsoftDefenderForServers, microsoftDefenderForStorage,
-	// microsoftDefenderForDNS, microsoftDefenderForDatabases, microsoftDefenderForContainers, microsoftDefenderForNetwork,
-	// microsoftDefenderForAppService, microsoftDefenderForKeyVault, microsoftDefenderForResourceManager,
-	// microsoftDefenderForApiManagement, microsoftSentinel, nrtAlerts, scheduledAlerts,
-	// microsoftDefenderThreatIntelligenceAnalytics, builtInMl.
+	// microsoftSentinel, nrtAlerts, scheduledAlerts, microsoftDefenderThreatIntelligenceAnalytics, builtInMl,
+	// microsoftThreatIntelligence. Use the Prefer: include-unknown-enum-members request header to get the following values
+	// in this evolvable enum: microsoftDefenderForCloud, microsoftDefenderForIoT, microsoftDefenderForServers,
+	// microsoftDefenderForStorage, microsoftDefenderForDNS, microsoftDefenderForDatabases, microsoftDefenderForContainers,
+	// microsoftDefenderForNetwork, microsoftDefenderForAppService, microsoftDefenderForKeyVault,
+	// microsoftDefenderForResourceManager, microsoftDefenderForApiManagement, microsoftSentinel, nrtAlerts,
+	// scheduledAlerts, microsoftDefenderThreatIntelligenceAnalytics, builtInMl, microsoftThreatIntelligence.
 	DetectionSource *SecurityDetectionSource `json:"detectionSource,omitempty"`
 
 	// The ID of the detector that triggered the alert.
@@ -68,8 +71,8 @@ type SecurityAlert struct {
 
 	// Specifies the result of the investigation, whether the alert represents a true attack and if so, the nature of the
 	// attack. Possible values are: unknown, apt, malware, securityPersonnel, securityTesting, unwantedSoftware, other,
-	// multiStagedAttack, compromisedUser, phishing, maliciousUserActivity, clean, insufficientData, confirmedUserActivity,
-	// lineOfBusinessApplication, unknownFutureValue.
+	// multiStagedAttack, compromisedAccount, phishing, maliciousUserActivity, notMalicious, notEnoughDataToValidate,
+	// confirmedUserActivity, lineOfBusinessApplication, unknownFutureValue.
 	Determination *SecurityAlertDetermination `json:"determination,omitempty"`
 
 	// Collection of evidence related to the alert.
@@ -187,6 +190,7 @@ func (s *SecurityAlert) UnmarshalJSON(bytes []byte) error {
 		Classification        *SecurityAlertClassification `json:"classification,omitempty"`
 		Comments              *[]SecurityAlertComment      `json:"comments,omitempty"`
 		CreatedDateTime       nullable.Type[string]        `json:"createdDateTime,omitempty"`
+		CustomDetails         *SecurityDictionary          `json:"customDetails,omitempty"`
 		Description           nullable.Type[string]        `json:"description,omitempty"`
 		DetectionSource       *SecurityDetectionSource     `json:"detectionSource,omitempty"`
 		DetectorId            nullable.Type[string]        `json:"detectorId,omitempty"`
@@ -226,6 +230,7 @@ func (s *SecurityAlert) UnmarshalJSON(bytes []byte) error {
 	s.Classification = decoded.Classification
 	s.Comments = decoded.Comments
 	s.CreatedDateTime = decoded.CreatedDateTime
+	s.CustomDetails = decoded.CustomDetails
 	s.Description = decoded.Description
 	s.DetectionSource = decoded.DetectionSource
 	s.DetectorId = decoded.DetectorId

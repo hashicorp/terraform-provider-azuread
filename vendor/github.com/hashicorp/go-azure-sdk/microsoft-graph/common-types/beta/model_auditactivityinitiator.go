@@ -4,9 +4,13 @@ package beta
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type AuditActivityInitiator struct {
-	// If the actor initiating the activity is an app, this property indicates all its identification information including
-	// appId, displayName, servicePrincipalId, and servicePrincipalName.
+	// If the resource initiating the activity is an app, this property indicates all the app related information like appId
+	// and name.
 	App *AppIdentity `json:"app,omitempty"`
+
+	// A set of linkable claims to link together all the authentication artifacts issued from a single interactive root
+	// authentication.
+	LinkableIdentifiers *LinkableIdentifiers `json:"linkableIdentifiers,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
@@ -14,7 +18,7 @@ type AuditActivityInitiator struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// If the actor initiating the activity is a user, this property indicates their identification information including
-	// their id, displayName, and userPrincipalName.
+	// If the resource initiating the activity is a user, this property Indicates all the user related information like user
+	// ID and userPrincipalName.
 	User *AuditUserIdentity `json:"user,omitempty"`
 }

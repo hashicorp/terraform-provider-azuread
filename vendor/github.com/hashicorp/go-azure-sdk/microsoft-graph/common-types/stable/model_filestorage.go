@@ -11,7 +11,8 @@ import (
 var _ Entity = FileStorage{}
 
 type FileStorage struct {
-	Containers *[]FileStorageContainer `json:"containers,omitempty"`
+	Containers        *[]FileStorageContainer `json:"containers,omitempty"`
+	DeletedContainers *[]FileStorageContainer `json:"deletedContainers,omitempty"`
 
 	// Fields inherited from Entity
 

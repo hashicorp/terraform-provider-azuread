@@ -31,6 +31,12 @@ type ComplianceManagementPartner struct {
 	// Timestamp of last heartbeat after admin onboarded to the compliance management partner
 	LastHeartbeatDateTime *string `json:"lastHeartbeatDateTime,omitempty"`
 
+	// User groups which enroll Linux devices through partner.
+	LinuxEnrollmentAssignments *[]ComplianceManagementPartnerAssignment `json:"linuxEnrollmentAssignments,omitempty"`
+
+	// Partner onboarded for Linux devices.
+	LinuxOnboarded *bool `json:"linuxOnboarded,omitempty"`
+
 	// User groups which enroll Mac devices through partner.
 	MacOsEnrollmentAssignments *[]ComplianceManagementPartnerAssignment `json:"macOsEnrollmentAssignments,omitempty"`
 

@@ -60,6 +60,22 @@ func UnmarshalIdentityGovernanceWorkflowExecutionTriggerImplementation(input []b
 		value = fmt.Sprintf("%v", v)
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.identityGovernance.attributeChangeTrigger") {
+		var out IdentityGovernanceAttributeChangeTrigger
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into IdentityGovernanceAttributeChangeTrigger: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.identityGovernance.membershipChangeTrigger") {
+		var out IdentityGovernanceMembershipChangeTrigger
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into IdentityGovernanceMembershipChangeTrigger: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.identityGovernance.timeBasedAttributeTrigger") {
 		var out IdentityGovernanceTimeBasedAttributeTrigger
 		if err := json.Unmarshal(input, &out); err != nil {

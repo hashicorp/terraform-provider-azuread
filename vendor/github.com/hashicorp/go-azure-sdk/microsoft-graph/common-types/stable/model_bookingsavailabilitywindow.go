@@ -13,17 +13,18 @@ import (
 var _ BookingsAvailability = BookingsAvailabilityWindow{}
 
 type BookingsAvailabilityWindow struct {
-	// Allow customers to end date of availability window.
+	// End date of the availability window.
 	EndDate nullable.Type[string] `json:"endDate,omitempty"`
 
-	// Allow customers to start date of availability window.
+	// Start date of the availability window.
 	StartDate nullable.Type[string] `json:"startDate,omitempty"`
 
 	// Fields inherited from BookingsAvailability
 
 	AvailabilityType *BookingsServiceAvailabilityType `json:"availabilityType,omitempty"`
 
-	// The hours of operation in a week. This is set to null if the availability type is not customWeeklyHours
+	// The hours of operation in a week. The business hours value is set to null if the availability type isn't
+	// customWeeklyHours.
 	BusinessHours *[]BookingWorkHours `json:"businessHours,omitempty"`
 
 	// The OData ID of this entity

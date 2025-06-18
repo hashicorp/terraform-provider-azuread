@@ -14,7 +14,7 @@ type WorkbookChartGridlines struct {
 	// Represents the formatting of chart gridlines. Read-only.
 	Format *WorkbookChartGridlinesFormat `json:"format,omitempty"`
 
-	// Boolean value representing if the axis gridlines are visible or not.
+	// Indicates whether the axis gridlines are visible.
 	Visible *bool `json:"visible,omitempty"`
 
 	// Fields inherited from Entity

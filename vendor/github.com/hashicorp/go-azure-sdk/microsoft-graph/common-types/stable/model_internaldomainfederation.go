@@ -14,8 +14,8 @@ var _ SamlOrWsFedProvider = InternalDomainFederation{}
 
 type InternalDomainFederation struct {
 	// URL of the endpoint used by active clients when authenticating with federated domains set up for single sign-on in
-	// Microsoft Entra ID. Corresponds to the ActiveLogOnUri property of the Set-MsolDomainFederationSettings MSOnline v1
-	// PowerShell cmdlet.
+	// Microsoft Entra ID. Corresponds to the ActiveLogOnUri property of the Set-EntraDomainFederationSettings PowerShell
+	// cmdlet.
 	ActiveSignInUri nullable.Type[string] `json:"activeSignInUri,omitempty"`
 
 	// Determines whether Microsoft Entra ID accepts the MFA performed by the federated IdP when a federated user accesses
@@ -37,12 +37,14 @@ type InternalDomainFederation struct {
 	// properties after the federation service certificate has been updated.
 	NextSigningCertificate nullable.Type[string] `json:"nextSigningCertificate,omitempty"`
 
+	PasswordResetUri nullable.Type[string] `json:"passwordResetUri,omitempty"`
+
 	// Sets the preferred behavior for the sign-in prompt. The possible values are: translateToFreshPasswordAuthentication,
 	// nativeSupport, disabled, unknownFutureValue.
 	PromptLoginBehavior *PromptLoginBehavior `json:"promptLoginBehavior,omitempty"`
 
 	// URI that clients are redirected to when they sign out of Microsoft Entra services. Corresponds to the LogOffUri
-	// property of the Set-MsolDomainFederationSettings MSOnline v1 PowerShell cmdlet.
+	// property of the Set-EntraDomainFederationSettings PowerShell cmdlet.
 	SignOutUri nullable.Type[string] `json:"signOutUri,omitempty"`
 
 	// Provides status and timestamp of the last update of the signing certificate.

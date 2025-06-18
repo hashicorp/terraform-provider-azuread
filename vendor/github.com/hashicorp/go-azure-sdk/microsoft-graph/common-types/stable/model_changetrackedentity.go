@@ -19,6 +19,9 @@ type ChangeTrackedEntity interface {
 var _ ChangeTrackedEntity = BaseChangeTrackedEntityImpl{}
 
 type BaseChangeTrackedEntityImpl struct {
+	// Identity of the creator of the entity.
+	CreatedBy IdentitySet `json:"createdBy"`
+
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
@@ -132,6 +135,14 @@ func (s *BaseChangeTrackedEntityImpl) UnmarshalJSON(bytes []byte) error {
 		return fmt.Errorf("unmarshaling BaseChangeTrackedEntityImpl into map[string]json.RawMessage: %+v", err)
 	}
 
+	if v, ok := temp["createdBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'BaseChangeTrackedEntityImpl': %+v", err)
+		}
+		s.CreatedBy = impl
+	}
+
 	if v, ok := temp["lastModifiedBy"]; ok {
 		impl, err := UnmarshalIdentitySetImplementation(v)
 		if err != nil {
@@ -156,6 +167,14 @@ func UnmarshalChangeTrackedEntityImplementation(input []byte) (ChangeTrackedEnti
 	var value string
 	if v, ok := temp["@odata.type"]; ok {
 		value = fmt.Sprintf("%v", v)
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.dayNote") {
+		var out DayNote
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DayNote: %+v", err)
+		}
+		return out, nil
 	}
 
 	if strings.EqualFold(value, "#microsoft.graph.openShift") {
@@ -194,6 +213,14 @@ func UnmarshalChangeTrackedEntityImplementation(input []byte) (ChangeTrackedEnti
 		var out ShiftPreferences
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ShiftPreferences: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.timeCard") {
+		var out TimeCard
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TimeCard: %+v", err)
 		}
 		return out, nil
 	}

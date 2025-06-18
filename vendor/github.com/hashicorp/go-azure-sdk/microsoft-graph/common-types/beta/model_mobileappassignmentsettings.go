@@ -68,6 +68,14 @@ func UnmarshalMobileAppAssignmentSettingsImplementation(input []byte) (MobileApp
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.iosDdmLobAppAssignmentSettings") {
+		var out IosDdmLobAppAssignmentSettings
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into IosDdmLobAppAssignmentSettings: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.iosLobAppAssignmentSettings") {
 		var out IosLobAppAssignmentSettings
 		if err := json.Unmarshal(input, &out); err != nil {

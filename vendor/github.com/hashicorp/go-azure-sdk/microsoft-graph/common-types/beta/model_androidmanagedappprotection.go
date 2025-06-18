@@ -20,7 +20,7 @@ type AndroidManagedAppProtection struct {
 	AllowedAndroidDeviceModels *[]string `json:"allowedAndroidDeviceModels,omitempty"`
 
 	// Defines a managed app behavior, either block or warn, if the user is clocked out (non-working time). Possible values
-	// are: block, wipe, warn.
+	// are: block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfAccountIsClockedOut *ManagedAppRemediationAction `json:"appActionIfAccountIsClockedOut,omitempty"`
 
 	// An admin initiated action to be applied on a managed app.
@@ -39,20 +39,20 @@ type AndroidManagedAppProtection struct {
 	AppActionIfDeviceLockNotSet *ManagedAppRemediationAction `json:"appActionIfDeviceLockNotSet,omitempty"`
 
 	// If the device does not have a passcode of high complexity or higher, trigger the stored action. Possible values are:
-	// block, wipe, warn.
+	// block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfDevicePasscodeComplexityLessThanHigh *ManagedAppRemediationAction `json:"appActionIfDevicePasscodeComplexityLessThanHigh,omitempty"`
 
 	// If the device does not have a passcode of low complexity or higher, trigger the stored action. Possible values are:
-	// block, wipe, warn.
+	// block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfDevicePasscodeComplexityLessThanLow *ManagedAppRemediationAction `json:"appActionIfDevicePasscodeComplexityLessThanLow,omitempty"`
 
 	// If the device does not have a passcode of medium complexity or higher, trigger the stored action. Possible values
-	// are: block, wipe, warn.
+	// are: block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfDevicePasscodeComplexityLessThanMedium *ManagedAppRemediationAction `json:"appActionIfDevicePasscodeComplexityLessThanMedium,omitempty"`
 
 	// Defines the behavior of a managed app when Samsung Knox Attestation is required. Possible values are null, warn,
 	// block & wipe. If the admin does not set this action, the default is null, which indicates this setting is not
-	// configured. Possible values are: block, wipe, warn.
+	// configured. Possible values are: block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfSamsungKnoxAttestationRequired *ManagedAppRemediationAction `json:"appActionIfSamsungKnoxAttestationRequired,omitempty"`
 
 	// If Keyboard Restriction is enabled, only keyboards in this approved list will be allowed. A key should be Android
@@ -71,10 +71,12 @@ type AndroidManagedAppProtection struct {
 	// Whether the app should connect to the configured VPN on launch.
 	ConnectToVpnOnLaunch *bool `json:"connectToVpnOnLaunch,omitempty"`
 
-	// Friendly name of the preferred custom browser to open weblink on Android.
+	// Friendly name of the preferred custom browser to open weblink on Android. When this property is configured,
+	// ManagedBrowserToOpenLinksRequired should be true.
 	CustomBrowserDisplayName nullable.Type[string] `json:"customBrowserDisplayName,omitempty"`
 
-	// Unique identifier of a custom browser to open weblink on Android.
+	// Unique identifier of the preferred custom browser to open weblink on Android. When this property is configured,
+	// ManagedBrowserToOpenLinksRequired should be true.
 	CustomBrowserPackageId nullable.Type[string] `json:"customBrowserPackageId,omitempty"`
 
 	// Friendly name of a custom dialer app to click-to-open a phone number on Android.
@@ -206,7 +208,7 @@ type AndroidManagedAppProtection struct {
 
 	// If set, it will specify what action to take in the case where the user is unable to checkin because their
 	// authentication token is invalid. This happens when the user is deleted or disabled in AAD. Possible values are:
-	// block, wipe, warn.
+	// block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfUnableToAuthenticateUser *ManagedAppRemediationAction `json:"appActionIfUnableToAuthenticateUser,omitempty"`
 
 	// Indicates whether a user can bring data into org documents.

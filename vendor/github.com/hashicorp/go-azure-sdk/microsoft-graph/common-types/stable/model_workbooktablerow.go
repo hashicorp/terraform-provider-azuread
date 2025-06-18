@@ -11,8 +11,12 @@ import (
 var _ Entity = WorkbookTableRow{}
 
 type WorkbookTableRow struct {
-	// Returns the index number of the row within the rows collection of the table. Zero-indexed. Read-only.
+	// The index of the row within the rows collection of the table. Zero-based. Read-only.
 	Index *int64 `json:"index,omitempty"`
+
+	// The raw values of the specified range. The data returned could be of type string, number, or a Boolean. Any cell that
+	// contain an error will return the error string.
+	Values *Json `json:"values,omitempty"`
 
 	// Fields inherited from Entity
 

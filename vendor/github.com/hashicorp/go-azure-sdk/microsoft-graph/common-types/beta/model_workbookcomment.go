@@ -16,9 +16,10 @@ type WorkbookComment struct {
 	// The content of the comment.
 	Content nullable.Type[string] `json:"content,omitempty"`
 
-	// Indicates the type for the comment.
+	// The content type of the comment.
 	ContentType *string `json:"contentType,omitempty"`
 
+	// The list of replies to the comment. Read-only. Nullable.
 	Replies *[]WorkbookCommentReply `json:"replies,omitempty"`
 
 	// The task associated with the comment. Read-only. Nullable.
@@ -62,6 +63,7 @@ func (s WorkbookComment) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling WorkbookComment: %+v", err)
 	}
 
+	delete(decoded, "replies")
 	delete(decoded, "task")
 
 	if !s.OmitDiscriminatedValue {

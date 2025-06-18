@@ -57,6 +57,9 @@ type Site struct {
 	// The collection of long running operations for the site.
 	Operations *[]RichLongRunningOperation `json:"operations,omitempty"`
 
+	// The collection of page templates on this site.
+	PageTemplates *[]PageTemplate `json:"pageTemplates,omitempty"`
+
 	// The collection of pages in the baseSitePages list on this site.
 	Pages *[]BaseSitePage `json:"pages,omitempty"`
 
@@ -212,6 +215,7 @@ func (s *Site) UnmarshalJSON(bytes []byte) error {
 		Lists                  *[]List                     `json:"lists,omitempty"`
 		Onenote                *Onenote                    `json:"onenote,omitempty"`
 		Operations             *[]RichLongRunningOperation `json:"operations,omitempty"`
+		PageTemplates          *[]PageTemplate             `json:"pageTemplates,omitempty"`
 		Permissions            *[]Permission               `json:"permissions,omitempty"`
 		RecycleBin             *RecycleBin                 `json:"recycleBin,omitempty"`
 		Root                   *Root                       `json:"root,omitempty"`
@@ -252,6 +256,7 @@ func (s *Site) UnmarshalJSON(bytes []byte) error {
 	s.Lists = decoded.Lists
 	s.Onenote = decoded.Onenote
 	s.Operations = decoded.Operations
+	s.PageTemplates = decoded.PageTemplates
 	s.Permissions = decoded.Permissions
 	s.RecycleBin = decoded.RecycleBin
 	s.Root = decoded.Root

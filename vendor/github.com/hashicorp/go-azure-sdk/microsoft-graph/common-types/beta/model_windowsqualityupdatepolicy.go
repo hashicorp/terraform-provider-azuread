@@ -13,6 +13,10 @@ import (
 var _ Entity = WindowsQualityUpdatePolicy{}
 
 type WindowsQualityUpdatePolicy struct {
+	// The list of approval settings for this policy. The maximun number of approval settings supported for one policy is 6.
+	// The expected number of approval settings for one policy from UX is 4.
+	ApprovalSettings *[]WindowsQualityUpdateApprovalSetting `json:"approvalSettings,omitempty"`
+
 	// List of the groups this profile is assgined to.
 	Assignments *[]WindowsQualityUpdatePolicyAssignment `json:"assignments,omitempty"`
 

@@ -11,7 +11,8 @@ import (
 var _ Entity = PartnersBillingBillingReconciliation{}
 
 type PartnersBillingBillingReconciliation struct {
-	Billed *PartnersBillingBilledReconciliation `json:"billed,omitempty"`
+	Billed   *PartnersBillingBilledReconciliation   `json:"billed,omitempty"`
+	Unbilled *PartnersBillingUnbilledReconciliation `json:"unbilled,omitempty"`
 
 	// Fields inherited from Entity
 

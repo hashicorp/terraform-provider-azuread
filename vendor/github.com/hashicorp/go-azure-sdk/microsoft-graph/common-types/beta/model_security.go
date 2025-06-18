@@ -20,10 +20,12 @@ type Security struct {
 	// Enables read and other actions on collaborative entities in Microsoft Defender.
 	Collaboration *SecurityCollaborationRoot `json:"collaboration,omitempty"`
 
-	DomainSecurityProfiles *[]DomainSecurityProfile `json:"domainSecurityProfiles,omitempty"`
-	FileSecurityProfiles   *[]FileSecurityProfile   `json:"fileSecurityProfiles,omitempty"`
-	HostSecurityProfiles   *[]HostSecurityProfile   `json:"hostSecurityProfiles,omitempty"`
-	IPSecurityProfiles     *[]IPSecurityProfile     `json:"ipSecurityProfiles,omitempty"`
+	DataDiscovery             *SecurityDataDiscoveryRoot       `json:"dataDiscovery,omitempty"`
+	DataSecurityAndGovernance *TenantDataSecurityAndGovernance `json:"dataSecurityAndGovernance,omitempty"`
+	DomainSecurityProfiles    *[]DomainSecurityProfile         `json:"domainSecurityProfiles,omitempty"`
+	FileSecurityProfiles      *[]FileSecurityProfile           `json:"fileSecurityProfiles,omitempty"`
+	HostSecurityProfiles      *[]HostSecurityProfile           `json:"hostSecurityProfiles,omitempty"`
+	IPSecurityProfiles        *[]IPSecurityProfile             `json:"ipSecurityProfiles,omitempty"`
 
 	// A container for security identities APIs.
 	Identities *SecurityIdentityContainer `json:"identities,omitempty"`

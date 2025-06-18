@@ -10,5 +10,7 @@ type AuthenticationFlow struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
+	// Represents the transfer methods in scope for the policy. The possible values are: none, deviceCodeFlow,
+	// authenticationTransfer, unknownFutureValue. Default value is none.
 	TransferMethod *ConditionalAccessTransferMethods `json:"transferMethod,omitempty"`
 }

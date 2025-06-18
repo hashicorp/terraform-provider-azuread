@@ -98,6 +98,46 @@ func (s BaseExactMatchJobBaseImpl) MarshalJSON() ([]byte, error) {
 	return encoded, nil
 }
 
+var _ json.Unmarshaler = &BaseExactMatchJobBaseImpl{}
+
+func (s *BaseExactMatchJobBaseImpl) UnmarshalJSON(bytes []byte) error {
+	var decoded struct {
+		CompletionDateTime  nullable.Type[string] `json:"completionDateTime,omitempty"`
+		CreationDateTime    nullable.Type[string] `json:"creationDateTime,omitempty"`
+		LastUpdatedDateTime nullable.Type[string] `json:"lastUpdatedDateTime,omitempty"`
+		StartDateTime       nullable.Type[string] `json:"startDateTime,omitempty"`
+		Id                  *string               `json:"id,omitempty"`
+		ODataId             *string               `json:"@odata.id,omitempty"`
+		ODataType           *string               `json:"@odata.type,omitempty"`
+	}
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+
+	s.CompletionDateTime = decoded.CompletionDateTime
+	s.CreationDateTime = decoded.CreationDateTime
+	s.LastUpdatedDateTime = decoded.LastUpdatedDateTime
+	s.StartDateTime = decoded.StartDateTime
+	s.Id = decoded.Id
+	s.ODataId = decoded.ODataId
+	s.ODataType = decoded.ODataType
+
+	var temp map[string]json.RawMessage
+	if err := json.Unmarshal(bytes, &temp); err != nil {
+		return fmt.Errorf("unmarshaling BaseExactMatchJobBaseImpl into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["error"]; ok {
+		impl, err := UnmarshalClassificationErrorImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'Error' for 'BaseExactMatchJobBaseImpl': %+v", err)
+		}
+		s.Error = &impl
+	}
+
+	return nil
+}
+
 func UnmarshalExactMatchJobBaseImplementation(input []byte) (ExactMatchJobBase, error) {
 	if input == nil {
 		return nil, nil

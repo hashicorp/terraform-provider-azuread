@@ -26,7 +26,7 @@ type Team struct {
 	// Timestamp at which the team was created.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
-	// An optional description for the team. Maximum length: 1024 characters.
+	// An optional description for the team. Maximum length: 1,024 characters.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
 	// Settings to configure team discoverability by others.
@@ -34,6 +34,10 @@ type Team struct {
 
 	// The name of the team.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
+
+	// The name of the first channel in the team. This is an optional property, only used during team creation and isn't
+	// returned in methods to get and list teams.
+	FirstChannelName nullable.Type[string] `json:"firstChannelName,omitempty"`
 
 	// Settings to configure the use of Giphy, memes, and stickers in the team.
 	FunSettings *TeamFunSettings `json:"funSettings,omitempty"`
@@ -111,7 +115,7 @@ type Team struct {
 	// The visibility of the group and team. Defaults to Public.
 	Visibility *TeamVisibilityType `json:"visibility,omitempty"`
 
-	// A hyperlink that goes to the team in the Microsoft Teams client. It is the URL you get when you right-click a team in
+	// A hyperlink that goes to the team in the Microsoft Teams client. It's the URL you get when you right-click a team in
 	// the Microsoft Teams client and select Get link to team. This URL should be treated as an opaque blob, and not parsed.
 	WebUrl nullable.Type[string] `json:"webUrl,omitempty"`
 
@@ -176,6 +180,7 @@ func (s *Team) UnmarshalJSON(bytes []byte) error {
 		Description                 nullable.Type[string]              `json:"description,omitempty"`
 		DiscoverySettings           *TeamDiscoverySettings             `json:"discoverySettings,omitempty"`
 		DisplayName                 nullable.Type[string]              `json:"displayName,omitempty"`
+		FirstChannelName            nullable.Type[string]              `json:"firstChannelName,omitempty"`
 		FunSettings                 *TeamFunSettings                   `json:"funSettings,omitempty"`
 		Group                       *Group                             `json:"group,omitempty"`
 		GuestSettings               *TeamGuestSettings                 `json:"guestSettings,omitempty"`
@@ -214,6 +219,7 @@ func (s *Team) UnmarshalJSON(bytes []byte) error {
 	s.Description = decoded.Description
 	s.DiscoverySettings = decoded.DiscoverySettings
 	s.DisplayName = decoded.DisplayName
+	s.FirstChannelName = decoded.FirstChannelName
 	s.FunSettings = decoded.FunSettings
 	s.Group = decoded.Group
 	s.GuestSettings = decoded.GuestSettings

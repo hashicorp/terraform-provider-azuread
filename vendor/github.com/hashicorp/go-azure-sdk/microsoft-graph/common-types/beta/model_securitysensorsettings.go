@@ -8,10 +8,16 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type SecuritySensorSettings struct {
-	Description                *string                   `json:"description,omitempty"`
-	DomainControllerDnsNames   *[]string                 `json:"domainControllerDnsNames,omitempty"`
-	IsDelayedDeploymentEnabled nullable.Type[bool]       `json:"isDelayedDeploymentEnabled,omitempty"`
-	NetworkAdapters            *[]SecurityNetworkAdapter `json:"networkAdapters,omitempty"`
+	// Description of the sensor.
+	Description nullable.Type[string] `json:"description,omitempty"`
+
+	// DNS names for the domain controller
+	DomainControllerDnsNames *[]string `json:"domainControllerDnsNames,omitempty"`
+
+	// Indicates whether to delay updates for the sensor.
+	IsDelayedDeploymentEnabled nullable.Type[bool] `json:"isDelayedDeploymentEnabled,omitempty"`
+
+	NetworkAdapters *[]SecurityNetworkAdapter `json:"networkAdapters,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`

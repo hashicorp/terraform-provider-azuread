@@ -48,6 +48,8 @@ type AccessPackageAssignmentPolicy struct {
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	ModifiedDateTime nullable.Type[string] `json:"modifiedDateTime,omitempty"`
 
+	NotificationSettings *AccessPackageNotificationSettings `json:"notificationSettings,omitempty"`
+
 	// Questions that are posed to the requestor.
 	Questions *[]AccessPackageQuestion `json:"questions,omitempty"`
 
@@ -132,6 +134,7 @@ func (s *AccessPackageAssignmentPolicy) UnmarshalJSON(bytes []byte) error {
 		DisplayName                  nullable.Type[string]                     `json:"displayName,omitempty"`
 		Expiration                   *ExpirationPattern                        `json:"expiration,omitempty"`
 		ModifiedDateTime             nullable.Type[string]                     `json:"modifiedDateTime,omitempty"`
+		NotificationSettings         *AccessPackageNotificationSettings        `json:"notificationSettings,omitempty"`
 		RequestApprovalSettings      *AccessPackageAssignmentApprovalSettings  `json:"requestApprovalSettings,omitempty"`
 		RequestorSettings            *AccessPackageAssignmentRequestorSettings `json:"requestorSettings,omitempty"`
 		ReviewSettings               *AccessPackageAssignmentReviewSettings    `json:"reviewSettings,omitempty"`
@@ -153,6 +156,7 @@ func (s *AccessPackageAssignmentPolicy) UnmarshalJSON(bytes []byte) error {
 	s.DisplayName = decoded.DisplayName
 	s.Expiration = decoded.Expiration
 	s.ModifiedDateTime = decoded.ModifiedDateTime
+	s.NotificationSettings = decoded.NotificationSettings
 	s.RequestApprovalSettings = decoded.RequestApprovalSettings
 	s.RequestorSettings = decoded.RequestorSettings
 	s.ReviewSettings = decoded.ReviewSettings

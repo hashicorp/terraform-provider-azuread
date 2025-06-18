@@ -15,9 +15,9 @@ var _ Entity = Simulation{}
 type Simulation struct {
 	// The social engineering technique used in the attack simulation and training campaign. Supports $filter and $orderby.
 	// Possible values are: unknown, credentialHarvesting, attachmentMalware, driveByUrl, linkInAttachment,
-	// linkToMalwareFile, unknownFutureValue, oAuthConsentGrant. Note that you must use the Prefer:
-	// include-unknown-enum-members request header to get the following values from this evolvable enum: oAuthConsentGrant.
-	// For more information on the types of social engineering attack techniques, see simulations.
+	// linkToMalwareFile, unknownFutureValue, oAuthConsentGrant. Use the Prefer: include-unknown-enum-members request header
+	// to get the following values from this evolvable enum: oAuthConsentGrant. For more information on the types of social
+	// engineering attack techniques, see simulations.
 	AttackTechnique *SimulationAttackTechnique `json:"attackTechnique,omitempty"`
 
 	// Attack type of the attack simulation and training campaign. Supports $filter and $orderby. Possible values are:

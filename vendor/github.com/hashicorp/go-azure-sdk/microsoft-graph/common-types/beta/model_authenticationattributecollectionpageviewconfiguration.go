@@ -11,7 +11,8 @@ type AuthenticationAttributeCollectionPageViewConfiguration struct {
 	// The description of the page.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
-	// The display configuration of attributes being collected on the attribute collection page.
+	// The display configuration of attributes being collected on the attribute collection page. You must specify all
+	// attributes that you want to retain, otherwise they're removed from the user flow.
 	Inputs *[]AuthenticationAttributeCollectionInputConfiguration `json:"inputs,omitempty"`
 
 	// The OData ID of this entity

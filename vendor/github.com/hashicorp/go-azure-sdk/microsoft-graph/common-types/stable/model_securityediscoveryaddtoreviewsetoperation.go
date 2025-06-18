@@ -13,6 +13,11 @@ import (
 var _ SecurityCaseOperation = SecurityEdiscoveryAddToReviewSetOperation{}
 
 type SecurityEdiscoveryAddToReviewSetOperation struct {
+	AdditionalDataOptions  *SecurityAdditionalDataOptions  `json:"additionalDataOptions,omitempty"`
+	CloudAttachmentVersion *SecurityCloudAttachmentVersion `json:"cloudAttachmentVersion,omitempty"`
+	DocumentVersion        *SecurityDocumentVersion        `json:"documentVersion,omitempty"`
+	ItemsToInclude         *SecurityItemsToInclude         `json:"itemsToInclude,omitempty"`
+
 	// eDiscovery review set to which items matching source collection query gets added.
 	ReviewSet *SecurityEdiscoveryReviewSet `json:"reviewSet,omitempty"`
 
@@ -21,8 +26,10 @@ type SecurityEdiscoveryAddToReviewSetOperation struct {
 
 	// Fields inherited from SecurityCaseOperation
 
-	// The type of action the operation represents. Possible values are:
-	// addToReviewSet,applyTags,contentExport,convertToPdf,estimateStatistics, purgeData
+	// The type of action the operation represents. Possible values are: contentExport, applyTags, convertToPdf, index,
+	// estimateStatistics, addToReviewSet, holdUpdate, unknownFutureValue, purgeData, exportReport, exportResult. Use the
+	// Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum: purgeData,
+	// exportReport, exportResult.
 	Action *SecurityCaseAction `json:"action,omitempty"`
 
 	// The date and time the operation was completed.
@@ -113,22 +120,30 @@ var _ json.Unmarshaler = &SecurityEdiscoveryAddToReviewSetOperation{}
 
 func (s *SecurityEdiscoveryAddToReviewSetOperation) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		ReviewSet         *SecurityEdiscoveryReviewSet `json:"reviewSet,omitempty"`
-		Search            *SecurityEdiscoverySearch    `json:"search,omitempty"`
-		Action            *SecurityCaseAction          `json:"action,omitempty"`
-		CompletedDateTime nullable.Type[string]        `json:"completedDateTime,omitempty"`
-		CreatedDateTime   nullable.Type[string]        `json:"createdDateTime,omitempty"`
-		PercentProgress   nullable.Type[int64]         `json:"percentProgress,omitempty"`
-		ResultInfo        *ResultInfo                  `json:"resultInfo,omitempty"`
-		Status            *SecurityCaseOperationStatus `json:"status,omitempty"`
-		Id                *string                      `json:"id,omitempty"`
-		ODataId           *string                      `json:"@odata.id,omitempty"`
-		ODataType         *string                      `json:"@odata.type,omitempty"`
+		AdditionalDataOptions  *SecurityAdditionalDataOptions  `json:"additionalDataOptions,omitempty"`
+		CloudAttachmentVersion *SecurityCloudAttachmentVersion `json:"cloudAttachmentVersion,omitempty"`
+		DocumentVersion        *SecurityDocumentVersion        `json:"documentVersion,omitempty"`
+		ItemsToInclude         *SecurityItemsToInclude         `json:"itemsToInclude,omitempty"`
+		ReviewSet              *SecurityEdiscoveryReviewSet    `json:"reviewSet,omitempty"`
+		Search                 *SecurityEdiscoverySearch       `json:"search,omitempty"`
+		Action                 *SecurityCaseAction             `json:"action,omitempty"`
+		CompletedDateTime      nullable.Type[string]           `json:"completedDateTime,omitempty"`
+		CreatedDateTime        nullable.Type[string]           `json:"createdDateTime,omitempty"`
+		PercentProgress        nullable.Type[int64]            `json:"percentProgress,omitempty"`
+		ResultInfo             *ResultInfo                     `json:"resultInfo,omitempty"`
+		Status                 *SecurityCaseOperationStatus    `json:"status,omitempty"`
+		Id                     *string                         `json:"id,omitempty"`
+		ODataId                *string                         `json:"@odata.id,omitempty"`
+		ODataType              *string                         `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.AdditionalDataOptions = decoded.AdditionalDataOptions
+	s.CloudAttachmentVersion = decoded.CloudAttachmentVersion
+	s.DocumentVersion = decoded.DocumentVersion
+	s.ItemsToInclude = decoded.ItemsToInclude
 	s.ReviewSet = decoded.ReviewSet
 	s.Search = decoded.Search
 	s.Action = decoded.Action

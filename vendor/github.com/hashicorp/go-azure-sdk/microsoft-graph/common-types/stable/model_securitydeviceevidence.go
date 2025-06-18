@@ -23,12 +23,18 @@ type SecurityDeviceEvidence struct {
 	// The fully qualified domain name (FQDN) for the device.
 	DeviceDnsName nullable.Type[string] `json:"deviceDnsName,omitempty"`
 
+	// The DNS domain that this computer belongs to. A sequence of labels separated by dots.
+	DnsDomain nullable.Type[string] `json:"dnsDomain,omitempty"`
+
 	// The date and time when the device was first seen.
 	FirstSeenDateTime nullable.Type[string] `json:"firstSeenDateTime,omitempty"`
 
 	// The health state of the device. The possible values are: active, inactive, impairedCommunication, noSensorData,
 	// noSensorDataImpairedCommunication, unknown, unknownFutureValue.
 	HealthStatus *SecurityDeviceHealthStatus `json:"healthStatus,omitempty"`
+
+	// The hostname without the domain suffix.
+	HostName nullable.Type[string] `json:"hostName,omitempty"`
 
 	// Ip interfaces of the device during the time of the alert.
 	IPInterfaces *[]string `json:"ipInterfaces,omitempty"`
@@ -41,6 +47,9 @@ type SecurityDeviceEvidence struct {
 
 	// A unique identifier assigned to a device by Microsoft Defender for Endpoint.
 	MdeDeviceId nullable.Type[string] `json:"mdeDeviceId,omitempty"`
+
+	// A logical grouping of computers within a Microsoft Windows network.
+	NtDomain nullable.Type[string] `json:"ntDomain,omitempty"`
 
 	// The status of the machine onboarding to Microsoft Defender for Endpoint. The possible values are: insufficientInfo,
 	// onboarded, canBeOnboarded, unsupported, unknownFutureValue.

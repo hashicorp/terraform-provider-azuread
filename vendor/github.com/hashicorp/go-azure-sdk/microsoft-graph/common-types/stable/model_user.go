@@ -93,8 +93,8 @@ type User struct {
 	// The user's contacts. Read-only. Nullable.
 	Contacts *[]Contact `json:"contacts,omitempty"`
 
-	// The country/region where the user is located; for example, US or UK. Maximum length is 128 characters. Returned only
-	// on $select. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null values).
+	// The country or region where the user is located; for example, US or UK. Maximum length is 128 characters. Returned
+	// only on $select. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null values).
 	Country nullable.Type[string] `json:"country,omitempty"`
 
 	// The date and time the user was created, in ISO 8601 format and UTC. The value can't be modified and is automatically
@@ -119,6 +119,10 @@ type User struct {
 
 	// An open complex type that holds the value of a custom security attribute that is assigned to a directory object.
 	// Nullable. Returned only on $select. Supports $filter (eq, ne, not, startsWith). The filter value is case-sensitive.
+	// To read this property, the calling app must be assigned the CustomSecAttributeAssignment.Read.All permission. To
+	// write this property, the calling app must be assigned the CustomSecAttributeAssignment.ReadWrite.All permissions. To
+	// read or write this property in delegated scenarios, the admin must be assigned the Attribute Assignment Administrator
+	// role.
 	CustomSecurityAttributes *CustomSecurityAttributeValue `json:"customSecurityAttributes,omitempty"`
 
 	// The name of the department in which the user works. Maximum length is 64 characters. Returned only on $select.
@@ -163,9 +167,10 @@ type User struct {
 	// The date and time when the user left or will leave the organization. To read this property, the calling app must be
 	// assigned the User-LifeCycleInfo.Read.All permission. To write this property, the calling app must be assigned the
 	// User.Read.All and User-LifeCycleInfo.ReadWrite.All permissions. To read this property in delegated scenarios, the
-	// admin needs at least one of the following Microsoft Entra roles: Lifecycle Workflows Administrator, Global Reader. To
-	// write this property in delegated scenarios, the admin needs the Global Administrator role. Supports $filter (eq, ne,
-	// not , ge, le, in). For more information, see Configure the employeeLeaveDateTime property for a user.
+	// admin needs at least one of the following Microsoft Entra roles: Lifecycle Workflows Administrator (least privilege),
+	// Global Reader. To write this property in delegated scenarios, the admin needs the Global Administrator role. Supports
+	// $filter (eq, ne, not , ge, le, in). For more information, see Configure the employeeLeaveDateTime property for a
+	// user.
 	EmployeeLeaveDateTime nullable.Type[string] `json:"employeeLeaveDateTime,omitempty"`
 
 	// Represents organization data (for example, division and costCenter) associated with a user. Returned only on $select.
@@ -221,10 +226,14 @@ type User struct {
 	// importance.
 	InferenceClassification *InferenceClassification `json:"inferenceClassification,omitempty"`
 
+	// Represents relationships between a user and items such as OneDrive for work or school documents, calculated using
+	// advanced analytics and machine learning techniques. Read-only. Nullable.
 	Insights *ItemInsights `json:"insights,omitempty"`
 
 	// A list for the user to describe their interests. Returned only on $select.
 	Interests *[]string `json:"interests,omitempty"`
+
+	IsManagementRestricted nullable.Type[bool] `json:"isManagementRestricted,omitempty"`
 
 	// Don't use – reserved for future use.
 	IsResourceAccount nullable.Type[bool] `json:"isResourceAccount,omitempty"`
@@ -241,7 +250,7 @@ type User struct {
 	LastPasswordChangeDateTime nullable.Type[string] `json:"lastPasswordChangeDateTime,omitempty"`
 
 	// Used by enterprise applications to determine the legal age group of the user. This property is read-only and
-	// calculated based on ageGroup and consentProvidedForMinor properties. Allowed values: null,
+	// calculated based on ageGroup and consentProvidedForMinor properties. Allowed values: null, Undefined,
 	// MinorWithOutParentalConsent, MinorWithParentalConsent, MinorNoParentalConsentRequired, NotAdult, and Adult. For more
 	// information, see legal age group property definitions. Returned only on $select.
 	LegalAgeGroupClassification nullable.Type[string] `json:"legalAgeGroupClassification,omitempty"`
@@ -316,11 +325,12 @@ type User struct {
 	OnPremisesDomainName nullable.Type[string] `json:"onPremisesDomainName,omitempty"`
 
 	// Contains extensionAttributes1-15 for the user. These extension attributes are also known as Exchange custom
-	// attributes 1-15. For an onPremisesSyncEnabled user, the source of authority for this set of properties is the
-	// on-premises and is read-only. For a cloud-only user (where onPremisesSyncEnabled is false), these properties can be
-	// set during the creation or update of a user object. For a cloud-only user previously synced from on-premises Active
-	// Directory, these properties are read-only in Microsoft Graph but can be fully managed through the Exchange Admin
-	// Center or the Exchange Online V2 module in PowerShell. Returned only on $select. Supports $filter (eq, ne, not, in).
+	// attributes 1-15. Each attribute can store up to 1024 characters. For an onPremisesSyncEnabled user, the source of
+	// authority for this set of properties is the on-premises and is read-only. For a cloud-only user (where
+	// onPremisesSyncEnabled is false), these properties can be set during the creation or update of a user object. For a
+	// cloud-only user previously synced from on-premises Active Directory, these properties are read-only in Microsoft
+	// Graph but can be fully managed through the Exchange Admin Center or the Exchange Online V2 module in PowerShell.
+	// Returned only on $select. Supports $filter (eq, ne, not, in).
 	OnPremisesExtensionAttributes *OnPremisesExtensionAttributes `json:"onPremisesExtensionAttributes,omitempty"`
 
 	// This property is used to associate an on-premises Active Directory user account to their Microsoft Entra user object.
@@ -363,9 +373,9 @@ type User struct {
 	// Information about a meeting, including the URL used to join a meeting, the attendees list, and the description.
 	OnlineMeetings *[]OnlineMeeting `json:"onlineMeetings,omitempty"`
 
-	// A list of other email addresses for the user; for example: ['bob@contoso.com', 'Robert@fabrikam.com']. NOTE: This
-	// property can't contain accent characters. Returned only on $select. Supports $filter (eq, not, ge, le, in,
-	// startsWith, endsWith, /$count eq 0, /$count ne 0).
+	// A list of other email addresses for the user; for example: ['bob@contoso.com', 'Robert@fabrikam.com']. Can store up
+	// to 250 values, each with a limit of 250 characters. NOTE: This property can't contain accent characters. Returned
+	// only on $select. Supports $filter (eq, not, ge, le, in, startsWith, endsWith, /$count eq 0, /$count ne 0).
 	OtherMails *[]string `json:"otherMails,omitempty"`
 
 	Outlook *OutlookUser `json:"outlook,omitempty"`
@@ -394,7 +404,13 @@ type User struct {
 	// Specifies the password profile for the user. The profile contains the user's password. This property is required when
 	// a user is created. The password in the profile must satisfy minimum requirements as specified by the passwordPolicies
 	// property. By default, a strong password is required. Returned only on $select. Supports $filter (eq, ne, not, in, and
-	// eq on null values).
+	// eq on null values). To update this property: User-PasswordProfile.ReadWrite.All is the least privileged permission to
+	// update this property. In delegated scenarios, the User Administrator Microsoft Entra role is the least privileged
+	// admin role supported to update this property for nonadmin users. Privileged Authentication Administrator is the least
+	// privileged role that's allowed to update this property for all administrators in the tenant. In general, the
+	// signed-in user must have a higher privileged administrator role as indicated in Who can reset passwords. In app-only
+	// scenarios, the calling app must be assigned a supported permission and at least the User Administrator Microsoft
+	// Entra role.
 	PasswordProfile *PasswordProfile `json:"passwordProfile,omitempty"`
 
 	// A list for the user to enumerate their past projects. Returned only on $select.
@@ -415,7 +431,7 @@ type User struct {
 	// Entry-point to the Planner resource that might exist for a user. Read-only.
 	Planner *PlannerUser `json:"planner,omitempty"`
 
-	// The postal code for the user's postal address. The postal code is specific to the user's country/region. In the
+	// The postal code for the user's postal address. The postal code is specific to the user's country or region. In the
 	// United States of America, this attribute contains the ZIP code. Maximum length is 40 characters. Returned only on
 	// $select. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null values).
 	PostalCode nullable.Type[string] `json:"postalCode,omitempty"`
@@ -490,6 +506,9 @@ type User struct {
 	// A list for the user to enumerate their skills. Returned only on $select.
 	Skills *[]string `json:"skills,omitempty"`
 
+	// The identifier that relates the user to the working time schedule triggers. Read-Only. Nullable
+	Solutions *UserSolutionRoot `json:"solutions,omitempty"`
+
 	// The users and groups responsible for this guest's privileges in the tenant and keeping the guest's information and
 	// access updated. (HTTP Methods: GET, POST, DELETE.). Supports $expand.
 	Sponsors *[]DirectoryObject `json:"sponsors,omitempty"`
@@ -522,8 +541,8 @@ type User struct {
 	TransitiveMemberOf_ODataBind *[]string `json:"transitiveMemberOf@odata.bind,omitempty"`
 
 	// A two-letter country code (ISO standard 3166). Required for users that are assigned licenses due to legal
-	// requirements to check for availability of services in countries. Examples include: US, JP, and GB. Not nullable.
-	// Returned only on $select. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null values).
+	// requirements to check for availability of services in countries/regions. Examples include: US, JP, and GB. Not
+	// nullable. Returned only on $select. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null values).
 	UsageLocation nullable.Type[string] `json:"usageLocation,omitempty"`
 
 	// The user principal name (UPN) of the user. The UPN is an Internet-style sign-in name for the user based on the
@@ -610,6 +629,7 @@ func (s User) MarshalJSON() ([]byte, error) {
 	delete(decoded, "events")
 	delete(decoded, "extensions")
 	delete(decoded, "imAddresses")
+	delete(decoded, "insights")
 	delete(decoded, "licenseAssignmentStates")
 	delete(decoded, "licenseDetails")
 	delete(decoded, "mailFolders")
@@ -704,6 +724,7 @@ func (s *User) UnmarshalJSON(bytes []byte) error {
 		InferenceClassification         *InferenceClassification           `json:"inferenceClassification,omitempty"`
 		Insights                        *ItemInsights                      `json:"insights,omitempty"`
 		Interests                       *[]string                          `json:"interests,omitempty"`
+		IsManagementRestricted          nullable.Type[bool]                `json:"isManagementRestricted,omitempty"`
 		IsResourceAccount               nullable.Type[bool]                `json:"isResourceAccount,omitempty"`
 		JobTitle                        nullable.Type[string]              `json:"jobTitle,omitempty"`
 		JoinedTeams                     *[]Team                            `json:"joinedTeams,omitempty"`
@@ -763,6 +784,7 @@ func (s *User) UnmarshalJSON(bytes []byte) error {
 		SignInActivity                  *SignInActivity                    `json:"signInActivity,omitempty"`
 		SignInSessionsValidFromDateTime nullable.Type[string]              `json:"signInSessionsValidFromDateTime,omitempty"`
 		Skills                          *[]string                          `json:"skills,omitempty"`
+		Solutions                       *UserSolutionRoot                  `json:"solutions,omitempty"`
 		Sponsors_ODataBind              *[]string                          `json:"sponsors@odata.bind,omitempty"`
 		State                           nullable.Type[string]              `json:"state,omitempty"`
 		StreetAddress                   nullable.Type[string]              `json:"streetAddress,omitempty"`
@@ -834,6 +856,7 @@ func (s *User) UnmarshalJSON(bytes []byte) error {
 	s.InferenceClassification = decoded.InferenceClassification
 	s.Insights = decoded.Insights
 	s.Interests = decoded.Interests
+	s.IsManagementRestricted = decoded.IsManagementRestricted
 	s.IsResourceAccount = decoded.IsResourceAccount
 	s.JobTitle = decoded.JobTitle
 	s.JoinedTeams = decoded.JoinedTeams
@@ -893,6 +916,7 @@ func (s *User) UnmarshalJSON(bytes []byte) error {
 	s.SignInActivity = decoded.SignInActivity
 	s.SignInSessionsValidFromDateTime = decoded.SignInSessionsValidFromDateTime
 	s.Skills = decoded.Skills
+	s.Solutions = decoded.Solutions
 	s.Sponsors_ODataBind = decoded.Sponsors_ODataBind
 	s.State = decoded.State
 	s.StreetAddress = decoded.StreetAddress

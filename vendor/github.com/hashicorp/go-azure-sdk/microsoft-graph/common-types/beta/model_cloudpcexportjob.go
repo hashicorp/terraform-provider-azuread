@@ -32,12 +32,16 @@ type CloudPCExportJob struct {
 	// The report name. The possible values are: remoteConnectionHistoricalReports, dailyAggregatedRemoteConnectionReports,
 	// totalAggregatedRemoteConnectionReports, sharedUseLicenseUsageReport, sharedUseLicenseUsageRealTimeReport,
 	// unknownFutureValue, noLicenseAvailableConnectivityFailureReport, frontlineLicenseUsageReport,
-	// frontlineLicenseUsageRealTimeReport, remoteConnectionQualityReports, inaccessibleCloudPcReports,
-	// rawRemoteConnectionReports, cloudPcUsageCategoryReports, crossRegionDisasterRecoveryReport. You must use the Prefer:
+	// frontlineLicenseUsageRealTimeReport, remoteConnectionQualityReports, inaccessibleCloudPcReports, actionStatusReport,
+	// rawRemoteConnectionReports, cloudPcUsageCategoryReports, crossRegionDisasterRecoveryReport,
+	// regionalConnectionQualityTrendReport, regionalConnectionQualityInsightsReport, remoteConnectionQualityReport,
+	// bulkActionStatusReport, cloudPcInsightReport, regionalInaccessibleCloudPcTrendReport, troubleshootDetailsReport,
+	// troubleshootTrendCountReport, troubleshootRegionalReport, troubleshootIssueCountReport. Use the Prefer:
 	// include-unknown-enum-members request header to get the following values in this evolvable enum:
 	// noLicenseAvailableConnectivityFailureReport, frontlineLicenseUsageReport, frontlineLicenseUsageRealTimeReport,
 	// remoteConnectionQualityReports, inaccessibleCloudPcReports, rawRemoteConnectionReports, cloudPcUsageCategoryReports,
-	// crossRegionDisasterRecoveryReport.
+	// crossRegionDisasterRecoveryReport, cloudPcInsightReport, regionalInaccessibleCloudPcTrendReport,,
+	// troubleshootDetailsReport, troubleshootTrendCountReport, troubleshootRegionalReport, troubleshootIssueCountReport.
 	ReportName *CloudPCReportName `json:"reportName,omitempty"`
 
 	// The date and time when the export job was requested.

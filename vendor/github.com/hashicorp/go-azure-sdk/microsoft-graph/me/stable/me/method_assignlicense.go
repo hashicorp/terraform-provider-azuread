@@ -50,7 +50,8 @@ func (o AssignLicenseOperationOptions) ToQuery() *client.QueryParams {
 // AssignLicense - Invoke action assignLicense. Add or remove licenses for the user to enable or disable their use of
 // Microsoft cloud offerings that the company has licenses to. For example, an organization can have a Microsoft 365
 // Enterprise E3 subscription with 100 licenses, and this request assigns one of those licenses to a specific user. You
-// can also enable and disable specific plans associated with a subscription.
+// can also enable and disable specific plans associated with a subscription. Direct user licensing method is an
+// alternative to group-based licensing.
 func (c MeClient) AssignLicense(ctx context.Context, input AssignLicenseRequest, options AssignLicenseOperationOptions) (result AssignLicenseOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

@@ -140,6 +140,14 @@ func UnmarshalOutlookItemImplementation(input []byte) (OutlookItem, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.mailboxItem") {
+		var out MailboxItem
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MailboxItem: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.message") {
 		var out Message
 		if err := json.Unmarshal(input, &out); err != nil {

@@ -13,12 +13,25 @@ import (
 var _ ApplicationSegment = IPApplicationSegment{}
 
 type IPApplicationSegment struct {
-	Application     *Application                   `json:"application,omitempty"`
-	DestinationHost nullable.Type[string]          `json:"destinationHost,omitempty"`
+	// The on-premises nonweb application published through Microsoft Entra application proxy. Expanded by default and
+	// supports $expand.
+	Application *Application `json:"application,omitempty"`
+
+	// Either the IP address, IP range, or FQDN of the applicationSegment, with or without wildcards.
+	DestinationHost nullable.Type[string] `json:"destinationHost,omitempty"`
+
+	// The possible values are: ipAddress, ipRange, ipRangeCidr, fqdn, dnsSuffix, unknownFutureValue.
 	DestinationType *PrivateNetworkDestinationType `json:"destinationType,omitempty"`
-	Port            nullable.Type[int64]           `json:"port,omitempty"`
-	Ports           *[]string                      `json:"ports,omitempty"`
-	Protocol        *PrivateNetworkProtocol        `json:"protocol,omitempty"`
+
+	// Port supported for the application segment. DO NOT USE.
+	Port nullable.Type[int64] `json:"port,omitempty"`
+
+	// List of ports supported for the application segment.
+	Ports *[]string `json:"ports,omitempty"`
+
+	// Indicates the protocol of the network traffic acquired for the application segment. The possible values are: tcp,
+	// udp, unknownFutureValue.
+	Protocol *PrivateNetworkProtocol `json:"protocol,omitempty"`
 
 	// Fields inherited from Entity
 

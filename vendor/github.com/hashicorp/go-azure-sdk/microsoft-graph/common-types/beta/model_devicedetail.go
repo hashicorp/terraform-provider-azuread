@@ -8,15 +8,15 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type DeviceDetail struct {
-	// Indicates the browser information of the used for signing-in.
+	// Indicates the browser information of the used in the sign-in. Populated for devices registered in Microsoft Entra.
 	Browser nullable.Type[string] `json:"browser,omitempty"`
 
 	BrowserId nullable.Type[string] `json:"browserId,omitempty"`
 
-	// Refers to the UniqueID of the device used for signing-in.
+	// Refers to the unique ID of the device used in the sign-in. Populated for devices registered in Microsoft Entra.
 	DeviceId nullable.Type[string] `json:"deviceId,omitempty"`
 
-	// Refers to the name of the device used for signing-in.
+	// Refers to the name of the device used in the sign-in. Populated for devices registered in Microsoft Entra.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
 	// Indicates whether the device is compliant or not.
@@ -31,9 +31,10 @@ type DeviceDetail struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// Indicates the OS name and version used for signing-in.
+	// Indicates the OS name and version used in the sign-in.
 	OperatingSystem nullable.Type[string] `json:"operatingSystem,omitempty"`
 
-	// Indicates information on whether the signed-in device is Workplace Joined, AzureAD Joined, Domain Joined.
+	// Indicates information on whether the device used in the sign-in is workplace-joined, Microsoft Entra-joined,
+	// domain-joined.
 	TrustType nullable.Type[string] `json:"trustType,omitempty"`
 }

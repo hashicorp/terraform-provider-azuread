@@ -20,6 +20,8 @@ type X509CertificateAuthenticationMethodConfiguration struct {
 	// first binding that matches will be used and the rest ignored.
 	CertificateUserBindings *[]X509CertificateUserBinding `json:"certificateUserBindings,omitempty"`
 
+	CrlValidationConfiguration *X509CertificateCRLValidationConfiguration `json:"crlValidationConfiguration,omitempty"`
+
 	// A collection of groups that are enabled to use the authentication method.
 	IncludeTargets *[]AuthenticationMethodTarget `json:"includeTargets,omitempty"`
 
@@ -97,6 +99,7 @@ func (s *X509CertificateAuthenticationMethodConfiguration) UnmarshalJSON(bytes [
 	var decoded struct {
 		AuthenticationModeConfiguration *X509CertificateAuthenticationModeConfiguration `json:"authenticationModeConfiguration,omitempty"`
 		CertificateUserBindings         *[]X509CertificateUserBinding                   `json:"certificateUserBindings,omitempty"`
+		CrlValidationConfiguration      *X509CertificateCRLValidationConfiguration      `json:"crlValidationConfiguration,omitempty"`
 		ExcludeTargets                  *[]ExcludeTarget                                `json:"excludeTargets,omitempty"`
 		State                           *AuthenticationMethodState                      `json:"state,omitempty"`
 		Id                              *string                                         `json:"id,omitempty"`
@@ -109,6 +112,7 @@ func (s *X509CertificateAuthenticationMethodConfiguration) UnmarshalJSON(bytes [
 
 	s.AuthenticationModeConfiguration = decoded.AuthenticationModeConfiguration
 	s.CertificateUserBindings = decoded.CertificateUserBindings
+	s.CrlValidationConfiguration = decoded.CrlValidationConfiguration
 	s.ExcludeTargets = decoded.ExcludeTargets
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId

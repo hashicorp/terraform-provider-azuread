@@ -24,12 +24,12 @@ type OpenIdConnectIdentityProvider struct {
 
 	// The client secret for the application obtained when registering the application with the identity provider. The
 	// clientSecret has a dependency on responseType. When responseType is code, a secret is required for the auth code
-	// exchange.When responseType is idtoken the secret is not required because there is no code exchange. The idtoken is
+	// exchange.When responseType is idtoken, the secret isn't required because there's no code exchange. The idtoken is
 	// returned directly from the authorization response. This is write-only. A read operation returns .
 	ClientSecret nullable.Type[string] `json:"clientSecret,omitempty"`
 
-	// The domain hint can be used to skip directly to the sign-in page of the specified identity provider, instead of
-	// having the user make a selection among the list of available identity providers.
+	// The domain hint can be used to skip directly to the sign-in page of the specified identity provider instead of having
+	// the user make a selection among the list of available identity providers.
 	DomainHint nullable.Type[string] `json:"domainHint,omitempty"`
 
 	// The URL for the metadata document of the OpenID Connect identity provider. Every OpenID Connect identity provider
@@ -42,10 +42,10 @@ type OpenIdConnectIdentityProvider struct {
 	ResponseMode *OpenIdConnectResponseMode  `json:"responseMode,omitempty"`
 	ResponseType *OpenIdConnectResponseTypes `json:"responseType,omitempty"`
 
-	// Scope defines the information and permissions you are looking to gather from your custom identity provider. OpenID
+	// Scope defines the information and permissions you're looking to gather from your custom identity provider. OpenID
 	// Connect requests must contain the openid scope value in order to receive the ID token from the identity provider.
-	// Without the ID token, users are not able to sign in to Azure AD B2C using the custom identity provider. Other scopes
-	// can be appended, separated by a space. For more details about the scope limitations, see RFC6749 Section 3.3.
+	// Without the ID token, users aren't able to sign in to Azure AD B2C using the custom identity provider. Other scopes
+	// can be appended, separated by a space. For more information about the scope limitations, see RFC6749 Section 3.3.
 	// Required.
 	Scope nullable.Type[string] `json:"scope,omitempty"`
 

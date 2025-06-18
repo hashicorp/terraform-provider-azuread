@@ -57,6 +57,8 @@ type AccessPackageCatalog struct {
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Read-only.
 	ModifiedDateTime nullable.Type[string] `json:"modifiedDateTime,omitempty"`
 
+	UniqueName nullable.Type[string] `json:"uniqueName,omitempty"`
+
 	// Fields inherited from Entity
 
 	// The unique identifier for an entity. Read-only.
@@ -132,6 +134,7 @@ func (s *AccessPackageCatalog) UnmarshalJSON(bytes []byte) error {
 		IsExternallyVisible                   nullable.Type[bool]                     `json:"isExternallyVisible,omitempty"`
 		ModifiedBy                            nullable.Type[string]                   `json:"modifiedBy,omitempty"`
 		ModifiedDateTime                      nullable.Type[string]                   `json:"modifiedDateTime,omitempty"`
+		UniqueName                            nullable.Type[string]                   `json:"uniqueName,omitempty"`
 		Id                                    *string                                 `json:"id,omitempty"`
 		ODataId                               *string                                 `json:"@odata.id,omitempty"`
 		ODataType                             *string                                 `json:"@odata.type,omitempty"`
@@ -154,6 +157,7 @@ func (s *AccessPackageCatalog) UnmarshalJSON(bytes []byte) error {
 	s.IsExternallyVisible = decoded.IsExternallyVisible
 	s.ModifiedBy = decoded.ModifiedBy
 	s.ModifiedDateTime = decoded.ModifiedDateTime
+	s.UniqueName = decoded.UniqueName
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType

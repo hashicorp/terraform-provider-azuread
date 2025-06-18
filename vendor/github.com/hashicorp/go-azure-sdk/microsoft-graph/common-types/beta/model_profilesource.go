@@ -13,8 +13,20 @@ import (
 var _ Entity = ProfileSource{}
 
 type ProfileSource struct {
+	// Name of the profile source intended to inform users about the profile source name.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
-	WebUrl      nullable.Type[string] `json:"webUrl,omitempty"`
+
+	// Type of the profile source.
+	Kind nullable.Type[string] `json:"kind,omitempty"`
+
+	// Alternative localized labels specified by an administrator.
+	Localizations *[]ProfileSourceLocalization `json:"localizations,omitempty"`
+
+	// Profile source identifier used as an alternate key.
+	SourceId nullable.Type[string] `json:"sourceId,omitempty"`
+
+	// Web URL of the profile source that directs users to the page view of profile data.
+	WebUrl nullable.Type[string] `json:"webUrl,omitempty"`
 
 	// Fields inherited from Entity
 

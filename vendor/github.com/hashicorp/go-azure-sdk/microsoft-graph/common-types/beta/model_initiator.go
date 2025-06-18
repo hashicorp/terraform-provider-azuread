@@ -13,7 +13,7 @@ import (
 var _ Identity = Initiator{}
 
 type Initiator struct {
-	// Type of initiator. Possible values are: user, application, system, unknownFutureValue.
+	// The type of the initiator. Possible values are: user, application, system, unknownFutureValue.
 	InitiatorType *InitiatorType `json:"initiatorType,omitempty"`
 
 	// Fields inherited from Identity

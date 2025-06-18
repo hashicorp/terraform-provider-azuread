@@ -13,12 +13,17 @@ import (
 var _ VirtualEventRegistrationQuestionBase = VirtualEventRegistrationPredefinedQuestion{}
 
 type VirtualEventRegistrationPredefinedQuestion struct {
+	// Label of the predefined registration question. It accepts a single line of text: street, city, state, postalCode,
+	// countryOrRegion, industry, jobTitle, organization, and unknownFutureValue.
 	Label *VirtualEventRegistrationPredefinedQuestionLabel `json:"label,omitempty"`
 
 	// Fields inherited from VirtualEventRegistrationQuestionBase
 
+	// Display name of the registration question.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
-	IsRequired  nullable.Type[bool]   `json:"isRequired,omitempty"`
+
+	// Indicates whether an answer to the question is required. The default value is false.
+	IsRequired nullable.Type[bool] `json:"isRequired,omitempty"`
 
 	// Fields inherited from Entity
 

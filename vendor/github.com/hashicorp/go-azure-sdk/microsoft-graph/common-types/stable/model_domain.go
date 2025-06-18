@@ -25,15 +25,16 @@ type Domain struct {
 	// AvailableImmediately or EmailVerifiedDomainTakeoverScheduled.
 	AvailabilityStatus nullable.Type[string] `json:"availabilityStatus,omitempty"`
 
-	// The objects such as users and groups that reference the domain ID. Read-only, Nullable. Supports $expand and $filter
-	// by the OData type of objects returned. For example, /domains/{domainId}/domainNameReferences/microsoft.graph.user and
+	// The objects such as users and groups that reference the domain ID. Read-only, Nullable. Doesn't support $expand.
+	// Supports $filter by the OData type of objects returned. For example,
+	// /domains/{domainId}/domainNameReferences/microsoft.graph.user and
 	// /domains/{domainId}/domainNameReferences/microsoft.graph.group.
 	DomainNameReferences *[]DirectoryObject `json:"domainNameReferences,omitempty"`
 
 	// List of OData IDs for `DomainNameReferences` to bind to this entity
 	DomainNameReferences_ODataBind *[]string `json:"domainNameReferences@odata.bind,omitempty"`
 
-	// Domain settings configured by a customer when federated with Microsoft Entra ID. Supports $expand.
+	// Domain settings configured by a customer when federated with Microsoft Entra ID. Doesn't support $expand.
 	FederationConfiguration *[]InternalDomainFederation `json:"federationConfiguration,omitempty"`
 
 	// The value of the property is false if the DNS record management of the domain is delegated to Microsoft 365.
@@ -41,7 +42,7 @@ type Domain struct {
 	IsAdminManaged *bool `json:"isAdminManaged,omitempty"`
 
 	// true if this is the default domain that is used for user creation. There's only one default domain per company. Not
-	// nullable
+	// nullable.
 	IsDefault *bool `json:"isDefault,omitempty"`
 
 	// true if this is the initial domain created by Microsoft Online Services (contoso.com). There's only one initial
@@ -49,25 +50,28 @@ type Domain struct {
 	IsInitial *bool `json:"isInitial,omitempty"`
 
 	// true if the domain is a verified root domain. Otherwise, false if the domain is a subdomain or unverified. Not
-	// nullable
+	// nullable.
 	IsRoot *bool `json:"isRoot,omitempty"`
 
-	// true if the domain has completed domain ownership verification. Not nullable
+	// true if the domain completed domain ownership verification. Not nullable.
 	IsVerified *bool `json:"isVerified,omitempty"`
 
 	Manufacturer nullable.Type[string] `json:"manufacturer,omitempty"`
 	Model        nullable.Type[string] `json:"model,omitempty"`
 
-	// Specifies the number of days before a user receives notification that their password will expire. If the property
-	// isn't set, a default value of 14 days is used.
+	// Specifies the number of days before a user receives notification that their password expires. If the property isn't
+	// set, a default value of 14 days is used.
 	PasswordNotificationWindowInDays nullable.Type[int64] `json:"passwordNotificationWindowInDays,omitempty"`
 
 	// Specifies the length of time that a password is valid before it must be changed. If the property isn't set, a default
 	// value of 90 days is used.
 	PasswordValidityPeriodInDays nullable.Type[int64] `json:"passwordValidityPeriodInDays,omitempty"`
 
+	// Root domain of a subdomain. Read-only, Nullable. Supports $expand.
+	RootDomain *Domain `json:"rootDomain,omitempty"`
+
 	// DNS records the customer adds to the DNS zone file of the domain before the domain can be used by Microsoft Online
-	// services. Read-only, Nullable. Supports $expand.
+	// services. Read-only, Nullable. Doesn't support $expand.
 	ServiceConfigurationRecords *[]DomainDnsRecord `json:"serviceConfigurationRecords,omitempty"`
 
 	// Status of asynchronous operations scheduled for the domain.
@@ -80,7 +84,7 @@ type Domain struct {
 	SupportedServices *[]string `json:"supportedServices,omitempty"`
 
 	// DNS records that the customer adds to the DNS zone file of the domain before the customer can complete domain
-	// ownership verification with Microsoft Entra ID. Read-only, Nullable. Supports $expand.
+	// ownership verification with Microsoft Entra ID. Read-only, Nullable. Doesn't support $expand.
 	VerificationDnsRecords *[]DomainDnsRecord `json:"verificationDnsRecords,omitempty"`
 
 	// Fields inherited from Entity
@@ -150,6 +154,7 @@ func (s *Domain) UnmarshalJSON(bytes []byte) error {
 		Model                            nullable.Type[string]       `json:"model,omitempty"`
 		PasswordNotificationWindowInDays nullable.Type[int64]        `json:"passwordNotificationWindowInDays,omitempty"`
 		PasswordValidityPeriodInDays     nullable.Type[int64]        `json:"passwordValidityPeriodInDays,omitempty"`
+		RootDomain                       *Domain                     `json:"rootDomain,omitempty"`
 		State                            *DomainState                `json:"state,omitempty"`
 		SupportedServices                *[]string                   `json:"supportedServices,omitempty"`
 		Id                               *string                     `json:"id,omitempty"`
@@ -173,6 +178,7 @@ func (s *Domain) UnmarshalJSON(bytes []byte) error {
 	s.Model = decoded.Model
 	s.PasswordNotificationWindowInDays = decoded.PasswordNotificationWindowInDays
 	s.PasswordValidityPeriodInDays = decoded.PasswordValidityPeriodInDays
+	s.RootDomain = decoded.RootDomain
 	s.State = decoded.State
 	s.SupportedServices = decoded.SupportedServices
 	s.Id = decoded.Id

@@ -38,6 +38,7 @@ type BaseImportedDeviceIdentityImpl struct {
 	// Last Modified DateTime of the description
 	LastModifiedDateTime *string `json:"lastModifiedDateTime,omitempty"`
 
+	// Supported platform types for policies.
 	Platform *Platform `json:"platform,omitempty"`
 
 	// Fields inherited from Entity

@@ -20,6 +20,9 @@ type AccessPackageAssignmentRequestRequirements struct {
 	// Indicates whether a request to update must be approved by an approver.
 	IsApprovalRequiredForUpdate nullable.Type[bool] `json:"isApprovalRequiredForUpdate,omitempty"`
 
+	// Indicates whether requestors must justify requesting access to an access package.
+	IsRequestorJustificationRequired nullable.Type[bool] `json:"isRequestorJustificationRequired,omitempty"`
+
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
 
@@ -46,15 +49,16 @@ var _ json.Unmarshaler = &AccessPackageAssignmentRequestRequirements{}
 
 func (s *AccessPackageAssignmentRequestRequirements) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		AllowCustomAssignmentSchedule nullable.Type[bool]            `json:"allowCustomAssignmentSchedule,omitempty"`
-		IsApprovalRequiredForAdd      nullable.Type[bool]            `json:"isApprovalRequiredForAdd,omitempty"`
-		IsApprovalRequiredForUpdate   nullable.Type[bool]            `json:"isApprovalRequiredForUpdate,omitempty"`
-		ODataId                       *string                        `json:"@odata.id,omitempty"`
-		ODataType                     *string                        `json:"@odata.type,omitempty"`
-		PolicyDescription             nullable.Type[string]          `json:"policyDescription,omitempty"`
-		PolicyDisplayName             nullable.Type[string]          `json:"policyDisplayName,omitempty"`
-		PolicyId                      nullable.Type[string]          `json:"policyId,omitempty"`
-		Schedule                      *EntitlementManagementSchedule `json:"schedule,omitempty"`
+		AllowCustomAssignmentSchedule    nullable.Type[bool]            `json:"allowCustomAssignmentSchedule,omitempty"`
+		IsApprovalRequiredForAdd         nullable.Type[bool]            `json:"isApprovalRequiredForAdd,omitempty"`
+		IsApprovalRequiredForUpdate      nullable.Type[bool]            `json:"isApprovalRequiredForUpdate,omitempty"`
+		IsRequestorJustificationRequired nullable.Type[bool]            `json:"isRequestorJustificationRequired,omitempty"`
+		ODataId                          *string                        `json:"@odata.id,omitempty"`
+		ODataType                        *string                        `json:"@odata.type,omitempty"`
+		PolicyDescription                nullable.Type[string]          `json:"policyDescription,omitempty"`
+		PolicyDisplayName                nullable.Type[string]          `json:"policyDisplayName,omitempty"`
+		PolicyId                         nullable.Type[string]          `json:"policyId,omitempty"`
+		Schedule                         *EntitlementManagementSchedule `json:"schedule,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -63,6 +67,7 @@ func (s *AccessPackageAssignmentRequestRequirements) UnmarshalJSON(bytes []byte)
 	s.AllowCustomAssignmentSchedule = decoded.AllowCustomAssignmentSchedule
 	s.IsApprovalRequiredForAdd = decoded.IsApprovalRequiredForAdd
 	s.IsApprovalRequiredForUpdate = decoded.IsApprovalRequiredForUpdate
+	s.IsRequestorJustificationRequired = decoded.IsRequestorJustificationRequired
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType
 	s.PolicyDescription = decoded.PolicyDescription

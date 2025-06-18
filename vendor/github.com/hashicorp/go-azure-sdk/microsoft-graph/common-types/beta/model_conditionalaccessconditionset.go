@@ -24,13 +24,13 @@ type ConditionalAccessConditionSet struct {
 	DeviceStates *ConditionalAccessDeviceStates `json:"deviceStates,omitempty"`
 
 	// Devices in the policy.
-	Devices *ConditionalAccessDevices `json:"devices"`
+	Devices *ConditionalAccessDevices `json:"devices,omitempty"`
 
 	// Insider risk levels included in the policy. The possible values are: minor, moderate, elevated, unknownFutureValue.
 	InsiderRiskLevels *ConditionalAccessInsiderRiskLevels `json:"insiderRiskLevels,omitempty"`
 
 	// Locations included in and excluded from the policy.
-	Locations *ConditionalAccessLocations `json:"locations"`
+	Locations *ConditionalAccessLocations `json:"locations,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
@@ -39,7 +39,7 @@ type ConditionalAccessConditionSet struct {
 	ODataType *string `json:"@odata.type,omitempty"`
 
 	// Platforms included in and excluded from the policy.
-	Platforms *ConditionalAccessPlatforms `json:"platforms"`
+	Platforms *ConditionalAccessPlatforms `json:"platforms,omitempty"`
 
 	// Service principal risk levels included in the policy. Possible values are: low, medium, high, none,
 	// unknownFutureValue.

@@ -191,6 +191,14 @@ func UnmarshalDeviceEnrollmentConfigurationImplementation(input []byte) (DeviceE
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.windowsRestoreDeviceEnrollmentConfiguration") {
+		var out WindowsRestoreDeviceEnrollmentConfiguration
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into WindowsRestoreDeviceEnrollmentConfiguration: %+v", err)
+		}
+		return out, nil
+	}
+
 	var parent BaseDeviceEnrollmentConfigurationImpl
 	if err := json.Unmarshal(input, &parent); err != nil {
 		return nil, fmt.Errorf("unmarshaling into BaseDeviceEnrollmentConfigurationImpl: %+v", err)

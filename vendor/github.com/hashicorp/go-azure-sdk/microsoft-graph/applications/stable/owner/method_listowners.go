@@ -102,7 +102,8 @@ func (p *ListOwnersCustomPager) NextPageLink() *odata.Link {
 	return p.NextLink
 }
 
-// ListOwners - List owners. Retrieve a list of owners for an application that are directoryObject objects.
+// ListOwners - List owners of an application. Retrieve a list of owners for an application that are directoryObject
+// types.
 func (c OwnerClient) ListOwners(ctx context.Context, id stable.ApplicationId, options ListOwnersOperationOptions) (result ListOwnersOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

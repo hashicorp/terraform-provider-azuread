@@ -47,7 +47,7 @@ func (o CreateAdministrativeUnitOperationOptions) ToQuery() *client.QueryParams 
 	return &out
 }
 
-// CreateAdministrativeUnit - Create administrativeUnit. Use this API to create a new administrativeUnit.
+// CreateAdministrativeUnit - Create administrativeUnit. Create a new administrativeUnit.
 func (c AdministrativeUnitClient) CreateAdministrativeUnit(ctx context.Context, input stable.AdministrativeUnit, options CreateAdministrativeUnitOperationOptions) (result CreateAdministrativeUnitOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

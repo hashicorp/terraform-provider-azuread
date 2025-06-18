@@ -43,9 +43,9 @@ type RiskyServicePrincipalHistoryItem struct {
 
 	// Details of the detected risk. Note: Details for this property are only available for Workload Identities Premium
 	// customers. Events in tenants without this license will be returned hidden. The possible values are: none, hidden,
-	// unknownFutureValue, adminConfirmedServicePrincipalCompromised, adminDismissedAllRiskForServicePrincipal. Note that
-	// you must use the Prefer: include-unknown-enum-members request header to get the following value(s) in this evolvable
-	// enum: adminConfirmedServicePrincipalCompromised , adminDismissedAllRiskForServicePrincipal.
+	// unknownFutureValue, adminConfirmedServicePrincipalCompromised, adminDismissedAllRiskForServicePrincipal. Use the
+	// Prefer: include-unknown-enum-members request header to get the following value(s) in this evolvable enum:
+	// adminConfirmedServicePrincipalCompromised , adminDismissedAllRiskForServicePrincipal.
 	RiskDetail *RiskDetail `json:"riskDetail,omitempty"`
 
 	// The date and time that the risk state was last updated. The DateTimeOffset type represents date and time information

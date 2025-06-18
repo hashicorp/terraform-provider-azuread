@@ -58,7 +58,8 @@ type AccessPackageAssignment struct {
 	// objectId.
 	Target *AccessPackageSubject `json:"target,omitempty"`
 
-	// The ID of the subject with the assignment. Read-only.
+	// This property should not be used as a dependency, as it may change without notice. Instead, expand the target
+	// relationship and use the objectId property. Read-only.
 	TargetId nullable.Type[string] `json:"targetId,omitempty"`
 
 	// Fields inherited from Entity

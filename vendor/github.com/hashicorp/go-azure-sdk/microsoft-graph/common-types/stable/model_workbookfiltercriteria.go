@@ -34,4 +34,7 @@ type WorkbookFilterCriteria struct {
 
 	// An operator in a cell; for example, =, >, <, <=, or <>.
 	Operator *string `json:"operator,omitempty"`
+
+	// The values that appear in the cell.
+	Values *Json `json:"values,omitempty"`
 }

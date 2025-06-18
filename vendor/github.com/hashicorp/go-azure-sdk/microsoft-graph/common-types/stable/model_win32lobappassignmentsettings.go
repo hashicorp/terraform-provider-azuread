@@ -11,6 +11,9 @@ import (
 var _ MobileAppAssignmentSettings = Win32LobAppAssignmentSettings{}
 
 type Win32LobAppAssignmentSettings struct {
+	// The auto-update settings to apply for this app assignment.
+	AutoUpdateSettings *Win32LobAppAutoUpdateSettings `json:"autoUpdateSettings,omitempty"`
+
 	// Contains value for delivery optimization priority.
 	DeliveryOptimizationPriority *Win32LobAppDeliveryOptimizationPriority `json:"deliveryOptimizationPriority,omitempty"`
 

@@ -92,6 +92,14 @@ func UnmarshalSubjectSetImplementation(input []byte) (SubjectSet, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.identityGovernance.groupBasedSubjectSet") {
+		var out IdentityGovernanceGroupBasedSubjectSet
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into IdentityGovernanceGroupBasedSubjectSet: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.identityGovernance.ruleBasedSubjectSet") {
 		var out IdentityGovernanceRuleBasedSubjectSet
 		if err := json.Unmarshal(input, &out); err != nil {

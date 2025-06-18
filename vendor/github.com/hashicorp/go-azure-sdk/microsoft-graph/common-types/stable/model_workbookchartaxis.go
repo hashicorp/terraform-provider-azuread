@@ -17,8 +17,24 @@ type WorkbookChartAxis struct {
 	// Returns a gridlines object that represents the major gridlines for the specified axis. Read-only.
 	MajorGridlines *WorkbookChartGridlines `json:"majorGridlines,omitempty"`
 
+	// Represents the interval between two major tick marks. Can be set to a numeric value or an empty string. The returned
+	// value is always a number.
+	MajorUnit *Json `json:"majorUnit,omitempty"`
+
+	// Represents the maximum value on the value axis. Can be set to a numeric value or an empty string (for automatic axis
+	// values). The returned value is always a number.
+	Maximum *Json `json:"maximum,omitempty"`
+
+	// Represents the minimum value on the value axis. Can be set to a numeric value or an empty string (for automatic axis
+	// values). The returned value is always a number.
+	Minimum *Json `json:"minimum,omitempty"`
+
 	// Returns a Gridlines object that represents the minor gridlines for the specified axis. Read-only.
 	MinorGridlines *WorkbookChartGridlines `json:"minorGridlines,omitempty"`
+
+	// Represents the interval between two minor tick marks. 'Can be set to a numeric value or an empty string (for
+	// automatic axis values). The returned value is always a number.
+	MinorUnit *Json `json:"minorUnit,omitempty"`
 
 	// Represents the axis title. Read-only.
 	Title *WorkbookChartAxisTitle `json:"title,omitempty"`

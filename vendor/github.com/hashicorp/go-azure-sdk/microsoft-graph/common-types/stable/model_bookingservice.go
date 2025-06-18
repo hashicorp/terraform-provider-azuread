@@ -16,6 +16,8 @@ type BookingService struct {
 	// Additional information that is sent to the customer when an appointment is confirmed.
 	AdditionalInformation nullable.Type[string] `json:"additionalInformation,omitempty"`
 
+	// The date, time, and time zone when the service was created. The timestamp type represents date and time information
+	// using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
 	// Contains the set of custom questions associated with a particular service.
@@ -41,21 +43,25 @@ type BookingService struct {
 	// A service name.
 	DisplayName *string `json:"displayName,omitempty"`
 
-	// True if the URL to join the appointment anonymously (anonymousJoinWebUrl) will be generated for the appointment
-	// booked for this service.
+	// Indicates if an anonymousJoinWebUrl(webrtcUrl) is generated for the appointment booked for this service. The default
+	// value is false.
 	IsAnonymousJoinEnabled *bool `json:"isAnonymousJoinEnabled,omitempty"`
 
+	// Indicates that the customer can manage bookings created by the staff. The default value is false.
 	IsCustomerAllowedToManageBooking nullable.Type[bool] `json:"isCustomerAllowedToManageBooking,omitempty"`
 
-	// True means this service is not available to customers for booking.
+	// True indicates that this service isn't available to customers for booking.
 	IsHiddenFromCustomers *bool `json:"isHiddenFromCustomers,omitempty"`
 
-	// True indicates that the appointments for the service will be held online. Default value is false.
+	// Indicates that the appointments for the service are held online. The default value is false.
 	IsLocationOnline *bool `json:"isLocationOnline,omitempty"`
 
 	// The language of the self-service booking page.
 	LanguageTag *string `json:"languageTag,omitempty"`
 
+	// The date, time, and time zone when the service was last updated. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
 	LastUpdatedDateTime nullable.Type[string] `json:"lastUpdatedDateTime,omitempty"`
 
 	// The maximum number of customers allowed in a service. If maximumAttendeesCount of the service is greater than 1, pass

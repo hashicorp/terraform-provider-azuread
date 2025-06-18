@@ -38,6 +38,9 @@ type AccessPackageAssignmentRequest struct {
 	// Information about all the custom extension calls that were made during the access package assignment workflow.
 	CustomExtensionCalloutInstances *[]CustomExtensionCalloutInstance `json:"customExtensionCalloutInstances,omitempty"`
 
+	// The requestor's supplied justification.
+	Justification nullable.Type[string] `json:"justification,omitempty"`
+
 	// The type of the request. The possible values are: notSpecified, userAdd, UserExtend, userUpdate, userRemove,
 	// adminAdd, adminUpdate, adminRemove, systemAdd, systemUpdate, systemRemove, onBehalfAdd (not supported),
 	// unknownFutureValue. Requests from the user have a requestType of userAdd, userUpdate, or userRemove. This property
@@ -47,7 +50,8 @@ type AccessPackageAssignmentRequest struct {
 	// The subject who requested or, if a direct assignment, was assigned. Read-only. Nullable. Supports $expand.
 	Requestor *AccessPackageSubject `json:"requestor,omitempty"`
 
-	// The range of dates that access is to be assigned to the requestor. This property can't be changed once set.
+	// The range of dates that access is to be assigned to the requestor. This property can't be changed once set, but a new
+	// schedule for an assignment can be included in another userUpdate or UserExtend or adminUpdate assignment request.
 	Schedule *EntitlementManagementSchedule `json:"schedule,omitempty"`
 
 	// The state of the request. The possible values are: submitted, pendingApproval, delivering, delivered, deliveryFailed,
@@ -123,6 +127,7 @@ func (s *AccessPackageAssignmentRequest) UnmarshalJSON(bytes []byte) error {
 		CompletedDateTime               nullable.Type[string]             `json:"completedDateTime,omitempty"`
 		CreatedDateTime                 nullable.Type[string]             `json:"createdDateTime,omitempty"`
 		CustomExtensionCalloutInstances *[]CustomExtensionCalloutInstance `json:"customExtensionCalloutInstances,omitempty"`
+		Justification                   nullable.Type[string]             `json:"justification,omitempty"`
 		RequestType                     *AccessPackageRequestType         `json:"requestType,omitempty"`
 		Requestor                       *AccessPackageSubject             `json:"requestor,omitempty"`
 		Schedule                        *EntitlementManagementSchedule    `json:"schedule,omitempty"`
@@ -141,6 +146,7 @@ func (s *AccessPackageAssignmentRequest) UnmarshalJSON(bytes []byte) error {
 	s.CompletedDateTime = decoded.CompletedDateTime
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.CustomExtensionCalloutInstances = decoded.CustomExtensionCalloutInstances
+	s.Justification = decoded.Justification
 	s.RequestType = decoded.RequestType
 	s.Requestor = decoded.Requestor
 	s.Schedule = decoded.Schedule

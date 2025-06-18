@@ -46,7 +46,8 @@ type BaseDeviceCompliancePolicyImpl struct {
 	// List of Scope Tags for this Entity instance.
 	RoleScopeTagIds *[]string `json:"roleScopeTagIds,omitempty"`
 
-	// The list of scheduled action for this rule
+	// The list of scheduled action per rule for this compliance policy. This is a required property when creating any
+	// individual per-platform compliance policies.
 	ScheduledActionsForRule *[]DeviceComplianceScheduledActionForRule `json:"scheduledActionsForRule,omitempty"`
 
 	// Device compliance users status overview

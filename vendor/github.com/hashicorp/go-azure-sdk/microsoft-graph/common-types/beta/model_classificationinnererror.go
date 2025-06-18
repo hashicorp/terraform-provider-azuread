@@ -8,10 +8,17 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type ClassificationInnerError struct {
-	ActivityId      nullable.Type[string] `json:"activityId,omitempty"`
+	// The activity ID associated with the request that generated the error.
+	ActivityId nullable.Type[string] `json:"activityId,omitempty"`
+
+	// The client request ID, if provided by the caller.
 	ClientRequestId nullable.Type[string] `json:"clientRequestId,omitempty"`
-	Code            nullable.Type[string] `json:"code,omitempty"`
-	ErrorDateTime   nullable.Type[string] `json:"errorDateTime,omitempty"`
+
+	// A more specific, potentially internal, error code string.
+	Code nullable.Type[string] `json:"code,omitempty"`
+
+	// The date and time the inner error occurred.
+	ErrorDateTime nullable.Type[string] `json:"errorDateTime,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`

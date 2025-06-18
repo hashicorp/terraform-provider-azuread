@@ -19,5 +19,6 @@ type AuditLogRoot struct {
 	// Represents an action performed by the Microsoft Entra provisioning service and its associated properties.
 	Provisioning *[]ProvisioningObjectSummary `json:"provisioning,omitempty"`
 
-	SignIns *[]SignIn `json:"signIns,omitempty"`
+	SignIns *[]SignIn            `json:"signIns,omitempty"`
+	SignUps *[]SelfServiceSignUp `json:"signUps,omitempty"`
 }

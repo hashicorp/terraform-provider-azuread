@@ -24,6 +24,9 @@ type Admin struct {
 	// Represents a setting to control people-related admin settings in the tenant.
 	People *PeopleAdminSettings `json:"people,omitempty"`
 
+	// A container for administrative resources to manage reports.
+	ReportSettings *AdminReportSettings `json:"reportSettings,omitempty"`
+
 	// A container for service communications resources. Read-only.
 	ServiceAnnouncement *ServiceAnnouncement `json:"serviceAnnouncement,omitempty"`
 

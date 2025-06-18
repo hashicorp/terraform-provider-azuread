@@ -11,8 +11,11 @@ import (
 var _ Entity = WorkbookChartPoint{}
 
 type WorkbookChartPoint struct {
-	// Encapsulates the format properties chart point. Read-only.
+	// The format properties of the chart point. Read-only.
 	Format *WorkbookChartPointFormat `json:"format,omitempty"`
+
+	// The value of a chart point. Read-only.
+	Value *Json `json:"value,omitempty"`
 
 	// Fields inherited from Entity
 
@@ -53,6 +56,7 @@ func (s WorkbookChartPoint) MarshalJSON() ([]byte, error) {
 	}
 
 	delete(decoded, "format")
+	delete(decoded, "value")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.workbookChartPoint"

@@ -12,7 +12,10 @@ var _ CloudPCDisasterRecoveryNetworkSetting = CloudPCDisasterRecoveryMicrosoftHo
 
 type CloudPCDisasterRecoveryMicrosoftHostedNetworkSetting struct {
 	RegionGroup *CloudPCRegionGroup `json:"regionGroup,omitempty"`
-	RegionName  *string             `json:"regionName,omitempty"`
+
+	// Indicates the Azure region that the new Cloud PC is assigned to. The Windows 365 service creates and manages the
+	// underlying virtual network.
+	RegionName *string `json:"regionName,omitempty"`
 
 	// Fields inherited from CloudPCDisasterRecoveryNetworkSetting
 

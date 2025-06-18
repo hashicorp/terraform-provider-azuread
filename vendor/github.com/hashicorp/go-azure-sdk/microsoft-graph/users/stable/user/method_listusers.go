@@ -101,7 +101,7 @@ func (p *ListUsersCustomPager) NextPageLink() *odata.Link {
 	return p.NextLink
 }
 
-// ListUsers - List users. List properties and relationships of the user objects.
+// ListUsers - List users. Retrieve a list of user objects.
 func (c UserClient) ListUsers(ctx context.Context, options ListUsersOperationOptions) (result ListUsersOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

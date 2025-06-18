@@ -25,7 +25,8 @@ type ServiceNowConnection struct {
 	// /api/now/table/incident
 	IncidentApiUrl nullable.Type[string] `json:"incidentApiUrl,omitempty"`
 
-	// Indicates the ServiceNow instance URL that Intune will connect to. Saved in the format of https://.service-now.com
+	// Indicates the ServiceNow instance URL that Intune will connect to. Saved in the format of
+	// https://<instance>.service-now.com
 	InstanceUrl nullable.Type[string] `json:"instanceUrl,omitempty"`
 
 	// Date Time when connection properties were last updated. The value cannot be modified and is automatically populated

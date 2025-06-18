@@ -21,31 +21,53 @@ type OfferShiftRequest interface {
 var _ OfferShiftRequest = BaseOfferShiftRequestImpl{}
 
 type BaseOfferShiftRequestImpl struct {
-	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
-	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
+	// The date and time when the recipient approved or declined the request.
 	RecipientActionDateTime nullable.Type[string] `json:"recipientActionDateTime,omitempty"`
 
-	// Custom message sent by recipient of the offer shift request.
+	// The message sent by the recipient regarding the request.
 	RecipientActionMessage nullable.Type[string] `json:"recipientActionMessage,omitempty"`
 
-	// User ID of the recipient of the offer shift request.
+	// The recipient's user ID.
 	RecipientUserId nullable.Type[string] `json:"recipientUserId,omitempty"`
 
-	// User ID of the sender of the offer shift request.
+	// The sender's shift ID.
 	SenderShiftId nullable.Type[string] `json:"senderShiftId,omitempty"`
 
 	// Fields inherited from ScheduleChangeRequest
 
-	AssignedTo            *ScheduleChangeRequestActor `json:"assignedTo,omitempty"`
-	ManagerActionDateTime nullable.Type[string]       `json:"managerActionDateTime,omitempty"`
-	ManagerActionMessage  nullable.Type[string]       `json:"managerActionMessage,omitempty"`
-	ManagerUserId         nullable.Type[string]       `json:"managerUserId,omitempty"`
-	SenderDateTime        nullable.Type[string]       `json:"senderDateTime,omitempty"`
-	SenderMessage         nullable.Type[string]       `json:"senderMessage,omitempty"`
-	SenderUserId          nullable.Type[string]       `json:"senderUserId,omitempty"`
-	State                 *ScheduleChangeState        `json:"state,omitempty"`
+	// Indicates who the request is assigned to. Possible values are: sender, recipient, manager, system,
+	// unknownFutureValue.
+	AssignedTo *ScheduleChangeRequestActor `json:"assignedTo,omitempty"`
+
+	// The date and time when the manager approved or declined the scheduleChangeRequest. The timestamp type represents date
+	// and time information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
+	ManagerActionDateTime nullable.Type[string] `json:"managerActionDateTime,omitempty"`
+
+	// The message sent by the manager regarding the scheduleChangeRequest. Optional.
+	ManagerActionMessage nullable.Type[string] `json:"managerActionMessage,omitempty"`
+
+	// The user ID of the manager who approved or declined the scheduleChangeRequest.
+	ManagerUserId nullable.Type[string] `json:"managerUserId,omitempty"`
+
+	// The date and time when the sender sent the scheduleChangeRequest. The timestamp type represents date and time
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
+	// 2014-01-01T00:00:00Z.
+	SenderDateTime nullable.Type[string] `json:"senderDateTime,omitempty"`
+
+	// The message sent by the sender of the scheduleChangeRequest. Optional.
+	SenderMessage nullable.Type[string] `json:"senderMessage,omitempty"`
+
+	// The user ID of the sender of the scheduleChangeRequest.
+	SenderUserId nullable.Type[string] `json:"senderUserId,omitempty"`
+
+	// The state of the scheduleChangeRequest. Possible values are: pending, approved, declined, unknownFutureValue.
+	State *ScheduleChangeState `json:"state,omitempty"`
 
 	// Fields inherited from ChangeTrackedEntity
+
+	// Identity of the creator of the entity.
+	CreatedBy IdentitySet `json:"createdBy"`
 
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
@@ -87,6 +109,7 @@ func (s BaseOfferShiftRequestImpl) ScheduleChangeRequest() BaseScheduleChangeReq
 		SenderMessage:         s.SenderMessage,
 		SenderUserId:          s.SenderUserId,
 		State:                 s.State,
+		CreatedBy:             s.CreatedBy,
 		CreatedDateTime:       s.CreatedDateTime,
 		LastModifiedBy:        s.LastModifiedBy,
 		LastModifiedDateTime:  s.LastModifiedDateTime,
@@ -98,6 +121,7 @@ func (s BaseOfferShiftRequestImpl) ScheduleChangeRequest() BaseScheduleChangeReq
 
 func (s BaseOfferShiftRequestImpl) ChangeTrackedEntity() BaseChangeTrackedEntityImpl {
 	return BaseChangeTrackedEntityImpl{
+		CreatedBy:            s.CreatedBy,
 		CreatedDateTime:      s.CreatedDateTime,
 		LastModifiedBy:       s.LastModifiedBy,
 		LastModifiedDateTime: s.LastModifiedDateTime,
@@ -218,6 +242,14 @@ func (s *BaseOfferShiftRequestImpl) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling BaseOfferShiftRequestImpl into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["createdBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'BaseOfferShiftRequestImpl': %+v", err)
+		}
+		s.CreatedBy = impl
 	}
 
 	if v, ok := temp["lastModifiedBy"]; ok {

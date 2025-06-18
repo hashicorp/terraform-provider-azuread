@@ -18,6 +18,7 @@ type LabelActionBase interface {
 var _ LabelActionBase = BaseLabelActionBaseImpl{}
 
 type BaseLabelActionBaseImpl struct {
+	// The name of the action (for example, 'Encrypt', 'AddHeader').
 	Name nullable.Type[string] `json:"name,omitempty"`
 
 	// The OData ID of this entity

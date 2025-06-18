@@ -509,12 +509,7 @@ if model := read.Model; model != nil {
 ctx := context.TODO()
 id := user.NewUserID("userId")
 
-payload := user.RestoreRequest{
-	// ...
-}
-
-
-read, err := client.Restore(ctx, id, payload, user.DefaultRestoreOperationOptions())
+read, err := client.Restore(ctx, id, user.DefaultRestoreOperationOptions())
 if err != nil {
 	// handle the error
 }

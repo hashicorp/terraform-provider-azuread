@@ -5,7 +5,7 @@ package stable
 
 type PrintSettings struct {
 	// Specifies whether document conversion is enabled for the tenant. If document conversion is enabled, Universal Print
-	// service will automatically convert documents into a format compatible with the printer (xps to pdf) when needed.
+	// service converts documents into a format compatible with the printer (xps to pdf) when needed.
 	DocumentConversionEnabled *bool `json:"documentConversionEnabled,omitempty"`
 
 	// The OData ID of this entity
@@ -13,4 +13,7 @@ type PrintSettings struct {
 
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
+
+	// Specifies settings that affect printer discovery when using Universal Print.
+	PrinterDiscoverySettings *PrinterDiscoverySettings `json:"printerDiscoverySettings,omitempty"`
 }

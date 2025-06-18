@@ -46,7 +46,8 @@ func (o UpdateConditionalAccessNamedLocationOperationOptions) ToQuery() *client.
 	return &out
 }
 
-// UpdateConditionalAccessNamedLocation - Update ipNamedlocation. Update the properties of an ipNamedLocation object.
+// UpdateConditionalAccessNamedLocation - Update countryNamedLocation. Update the properties of a countryNamedLocation
+// object.
 func (c ConditionalAccessNamedLocationClient) UpdateConditionalAccessNamedLocation(ctx context.Context, id stable.IdentityConditionalAccessNamedLocationId, input stable.NamedLocation, options UpdateConditionalAccessNamedLocationOperationOptions) (result UpdateConditionalAccessNamedLocationOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

@@ -20,25 +20,25 @@ type WorkbookChartDataLabels struct {
 	// InsideEnd, InsideBase, OutsideEnd, Left, Right, Top, Bottom, BestFit, Callout.
 	Position nullable.Type[string] `json:"position,omitempty"`
 
-	// String representing the separator used for the data labels on a chart.
+	// String that represents the separator used for the data labels on a chart.
 	Separator nullable.Type[string] `json:"separator,omitempty"`
 
-	// Boolean value representing if the data label bubble size is visible or not.
+	// Boolean value that represents whether the data label bubble size is visible.
 	ShowBubbleSize nullable.Type[bool] `json:"showBubbleSize,omitempty"`
 
-	// Boolean value representing if the data label category name is visible or not.
+	// Boolean value that represents whether the data label category name is visible.
 	ShowCategoryName nullable.Type[bool] `json:"showCategoryName,omitempty"`
 
-	// Boolean value representing if the data label legend key is visible or not.
+	// Boolean value that represents whether the data label legend key is visible.
 	ShowLegendKey nullable.Type[bool] `json:"showLegendKey,omitempty"`
 
-	// Boolean value representing if the data label percentage is visible or not.
+	// Boolean value that represents whether the data label percentage is visible.
 	ShowPercentage nullable.Type[bool] `json:"showPercentage,omitempty"`
 
-	// Boolean value representing if the data label series name is visible or not.
+	// Boolean value that represents whether the data label series name is visible.
 	ShowSeriesName nullable.Type[bool] `json:"showSeriesName,omitempty"`
 
-	// Boolean value representing if the data label value is visible or not.
+	// Boolean value that represents whether the data label value is visible.
 	ShowValue nullable.Type[bool] `json:"showValue,omitempty"`
 
 	// Fields inherited from Entity

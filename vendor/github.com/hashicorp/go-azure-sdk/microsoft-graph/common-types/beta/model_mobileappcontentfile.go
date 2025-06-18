@@ -43,17 +43,11 @@ type MobileAppContentFile struct {
 	// Indicates the name of the file.
 	Name nullable.Type[string] `json:"name,omitempty"`
 
-	// The size of the file prior to encryption. To be deprecated, please use sizeInBytes property instead.
+	// Indicates the original size of the file, in bytes.
 	Size *int64 `json:"size,omitempty"`
 
-	// The size of the file after encryption. To be deprecated, please use sizeEncryptedInBytes property instead.
+	// Indicates the size of the file after encryption, in bytes.
 	SizeEncrypted *int64 `json:"sizeEncrypted,omitempty"`
-
-	// Indicates the size of the file after encryption, in bytes. Valid values 0 to 9.22337203685478E+18
-	SizeEncryptedInBytes *int64 `json:"sizeEncryptedInBytes,omitempty"`
-
-	// Indicates the original size of the file, in bytes. Valid values 0 to 9.22337203685478E+18
-	SizeInBytes *int64 `json:"sizeInBytes,omitempty"`
 
 	// Contains properties for upload request states.
 	UploadState *MobileAppContentFileUploadState `json:"uploadState,omitempty"`

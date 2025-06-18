@@ -151,6 +151,14 @@ func UnmarshalAuthenticationMethodConfigurationImplementation(input []byte) (Aut
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.qrCodePinAuthenticationMethodConfiguration") {
+		var out QrCodePinAuthenticationMethodConfiguration
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into QrCodePinAuthenticationMethodConfiguration: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.smsAuthenticationMethodConfiguration") {
 		var out SmsAuthenticationMethodConfiguration
 		if err := json.Unmarshal(input, &out); err != nil {

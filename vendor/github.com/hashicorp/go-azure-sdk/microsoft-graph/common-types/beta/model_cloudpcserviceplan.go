@@ -15,7 +15,7 @@ type CloudPCServicePlan struct {
 	DisplayName *string `json:"displayName,omitempty"`
 
 	// Specifies the type of license used when provisioning Cloud PCs. By default, the license type is dedicated. Possible
-	// values are: dedicated, shared, unknownFutureValue, sharedByUser, sharedByEntraGroup. You must use the Prefer:
+	// values are: dedicated, shared, unknownFutureValue, sharedByUser, sharedByEntraGroup. Use the Prefer:
 	// include-unknown-enum-members request header to get the following values from this evolvable enum: sharedByUser,
 	// sharedByEntraGroup. The shared member is deprecated and will stop returning on April 30, 2027; going forward, use the
 	// sharedByUser member.

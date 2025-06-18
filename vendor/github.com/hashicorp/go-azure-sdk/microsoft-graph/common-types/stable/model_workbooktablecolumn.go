@@ -13,14 +13,18 @@ import (
 var _ Entity = WorkbookTableColumn{}
 
 type WorkbookTableColumn struct {
-	// Retrieve the filter applied to the column. Read-only.
+	// The filter applied to the column. Read-only.
 	Filter *WorkbookFilter `json:"filter,omitempty"`
 
-	// Returns the index number of the column within the columns collection of the table. Zero-indexed. Read-only.
+	// The index of the column within the columns collection of the table. Zero-indexed. Read-only.
 	Index *int64 `json:"index,omitempty"`
 
-	// Returns the name of the table column.
+	// The name of the table column.
 	Name nullable.Type[string] `json:"name,omitempty"`
+
+	// TRepresents the raw values of the specified range. The data returned could be of type string, number, or a Boolean.
+	// Cell that contain an error will return the error string.
+	Values *Json `json:"values,omitempty"`
 
 	// Fields inherited from Entity
 

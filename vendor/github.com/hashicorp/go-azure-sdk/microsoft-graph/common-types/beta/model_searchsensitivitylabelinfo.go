@@ -1,6 +1,9 @@
 package beta
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 )
 
@@ -20,4 +23,33 @@ type SearchSensitivityLabelInfo struct {
 	Priority           nullable.Type[int64]  `json:"priority,omitempty"`
 	SensitivityLabelId nullable.Type[string] `json:"sensitivityLabelId,omitempty"`
 	Tooltip            nullable.Type[string] `json:"tooltip,omitempty"`
+}
+
+var _ json.Marshaler = SearchSensitivityLabelInfo{}
+
+func (s SearchSensitivityLabelInfo) MarshalJSON() ([]byte, error) {
+	type wrapper SearchSensitivityLabelInfo
+	wrapped := wrapper(s)
+	encoded, err := json.Marshal(wrapped)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling SearchSensitivityLabelInfo: %+v", err)
+	}
+
+	var decoded map[string]interface{}
+	if err = json.Unmarshal(encoded, &decoded); err != nil {
+		return nil, fmt.Errorf("unmarshaling SearchSensitivityLabelInfo: %+v", err)
+	}
+
+	delete(decoded, "color")
+	delete(decoded, "displayName")
+	delete(decoded, "priority")
+	delete(decoded, "sensitivityLabelId")
+	delete(decoded, "tooltip")
+
+	encoded, err = json.Marshal(decoded)
+	if err != nil {
+		return nil, fmt.Errorf("re-marshaling SearchSensitivityLabelInfo: %+v", err)
+	}
+
+	return encoded, nil
 }

@@ -14,8 +14,11 @@ var _ ChangeTrackedEntity = Shift{}
 
 type Shift struct {
 	// Draft changes in the shift. Draft changes are only visible to managers. The changes are visible to employees when
-	// they are shared, which copies the changes from the draftShift to the sharedShift property.
+	// they're shared, which copies the changes from the draftShift to the sharedShift property.
 	DraftShift *ShiftItem `json:"draftShift,omitempty"`
+
+	// The shift is marked for deletion, a process that is finalized when the schedule is shared.
+	IsStagedForDeletion nullable.Type[bool] `json:"isStagedForDeletion,omitempty"`
 
 	// ID of the scheduling group the shift is part of. Required.
 	SchedulingGroupId nullable.Type[string] `json:"schedulingGroupId,omitempty"`
@@ -28,6 +31,9 @@ type Shift struct {
 	UserId nullable.Type[string] `json:"userId,omitempty"`
 
 	// Fields inherited from ChangeTrackedEntity
+
+	// Identity of the creator of the entity.
+	CreatedBy IdentitySet `json:"createdBy"`
 
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
@@ -57,6 +63,7 @@ type Shift struct {
 
 func (s Shift) ChangeTrackedEntity() BaseChangeTrackedEntityImpl {
 	return BaseChangeTrackedEntityImpl{
+		CreatedBy:            s.CreatedBy,
 		CreatedDateTime:      s.CreatedDateTime,
 		LastModifiedBy:       s.LastModifiedBy,
 		LastModifiedDateTime: s.LastModifiedDateTime,
@@ -105,6 +112,7 @@ var _ json.Unmarshaler = &Shift{}
 
 func (s *Shift) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
+		IsStagedForDeletion  nullable.Type[bool]   `json:"isStagedForDeletion,omitempty"`
 		SchedulingGroupId    nullable.Type[string] `json:"schedulingGroupId,omitempty"`
 		UserId               nullable.Type[string] `json:"userId,omitempty"`
 		CreatedDateTime      nullable.Type[string] `json:"createdDateTime,omitempty"`
@@ -117,6 +125,7 @@ func (s *Shift) UnmarshalJSON(bytes []byte) error {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.IsStagedForDeletion = decoded.IsStagedForDeletion
 	s.SchedulingGroupId = decoded.SchedulingGroupId
 	s.UserId = decoded.UserId
 	s.CreatedDateTime = decoded.CreatedDateTime
@@ -128,6 +137,14 @@ func (s *Shift) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling Shift into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["createdBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'Shift': %+v", err)
+		}
+		s.CreatedBy = impl
 	}
 
 	if v, ok := temp["draftShift"]; ok {

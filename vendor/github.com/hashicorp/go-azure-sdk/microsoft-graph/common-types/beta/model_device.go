@@ -17,6 +17,9 @@ type Device struct {
 	// with at least the Cloud Device Administrator role can set this property.
 	AccountEnabled nullable.Type[bool] `json:"accountEnabled,omitempty"`
 
+	// List of alternative names for the device.
+	AlternativeNames *[]string `json:"alternativeNames,omitempty"`
+
 	// For internal use only. Not nullable. Supports $filter (eq, not, ge, le).
 	AlternativeSecurityIds *[]AlternativeSecurityId `json:"alternativeSecurityIds,omitempty"`
 
@@ -36,33 +39,38 @@ type Device struct {
 	// User-defined property set by Intune to automatically add devices to groups and simplify managing devices.
 	DeviceCategory nullable.Type[string] `json:"deviceCategory,omitempty"`
 
-	// Unique Identifier set by Azure Device Registration Service at the time of registration. This is an alternate key that
-	// can be used to reference the device object. Also Supports $filter (eq, ne, not, startsWith).
+	// Unique identifier set by Azure Device Registration Service at the time of registration. This ID is an alternate key
+	// that can be used to reference the device object. Also supports $filter (eq, ne, not, startsWith).
 	DeviceId nullable.Type[string] `json:"deviceId,omitempty"`
 
 	// For internal use only. Set to null.
 	DeviceMetadata nullable.Type[string] `json:"deviceMetadata,omitempty"`
 
-	// Ownership of the device. This property is set by Intune. Possible values are: unknown, company, personal.
+	// Ownership of the device. Intune sets this property. Possible values are: unknown, company, personal.
 	DeviceOwnership nullable.Type[string] `json:"deviceOwnership,omitempty"`
+
+	// Device template used to instantiate this device. Nullable. Read-only.
+	DeviceTemplate *[]DeviceTemplate `json:"deviceTemplate,omitempty"`
 
 	// For internal use only.
 	DeviceVersion nullable.Type[int64] `json:"deviceVersion,omitempty"`
 
-	// The display name for the device. Required. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null
-	// values), $search, and $orderby.
+	// The display name for the device. Maximum length is 256 characters. Required. Supports $filter (eq, ne, not, ge, le,
+	// in, startsWith, and eq on null values), $search, and $orderby.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
-	// The on-premises domain name of Microsoft Entra hybrid joined devices. This property is set by Intune.
+	// The on-premises domain name of Microsoft Entra hybrid joined devices. Intune sets this property.
 	DomainName nullable.Type[string] `json:"domainName,omitempty"`
 
 	// Enrollment profile applied to the device. For example, Apple Device Enrollment Profile, Device enrollment - Corporate
-	// device identifiers, or Windows Autopilot profile name. This property is set by Intune.
+	// device identifiers, or Windows Autopilot profile name. Intune sets this property.
 	EnrollmentProfileName nullable.Type[string] `json:"enrollmentProfileName,omitempty"`
 
-	// Enrollment type of the device. This property is set by Intune. Possible values are: unknown, userEnrollment,
+	// Enrollment type of the device. Intune sets this property. Possible values are: unknown, userEnrollment,
 	// deviceEnrollmentManager, appleBulkWithUser, appleBulkWithoutUser, windowsAzureADJoin, windowsBulkUserless,
-	// windowsAutoEnrollment, windowsBulkAzureDomainJoin, windowsCoManagement.
+	// windowsAutoEnrollment, windowsBulkAzureDomainJoin, windowsCoManagement,
+	// windowsAzureADJoinUsingDeviceAuth,appleUserEnrollment, appleUserEnrollmentWithServiceAccount. NOTE: This property
+	// might return other values apart from those listed.
 	EnrollmentType nullable.Type[string] `json:"enrollmentType,omitempty"`
 
 	// Contains extension attributes 1-15 for the device. The individual extension attributes aren't selectable. These
@@ -85,11 +93,9 @@ type Device struct {
 	// Intune for any device OS type or by an approved MDM app for Windows OS devices. Supports $filter (eq, ne, not).
 	IsManaged nullable.Type[bool] `json:"isManaged,omitempty"`
 
-	// Indicates whether the device is a member of a restricted management administrative unit, in which case it requires a
-	// role scoped to the restricted administrative unit to manage. The default value is false. Read-only. To manage a
-	// device that's a member of a restricted administrative unit, the calling app must be assigned the
-	// Directory.Write.Restricted permission. For delegated scenarios, the administrators must also be explicitly assigned
-	// supported roles at the restricted administrative unit scope.
+	// Indicates whether the device is a member of a restricted management administrative unit. The default value is false.
+	// Read-only. To manage a device that's a member of a restricted management administrative unit, the administrator or
+	// calling app must be assigned a Microsoft Entra role at the scope of the restricted management administrative unit.
 	IsManagementRestricted nullable.Type[bool] `json:"isManagementRestricted,omitempty"`
 
 	// true if the device is rooted or jail-broken. This property can only be updated by Intune.
@@ -98,9 +104,9 @@ type Device struct {
 	// Form factor of the device. Only returned if the user signs in with a Microsoft account as part of Project Rome.
 	Kind nullable.Type[string] `json:"kind,omitempty"`
 
-	// Management channel of the device. This property is set by Intune. Possible values are: eas, mdm, easMdm,
-	// intuneClient, easIntuneClient, configurationManagerClient, configurationManagerClientMdm,
-	// configurationManagerClientMdmEas, unknown, jamf, googleCloudDevicePolicyController.
+	// Management channel of the device. Intune sets this property. Possible values are: eas, mdm, easMdm, intuneClient,
+	// easIntuneClient, configurationManagerClient, configurationManagerClientMdm, configurationManagerClientMdmEas,
+	// unknown, jamf, googleCloudDevicePolicyController.
 	ManagementType nullable.Type[string] `json:"managementType,omitempty"`
 
 	// Manufacturer of the device. Read-only.
@@ -185,7 +191,8 @@ type Device struct {
 
 	// Type of trust for the joined device. Read-only. Possible values: Workplace (indicates bring your own personal
 	// devices), AzureAd (Cloud only joined devices), ServerAd (on-premises domain joined devices joined to Microsoft Entra
-	// ID). For more information, see Introduction to device management in Microsoft Entra ID.
+	// ID). For more information, see Introduction to device management in Microsoft Entra ID. Supports $filter (eq, ne,
+	// not, in).
 	TrustType nullable.Type[string] `json:"trustType,omitempty"`
 
 	// Represents the usage rights a device has been granted.
@@ -245,6 +252,7 @@ func (s Device) MarshalJSON() ([]byte, error) {
 
 	delete(decoded, "approximateLastSignInDateTime")
 	delete(decoded, "complianceExpirationDateTime")
+	delete(decoded, "deviceTemplate")
 	delete(decoded, "extensions")
 	delete(decoded, "isCompliant")
 	delete(decoded, "isManagementRestricted")
@@ -277,6 +285,7 @@ var _ json.Unmarshaler = &Device{}
 func (s *Device) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
 		AccountEnabled                nullable.Type[bool]            `json:"accountEnabled,omitempty"`
+		AlternativeNames              *[]string                      `json:"alternativeNames,omitempty"`
 		AlternativeSecurityIds        *[]AlternativeSecurityId       `json:"alternativeSecurityIds,omitempty"`
 		ApproximateLastSignInDateTime nullable.Type[string]          `json:"approximateLastSignInDateTime,omitempty"`
 		Commands                      *[]Command                     `json:"commands,omitempty"`
@@ -285,6 +294,7 @@ func (s *Device) UnmarshalJSON(bytes []byte) error {
 		DeviceId                      nullable.Type[string]          `json:"deviceId,omitempty"`
 		DeviceMetadata                nullable.Type[string]          `json:"deviceMetadata,omitempty"`
 		DeviceOwnership               nullable.Type[string]          `json:"deviceOwnership,omitempty"`
+		DeviceTemplate                *[]DeviceTemplate              `json:"deviceTemplate,omitempty"`
 		DeviceVersion                 nullable.Type[int64]           `json:"deviceVersion,omitempty"`
 		DisplayName                   nullable.Type[string]          `json:"displayName,omitempty"`
 		DomainName                    nullable.Type[string]          `json:"domainName,omitempty"`
@@ -329,6 +339,7 @@ func (s *Device) UnmarshalJSON(bytes []byte) error {
 	}
 
 	s.AccountEnabled = decoded.AccountEnabled
+	s.AlternativeNames = decoded.AlternativeNames
 	s.AlternativeSecurityIds = decoded.AlternativeSecurityIds
 	s.ApproximateLastSignInDateTime = decoded.ApproximateLastSignInDateTime
 	s.Commands = decoded.Commands
@@ -337,6 +348,7 @@ func (s *Device) UnmarshalJSON(bytes []byte) error {
 	s.DeviceId = decoded.DeviceId
 	s.DeviceMetadata = decoded.DeviceMetadata
 	s.DeviceOwnership = decoded.DeviceOwnership
+	s.DeviceTemplate = decoded.DeviceTemplate
 	s.DeviceVersion = decoded.DeviceVersion
 	s.DisplayName = decoded.DisplayName
 	s.DomainName = decoded.DomainName

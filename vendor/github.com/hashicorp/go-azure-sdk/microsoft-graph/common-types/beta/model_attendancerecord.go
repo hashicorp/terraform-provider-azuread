@@ -19,6 +19,9 @@ type AttendanceRecord struct {
 	// Email address of the user associated with this attendance record.
 	EmailAddress nullable.Type[string] `json:"emailAddress,omitempty"`
 
+	// The external information for a virtual event registration.
+	ExternalRegistrationInformation *VirtualEventExternalRegistrationInformation `json:"externalRegistrationInformation,omitempty"`
+
 	// Identity of the user associated with this attendance record. The specific type will be one of the following derived
 	// types of identity, depending on the type of the user: communicationsUserIdentity,
 	// azureCommunicationServicesUserIdentity.
@@ -26,6 +29,10 @@ type AttendanceRecord struct {
 
 	// Unique identifier of a meetingRegistrant. Presents when the participant has registered for the meeting. (deprecated)
 	RegistrantId nullable.Type[string] `json:"registrantId,omitempty"`
+
+	// Unique identifier of a virtualEventRegistration. Presents for all participant who has registered for the
+	// virtualEventWebinar.
+	RegistrationId nullable.Type[string] `json:"registrationId,omitempty"`
 
 	// Role of the attendee. Possible values are: None, Attendee, Presenter, and Organizer.
 	Role nullable.Type[string] `json:"role,omitempty"`
@@ -87,14 +94,16 @@ var _ json.Unmarshaler = &AttendanceRecord{}
 
 func (s *AttendanceRecord) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		AttendanceIntervals      *[]AttendanceInterval `json:"attendanceIntervals,omitempty"`
-		EmailAddress             nullable.Type[string] `json:"emailAddress,omitempty"`
-		RegistrantId             nullable.Type[string] `json:"registrantId,omitempty"`
-		Role                     nullable.Type[string] `json:"role,omitempty"`
-		TotalAttendanceInSeconds nullable.Type[int64]  `json:"totalAttendanceInSeconds,omitempty"`
-		Id                       *string               `json:"id,omitempty"`
-		ODataId                  *string               `json:"@odata.id,omitempty"`
-		ODataType                *string               `json:"@odata.type,omitempty"`
+		AttendanceIntervals             *[]AttendanceInterval                        `json:"attendanceIntervals,omitempty"`
+		EmailAddress                    nullable.Type[string]                        `json:"emailAddress,omitempty"`
+		ExternalRegistrationInformation *VirtualEventExternalRegistrationInformation `json:"externalRegistrationInformation,omitempty"`
+		RegistrantId                    nullable.Type[string]                        `json:"registrantId,omitempty"`
+		RegistrationId                  nullable.Type[string]                        `json:"registrationId,omitempty"`
+		Role                            nullable.Type[string]                        `json:"role,omitempty"`
+		TotalAttendanceInSeconds        nullable.Type[int64]                         `json:"totalAttendanceInSeconds,omitempty"`
+		Id                              *string                                      `json:"id,omitempty"`
+		ODataId                         *string                                      `json:"@odata.id,omitempty"`
+		ODataType                       *string                                      `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -102,7 +111,9 @@ func (s *AttendanceRecord) UnmarshalJSON(bytes []byte) error {
 
 	s.AttendanceIntervals = decoded.AttendanceIntervals
 	s.EmailAddress = decoded.EmailAddress
+	s.ExternalRegistrationInformation = decoded.ExternalRegistrationInformation
 	s.RegistrantId = decoded.RegistrantId
+	s.RegistrationId = decoded.RegistrationId
 	s.Role = decoded.Role
 	s.TotalAttendanceInSeconds = decoded.TotalAttendanceInSeconds
 	s.Id = decoded.Id

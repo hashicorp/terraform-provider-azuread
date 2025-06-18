@@ -32,7 +32,7 @@ type Payload struct {
 	// Description of the attack simulation and training campaign payload.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
-	// Additional details about the payload.
+	// More details about the payload.
 	Detail PayloadDetail `json:"detail"`
 
 	// Display name of the attack simulation and training campaign payload. Supports $filter and $orderby.
@@ -82,9 +82,9 @@ type Payload struct {
 
 	// The social engineering technique used in the attack simulation and training campaign. Supports $filter and $orderby.
 	// Possible values are: unknown, credentialHarvesting, attachmentMalware, driveByUrl, linkInAttachment,
-	// linkToMalwareFile, unknownFutureValue, oAuthConsentGrant. Note that you must use the Prefer:
-	// include-unknown-enum-members request header to get the following values from this evolvable enum: oAuthConsentGrant.
-	// For more information on the types of social engineering attack techniques, see simulations.
+	// linkToMalwareFile, unknownFutureValue, oAuthConsentGrant, phishTraining. Use the Prefer: include-unknown-enum-members
+	// request header to get the following values from this evolvable enum: oAuthConsentGrant, phishTraining. For more
+	// information on the types of social engineering attack techniques, see simulations.
 	Technique *SimulationAttackTechnique `json:"technique,omitempty"`
 
 	// The theme of a payload. Possible values are: unknown, other, accountActivation, accountVerification, billing,

@@ -12,19 +12,25 @@ import (
 type PlannerContainerType string
 
 const (
-	PlannerContainerType_DriveItem PlannerContainerType = "driveItem"
-	PlannerContainerType_Group     PlannerContainerType = "group"
-	PlannerContainerType_Project   PlannerContainerType = "project"
-	PlannerContainerType_Roster    PlannerContainerType = "roster"
-	PlannerContainerType_User      PlannerContainerType = "user"
+	PlannerContainerType_DriveItem     PlannerContainerType = "driveItem"
+	PlannerContainerType_Group         PlannerContainerType = "group"
+	PlannerContainerType_OnlineMeeting PlannerContainerType = "onlineMeeting"
+	PlannerContainerType_PlannerTask   PlannerContainerType = "plannerTask"
+	PlannerContainerType_Project       PlannerContainerType = "project"
+	PlannerContainerType_Roster        PlannerContainerType = "roster"
+	PlannerContainerType_TeamsChannel  PlannerContainerType = "teamsChannel"
+	PlannerContainerType_User          PlannerContainerType = "user"
 )
 
 func PossibleValuesForPlannerContainerType() []string {
 	return []string{
 		string(PlannerContainerType_DriveItem),
 		string(PlannerContainerType_Group),
+		string(PlannerContainerType_OnlineMeeting),
+		string(PlannerContainerType_PlannerTask),
 		string(PlannerContainerType_Project),
 		string(PlannerContainerType_Roster),
+		string(PlannerContainerType_TeamsChannel),
 		string(PlannerContainerType_User),
 	}
 }
@@ -44,11 +50,14 @@ func (s *PlannerContainerType) UnmarshalJSON(bytes []byte) error {
 
 func parsePlannerContainerType(input string) (*PlannerContainerType, error) {
 	vals := map[string]PlannerContainerType{
-		"driveitem": PlannerContainerType_DriveItem,
-		"group":     PlannerContainerType_Group,
-		"project":   PlannerContainerType_Project,
-		"roster":    PlannerContainerType_Roster,
-		"user":      PlannerContainerType_User,
+		"driveitem":     PlannerContainerType_DriveItem,
+		"group":         PlannerContainerType_Group,
+		"onlinemeeting": PlannerContainerType_OnlineMeeting,
+		"plannertask":   PlannerContainerType_PlannerTask,
+		"project":       PlannerContainerType_Project,
+		"roster":        PlannerContainerType_Roster,
+		"teamschannel":  PlannerContainerType_TeamsChannel,
+		"user":          PlannerContainerType_User,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

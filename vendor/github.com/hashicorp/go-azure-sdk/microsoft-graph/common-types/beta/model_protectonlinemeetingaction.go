@@ -21,6 +21,7 @@ type ProtectOnlineMeetingAction struct {
 
 	// Fields inherited from LabelActionBase
 
+	// The name of the action (for example, 'Encrypt', 'AddHeader').
 	Name nullable.Type[string] `json:"name,omitempty"`
 
 	// The OData ID of this entity

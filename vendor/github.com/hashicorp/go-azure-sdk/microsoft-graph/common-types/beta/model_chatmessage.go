@@ -56,7 +56,7 @@ type ChatMessage struct {
 	// Locale of the chat message set by the client. Always set to en-us.
 	Locale *string `json:"locale,omitempty"`
 
-	// List of entities mentioned in the chat message. Supported entities are: user, bot, team, channel, and tag.
+	// List of entities mentioned in the chat message. Supported entities are: user, bot, team, channel, chat, and tag.
 	Mentions *[]ChatMessageMention `json:"mentions,omitempty"`
 
 	// List of activity history of a message item, including modification time and actions, such as reactionAdded,

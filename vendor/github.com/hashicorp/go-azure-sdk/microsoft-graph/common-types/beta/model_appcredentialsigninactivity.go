@@ -13,7 +13,8 @@ import (
 var _ Entity = AppCredentialSignInActivity{}
 
 type AppCredentialSignInActivity struct {
-	// The globally unique appId (also called client ID on the Microsoft Entra admin center) of the credential application.
+	// The globally unique appId (also called client ID on the Microsoft Entra admin center) of the credentialed
+	// application.
 	AppId *string `json:"appId,omitempty"`
 
 	// The ID of the credential application instance.

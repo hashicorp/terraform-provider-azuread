@@ -37,9 +37,6 @@ type DeviceManagementAutopilotEvent struct {
 	// Device id associated with the object
 	DeviceId nullable.Type[string] `json:"deviceId,omitempty"`
 
-	// Time spent in device enrollment.
-	DevicePreparationDuration *string `json:"devicePreparationDuration,omitempty"`
-
 	// Device registration date.
 	DeviceRegisteredDateTime *string `json:"deviceRegisteredDateTime,omitempty"`
 
@@ -70,14 +67,8 @@ type DeviceManagementAutopilotEvent struct {
 	// Device operating system version.
 	OsVersion nullable.Type[string] `json:"osVersion,omitempty"`
 
-	// Policy and application status details for this device.
-	PolicyStatusDetails *[]DeviceManagementAutopilotPolicyStatusDetail `json:"policyStatusDetails,omitempty"`
-
-	// Count of applications targeted.
-	TargetedAppCount *int64 `json:"targetedAppCount,omitempty"`
-
-	// Count of policies targeted.
-	TargetedPolicyCount *int64 `json:"targetedPolicyCount,omitempty"`
+	// UserId id associated with the object
+	UserId nullable.Type[string] `json:"userId,omitempty"`
 
 	// User principal name used to enroll the device.
 	UserPrincipalName nullable.Type[string] `json:"userPrincipalName,omitempty"`

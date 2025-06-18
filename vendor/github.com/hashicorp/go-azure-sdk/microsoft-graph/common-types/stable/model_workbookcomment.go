@@ -13,12 +13,13 @@ import (
 var _ Entity = WorkbookComment{}
 
 type WorkbookComment struct {
-	// The content of comment.
+	// The content of the comment.
 	Content nullable.Type[string] `json:"content,omitempty"`
 
-	// Indicates the type for the comment.
+	// The content type of the comment.
 	ContentType *string `json:"contentType,omitempty"`
 
+	// The list of replies to the comment. Read-only. Nullable.
 	Replies *[]WorkbookCommentReply `json:"replies,omitempty"`
 
 	// Fields inherited from Entity
@@ -58,6 +59,8 @@ func (s WorkbookComment) MarshalJSON() ([]byte, error) {
 	if err = json.Unmarshal(encoded, &decoded); err != nil {
 		return nil, fmt.Errorf("unmarshaling WorkbookComment: %+v", err)
 	}
+
+	delete(decoded, "replies")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.workbookComment"

@@ -12,8 +12,8 @@ type DateTimeColumn struct {
 	// details. If unspecified, treated as default.
 	DisplayAs nullable.Type[string] `json:"displayAs,omitempty"`
 
-	// Indicates whether the value should be presented as a date only or a date and time. Must be one of dateOnly or
-	// dateTime
+	// Indicates whether the value should be presented as a date only or a date and time. It must be either dateOnly or
+	// dateTime.
 	Format nullable.Type[string] `json:"format,omitempty"`
 
 	// The OData ID of this entity

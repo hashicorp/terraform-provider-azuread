@@ -37,6 +37,8 @@ type BaseProtectionUnitBaseImpl struct {
 	// The unique identifier of the protection policy based on which protection unit was created.
 	PolicyId nullable.Type[string] `json:"policyId,omitempty"`
 
+	ProtectionSources *ProtectionSource `json:"protectionSources,omitempty"`
+
 	// The status of the protection unit. The possible values are: protectRequested, protected, unprotectRequested,
 	// unprotected, removeRequested, unknownFutureValue.
 	Status *ProtectionUnitStatus `json:"status,omitempty"`
@@ -122,6 +124,7 @@ func (s *BaseProtectionUnitBaseImpl) UnmarshalJSON(bytes []byte) error {
 		Error                *PublicError          `json:"error,omitempty"`
 		LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 		PolicyId             nullable.Type[string] `json:"policyId,omitempty"`
+		ProtectionSources    *ProtectionSource     `json:"protectionSources,omitempty"`
 		Status               *ProtectionUnitStatus `json:"status,omitempty"`
 		Id                   *string               `json:"id,omitempty"`
 		ODataId              *string               `json:"@odata.id,omitempty"`
@@ -135,6 +138,7 @@ func (s *BaseProtectionUnitBaseImpl) UnmarshalJSON(bytes []byte) error {
 	s.Error = decoded.Error
 	s.LastModifiedDateTime = decoded.LastModifiedDateTime
 	s.PolicyId = decoded.PolicyId
+	s.ProtectionSources = decoded.ProtectionSources
 	s.Status = decoded.Status
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId

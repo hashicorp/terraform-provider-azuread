@@ -19,8 +19,11 @@ type VirtualEventRegistrationQuestionBase interface {
 var _ VirtualEventRegistrationQuestionBase = BaseVirtualEventRegistrationQuestionBaseImpl{}
 
 type BaseVirtualEventRegistrationQuestionBaseImpl struct {
+	// Display name of the registration question.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
-	IsRequired  nullable.Type[bool]   `json:"isRequired,omitempty"`
+
+	// Indicates whether an answer to the question is required. The default value is false.
+	IsRequired nullable.Type[bool] `json:"isRequired,omitempty"`
 
 	// Fields inherited from Entity
 

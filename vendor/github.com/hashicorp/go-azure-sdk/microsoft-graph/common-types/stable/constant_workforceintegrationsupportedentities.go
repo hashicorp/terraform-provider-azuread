@@ -18,6 +18,10 @@ const (
 	WorkforceIntegrationSupportedEntities_OpenShiftRequest     WorkforceIntegrationSupportedEntities = "openShiftRequest"
 	WorkforceIntegrationSupportedEntities_Shift                WorkforceIntegrationSupportedEntities = "shift"
 	WorkforceIntegrationSupportedEntities_SwapRequest          WorkforceIntegrationSupportedEntities = "swapRequest"
+	WorkforceIntegrationSupportedEntities_TimeCard             WorkforceIntegrationSupportedEntities = "timeCard"
+	WorkforceIntegrationSupportedEntities_TimeOff              WorkforceIntegrationSupportedEntities = "timeOff"
+	WorkforceIntegrationSupportedEntities_TimeOffReason        WorkforceIntegrationSupportedEntities = "timeOffReason"
+	WorkforceIntegrationSupportedEntities_TimeOffRequest       WorkforceIntegrationSupportedEntities = "timeOffRequest"
 	WorkforceIntegrationSupportedEntities_UserShiftPreferences WorkforceIntegrationSupportedEntities = "userShiftPreferences"
 )
 
@@ -29,6 +33,10 @@ func PossibleValuesForWorkforceIntegrationSupportedEntities() []string {
 		string(WorkforceIntegrationSupportedEntities_OpenShiftRequest),
 		string(WorkforceIntegrationSupportedEntities_Shift),
 		string(WorkforceIntegrationSupportedEntities_SwapRequest),
+		string(WorkforceIntegrationSupportedEntities_TimeCard),
+		string(WorkforceIntegrationSupportedEntities_TimeOff),
+		string(WorkforceIntegrationSupportedEntities_TimeOffReason),
+		string(WorkforceIntegrationSupportedEntities_TimeOffRequest),
 		string(WorkforceIntegrationSupportedEntities_UserShiftPreferences),
 	}
 }
@@ -54,6 +62,10 @@ func parseWorkforceIntegrationSupportedEntities(input string) (*WorkforceIntegra
 		"openshiftrequest":     WorkforceIntegrationSupportedEntities_OpenShiftRequest,
 		"shift":                WorkforceIntegrationSupportedEntities_Shift,
 		"swaprequest":          WorkforceIntegrationSupportedEntities_SwapRequest,
+		"timecard":             WorkforceIntegrationSupportedEntities_TimeCard,
+		"timeoff":              WorkforceIntegrationSupportedEntities_TimeOff,
+		"timeoffreason":        WorkforceIntegrationSupportedEntities_TimeOffReason,
+		"timeoffrequest":       WorkforceIntegrationSupportedEntities_TimeOffRequest,
 		"usershiftpreferences": WorkforceIntegrationSupportedEntities_UserShiftPreferences,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {

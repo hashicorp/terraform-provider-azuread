@@ -118,10 +118,34 @@ func UnmarshalDirectoryObjectImplementation(input []byte) (DirectoryObject, erro
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.appRoleAssignment") {
+		var out AppRoleAssignment
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AppRoleAssignment: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.application") {
 		var out Application
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into Application: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.certificateAuthorityDetail") {
+		var out CertificateAuthorityDetail
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CertificateAuthorityDetail: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.certificateBasedAuthPki") {
+		var out CertificateBasedAuthPki
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CertificateBasedAuthPki: %+v", err)
 		}
 		return out, nil
 	}
@@ -138,6 +162,14 @@ func UnmarshalDirectoryObjectImplementation(input []byte) (DirectoryObject, erro
 		var out Device
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into Device: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.deviceTemplate") {
+		var out DeviceTemplate
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DeviceTemplate: %+v", err)
 		}
 		return out, nil
 	}
@@ -214,6 +246,14 @@ func UnmarshalDirectoryObjectImplementation(input []byte) (DirectoryObject, erro
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.mailbox") {
+		var out Mailbox
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into Mailbox: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.multiTenantOrganizationMember") {
 		var out MultiTenantOrganizationMember
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -234,6 +274,14 @@ func UnmarshalDirectoryObjectImplementation(input []byte) (DirectoryObject, erro
 		var out Organization
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into Organization: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.organizationalUnit") {
+		var out OrganizationalUnit
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OrganizationalUnit: %+v", err)
 		}
 		return out, nil
 	}
@@ -274,6 +322,14 @@ func UnmarshalDirectoryObjectImplementation(input []byte) (DirectoryObject, erro
 		var out TrustedCertificateAuthorityAsEntityBase
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into TrustedCertificateAuthorityAsEntityBase: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.trustedCertificateAuthorityBase") {
+		var out TrustedCertificateAuthorityBase
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TrustedCertificateAuthorityBase: %+v", err)
 		}
 		return out, nil
 	}

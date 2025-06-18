@@ -14,7 +14,7 @@ type Package struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// An string indicating the type of package. While oneNote is the only currently defined value, you should expect other
-	// package types to be returned and handle them accordingly.
+	// Indicates the type of package. While oneNote is the only currently defined value, you should expect other package
+	// types to be returned and handle them accordingly.
 	Type nullable.Type[string] `json:"type,omitempty"`
 }

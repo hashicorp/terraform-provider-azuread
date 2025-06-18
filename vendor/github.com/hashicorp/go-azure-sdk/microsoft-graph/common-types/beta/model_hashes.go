@@ -20,14 +20,14 @@ type Hashes struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// A proprietary hash of the file that can be used to determine if the contents of the file have changed (if available).
+	// A proprietary hash of the file that can be used to determine if the contents of the file change (if available).
 	// Read-only.
 	QuickXorHash nullable.Type[string] `json:"quickXorHash,omitempty"`
 
 	// SHA1 hash for the contents of the file (if available). Read-only.
 	Sha1Hash nullable.Type[string] `json:"sha1Hash,omitempty"`
 
-	// SHA256 hash for the contents of the file (if available). Read-only.
+	// This property isn't supported. Don't use.
 	Sha256Hash nullable.Type[string] `json:"sha256Hash,omitempty"`
 }
 
@@ -49,7 +49,6 @@ func (s Hashes) MarshalJSON() ([]byte, error) {
 	delete(decoded, "crc32Hash")
 	delete(decoded, "quickXorHash")
 	delete(decoded, "sha1Hash")
-	delete(decoded, "sha256Hash")
 
 	encoded, err = json.Marshal(decoded)
 	if err != nil {

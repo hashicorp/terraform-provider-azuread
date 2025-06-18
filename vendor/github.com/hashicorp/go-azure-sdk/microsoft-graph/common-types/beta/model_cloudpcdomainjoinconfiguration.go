@@ -33,7 +33,9 @@ type CloudPCDomainJoinConfiguration struct {
 	// on resource status. For example, the Europe region group contains the Northern Europe and Western Europe regions.
 	// Possible values are: default, australia, canada, usCentral, usEast, usWest, france, germany, europeUnion,
 	// unitedKingdom, japan, asia, india, southAmerica, euap, usGovernment, usGovernmentDOD, unknownFutureValue, norway,
-	// switzerland, and southKorea. Read-only.
+	// switzerland, southKorea, middleEast, mexico, australasia, europe. Use the Prefer: include-unknown-enum-members
+	// request header to get the following values in this evolvable enum: norway, switzerland, southKorea, middleEast,
+	// mexico, australasia, europe. Read-only.
 	RegionGroup *CloudPCRegionGroup `json:"regionGroup,omitempty"`
 
 	// The supported Azure region where the IT admin wants the provisioning policy to create Cloud PCs. The underlying

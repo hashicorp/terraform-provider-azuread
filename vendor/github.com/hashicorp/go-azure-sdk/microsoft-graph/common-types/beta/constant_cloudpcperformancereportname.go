@@ -12,11 +12,13 @@ import (
 type CloudPCPerformanceReportName string
 
 const (
+	CloudPCPerformanceReportName_CloudPCInsightReport   CloudPCPerformanceReportName = "cloudPcInsightReport"
 	CloudPCPerformanceReportName_PerformanceTrendReport CloudPCPerformanceReportName = "performanceTrendReport"
 )
 
 func PossibleValuesForCloudPCPerformanceReportName() []string {
 	return []string{
+		string(CloudPCPerformanceReportName_CloudPCInsightReport),
 		string(CloudPCPerformanceReportName_PerformanceTrendReport),
 	}
 }
@@ -36,6 +38,7 @@ func (s *CloudPCPerformanceReportName) UnmarshalJSON(bytes []byte) error {
 
 func parseCloudPCPerformanceReportName(input string) (*CloudPCPerformanceReportName, error) {
 	vals := map[string]CloudPCPerformanceReportName{
+		"cloudpcinsightreport":   CloudPCPerformanceReportName_CloudPCInsightReport,
 		"performancetrendreport": CloudPCPerformanceReportName_PerformanceTrendReport,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {

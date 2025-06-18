@@ -21,7 +21,8 @@ var _ BaseSitePage = BaseBaseSitePageImpl{}
 
 type BaseBaseSitePageImpl struct {
 	// The name of the page layout of the page. The possible values are: microsoftReserved, article, home,
-	// unknownFutureValue.
+	// unknownFutureValue, newsLink. Use the Prefer: include-unknown-enum-members request header to get the following value
+	// in this evolvable enum: newsLink.
 	PageLayout *PageLayoutType `json:"pageLayout,omitempty"`
 
 	// The publishing status and the MM.mm version of the page.
@@ -243,6 +244,14 @@ func UnmarshalBaseSitePageImplementation(input []byte) (BaseSitePage, error) {
 		var out NewsLinkPage
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into NewsLinkPage: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.pageTemplate") {
+		var out PageTemplate
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PageTemplate: %+v", err)
 		}
 		return out, nil
 	}

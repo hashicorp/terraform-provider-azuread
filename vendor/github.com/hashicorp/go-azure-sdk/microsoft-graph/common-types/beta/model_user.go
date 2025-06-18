@@ -83,10 +83,17 @@ type User struct {
 	City nullable.Type[string] `json:"city,omitempty"`
 
 	CloudClipboard *CloudClipboardRoot `json:"cloudClipboard,omitempty"`
-	CloudPCs       *[]CloudPC          `json:"cloudPCs,omitempty"`
+
+	// The relationships of a user to cloud licensing resources.
+	CloudLicensing *CloudLicensingUserCloudLicensing `json:"cloudLicensing,omitempty"`
+
+	CloudPCs *[]CloudPC `json:"cloudPCs,omitempty"`
 
 	// Microsoft realtime communication information related to the user. Supports $filter (eq, ne,not).
 	CloudRealtimeCommunicationInfo *CloudRealtimeCommunicationInfo `json:"cloudRealtimeCommunicationInfo,omitempty"`
+
+	// The user's communications settings on Teams.
+	Communications *UserCloudCommunication `json:"communications,omitempty"`
 
 	// The name of the company the user is associated with. This property can be useful for describing the company that an
 	// external user comes from. The maximum length is 64 characters.Supports $filter (eq, ne, not, ge, le, in, startsWith,
@@ -128,7 +135,14 @@ type User struct {
 
 	// An open complex type that holds the value of a custom security attribute that is assigned to a directory object.
 	// Nullable. Returned only on $select. Supports $filter (eq, ne, not, startsWith). The filter value is case-sensitive.
+	// To read this property, the calling app must be assigned the CustomSecAttributeAssignment.Read.All permission. To
+	// write this property, the calling app must be assigned the CustomSecAttributeAssignment.ReadWrite.All permissions. To
+	// read or write this property in delegated scenarios, the admin must be assigned the Attribute Assignment Administrator
+	// role. Supports $filter (eq, ne, not , ge, le, in).
 	CustomSecurityAttributes *CustomSecurityAttributeValue `json:"customSecurityAttributes,omitempty"`
+
+	// The data security and governance settings for the user. Read-only. Nullable.
+	DataSecurityAndGovernance *UserDataSecurityAndGovernance `json:"dataSecurityAndGovernance,omitempty"`
 
 	// The name of the department where the user works. Maximum length is 64 characters.Supports $filter (eq, ne, not , ge,
 	// le, in, and eq on null values).
@@ -179,9 +193,10 @@ type User struct {
 	// The date and time when the user left or will leave the organization. To read this property, the calling app must be
 	// assigned the User-LifeCycleInfo.Read.All permission. To write this property, the calling app must be assigned the
 	// User.Read.All and User-LifeCycleInfo.ReadWrite.All permissions. To read this property in delegated scenarios, the
-	// admin needs at least one of the following Microsoft Entra roles: Lifecycle Workflows Administrator, Global Reader. To
-	// write this property in delegated scenarios, the admin needs the Global Administrator role. Supports $filter (eq, ne,
-	// not , ge, le, in). For more information, see Configure the employeeLeaveDateTime property for a user.
+	// admin needs at least one of the following Microsoft Entra roles: Lifecycle Workflows Administrator (least privilege),
+	// Global Reader. To write this property in delegated scenarios, the admin needs the Global Administrator role. Supports
+	// $filter (eq, ne, not , ge, le, in). For more information, see Configure the employeeLeaveDateTime property for a
+	// user.
 	EmployeeLeaveDateTime nullable.Type[string] `json:"employeeLeaveDateTime,omitempty"`
 
 	// Represents organization data (for example, division and costCenter) associated with a user. Supports $filter (eq, ne,
@@ -239,7 +254,10 @@ type User struct {
 	InfoCatalogs *[]string `json:"infoCatalogs,omitempty"`
 
 	InformationProtection *InformationProtection `json:"informationProtection,omitempty"`
-	Insights              *ItemInsights          `json:"insights,omitempty"`
+
+	// Represents relationships between a user and items such as OneDrive for work or school documents, calculated using
+	// advanced analytics and machine learning techniques. Read-only. Nullable.
+	Insights *ItemInsights `json:"insights,omitempty"`
 
 	// A list for users to describe their interests. Returned only on $select.
 	Interests *[]string `json:"interests,omitempty"`
@@ -254,11 +272,9 @@ type User struct {
 	// true only).
 	IsLicenseReconciliationNeeded nullable.Type[bool] `json:"isLicenseReconciliationNeeded,omitempty"`
 
-	// true if the user is a member of a restricted management administrative unit, which requires a role scoped to the
-	// restricted administrative unit to manage. Default value is false. Read-only. To manage a user who is a member of a
-	// restricted administrative unit, the calling app must be assigned the Directory.Write.Restricted permission. For
-	// delegated scenarios, the administrators must also be explicitly assigned supported roles at the restricted
-	// administrative unit scope.
+	// true if the user is a member of a restricted management administrative unit. Default value is false. Read-only. To
+	// manage a user who is a member of a restricted management administrative unit, the administrator or calling app must
+	// be assigned a Microsoft Entra role at the scope of the restricted management administrative unit.
 	IsManagementRestricted nullable.Type[bool] `json:"isManagementRestricted,omitempty"`
 
 	// Do not use – reserved for future use.
@@ -279,7 +295,7 @@ type User struct {
 	LastPasswordChangeDateTime nullable.Type[string] `json:"lastPasswordChangeDateTime,omitempty"`
 
 	// Used by enterprise applications to determine the legal age group of the user. This property is read-only and
-	// calculated based on ageGroup and consentProvidedForMinor properties. Allowed values: null,
+	// calculated based on ageGroup and consentProvidedForMinor properties. Allowed values: null, Undefined,
 	// MinorWithOutParentalConsent, MinorWithParentalConsent, MinorNoParentalConsentRequired, NotAdult, and Adult. For more
 	// information, see legal age group property definitions. Returned only on $select.
 	LegalAgeGroupClassification nullable.Type[string] `json:"legalAgeGroupClassification,omitempty"`
@@ -353,21 +369,19 @@ type User struct {
 	// ge, le, in, startsWith, and eq on null values).
 	OfficeLocation nullable.Type[string] `json:"officeLocation,omitempty"`
 
-	// Contains the on-premises Active Directory distinguished name or DN. The property is only populated for customers
-	// synchronizing their on-premises directory to Microsoft Entra ID via Microsoft Entra Connect. Read-only.
+	// Contains the on-premises Active Directory distinguished name or DN.
 	OnPremisesDistinguishedName nullable.Type[string] `json:"onPremisesDistinguishedName,omitempty"`
 
-	// Contains the on-premises domainFQDN, also called dnsDomainName synchronized from the on-premises directory. The
-	// property is only populated for customers synchronizing their on-premises directory to Microsoft Entra ID via
-	// Microsoft Entra Connect. Read-only.
+	// Contains the on-premises domainFQDN, also called dnsDomainName synchronized from the on-premises directory.
 	OnPremisesDomainName nullable.Type[string] `json:"onPremisesDomainName,omitempty"`
 
 	// Contains extensionAttributes1-15 for the user. These extension attributes are also known as Exchange custom
-	// attributes 1-15. For an onPremisesSyncEnabled user, the source of authority for this set of properties is the
-	// on-premises and is read-only. For a cloud-only user (where onPremisesSyncEnabled is false), these properties can be
-	// set during the creation or update of a user object. For a cloud-only user previously synced from on-premises Active
-	// Directory, these properties are read-only in Microsoft Graph but can be fully managed through the Exchange Admin
-	// Center or the Exchange Online V2 module in PowerShell. Supports $filter (eq, ne, not, in).
+	// attributes 1-15. Each attribute can store up to 1024 characters. For an onPremisesSyncEnabled user, the source of
+	// authority for this set of properties is the on-premises and is read-only. For a cloud-only user (where
+	// onPremisesSyncEnabled is false), these properties can be set during the creation or update of a user object. For a
+	// cloud-only user previously synced from on-premises Active Directory, these properties are read-only in Microsoft
+	// Graph but can be fully managed through the Exchange Admin Center or the Exchange Online V2 module in PowerShell.
+	// Supports $filter (eq, ne, not, in).
 	OnPremisesExtensionAttributes *OnPremisesExtensionAttributes `json:"onPremisesExtensionAttributes,omitempty"`
 
 	// This property associates an on-premises Active Directory user account to their Microsoft Entra user object. This
@@ -385,13 +399,13 @@ type User struct {
 	// Errors when using Microsoft synchronization product during provisioning. Supports $filter (eq, not, ge, le).
 	OnPremisesProvisioningErrors *[]OnPremisesProvisioningError `json:"onPremisesProvisioningErrors,omitempty"`
 
-	// Contains the on-premises sAMAccountName synchronized from the on-premises directory. The property is only populated
-	// for customers synchronizing their on-premises directory to Microsoft Entra ID via Microsoft Entra Connect. Read-only.
-	// Supports $filter (eq, ne, not, ge, le, in, startsWith).
+	// Contains the on-premises sAMAccountName synchronized from the on-premises directory. Supports $filter (eq, ne, not,
+	// ge, le, in, startsWith).
 	OnPremisesSamAccountName nullable.Type[string] `json:"onPremisesSamAccountName,omitempty"`
 
-	// Contains the on-premises security identifier (SID) for the user synchronized from on-premises to the cloud.
-	// Read-only. Supports $filter (eq including on null values).
+	// Contains the on-premises security identifier (SID) for the user synchronized from on-premises to the cloud. Must be
+	// in the format of SID, such as 'S-1-5-21-1180699209-877415012-3182824384-1006'. Supports $filter (eq including on null
+	// values).
 	OnPremisesSecurityIdentifier nullable.Type[string] `json:"onPremisesSecurityIdentifier,omitempty"`
 
 	// Contains all on-premises Session Initiation Protocol (SIP) information related to the user. Read-only.
@@ -402,9 +416,8 @@ type User struct {
 	// null values).
 	OnPremisesSyncEnabled nullable.Type[bool] `json:"onPremisesSyncEnabled,omitempty"`
 
-	// Contains the on-premises userPrincipalName synchronized from the on-premises directory. The property is only
-	// populated for customers synchronizing their on-premises directory to Microsoft Entra ID via Microsoft Entra Connect.
-	// Read-only. Supports $filter (eq, ne, not, ge, le, in, startsWith).
+	// Contains the on-premises userPrincipalName synchronized from the on-premises directory. Supports $filter (eq, ne,
+	// not, ge, le, in, startsWith).
 	OnPremisesUserPrincipalName nullable.Type[string] `json:"onPremisesUserPrincipalName,omitempty"`
 
 	Onenote *Onenote `json:"onenote,omitempty"`
@@ -412,9 +425,9 @@ type User struct {
 	// Information about a meeting, including the URL used to join a meeting, the attendees list, and the description.
 	OnlineMeetings *[]OnlineMeeting `json:"onlineMeetings,omitempty"`
 
-	// A list of additional email addresses for the user; for example: ['bob@contoso.com', 'Robert@fabrikam.com'].NOTE: This
-	// property can't contain accent characters.Supports $filter (eq, not, ge, le, in, startsWith, endsWith, /$count eq 0,
-	// /$count ne 0).
+	// A list of additional email addresses for the user; for example: ['bob@contoso.com', 'Robert@fabrikam.com']. Can store
+	// up to 250 values, each with a limit of 250 characters. NOTE: This property can't contain accent characters.Supports
+	// $filter (eq, not, ge, le, in, startsWith, endsWith, /$count eq 0, /$count ne 0).
 	OtherMails *[]string `json:"otherMails,omitempty"`
 
 	// Selective Outlook services available to the user. Read-only. Nullable.
@@ -443,6 +456,12 @@ type User struct {
 	// Specifies the password profile for the user. The profile contains the user's password. This property is required when
 	// a user is created. The password in the profile must satisfy minimum requirements as specified by the passwordPolicies
 	// property. By default, a strong password is required. Supports $filter (eq, ne, not, in, and eq on null values).
+	// User-PasswordProfile.ReadWrite.All is the least privileged permission to update this property. In delegated
+	// scenarios, the User Administrator Microsoft Entra role is the least privileged admin role supported to update this
+	// property for nonadmin users. Privileged Authentication Administrator is the least privileged role that's allowed to
+	// update this property for all administrators in the tenant. In general, the signed-in user must have a higher
+	// privileged administrator role as indicated in Who can reset passwords. In app-only scenarios, the calling app must be
+	// assigned a supported permission and at least the User Administrator Microsoft Entra role.
 	PasswordProfile *PasswordProfile `json:"passwordProfile,omitempty"`
 
 	// A list for users to enumerate their past projects. Returned only on $select.
@@ -554,6 +573,7 @@ type User struct {
 	// A list for the user to enumerate their skills. Returned only on $select.
 	Skills *[]string `json:"skills,omitempty"`
 
+	// Represents a user's custom solution entity. Read-Only. Nullable.
 	Solutions *UserSolutionRoot `json:"solutions,omitempty"`
 
 	// The users and groups responsible for this guest user's privileges in the tenant and keep the guest user's information
@@ -684,11 +704,13 @@ func (s User) MarshalJSON() ([]byte, error) {
 	delete(decoded, "createdDateTime")
 	delete(decoded, "createdObjects")
 	delete(decoded, "creationType")
+	delete(decoded, "dataSecurityAndGovernance")
 	delete(decoded, "directReports")
 	delete(decoded, "drive")
 	delete(decoded, "drives")
 	delete(decoded, "events")
 	delete(decoded, "imAddresses")
+	delete(decoded, "insights")
 	delete(decoded, "isLicenseReconciliationNeeded")
 	delete(decoded, "isManagementRestricted")
 	delete(decoded, "joinedTeams")
@@ -698,14 +720,9 @@ func (s User) MarshalJSON() ([]byte, error) {
 	delete(decoded, "manager")
 	delete(decoded, "memberOf")
 	delete(decoded, "messages")
-	delete(decoded, "onPremisesDistinguishedName")
-	delete(decoded, "onPremisesDomainName")
 	delete(decoded, "onPremisesLastSyncDateTime")
-	delete(decoded, "onPremisesSamAccountName")
-	delete(decoded, "onPremisesSecurityIdentifier")
 	delete(decoded, "onPremisesSipInfo")
 	delete(decoded, "onPremisesSyncEnabled")
-	delete(decoded, "onPremisesUserPrincipalName")
 	delete(decoded, "outlook")
 	delete(decoded, "ownedDevices")
 	delete(decoded, "ownedObjects")
@@ -762,8 +779,10 @@ func (s *User) UnmarshalJSON(bytes []byte) error {
 		Chats                                           *[]Chat                                           `json:"chats,omitempty"`
 		City                                            nullable.Type[string]                             `json:"city,omitempty"`
 		CloudClipboard                                  *CloudClipboardRoot                               `json:"cloudClipboard,omitempty"`
+		CloudLicensing                                  *CloudLicensingUserCloudLicensing                 `json:"cloudLicensing,omitempty"`
 		CloudPCs                                        *[]CloudPC                                        `json:"cloudPCs,omitempty"`
 		CloudRealtimeCommunicationInfo                  *CloudRealtimeCommunicationInfo                   `json:"cloudRealtimeCommunicationInfo,omitempty"`
+		Communications                                  *UserCloudCommunication                           `json:"communications,omitempty"`
 		CompanyName                                     nullable.Type[string]                             `json:"companyName,omitempty"`
 		ConsentProvidedForMinor                         nullable.Type[string]                             `json:"consentProvidedForMinor,omitempty"`
 		ContactFolders                                  *[]ContactFolder                                  `json:"contactFolders,omitempty"`
@@ -773,6 +792,7 @@ func (s *User) UnmarshalJSON(bytes []byte) error {
 		CreatedObjects_ODataBind                        *[]string                                         `json:"createdObjects@odata.bind,omitempty"`
 		CreationType                                    nullable.Type[string]                             `json:"creationType,omitempty"`
 		CustomSecurityAttributes                        *CustomSecurityAttributeValue                     `json:"customSecurityAttributes,omitempty"`
+		DataSecurityAndGovernance                       *UserDataSecurityAndGovernance                    `json:"dataSecurityAndGovernance,omitempty"`
 		Department                                      nullable.Type[string]                             `json:"department,omitempty"`
 		DeviceEnrollmentLimit                           *int64                                            `json:"deviceEnrollmentLimit,omitempty"`
 		DeviceKeys                                      *[]DeviceKey                                      `json:"deviceKeys,omitempty"`
@@ -919,8 +939,10 @@ func (s *User) UnmarshalJSON(bytes []byte) error {
 	s.Chats = decoded.Chats
 	s.City = decoded.City
 	s.CloudClipboard = decoded.CloudClipboard
+	s.CloudLicensing = decoded.CloudLicensing
 	s.CloudPCs = decoded.CloudPCs
 	s.CloudRealtimeCommunicationInfo = decoded.CloudRealtimeCommunicationInfo
+	s.Communications = decoded.Communications
 	s.CompanyName = decoded.CompanyName
 	s.ConsentProvidedForMinor = decoded.ConsentProvidedForMinor
 	s.ContactFolders = decoded.ContactFolders
@@ -930,6 +952,7 @@ func (s *User) UnmarshalJSON(bytes []byte) error {
 	s.CreatedObjects_ODataBind = decoded.CreatedObjects_ODataBind
 	s.CreationType = decoded.CreationType
 	s.CustomSecurityAttributes = decoded.CustomSecurityAttributes
+	s.DataSecurityAndGovernance = decoded.DataSecurityAndGovernance
 	s.Department = decoded.Department
 	s.DeviceEnrollmentLimit = decoded.DeviceEnrollmentLimit
 	s.DeviceKeys = decoded.DeviceKeys

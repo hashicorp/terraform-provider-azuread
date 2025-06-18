@@ -15,7 +15,7 @@ var _ Entity = EducationAssignment{}
 type EducationAssignment struct {
 	// Optional field to control the assignment behavior for adding assignments to students' and teachers' calendars when
 	// the assignment is published. The possible values are: none, studentsAndPublisher, studentsAndTeamOwners,
-	// unknownFutureValue, and studentsOnly. You must use the Prefer: include-unknown-enum-members request header to get the
+	// unknownFutureValue, and studentsOnly. Use the Prefer: include-unknown-enum-members request header to get the
 	// following values in this evolvable enum: studentsOnly. The default value is none.
 	AddToCalendarAction *EducationAddToCalendarOptions `json:"addToCalendarAction,omitempty"`
 
@@ -112,8 +112,8 @@ type EducationAssignment struct {
 	Rubric *EducationRubric `json:"rubric,omitempty"`
 
 	// Status of the assignment. You can't PATCH this value. Possible values are: draft, scheduled, published, assigned,
-	// unknownFutureValue, inactive. Note that you must use the Prefer: include-unknown-enum-members request header to get
-	// the following value(s) in this evolvable enum: inactive.
+	// unknownFutureValue, inactive. Use the Prefer: include-unknown-enum-members request header to get the following
+	// value(s) in this evolvable enum: inactive.
 	Status *EducationAssignmentStatus `json:"status,omitempty"`
 
 	// Once published, there's a submission object for each student representing their work and grade. Read-only. Nullable.

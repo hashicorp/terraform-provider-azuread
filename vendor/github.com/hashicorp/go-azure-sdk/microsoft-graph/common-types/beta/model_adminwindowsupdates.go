@@ -11,13 +11,13 @@ import (
 var _ Entity = AdminWindowsUpdates{}
 
 type AdminWindowsUpdates struct {
-	// Catalog of content that can be approved for deployment by the deployment service. Read-only.
+	// Catalog of content that can be approved for deployment by Windows Autopatch. Read-only.
 	Catalog *WindowsUpdatesCatalog `json:"catalog,omitempty"`
 
 	// The set of updatableAsset resources to which a deployment can apply.
 	DeploymentAudiences *[]WindowsUpdatesDeploymentAudience `json:"deploymentAudiences,omitempty"`
 
-	// Deployments created using the deployment service.
+	// Deployments created using Windows Autopatch.
 	Deployments *[]WindowsUpdatesDeployment `json:"deployments,omitempty"`
 
 	// A collection of Windows products.
@@ -26,7 +26,7 @@ type AdminWindowsUpdates struct {
 	// Service connections to external resources such as analytics workspaces.
 	ResourceConnections *[]WindowsUpdatesResourceConnection `json:"resourceConnections,omitempty"`
 
-	// Assets registered with the deployment service that can receive updates.
+	// Assets registered with Windows Autopatch that can receive updates.
 	UpdatableAssets *[]WindowsUpdatesUpdatableAsset `json:"updatableAssets,omitempty"`
 
 	// A collection of policies for approving the deployment of different content to an audience over time.

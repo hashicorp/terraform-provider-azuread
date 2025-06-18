@@ -13,6 +13,8 @@ import (
 var _ Entity = FileStorageContainer{}
 
 type FileStorageContainer struct {
+	ArchivalDetails *SiteArchivalDetails `json:"archivalDetails,omitempty"`
+
 	// Sensitivity label assigned to the fileStorageContainer. Read-write.
 	AssignedSensitivityLabel *AssignedLabel `json:"assignedSensitivityLabel,omitempty"`
 
@@ -37,14 +39,9 @@ type FileStorageContainer struct {
 	// The drive of the resource fileStorageContainer. Read-only.
 	Drive *Drive `json:"drive,omitempty"`
 
-	ExternalGroupId nullable.Type[string] `json:"externalGroupId,omitempty"`
-
-	// Indicates whether versioning is enabled for the fileStorageContainer. The setting is applicable to all items in the
-	// fileStorageContainer. Read-Write.
-	IsItemVersioningEnabled nullable.Type[bool] `json:"isItemVersioningEnabled,omitempty"`
-
-	// Maximum number of major versions allowed for items in the fileStorageContainer. Read-write.
-	ItemMajorVersionLimit nullable.Type[int64] `json:"itemMajorVersionLimit,omitempty"`
+	ExternalGroupId         nullable.Type[string] `json:"externalGroupId,omitempty"`
+	IsItemVersioningEnabled nullable.Type[bool]   `json:"isItemVersioningEnabled,omitempty"`
+	ItemMajorVersionLimit   nullable.Type[int64]  `json:"itemMajorVersionLimit,omitempty"`
 
 	// Indicates the lock state of the fileStorageContainer. The possible values are unlocked and lockedReadOnly. Read-only.
 	LockState *SiteLockState `json:"lockState,omitempty"`
@@ -52,17 +49,20 @@ type FileStorageContainer struct {
 	// List of users who own the fileStorageContainer. Read-only.
 	Owners *[]UserIdentity `json:"owners,omitempty"`
 
-	// Ownership type of the fileStorageContainer.The possible values are: tenantOwned. Read-only.
+	// Ownership type of the fileStorageContainer. The possible values are: tenantOwned. Read-only.
 	OwnershipType *FileStorageContainerOwnershipType `json:"ownershipType,omitempty"`
 
 	// The set of permissions for users in the fileStorageContainer. The permission for each user is set by the roles
-	// property. The possible values are 'reader', 'writer', 'manager', and 'owner'. Read-write.
+	// property. The possible values are reader, writer, manager, and owner. Read-write.
 	Permissions *[]Permission `json:"permissions,omitempty"`
 
 	// Recycle bin of the fileStorageContainer. Read-only.
 	RecycleBin *RecycleBin `json:"recycleBin,omitempty"`
 
 	Settings *FileStorageContainerSettings `json:"settings,omitempty"`
+
+	// The collection of sharePointGroup objects local to the container. Read-write.
+	SharePointGroups *[]SharePointGroup `json:"sharePointGroups,omitempty"`
 
 	// Status of the fileStorageContainer. Containers are created as inactive and require activation. Inactive containers
 	// are subjected to automatic deletion in 24 hours. The possible values are: inactive, active. Read-only.
@@ -139,6 +139,7 @@ var _ json.Unmarshaler = &FileStorageContainer{}
 
 func (s *FileStorageContainer) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
+		ArchivalDetails          *SiteArchivalDetails                          `json:"archivalDetails,omitempty"`
 		AssignedSensitivityLabel *AssignedLabel                                `json:"assignedSensitivityLabel,omitempty"`
 		Columns                  *[]ColumnDefinition                           `json:"columns,omitempty"`
 		ContainerTypeId          *string                                       `json:"containerTypeId,omitempty"`
@@ -155,6 +156,7 @@ func (s *FileStorageContainer) UnmarshalJSON(bytes []byte) error {
 		Permissions              *[]Permission                                 `json:"permissions,omitempty"`
 		RecycleBin               *RecycleBin                                   `json:"recycleBin,omitempty"`
 		Settings                 *FileStorageContainerSettings                 `json:"settings,omitempty"`
+		SharePointGroups         *[]SharePointGroup                            `json:"sharePointGroups,omitempty"`
 		Status                   *FileStorageContainerStatus                   `json:"status,omitempty"`
 		StorageUsedInBytes       nullable.Type[int64]                          `json:"storageUsedInBytes,omitempty"`
 		Viewpoint                *FileStorageContainerViewpoint                `json:"viewpoint,omitempty"`
@@ -166,6 +168,7 @@ func (s *FileStorageContainer) UnmarshalJSON(bytes []byte) error {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.ArchivalDetails = decoded.ArchivalDetails
 	s.AssignedSensitivityLabel = decoded.AssignedSensitivityLabel
 	s.Columns = decoded.Columns
 	s.ContainerTypeId = decoded.ContainerTypeId
@@ -182,6 +185,7 @@ func (s *FileStorageContainer) UnmarshalJSON(bytes []byte) error {
 	s.Permissions = decoded.Permissions
 	s.RecycleBin = decoded.RecycleBin
 	s.Settings = decoded.Settings
+	s.SharePointGroups = decoded.SharePointGroups
 	s.Status = decoded.Status
 	s.StorageUsedInBytes = decoded.StorageUsedInBytes
 	s.Viewpoint = decoded.Viewpoint

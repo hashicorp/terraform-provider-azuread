@@ -12,22 +12,30 @@ import (
 type DeviceManagementConfigurationPlatforms string
 
 const (
-	DeviceManagementConfigurationPlatforms_Android    DeviceManagementConfigurationPlatforms = "android"
-	DeviceManagementConfigurationPlatforms_IOS        DeviceManagementConfigurationPlatforms = "iOS"
-	DeviceManagementConfigurationPlatforms_Linux      DeviceManagementConfigurationPlatforms = "linux"
-	DeviceManagementConfigurationPlatforms_MacOS      DeviceManagementConfigurationPlatforms = "macOS"
-	DeviceManagementConfigurationPlatforms_None       DeviceManagementConfigurationPlatforms = "none"
-	DeviceManagementConfigurationPlatforms_Windows10  DeviceManagementConfigurationPlatforms = "windows10"
-	DeviceManagementConfigurationPlatforms_Windows10X DeviceManagementConfigurationPlatforms = "windows10X"
+	DeviceManagementConfigurationPlatforms_Android           DeviceManagementConfigurationPlatforms = "android"
+	DeviceManagementConfigurationPlatforms_AndroidEnterprise DeviceManagementConfigurationPlatforms = "androidEnterprise"
+	DeviceManagementConfigurationPlatforms_Aosp              DeviceManagementConfigurationPlatforms = "aosp"
+	DeviceManagementConfigurationPlatforms_IOS               DeviceManagementConfigurationPlatforms = "iOS"
+	DeviceManagementConfigurationPlatforms_Linux             DeviceManagementConfigurationPlatforms = "linux"
+	DeviceManagementConfigurationPlatforms_MacOS             DeviceManagementConfigurationPlatforms = "macOS"
+	DeviceManagementConfigurationPlatforms_None              DeviceManagementConfigurationPlatforms = "none"
+	DeviceManagementConfigurationPlatforms_TvOS              DeviceManagementConfigurationPlatforms = "tvOS"
+	DeviceManagementConfigurationPlatforms_VisionOS          DeviceManagementConfigurationPlatforms = "visionOS"
+	DeviceManagementConfigurationPlatforms_Windows10         DeviceManagementConfigurationPlatforms = "windows10"
+	DeviceManagementConfigurationPlatforms_Windows10X        DeviceManagementConfigurationPlatforms = "windows10X"
 )
 
 func PossibleValuesForDeviceManagementConfigurationPlatforms() []string {
 	return []string{
 		string(DeviceManagementConfigurationPlatforms_Android),
+		string(DeviceManagementConfigurationPlatforms_AndroidEnterprise),
+		string(DeviceManagementConfigurationPlatforms_Aosp),
 		string(DeviceManagementConfigurationPlatforms_IOS),
 		string(DeviceManagementConfigurationPlatforms_Linux),
 		string(DeviceManagementConfigurationPlatforms_MacOS),
 		string(DeviceManagementConfigurationPlatforms_None),
+		string(DeviceManagementConfigurationPlatforms_TvOS),
+		string(DeviceManagementConfigurationPlatforms_VisionOS),
 		string(DeviceManagementConfigurationPlatforms_Windows10),
 		string(DeviceManagementConfigurationPlatforms_Windows10X),
 	}
@@ -48,13 +56,17 @@ func (s *DeviceManagementConfigurationPlatforms) UnmarshalJSON(bytes []byte) err
 
 func parseDeviceManagementConfigurationPlatforms(input string) (*DeviceManagementConfigurationPlatforms, error) {
 	vals := map[string]DeviceManagementConfigurationPlatforms{
-		"android":    DeviceManagementConfigurationPlatforms_Android,
-		"ios":        DeviceManagementConfigurationPlatforms_IOS,
-		"linux":      DeviceManagementConfigurationPlatforms_Linux,
-		"macos":      DeviceManagementConfigurationPlatforms_MacOS,
-		"none":       DeviceManagementConfigurationPlatforms_None,
-		"windows10":  DeviceManagementConfigurationPlatforms_Windows10,
-		"windows10x": DeviceManagementConfigurationPlatforms_Windows10X,
+		"android":           DeviceManagementConfigurationPlatforms_Android,
+		"androidenterprise": DeviceManagementConfigurationPlatforms_AndroidEnterprise,
+		"aosp":              DeviceManagementConfigurationPlatforms_Aosp,
+		"ios":               DeviceManagementConfigurationPlatforms_IOS,
+		"linux":             DeviceManagementConfigurationPlatforms_Linux,
+		"macos":             DeviceManagementConfigurationPlatforms_MacOS,
+		"none":              DeviceManagementConfigurationPlatforms_None,
+		"tvos":              DeviceManagementConfigurationPlatforms_TvOS,
+		"visionos":          DeviceManagementConfigurationPlatforms_VisionOS,
+		"windows10":         DeviceManagementConfigurationPlatforms_Windows10,
+		"windows10x":        DeviceManagementConfigurationPlatforms_Windows10X,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

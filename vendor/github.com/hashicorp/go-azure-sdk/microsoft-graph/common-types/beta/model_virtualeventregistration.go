@@ -21,6 +21,9 @@ type VirtualEventRegistration struct {
 	// Email address of the registrant.
 	Email nullable.Type[string] `json:"email,omitempty"`
 
+	// The external information for a virtual event registration.
+	ExternalRegistrationInformation *VirtualEventExternalRegistrationInformation `json:"externalRegistrationInformation,omitempty"`
+
 	// First name of the registrant.
 	FirstName nullable.Type[string] `json:"firstName,omitempty"`
 
@@ -33,8 +36,10 @@ type VirtualEventRegistration struct {
 	// The registrant's time zone details.
 	PreferredTimezone nullable.Type[string] `json:"preferredTimezone,omitempty"`
 
+	RegistrantVideoOnDemandWebUrl nullable.Type[string] `json:"registrantVideoOnDemandWebUrl,omitempty"`
+
 	// Date and time when the registrant registers for the virtual event. The Timestamp type represents date and time
-	// information using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is
+	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
 	// 2014-01-01T00:00:00Z.
 	RegistrationDateTime nullable.Type[string] `json:"registrationDateTime,omitempty"`
 

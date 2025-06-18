@@ -11,7 +11,12 @@ import (
 var _ Entity = SecurityIdentityContainer{}
 
 type SecurityIdentityContainer struct {
+	// Represents potential issues identified by Microsoft Defender for Identity within a customer's Microsoft Defender for
+	// Identity configuration.
 	HealthIssues *[]SecurityHealthIssue `json:"healthIssues,omitempty"`
+
+	// Represents a customer's Microsoft Defender for Identity sensors.
+	Sensors *[]SecuritySensor `json:"sensors,omitempty"`
 
 	// Fields inherited from Entity
 

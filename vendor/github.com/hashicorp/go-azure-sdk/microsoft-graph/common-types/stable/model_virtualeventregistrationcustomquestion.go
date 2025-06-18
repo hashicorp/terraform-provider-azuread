@@ -13,13 +13,20 @@ import (
 var _ VirtualEventRegistrationQuestionBase = VirtualEventRegistrationCustomQuestion{}
 
 type VirtualEventRegistrationCustomQuestion struct {
-	AnswerChoices   *[]string                                        `json:"answerChoices,omitempty"`
+	// Answer choices when answerInputType is singleChoice or multiChoice.
+	AnswerChoices *[]string `json:"answerChoices,omitempty"`
+
+	// Input type of the registration question answer. Possible values are text, multilineText, singleChoice, multiChoice,
+	// boolean, and unknownFutureValue.
 	AnswerInputType *VirtualEventRegistrationQuestionAnswerInputType `json:"answerInputType,omitempty"`
 
 	// Fields inherited from VirtualEventRegistrationQuestionBase
 
+	// Display name of the registration question.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
-	IsRequired  nullable.Type[bool]   `json:"isRequired,omitempty"`
+
+	// Indicates whether an answer to the question is required. The default value is false.
+	IsRequired nullable.Type[bool] `json:"isRequired,omitempty"`
 
 	// Fields inherited from Entity
 

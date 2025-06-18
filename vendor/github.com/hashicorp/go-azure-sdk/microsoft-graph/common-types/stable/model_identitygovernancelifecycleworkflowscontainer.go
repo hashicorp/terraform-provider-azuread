@@ -17,6 +17,9 @@ type IdentityGovernanceLifecycleWorkflowsContainer struct {
 	// Deleted workflows in your lifecycle workflows instance.
 	DeletedItems *DeletedItemContainer `json:"deletedItems,omitempty"`
 
+	// The insight container holding workflow insight summaries for a tenant.
+	Insights *IdentityGovernanceInsights `json:"insights,omitempty"`
+
 	Settings *IdentityGovernanceLifecycleManagementSettings `json:"settings,omitempty"`
 
 	// The definition of tasks within the lifecycle workflows instance.

@@ -22,6 +22,10 @@ type MailboxProtectionUnit struct {
 	// Email address associated with the directory object.
 	Email nullable.Type[string] `json:"email,omitempty"`
 
+	// The type of mailbox which is assigned to the user with id: directoryObjectId.The possible values are: unknown, user,
+	// shared, unknownFutureValue.
+	MailboxType *MailboxType `json:"mailboxType,omitempty"`
+
 	// Fields inherited from ProtectionUnitBase
 
 	// The identity of person who created the protection unit.
@@ -41,6 +45,8 @@ type MailboxProtectionUnit struct {
 
 	// The unique identifier of the protection policy based on which protection unit was created.
 	PolicyId nullable.Type[string] `json:"policyId,omitempty"`
+
+	ProtectionSources *ProtectionSource `json:"protectionSources,omitempty"`
 
 	// The status of the protection unit. The possible values are: protectRequested, protected, unprotectRequested,
 	// unprotected, removeRequested, unknownFutureValue.
@@ -69,6 +75,7 @@ func (s MailboxProtectionUnit) ProtectionUnitBase() BaseProtectionUnitBaseImpl {
 		LastModifiedBy:       s.LastModifiedBy,
 		LastModifiedDateTime: s.LastModifiedDateTime,
 		PolicyId:             s.PolicyId,
+		ProtectionSources:    s.ProtectionSources,
 		Status:               s.Status,
 		Id:                   s.Id,
 		ODataId:              s.ODataId,
@@ -121,10 +128,12 @@ func (s *MailboxProtectionUnit) UnmarshalJSON(bytes []byte) error {
 		DirectoryObjectId    nullable.Type[string] `json:"directoryObjectId,omitempty"`
 		DisplayName          nullable.Type[string] `json:"displayName,omitempty"`
 		Email                nullable.Type[string] `json:"email,omitempty"`
+		MailboxType          *MailboxType          `json:"mailboxType,omitempty"`
 		CreatedDateTime      nullable.Type[string] `json:"createdDateTime,omitempty"`
 		Error                *PublicError          `json:"error,omitempty"`
 		LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 		PolicyId             nullable.Type[string] `json:"policyId,omitempty"`
+		ProtectionSources    *ProtectionSource     `json:"protectionSources,omitempty"`
 		Status               *ProtectionUnitStatus `json:"status,omitempty"`
 		Id                   *string               `json:"id,omitempty"`
 		ODataId              *string               `json:"@odata.id,omitempty"`
@@ -137,6 +146,7 @@ func (s *MailboxProtectionUnit) UnmarshalJSON(bytes []byte) error {
 	s.DirectoryObjectId = decoded.DirectoryObjectId
 	s.DisplayName = decoded.DisplayName
 	s.Email = decoded.Email
+	s.MailboxType = decoded.MailboxType
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.Error = decoded.Error
 	s.Id = decoded.Id
@@ -144,6 +154,7 @@ func (s *MailboxProtectionUnit) UnmarshalJSON(bytes []byte) error {
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType
 	s.PolicyId = decoded.PolicyId
+	s.ProtectionSources = decoded.ProtectionSources
 	s.Status = decoded.Status
 
 	var temp map[string]json.RawMessage

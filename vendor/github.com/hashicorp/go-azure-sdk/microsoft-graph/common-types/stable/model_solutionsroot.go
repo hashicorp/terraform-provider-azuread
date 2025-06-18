@@ -4,6 +4,7 @@ package stable
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type SolutionsRoot struct {
+	BackupRestore     *BackupRestoreRoot `json:"backupRestore,omitempty"`
 	BookingBusinesses *[]BookingBusiness `json:"bookingBusinesses,omitempty"`
 	BookingCurrencies *[]BookingCurrency `json:"bookingCurrencies,omitempty"`
 

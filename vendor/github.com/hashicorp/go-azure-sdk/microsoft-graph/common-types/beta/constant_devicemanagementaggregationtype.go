@@ -15,6 +15,7 @@ const (
 	DeviceManagementAggregationType_AffectedCloudPCCount      DeviceManagementAggregationType = "affectedCloudPcCount"
 	DeviceManagementAggregationType_AffectedCloudPCPercentage DeviceManagementAggregationType = "affectedCloudPcPercentage"
 	DeviceManagementAggregationType_Count                     DeviceManagementAggregationType = "count"
+	DeviceManagementAggregationType_DurationInMinutes         DeviceManagementAggregationType = "durationInMinutes"
 	DeviceManagementAggregationType_Percentage                DeviceManagementAggregationType = "percentage"
 )
 
@@ -23,6 +24,7 @@ func PossibleValuesForDeviceManagementAggregationType() []string {
 		string(DeviceManagementAggregationType_AffectedCloudPCCount),
 		string(DeviceManagementAggregationType_AffectedCloudPCPercentage),
 		string(DeviceManagementAggregationType_Count),
+		string(DeviceManagementAggregationType_DurationInMinutes),
 		string(DeviceManagementAggregationType_Percentage),
 	}
 }
@@ -45,6 +47,7 @@ func parseDeviceManagementAggregationType(input string) (*DeviceManagementAggreg
 		"affectedcloudpccount":      DeviceManagementAggregationType_AffectedCloudPCCount,
 		"affectedcloudpcpercentage": DeviceManagementAggregationType_AffectedCloudPCPercentage,
 		"count":                     DeviceManagementAggregationType_Count,
+		"durationinminutes":         DeviceManagementAggregationType_DurationInMinutes,
 		"percentage":                DeviceManagementAggregationType_Percentage,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {

@@ -12,14 +12,16 @@ import (
 type ManagedAppRemediationAction string
 
 const (
-	ManagedAppRemediationAction_Block ManagedAppRemediationAction = "block"
-	ManagedAppRemediationAction_Warn  ManagedAppRemediationAction = "warn"
-	ManagedAppRemediationAction_Wipe  ManagedAppRemediationAction = "wipe"
+	ManagedAppRemediationAction_Block                       ManagedAppRemediationAction = "block"
+	ManagedAppRemediationAction_BlockWhenSettingIsSupported ManagedAppRemediationAction = "blockWhenSettingIsSupported"
+	ManagedAppRemediationAction_Warn                        ManagedAppRemediationAction = "warn"
+	ManagedAppRemediationAction_Wipe                        ManagedAppRemediationAction = "wipe"
 )
 
 func PossibleValuesForManagedAppRemediationAction() []string {
 	return []string{
 		string(ManagedAppRemediationAction_Block),
+		string(ManagedAppRemediationAction_BlockWhenSettingIsSupported),
 		string(ManagedAppRemediationAction_Warn),
 		string(ManagedAppRemediationAction_Wipe),
 	}
@@ -40,9 +42,10 @@ func (s *ManagedAppRemediationAction) UnmarshalJSON(bytes []byte) error {
 
 func parseManagedAppRemediationAction(input string) (*ManagedAppRemediationAction, error) {
 	vals := map[string]ManagedAppRemediationAction{
-		"block": ManagedAppRemediationAction_Block,
-		"warn":  ManagedAppRemediationAction_Warn,
-		"wipe":  ManagedAppRemediationAction_Wipe,
+		"block":                       ManagedAppRemediationAction_Block,
+		"blockwhensettingissupported": ManagedAppRemediationAction_BlockWhenSettingIsSupported,
+		"warn":                        ManagedAppRemediationAction_Warn,
+		"wipe":                        ManagedAppRemediationAction_Wipe,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

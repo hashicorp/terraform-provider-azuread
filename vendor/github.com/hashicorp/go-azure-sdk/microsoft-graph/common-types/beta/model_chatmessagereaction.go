@@ -12,6 +12,9 @@ type ChatMessageReaction struct {
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	CreatedDateTime *string `json:"createdDateTime,omitempty"`
 
+	// The name of the reaction.
+	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
+
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
 
@@ -21,8 +24,8 @@ type ChatMessageReaction struct {
 	// The hosted content URL for the custom reaction type.
 	ReactionContentUrl nullable.Type[string] `json:"reactionContentUrl,omitempty"`
 
-	// Supported values are Unicode characters and custom. Some backward-compatible reaction types include like, angry, sad,
-	// laugh, heart, and surprised.
+	// The reaction type. Supported values include Unicode characters, custom, and some backward-compatible reaction types,
+	// such as like, angry, sad, laugh, heart, and surprised.
 	ReactionType *string `json:"reactionType,omitempty"`
 
 	User *ChatMessageReactionIdentitySet `json:"user,omitempty"`

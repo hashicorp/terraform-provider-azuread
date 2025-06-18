@@ -20,17 +20,21 @@ type Team struct {
 	Channels *[]Channel `json:"channels,omitempty"`
 
 	// An optional label. Typically describes the data or business sensitivity of the team. Must match one of a
-	// pre-configured set in the tenant's directory.
+	// preconfigured set in the tenant's directory.
 	Classification nullable.Type[string] `json:"classification,omitempty"`
 
 	// Timestamp at which the team was created.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
-	// An optional description for the team. Maximum length: 1024 characters.
+	// An optional description for the team. Maximum length: 1,024 characters.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
 	// The name of the team.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
+
+	// The name of the first channel in the team. This is an optional property, only used during team creation and isn't
+	// returned in methods to get and list teams.
+	FirstChannelName nullable.Type[string] `json:"firstChannelName,omitempty"`
 
 	// Settings to configure use of Giphy, memes, and stickers in the team.
 	FunSettings *TeamFunSettings `json:"funSettings,omitempty"`
@@ -46,7 +50,7 @@ type Team struct {
 	// The apps installed in this team.
 	InstalledApps *[]TeamsAppInstallation `json:"installedApps,omitempty"`
 
-	// A unique ID for the team that has been used in a few places such as the audit log/Office 365 Management Activity API.
+	// A unique ID for the team that was used in a few places such as the audit log/Office 365 Management Activity API.
 	InternalId nullable.Type[string] `json:"internalId,omitempty"`
 
 	// Whether this team is in read-only mode.
@@ -96,9 +100,8 @@ type Team struct {
 	// The visibility of the group and team. Defaults to Public.
 	Visibility *TeamVisibilityType `json:"visibility,omitempty"`
 
-	// A hyperlink that will go to the team in the Microsoft Teams client. This is the URL that you get when you right-click
-	// a team in the Microsoft Teams client and select Get link to team. This URL should be treated as an opaque blob, and
-	// not parsed.
+	// A hyperlink that goes to the team in the Microsoft Teams client. You get this URL when you right-click a team in the
+	// Microsoft Teams client and select Get link to team. This URL should be treated as an opaque blob, and not parsed.
 	WebUrl nullable.Type[string] `json:"webUrl,omitempty"`
 
 	// Fields inherited from Entity
@@ -161,6 +164,7 @@ func (s *Team) UnmarshalJSON(bytes []byte) error {
 		CreatedDateTime   nullable.Type[string]              `json:"createdDateTime,omitempty"`
 		Description       nullable.Type[string]              `json:"description,omitempty"`
 		DisplayName       nullable.Type[string]              `json:"displayName,omitempty"`
+		FirstChannelName  nullable.Type[string]              `json:"firstChannelName,omitempty"`
 		FunSettings       *TeamFunSettings                   `json:"funSettings,omitempty"`
 		Group             *Group                             `json:"group,omitempty"`
 		GuestSettings     *TeamGuestSettings                 `json:"guestSettings,omitempty"`
@@ -195,6 +199,7 @@ func (s *Team) UnmarshalJSON(bytes []byte) error {
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.Description = decoded.Description
 	s.DisplayName = decoded.DisplayName
+	s.FirstChannelName = decoded.FirstChannelName
 	s.FunSettings = decoded.FunSettings
 	s.Group = decoded.Group
 	s.GuestSettings = decoded.GuestSettings

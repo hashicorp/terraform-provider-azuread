@@ -13,10 +13,18 @@ import (
 var _ DlpActionInfo = NotifyUserAction{}
 
 type NotifyUserAction struct {
+	// Timestamp when the notification action configuration was last modified.
 	ActionLastModifiedDateTime nullable.Type[string] `json:"actionLastModifiedDateTime,omitempty"`
-	EmailText                  nullable.Type[string] `json:"emailText,omitempty"`
-	PolicyTip                  nullable.Type[string] `json:"policyTip,omitempty"`
-	Recipients                 *[]string             `json:"recipients,omitempty"`
+
+	// The body text of the email notification sent to users.
+	EmailText nullable.Type[string] `json:"emailText,omitempty"`
+
+	// The text of the policy tip displayed to the user within the application (For example, Outlook, Word).
+	PolicyTip nullable.Type[string] `json:"policyTip,omitempty"`
+
+	// List of email addresses or user identifiers designated to receive the notification email. Can include sender, owner,
+	// manager, etc.
+	Recipients *[]string `json:"recipients,omitempty"`
 
 	// Fields inherited from DlpActionInfo
 

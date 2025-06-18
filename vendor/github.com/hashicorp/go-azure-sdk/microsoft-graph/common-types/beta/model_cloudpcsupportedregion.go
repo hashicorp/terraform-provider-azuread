@@ -16,6 +16,12 @@ type CloudPCSupportedRegion struct {
 
 	RegionGroup *CloudPCRegionGroup `json:"regionGroup,omitempty"`
 
+	// When the region isn't available, all region restrictions are set to true. These restrictions apply to three
+	// properties: cPURestricted, gPURestricted, and nestedVirtualizationRestricted. cPURestricted indicates whether the
+	// region is available for CPU, gPURestricted indicates whether the region is available for GPU, and
+	// nestedVirtualizationRestricted indicates whether the region is available for nested virtualization. Read-only.
+	RegionRestrictionDetail *CloudPCSupportedRegionRestrictionDetail `json:"regionRestrictionDetail,omitempty"`
+
 	// The status of the supported region. Possible values are: available, restricted, unavailable, unknownFutureValue.
 	// Read-only.
 	RegionStatus *CloudPCSupportedRegionStatus `json:"regionStatus,omitempty"`
@@ -61,6 +67,7 @@ func (s CloudPCSupportedRegion) MarshalJSON() ([]byte, error) {
 	}
 
 	delete(decoded, "displayName")
+	delete(decoded, "regionRestrictionDetail")
 	delete(decoded, "regionStatus")
 
 	if !s.OmitDiscriminatedValue {

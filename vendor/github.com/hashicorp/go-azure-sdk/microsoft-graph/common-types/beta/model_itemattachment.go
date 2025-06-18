@@ -13,7 +13,7 @@ import (
 var _ Attachment = ItemAttachment{}
 
 type ItemAttachment struct {
-	// The attached contact, message or event. Navigation property.
+	// The attached contact, message, or event. Navigation property.
 	Item *OutlookItem `json:"item,omitempty"`
 
 	// Fields inherited from Attachment

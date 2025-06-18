@@ -17,6 +17,9 @@ type CallRecordsParticipantBase interface {
 var _ CallRecordsParticipantBase = BaseCallRecordsParticipantBaseImpl{}
 
 type BaseCallRecordsParticipantBaseImpl struct {
+	// List of administrativeUnitInfo objects for the call participant.
+	AdministrativeUnitInfos *[]CallRecordsAdministrativeUnitInfo `json:"administrativeUnitInfos,omitempty"`
+
 	// The identity of the call participant.
 	Identity *CommunicationsIdentitySet `json:"identity,omitempty"`
 

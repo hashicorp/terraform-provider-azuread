@@ -13,8 +13,8 @@ import (
 var _ PrinterBase = PrinterShare{}
 
 type PrinterShare struct {
-	// If true, all users and groups will be granted access to this printer share. This supersedes the allow lists defined
-	// by the allowedUsers and allowedGroups navigation properties.
+	// If true, all users and groups can access this printer share. This property supersedes the lists of allowed users and
+	// groups defined by the allowedUsers and allowedGroups navigation properties.
 	AllowAllUsers *bool `json:"allowAllUsers,omitempty"`
 
 	// The groups whose users have access to print using the printer.
@@ -29,21 +29,37 @@ type PrinterShare struct {
 	// The printer that this printer share is related to.
 	Printer *Printer `json:"printer,omitempty"`
 
-	// Additional data for a printer share as viewed by the signed-in user.
+	// More data for a printer share as viewed by the signed-in user.
 	ViewPoint *PrinterShareViewpoint `json:"viewPoint,omitempty"`
 
 	// Fields inherited from PrinterBase
 
-	Capabilities    *PrinterCapabilities  `json:"capabilities,omitempty"`
-	Defaults        *PrinterDefaults      `json:"defaults,omitempty"`
-	DisplayName     *string               `json:"displayName,omitempty"`
-	IsAcceptingJobs nullable.Type[bool]   `json:"isAcceptingJobs,omitempty"`
-	Jobs            *[]PrintJob           `json:"jobs,omitempty"`
-	Location        *PrinterLocation      `json:"location,omitempty"`
-	Manufacturer    nullable.Type[string] `json:"manufacturer,omitempty"`
-	Model           nullable.Type[string] `json:"model,omitempty"`
-	Name            nullable.Type[string] `json:"name,omitempty"`
-	Status          *PrinterStatus        `json:"status,omitempty"`
+	// The capabilities of the printer/printerShare.
+	Capabilities *PrinterCapabilities `json:"capabilities,omitempty"`
+
+	// The default print settings of printer/printerShare.
+	Defaults *PrinterDefaults `json:"defaults,omitempty"`
+
+	// The name of the printer/printerShare.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Specifies whether the printer/printerShare is currently accepting new print jobs.
+	IsAcceptingJobs nullable.Type[bool] `json:"isAcceptingJobs,omitempty"`
+
+	// The list of jobs that are queued for printing by the printer/printerShare.
+	Jobs *[]PrintJob `json:"jobs,omitempty"`
+
+	// The physical and/or organizational location of the printer/printerShare.
+	Location *PrinterLocation `json:"location,omitempty"`
+
+	// The manufacturer of the printer/printerShare.
+	Manufacturer nullable.Type[string] `json:"manufacturer,omitempty"`
+
+	// The model name of the printer/printerShare.
+	Model nullable.Type[string] `json:"model,omitempty"`
+
+	Name   nullable.Type[string] `json:"name,omitempty"`
+	Status *PrinterStatus        `json:"status,omitempty"`
 
 	// Fields inherited from Entity
 

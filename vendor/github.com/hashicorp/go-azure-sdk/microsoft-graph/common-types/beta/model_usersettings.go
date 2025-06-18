@@ -21,6 +21,9 @@ type UserSettings struct {
 	// When set to true, documents in the user's Office Delve are disabled. Users can control this setting in Office Delve.
 	ContributionToContentDiscoveryDisabled *bool `json:"contributionToContentDiscoveryDisabled,omitempty"`
 
+	// The Exchange settings for mailbox discovery.
+	Exchange *ExchangeSettings `json:"exchange,omitempty"`
+
 	// The user's settings for the visibility of meeting hour insights, and insights derived between a user and other items
 	// in Microsoft 365, such as documents or sites. Get userInsightsSettings through this navigation property.
 	ItemInsights *UserInsightsSettings `json:"itemInsights,omitempty"`

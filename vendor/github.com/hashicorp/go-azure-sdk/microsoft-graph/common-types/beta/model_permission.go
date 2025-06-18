@@ -33,7 +33,7 @@ type Permission struct {
 	// Read-only. For OneDrive Personal only.
 	HasPassword nullable.Type[bool] `json:"hasPassword,omitempty"`
 
-	// Provides a reference to the ancestor of the current permission, if it's inherited from an ancestor. Read-only.
+	// Provides a reference to the ancestor of the current permission, if inherited from an ancestor. Read-only.
 	InheritedFrom *ItemReference `json:"inheritedFrom,omitempty"`
 
 	// Details of any associated sharing invitation for this permission. Read-only.

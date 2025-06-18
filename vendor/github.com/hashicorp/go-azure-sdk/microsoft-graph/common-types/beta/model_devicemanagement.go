@@ -65,6 +65,12 @@ type DeviceManagement struct {
 	// Collection of ChromeOSOnboardingSettings settings associated with account.
 	ChromeOSOnboardingSettings *[]ChromeOSOnboardingSettings `json:"chromeOSOnboardingSettings,omitempty"`
 
+	// Collection of CloudCertificationAuthority records associated with account.
+	CloudCertificationAuthority *[]CloudCertificationAuthority `json:"cloudCertificationAuthority,omitempty"`
+
+	// Collection of CloudCertificationAuthorityLeafCertificate records associated with account.
+	CloudCertificationAuthorityLeafCertificate *[]CloudCertificationAuthorityLeafCertificate `json:"cloudCertificationAuthorityLeafCertificate,omitempty"`
+
 	// The list of CloudPC Connectivity Issue.
 	CloudPCConnectivityIssues *[]CloudPCConnectivityIssue `json:"cloudPCConnectivityIssues,omitempty"`
 
@@ -146,9 +152,6 @@ type DeviceManagement struct {
 
 	// The device configuration device state summary for this account.
 	DeviceConfigurationDeviceStateSummaries *DeviceConfigurationDeviceStateSummary `json:"deviceConfigurationDeviceStateSummaries,omitempty"`
-
-	// Profile Id of the object.
-	DeviceConfigurationProfiles *[]DeviceConfigurationProfile `json:"deviceConfigurationProfiles,omitempty"`
 
 	// Restricted apps violations for this account.
 	DeviceConfigurationRestrictedAppsViolations *[]RestrictedAppsViolation `json:"deviceConfigurationRestrictedAppsViolations,omitempty"`
@@ -237,9 +240,10 @@ type DeviceManagement struct {
 	// serial number, list of previous passwords, and current password.
 	HardwarePasswordDetails *[]HardwarePasswordDetail `json:"hardwarePasswordDetails,omitempty"`
 
-	// Intune will provide customer the ability to configure hardware/bios settings on the enrolled windows 10 Azure Active
-	// Directory joined devices. Starting from June, 2024 (Intune Release 2406), this type will no longer be supported and
-	// will be marked as deprecated
+	// Intune will provide customer the ability to configure BIOS configuration settings on the enrolled Windows 10 and
+	// Windows 11 Microsoft Entra joined devices. Starting from June, 2024, customers should start using
+	// hardwarePasswordDetail resource type - Microsoft Graph beta | Microsoft Learn. HardwarePasswordInfo will be marked as
+	// deprecated with Intune Release 2409
 	HardwarePasswordInfo *[]HardwarePasswordInfo `json:"hardwarePasswordInfo,omitempty"`
 
 	// The imported device identities.
@@ -338,7 +342,6 @@ type DeviceManagement struct {
 	// The remote assistance settings singleton
 	RemoteAssistanceSettings *RemoteAssistanceSettings `json:"remoteAssistanceSettings,omitempty"`
 
-	// Reports singleton
 	Reports *DeviceManagementReports `json:"reports,omitempty"`
 
 	// Collection of resource access settings associated with account.
@@ -483,7 +486,9 @@ type DeviceManagement struct {
 	// User experience analytics categories
 	UserExperienceAnalyticsCategories *[]UserExperienceAnalyticsCategory `json:"userExperienceAnalyticsCategories,omitempty"`
 
-	// User experience analytics device metric history
+	// User experience analytics device metric history. The report will be retired on December 31, 2024. You can start using
+	// the Cloud PC connection quality report now via
+	// https://learn.microsoft.com/windows-365/enterprise/report-cloud-pc-connection-quality.
 	UserExperienceAnalyticsDeviceMetricHistory *[]UserExperienceAnalyticsMetricHistory `json:"userExperienceAnalyticsDeviceMetricHistory,omitempty"`
 
 	// User experience analytics device performance
@@ -530,7 +535,9 @@ type DeviceManagement struct {
 	// User experience analytics overview
 	UserExperienceAnalyticsOverview *UserExperienceAnalyticsOverview `json:"userExperienceAnalyticsOverview,omitempty"`
 
-	// User experience analytics remote connection
+	// User experience analytics remote connection. The report will be retired on December 31, 2024. You can start using the
+	// Cloud PC connection quality report now via
+	// https://learn.microsoft.com/windows-365/enterprise/report-cloud-pc-connection-quality.
 	UserExperienceAnalyticsRemoteConnection *[]UserExperienceAnalyticsRemoteConnection `json:"userExperienceAnalyticsRemoteConnection,omitempty"`
 
 	// User experience analytics resource performance
@@ -676,6 +683,8 @@ func (s *DeviceManagement) UnmarshalJSON(bytes []byte) error {
 		CartToClassAssociations                                                    *[]CartToClassAssociation                                             `json:"cartToClassAssociations,omitempty"`
 		CertificateConnectorDetails                                                *[]CertificateConnectorDetails                                        `json:"certificateConnectorDetails,omitempty"`
 		ChromeOSOnboardingSettings                                                 *[]ChromeOSOnboardingSettings                                         `json:"chromeOSOnboardingSettings,omitempty"`
+		CloudCertificationAuthority                                                *[]CloudCertificationAuthority                                        `json:"cloudCertificationAuthority,omitempty"`
+		CloudCertificationAuthorityLeafCertificate                                 *[]CloudCertificationAuthorityLeafCertificate                         `json:"cloudCertificationAuthorityLeafCertificate,omitempty"`
 		CloudPCConnectivityIssues                                                  *[]CloudPCConnectivityIssue                                           `json:"cloudPCConnectivityIssues,omitempty"`
 		ComanagementEligibleDevices                                                *[]ComanagementEligibleDevice                                         `json:"comanagementEligibleDevices,omitempty"`
 		ComplianceCategories                                                       *[]DeviceManagementConfigurationCategory                              `json:"complianceCategories,omitempty"`
@@ -699,7 +708,6 @@ func (s *DeviceManagement) UnmarshalJSON(bytes []byte) error {
 		DeviceComplianceScripts                                                    *[]DeviceComplianceScript                                             `json:"deviceComplianceScripts,omitempty"`
 		DeviceConfigurationConflictSummary                                         *[]DeviceConfigurationConflictSummary                                 `json:"deviceConfigurationConflictSummary,omitempty"`
 		DeviceConfigurationDeviceStateSummaries                                    *DeviceConfigurationDeviceStateSummary                                `json:"deviceConfigurationDeviceStateSummaries,omitempty"`
-		DeviceConfigurationProfiles                                                *[]DeviceConfigurationProfile                                         `json:"deviceConfigurationProfiles,omitempty"`
 		DeviceConfigurationRestrictedAppsViolations                                *[]RestrictedAppsViolation                                            `json:"deviceConfigurationRestrictedAppsViolations,omitempty"`
 		DeviceConfigurationUserStateSummaries                                      *DeviceConfigurationUserStateSummary                                  `json:"deviceConfigurationUserStateSummaries,omitempty"`
 		DeviceConfigurationsAllManagedDeviceCertificateStates                      *[]ManagedAllDeviceCertificateState                                   `json:"deviceConfigurationsAllManagedDeviceCertificateStates,omitempty"`
@@ -856,6 +864,8 @@ func (s *DeviceManagement) UnmarshalJSON(bytes []byte) error {
 	s.CartToClassAssociations = decoded.CartToClassAssociations
 	s.CertificateConnectorDetails = decoded.CertificateConnectorDetails
 	s.ChromeOSOnboardingSettings = decoded.ChromeOSOnboardingSettings
+	s.CloudCertificationAuthority = decoded.CloudCertificationAuthority
+	s.CloudCertificationAuthorityLeafCertificate = decoded.CloudCertificationAuthorityLeafCertificate
 	s.CloudPCConnectivityIssues = decoded.CloudPCConnectivityIssues
 	s.ComanagementEligibleDevices = decoded.ComanagementEligibleDevices
 	s.ComplianceCategories = decoded.ComplianceCategories
@@ -879,7 +889,6 @@ func (s *DeviceManagement) UnmarshalJSON(bytes []byte) error {
 	s.DeviceComplianceScripts = decoded.DeviceComplianceScripts
 	s.DeviceConfigurationConflictSummary = decoded.DeviceConfigurationConflictSummary
 	s.DeviceConfigurationDeviceStateSummaries = decoded.DeviceConfigurationDeviceStateSummaries
-	s.DeviceConfigurationProfiles = decoded.DeviceConfigurationProfiles
 	s.DeviceConfigurationRestrictedAppsViolations = decoded.DeviceConfigurationRestrictedAppsViolations
 	s.DeviceConfigurationUserStateSummaries = decoded.DeviceConfigurationUserStateSummaries
 	s.DeviceConfigurationsAllManagedDeviceCertificateStates = decoded.DeviceConfigurationsAllManagedDeviceCertificateStates

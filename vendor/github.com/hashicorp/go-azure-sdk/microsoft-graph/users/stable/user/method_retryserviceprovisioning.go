@@ -47,7 +47,8 @@ func (o RetryServiceProvisioningOperationOptions) ToQuery() *client.QueryParams 
 	return &out
 }
 
-// RetryServiceProvisioning - Invoke action retryServiceProvisioning. Retry the user service provisioning.
+// RetryServiceProvisioning - Invoke action retryServiceProvisioning. Retry the provisioning of a user object in
+// Microsoft Entra ID.
 func (c UserClient) RetryServiceProvisioning(ctx context.Context, id stable.UserId, options RetryServiceProvisioningOperationOptions) (result RetryServiceProvisioningOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

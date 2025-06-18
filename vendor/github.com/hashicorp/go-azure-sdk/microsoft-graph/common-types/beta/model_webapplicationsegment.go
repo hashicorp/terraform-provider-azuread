@@ -13,8 +13,8 @@ import (
 var _ ApplicationSegment = WebApplicationSegment{}
 
 type WebApplicationSegment struct {
-	// If you're configuring a traffic manager in front of multiple App Proxy application segments, this property contains
-	// the user-friendly URL that will point to the traffic manager.
+	// If you're configuring a traffic manager in front of multiple app proxy application segments, this property contains
+	// the user-friendly URL that points to the traffic manager.
 	AlternateUrl nullable.Type[string] `json:"alternateUrl,omitempty"`
 
 	// A collection of CORS Rule definitions for a particular application segment.

@@ -50,7 +50,11 @@ func (o DeleteUserOperationOptions) ToQuery() *client.QueryParams {
 	return &out
 }
 
-// DeleteUser - Delete user. Deletes a user.
+// DeleteUser - Delete a user. Delete a user object. When deleted, user resources, including their mailbox and license
+// assignments, are moved to a temporary container and if the user is restored within 30 days, these objects are
+// restored to them. The user is also restored to any groups they were a member of. After 30 days and if not restored,
+// the user object is permanently deleted and their assigned resources freed. To manage the deleted user object, see
+// deletedItems.
 func (c UserClient) DeleteUser(ctx context.Context, id stable.UserId, options DeleteUserOperationOptions) (result DeleteUserOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

@@ -44,6 +44,9 @@ type DriveItem struct {
 	// Information about the deleted state of the item. Read-only.
 	Deleted *Deleted `json:"deleted,omitempty"`
 
+	// The collection of open extensions defined for this item. Nullable.
+	Extensions *[]Extension `json:"extensions,omitempty"`
+
 	// File metadata, if the item is a file. Read-only.
 	File *File `json:"file,omitempty"`
 
@@ -388,6 +391,23 @@ func (s *DriveItem) UnmarshalJSON(bytes []byte) error {
 			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'DriveItem': %+v", err)
 		}
 		s.CreatedBy = &impl
+	}
+
+	if v, ok := temp["extensions"]; ok {
+		var listTemp []json.RawMessage
+		if err := json.Unmarshal(v, &listTemp); err != nil {
+			return fmt.Errorf("unmarshaling Extensions into list []json.RawMessage: %+v", err)
+		}
+
+		output := make([]Extension, 0)
+		for i, val := range listTemp {
+			impl, err := UnmarshalExtensionImplementation(val)
+			if err != nil {
+				return fmt.Errorf("unmarshaling index %d field 'Extensions' for 'DriveItem': %+v", i, err)
+			}
+			output = append(output, impl)
+		}
+		s.Extensions = &output
 	}
 
 	if v, ok := temp["lastModifiedBy"]; ok {
