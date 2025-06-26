@@ -119,11 +119,6 @@ func namedLocationResource() *pluginsdk.Resource {
 					},
 				},
 			},
-
-			"uuid": {
-				Type:     pluginsdk.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -160,7 +155,6 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		}
 
 		d.SetId(id.ID())
-		d.Set("uuid", id.NamedLocationId)
 
 	} else if v, ok = d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
@@ -186,7 +180,6 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 
 		id := stable.NewIdentityConditionalAccessNamedLocationID(*namedLocation.Id)
 		d.SetId(id.ID())
-		d.Set("uuid", id.NamedLocationId)
 		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*15, countryNamedLocationWait(client, &id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for creation of %s", id)
 		}
@@ -244,7 +237,6 @@ func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationClient
 
 	id, err := stable.ParseIdentityConditionalAccessNamedLocationID(d.Id())
-	d.Set("uuid", id.NamedLocationId)
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Named Location ID")
 	}

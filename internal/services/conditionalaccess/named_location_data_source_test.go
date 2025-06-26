@@ -40,7 +40,6 @@ func TestAccNamedLocationDataSource_countryByGps(t *testing.T) {
 				check.That(data.ResourceName).Key("country.0.countries_and_regions.#").HasValue("3"),
 				check.That(data.ResourceName).Key("country.0.include_unknown_countries_and_regions").HasValue("true"),
 				check.That(data.ResourceName).Key("country.0.country_lookup_method").HasValue("authenticatorAppGps"),
-				check.That(data.ResourceName).Key("uuid").IsUuid(),
 			),
 		},
 	})
@@ -56,7 +55,6 @@ func TestAccNamedLocationDataSource_ip(t *testing.T) {
 				check.That(data.ResourceName).Key("ip.#").HasValue("1"),
 				check.That(data.ResourceName).Key("ip.0.ip_ranges.#").HasValue("4"),
 				check.That(data.ResourceName).Key("ip.0.trusted").HasValue("true"),
-				check.That(data.ResourceName).Key("uuid").IsUuid(),
 			),
 		},
 	})

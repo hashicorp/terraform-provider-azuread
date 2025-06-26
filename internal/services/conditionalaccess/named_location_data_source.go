@@ -81,11 +81,6 @@ func namedLocationDataSource() *pluginsdk.Resource {
 					},
 				},
 			},
-
-			"uuid": {
-				Type:     pluginsdk.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -141,7 +136,6 @@ func namedLocationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData,
 
 	id := stable.NewIdentityConditionalAccessNamedLocationID(pointer.From(item.NamedLocation().Id))
 	d.SetId(id.ID())
-	d.Set("uuid", id.NamedLocationId)
 
 	return nil
 }
