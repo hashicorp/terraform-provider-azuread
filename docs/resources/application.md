@@ -199,6 +199,7 @@ The following arguments are supported:
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
+* `native_authentication_apis_enabled` - (Optional )The native application has native authentication enabled, allowing public clients to directly interact with users to collect credentials without rediecting to browsers for authentication. Defaults to `none`. Possible Values are `all` and `none`
 * `feature_tags` - (Optional) A `feature_tags` block as described below. Cannot be used together with the `tags` property.
 
 -> **Features and Tags** Features are configured for an application using tags, and are provided as a shortcut to set the corresponding magic tag value for each feature. You cannot configure `feature_tags` and `tags` for an application at the same time, so if you need to assign additional custom tags it's recommended to use the `tags` property instead. Tag values also propagate to any linked service principals.
