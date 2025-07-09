@@ -34,6 +34,9 @@ func TestPrivilegedAccessGroupEligibilitySchedule_member(t *testing.T) {
 			Config: r.member(data, endTime),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				// There is a minimum life of 5 minutes for a schedule request to exist.
+				// Attempting to delete the request within this time frame will result in
+				// a 400 error on destroy, which we can't trap.
 				helpers.SleepCheck(5*time.Minute+15*time.Second),
 			),
 		},
