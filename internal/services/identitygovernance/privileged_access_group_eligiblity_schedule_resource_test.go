@@ -34,9 +34,6 @@ func TestPrivilegedAccessGroupEligibilitySchedule_member(t *testing.T) {
 			Config: r.member(data, endTime),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				// There is a minimum life of 5 minutes for a schedule request to exist.
-				// Attempting to delete the request within this time frame will result in
-				// a 400 error on destroy, which we can't trap.
 				helpers.SleepCheck(5*time.Minute+15*time.Second),
 			),
 		},
@@ -50,7 +47,18 @@ func TestPrivilegedAccessGroupEligibilitySchedule_owner(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.owner(data),
+			Config: r.owner(data, "P30D", "required"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				// There is a minimum life of 5 minutes for a schedule request to exist.
+				// Attempting to delete the request within this time frame will result in
+				// a 400 error on destroy, which we can't trap.
+				helpers.SleepCheck(5*time.Minute+15*time.Second),
+			),
+		},
+		{
+
+			Config: r.owner(data, "P45D", "updated justification"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				// There is a minimum life of 5 minutes for a schedule request to exist.
@@ -114,7 +122,7 @@ resource "azuread_privileged_access_group_eligibility_schedule" "member" {
 `, data.RandomString, data.RandomPassword, endTime.Format(time.RFC3339))
 }
 
-func (PrivilegedAccessGroupEligibilityScheduleResource) owner(data acceptance.TestData) string {
+func (PrivilegedAccessGroupEligibilityScheduleResource) owner(data acceptance.TestData, duration, justification string) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -146,13 +154,12 @@ resource "azuread_user" "eligibile_owner" {
   password            = "%[2]s"
 }
 
-
 resource "azuread_privileged_access_group_eligibility_schedule" "owner" {
   group_id        = azuread_group.pam.id
   principal_id    = azuread_user.eligibile_owner.id
   assignment_type = "owner"
-  duration        = "P30D"
-  justification   = "required"
+  duration        = "%[3]s"
+  justification   = "%[4]s"
 }
-`, data.RandomString, data.RandomPassword)
+`, data.RandomString, data.RandomPassword, duration, justification)
 }
