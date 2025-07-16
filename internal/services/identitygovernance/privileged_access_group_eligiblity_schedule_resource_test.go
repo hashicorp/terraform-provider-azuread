@@ -23,7 +23,7 @@ import (
 
 type PrivilegedAccessGroupEligibilityScheduleResource struct{}
 
-func TestPrivilegedAccessGroupEligibilitySchedule_member(t *testing.T) {
+func TestAccPrivilegedAccessGroupEligibilitySchedule_member(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_eligibility_schedule", "member")
 	r := PrivilegedAccessGroupEligibilityScheduleResource{}
 
@@ -44,7 +44,7 @@ func TestPrivilegedAccessGroupEligibilitySchedule_member(t *testing.T) {
 	})
 }
 
-func TestPrivilegedAccessGroupEligibilitySchedule_owner(t *testing.T) {
+func TestAccPrivilegedAccessGroupEligibilitySchedule_owner(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_eligibility_schedule", "owner")
 	r := PrivilegedAccessGroupEligibilityScheduleResource{}
 

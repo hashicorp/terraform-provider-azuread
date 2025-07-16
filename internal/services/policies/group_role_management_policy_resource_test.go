@@ -21,7 +21,7 @@ import (
 
 type GroupRoleManagementPolicyResource struct{}
 
-func TestGroupRoleManagementPolicy_activationRules(t *testing.T) {
+func TestAccGroupRoleManagementPolicy_activationRules(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_role_management_policy", "test")
 	r := GroupRoleManagementPolicyResource{}
 
@@ -37,7 +37,7 @@ func TestGroupRoleManagementPolicy_activationRules(t *testing.T) {
 	})
 }
 
-func TestGroupRoleManagementPolicy_member(t *testing.T) {
+func TestAccGroupRoleManagementPolicy_member(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_role_management_policy", "test")
 	r := GroupRoleManagementPolicyResource{}
 
@@ -55,7 +55,7 @@ func TestGroupRoleManagementPolicy_member(t *testing.T) {
 	})
 }
 
-func TestGroupRoleManagementPolicy_owner(t *testing.T) {
+func TestAccGroupRoleManagementPolicy_owner(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_role_management_policy", "test")
 	r := GroupRoleManagementPolicyResource{}
 
