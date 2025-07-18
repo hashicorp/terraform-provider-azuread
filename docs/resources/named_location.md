@@ -75,6 +75,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the named location.
+* `object_id` - The object ID of the named location.
 
 ## Timeouts
 
