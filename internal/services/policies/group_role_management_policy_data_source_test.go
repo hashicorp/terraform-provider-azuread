@@ -13,7 +13,7 @@ import (
 
 type GroupRoleManagementPolicyDataSource struct{}
 
-func TestGroupRoleManagementPolicyDataSource_member(t *testing.T) {
+func TestAccGroupRoleManagementPolicyDataSource_member(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group_role_management_policy", "test")
 
 	data.DataSourceTest(t, []acceptance.TestStep{

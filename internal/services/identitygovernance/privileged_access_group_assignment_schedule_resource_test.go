@@ -23,7 +23,7 @@ import (
 
 type PrivilegedAccessGroupAssignmentScheduleResource struct{}
 
-func TestPrivilegedAccessGroupAssignmentSchedule_member(t *testing.T) {
+func TestAccPrivilegedAccessGroupAssignmentSchedule_member(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_assignment_schedule", "member")
 	r := PrivilegedAccessGroupAssignmentScheduleResource{}
 
@@ -44,7 +44,7 @@ func TestPrivilegedAccessGroupAssignmentSchedule_member(t *testing.T) {
 	})
 }
 
-func TestPrivilegedAccessGroupAssignmentSchedule_owner(t *testing.T) {
+func TestAccPrivilegedAccessGroupAssignmentSchedule_owner(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_assignment_schedule", "owner")
 	r := PrivilegedAccessGroupAssignmentScheduleResource{}
 
