@@ -20,7 +20,7 @@ import (
 
 type ClaimsMappingPolicyResource struct{}
 
-func TestClaimsMappingPolicy_basic(t *testing.T) {
+func TestAccClaimsMappingPolicy_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_claims_mapping_policy", "test")
 	r := ClaimsMappingPolicyResource{}
 
