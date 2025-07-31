@@ -185,19 +185,24 @@ The following arguments are supported:
 
 * `excluded_service_principals` - (Optional) A list of service principal IDs explicitly excluded in the policy.
 * `included_service_principals` - (Optional) A list of service principal IDs explicitly included in the policy. Can be set to `ServicePrincipalsInMyTenant` to include all service principals. This is mandatory value when at least one `excluded_service_principals` is set.
+* `filter` - (Optional) A `filter` block as documented below.
+
+~> **Note:** Specifying `filter` requires the `Attribute Definition Reader` role, this is not included in the `Global Administrator` or other administrator roles and must be separately assigned.
 
 ---
 
 `devices` block supports the following:
 
-* `filter` - (Optional) A `filter` block as described below.
+* `filter` - (Optional) A `filter` block as documented below.
+
+-> **Note:** For more information on device filters, see the [official documentation](https://docs.microsoft.com/en-us/azure/active-directory/conditional-access/concept-condition-filters-for-devices#supported-operators-and-device-properties-for-filters).
 
 ---
 
 `filter` block supports the following:
 
-* `mode` - (Required) Whether to include in, or exclude from, matching devices from the policy. Supported values are `include` or `exclude`.
-* `rule` - (Required) Condition filter to match devices. For more information, see [official documentation](https://docs.microsoft.com/en-us/azure/active-directory/conditional-access/concept-condition-filters-for-devices#supported-operators-and-device-properties-for-filters).
+* `mode` - (Required) Whether to include in, or exclude from, matching items from the policy. Supported values are `include` or `exclude`.
+* `rule` - (Required) Condition filter to match items.
 
 ---
 

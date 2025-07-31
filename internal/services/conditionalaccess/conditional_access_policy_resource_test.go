@@ -318,6 +318,13 @@ func TestAccConditionalAccessPolicy_clientApplications(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
+			Config: r.clientApplicationsFilter(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
 			Config: r.clientApplicationsIncluded(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -845,6 +852,49 @@ resource "azuread_conditional_access_policy" "test" {
     client_applications {
       included_service_principals = ["ServicePrincipalsInMyTenant"]
       excluded_service_principals = [data.azuread_service_principal.test.object_id]
+    }
+
+    service_principal_risk_levels = ["medium"]
+
+    users {
+      included_users = ["None"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) clientApplicationsFilter(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_service_principal" "test" {
+  display_name = "Terraform Acceptance Tests (Single Tenant)"
+}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["all"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    client_applications {
+      included_service_principals = ["ServicePrincipalsInMyTenant"]
+
+      filter {
+        mode = "exclude"
+        rule = "CustomSecurityAttribute.AzureADProviderTesting_Usage -contains \"Acceptance Tests\""
+      }
     }
 
     service_principal_risk_levels = ["medium"]
