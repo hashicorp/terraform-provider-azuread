@@ -133,5 +133,5 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 Delegated permission grants can be imported using their ID, e.g.
 
 ```shell
-terraform import azuread_service_principal_delegated_permission_grant.example aaBBcDDeFG6h5JKLMN2PQrrssTTUUvWWxxxxxyyyzzz
+terraform import azuread_service_principal_delegated_permission_grant.example /oauth2PermissionGrants/aaBBcDDeFG6h5JKLMN2PQrrssTTUUvWWxxxxxyyyzzz
 ```
