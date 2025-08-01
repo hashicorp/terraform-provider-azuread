@@ -138,6 +138,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
+
+									"filter": schemaConditionalAccessFilter(),
 								},
 							},
 						},
@@ -304,26 +306,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							MaxItems: 1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
-									"filter": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &pluginsdk.Resource{
-											Schema: map[string]*pluginsdk.Schema{
-												"mode": {
-													Type:         pluginsdk.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(stable.PossibleValuesForFilterMode(), false),
-												},
-
-												"rule": {
-													Type:         pluginsdk.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringIsNotEmpty,
-												},
-											},
-										},
-									},
+									"filter": schemaConditionalAccessFilter(),
 								},
 							},
 						},

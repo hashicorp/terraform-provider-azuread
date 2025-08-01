@@ -9,8 +9,33 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
+
+func schemaConditionalAccessFilter() *pluginsdk.Schema {
+	return &pluginsdk.Schema{
+		Type:     pluginsdk.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &pluginsdk.Resource{
+			Schema: map[string]*pluginsdk.Schema{
+				"mode": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(stable.PossibleValuesForFilterMode(), false),
+				},
+
+				"rule": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+			},
+		},
+	}
+}
 
 func flattenConditionalAccessConditionSet(in *stable.ConditionalAccessConditionSet) []interface{} {
 	if in == nil {
@@ -78,6 +103,7 @@ func flattenConditionalAccessClientApplications(in *stable.ConditionalAccessClie
 		map[string]interface{}{
 			"included_service_principals": tf.FlattenStringSlicePtr(in.IncludeServicePrincipals),
 			"excluded_service_principals": tf.FlattenStringSlicePtr(in.ExcludeServicePrincipals),
+			"filter":                      flattenConditionalAccessFilter(in.ServicePrincipalFilter),
 		},
 	}
 }
@@ -108,7 +134,7 @@ func flattenConditionalAccessDevices(in *stable.ConditionalAccessDevices) []inte
 
 	return []interface{}{
 		map[string]interface{}{
-			"filter": flattenConditionalAccessDeviceFilter(in.DeviceFilter),
+			"filter": flattenConditionalAccessFilter(in.DeviceFilter),
 		},
 	}
 }
@@ -228,7 +254,7 @@ func flattenConditionalAccessSessionControls(in *stable.ConditionalAccessSession
 	}
 }
 
-func flattenConditionalAccessDeviceFilter(in *stable.ConditionalAccessFilter) []interface{} {
+func flattenConditionalAccessFilter(in *stable.ConditionalAccessFilter) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -401,9 +427,14 @@ func expandConditionalAccessClientApplications(in []interface{}) *stable.Conditi
 
 	includeServicePrincipals := config["included_service_principals"].([]interface{})
 	excludeServicePrincipals := config["excluded_service_principals"].([]interface{})
+	servicePrincipalFilter := config["filter"].([]interface{})
 
 	result.IncludeServicePrincipals = tf.ExpandStringSlicePtr(includeServicePrincipals)
 	result.ExcludeServicePrincipals = tf.ExpandStringSlicePtr(excludeServicePrincipals)
+
+	if len(servicePrincipalFilter) > 0 {
+		result.ServicePrincipalFilter = expandConditionalAccessFilter(servicePrincipalFilter)
+	}
 
 	return &result
 }
