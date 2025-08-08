@@ -1,12 +1,12 @@
-## 3.5.0 (Unreleased)
+## 3.5.0 (August 08, 2025)
 
-FEATURES:
+ENHANCEMENTS:
 
-* `azuread_conditional_access_policy` - add support for the `client_applications.filter` property [GH-1744]
+* `azuread_conditional_access_policy` - add support for the `client_applications.filter` property ([#1744](https://github.com/hashicorp/terraform-provider-azuread/issues/1744))
 
 BUG FIXES:
 
-* `azuread_conditional_access_policy` - fix support for `everyTime` restrictions in `session_controls` request payload [GH-1719]
+* `azuread_conditional_access_policy` - fix support for `everyTime` restrictions in `session_controls` request payload ([#1719](https://github.com/hashicorp/terraform-provider-azuread/issues/1719))
 
 ## 3.4.0 (May 15, 2025)
 
