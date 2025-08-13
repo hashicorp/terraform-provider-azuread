@@ -48,7 +48,7 @@ resource "azuread_access_package_resource_package_association" "example" {
 ## Argument Reference
 
 * `access_package_id` - (Required) The ID of access package this resource association is configured to. Changing this forces a new resource to be created.
-* `access_type` - (Optional) The role of access type to the specified resource. Valid values are `Member`, or `Owner` The default is `Member`. Changing this forces a new resource to be created.
+* `access_type` - (Required) The role of access type to the specified resource. For `AadGroup` valid values are `Member`, or `Owner`, For `AadApplication` this it must be a the UUID of an app role and for `SharePointOnline` it should be a URL. Changing this forces a new resource to be created.
 * `catalog_resource_association_id` - (Required) The ID of the catalog association from the `azuread_access_package_resource_catalog_association` resource. Changing this forces a new resource to be created.
 
 ## Attributes Reference

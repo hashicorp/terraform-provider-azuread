@@ -20,13 +20,29 @@ import (
 
 type AccessPackageResourcePackageAssociationResource struct{}
 
-func TestAccAccessPackageResourcePackageAssociation_complete(t *testing.T) {
+func TestAccAccessPackageResourcePackageAssociation_completeWithGroup(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_resource_package_association", "test")
 	r := AccessPackageResourcePackageAssociationResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config:  r.complete(data),
+			Config:  r.completeWithGroup(data),
+			Destroy: false,
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccAccessPackageResourcePackageAssociation_completeWithApplication(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_access_package_resource_package_association", "test")
+	r := AccessPackageResourcePackageAssociationResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config:  r.completeWithApplication(data),
 			Destroy: false,
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -54,7 +70,7 @@ func (AccessPackageResourcePackageAssociationResource) Exists(ctx context.Contex
 	return pointer.To(roleScope != nil), nil
 }
 
-func (AccessPackageResourcePackageAssociationResource) complete(data acceptance.TestData) string {
+func (AccessPackageResourcePackageAssociationResource) completeWithGroup(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -83,6 +99,65 @@ resource "azuread_access_package" "test" {
 resource "azuread_access_package_resource_package_association" "test" {
   access_package_id               = azuread_access_package.test.id
   catalog_resource_association_id = azuread_access_package_resource_catalog_association.test.id
+}
+`, data.RandomInteger)
+}
+
+func (AccessPackageResourcePackageAssociationResource) completeWithApplication(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_application_published_app_ids" "well_known" {}
+
+resource "azuread_service_principal" "msgraph" {
+  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing = true
+}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-packageAssociationResource-%[1]d"
+
+  required_resource_access {
+    resource_app_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+
+    resource_access {
+      id   = azuread_service_principal.msgraph.app_role_ids["User.Read.All"]
+      type = "Role"
+    }
+  }
+}
+
+resource "azuread_service_principal" "test" {
+  client_id = azuread_application.test.client_id
+}
+
+resource "azuread_app_role_assignment" "test" {
+  app_role_id         = azuread_service_principal.msgraph.app_role_ids["User.Read.All"]
+  principal_object_id = azuread_service_principal.test.object_id
+  resource_object_id  = azuread_service_principal.msgraph.object_id
+}
+
+resource "azuread_access_package_catalog" "test_catalog" {
+  display_name = "test-catalog-%[1]d"
+  description  = "Test catalog %[1]d"
+}
+
+resource "azuread_access_package_resource_catalog_association" "test" {
+  catalog_id             = azuread_access_package_catalog.test_catalog.id
+  resource_origin_id     = azuread_service_principal.test.object_id
+  resource_origin_system = "AadApplication"
+}
+
+resource "azuread_access_package" "test" {
+  display_name = "test-package-%[1]d"
+  description  = "Test Package %[1]d"
+  catalog_id   = azuread_access_package_catalog.test_catalog.id
+}
+
+resource "azuread_access_package_resource_package_association" "test" {
+  access_package_id               = azuread_access_package.test.id
+  catalog_resource_association_id = azuread_access_package_resource_catalog_association.test.id
+  access_type                     = azuread_service_principal.msgraph.app_role_ids["User.Read.All"]
 }
 `, data.RandomInteger)
 }
