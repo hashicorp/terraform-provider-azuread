@@ -193,11 +193,42 @@ func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d 
 
 func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleRequestClient
+	scheduleClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleClient
 	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(d.Id())
 
 	resp, err := client.GetDirectoryRoleEligibilityScheduleRequest(ctx, id, directoryroleeligibilityschedulerequest.DefaultGetDirectoryRoleEligibilityScheduleRequestOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Retrieving %s", id)
+		// Check if the Schedule still exists, any other error we must return
+		if !response.WasNotFound(resp.HttpResponse) {
+			return tf.ErrorDiagF(err, "Retrieving %s", id)
+		}
+
+		// After (typically) 45 days the request resources are purged by the service, however, the underlying resource (the schedule) has the same GUID, so we need to check if it's still there or Terraform will try to recreate this resource and fail as it already exists.
+		// TODO - This resource needs a redesign/replacement in the longer term to avoid this, however, this will likely be a breaking change requiring a major version to implement.
+		scheduleID := stable.NewRoleManagementDirectoryRoleEligibilityScheduleID(d.Id())
+		scheduleResp, err2 := scheduleClient.GetDirectoryRoleEligibilitySchedule(ctx, scheduleID, directoryroleeligibilityschedule.DefaultGetDirectoryRoleEligibilityScheduleOperationOptions())
+		if err2 != nil {
+			if response.WasNotFound(scheduleResp.HttpResponse) {
+				log.Printf("[DEBUG] %s was not found - removing from state", id)
+				return nil
+			}
+		}
+
+		roleEligibilitySchedule := scheduleResp.Model
+		if roleEligibilitySchedule == nil {
+			return tf.ErrorDiagF(errors.New("model was nil"), "API Error")
+		}
+
+		if resp, err := scheduleClient.DeleteDirectoryRoleEligibilitySchedule(ctx, scheduleID, directoryroleeligibilityschedule.DefaultDeleteDirectoryRoleEligibilityScheduleOperationOptions()); err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				log.Printf("[DEBUG] %s was not found - removing from state", id)
+				return nil
+			}
+
+			return tf.ErrorDiagF(err, "Deleting %s", scheduleID)
+		}
+
+		return nil
 	}
 
 	roleEligibilityScheduleRequest := resp.Model
