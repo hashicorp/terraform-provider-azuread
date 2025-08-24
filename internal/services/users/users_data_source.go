@@ -211,6 +211,8 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		"userType",
 	}
 
+	filteredByNonUniqueField := false
+
 	if returnAll {
 		resp, err := client.ListUsers(ctx, user.ListUsersOperationOptions{Select: &fieldsToSelect})
 		if err != nil {
@@ -274,6 +276,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 		} else if mailNicknames, ok := d.Get("mail_nicknames").([]interface{}); ok && len(mailNicknames) > 0 {
+			filteredByNonUniqueField = true
 			expectedCount = len(mailNicknames)
 			for _, v := range mailNicknames {
 				options := user.ListUsersOperationOptions{
@@ -287,18 +290,14 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if resp.Model == nil {
 					return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 				}
-
-				count := len(*resp.Model)
-				if count > 1 {
-					return tf.ErrorDiagPathF(nil, "mail_nicknames", "More than one user found with email alias: %q", v)
-				} else if count == 0 {
+				if len(*resp.Model) == 0 {
 					if ignoreMissing {
 						continue
 					}
-					return tf.ErrorDiagPathF(err, "mail_nicknames", "User not found with email alias: %q", v)
+					return tf.ErrorDiagPathF(err, "mail_nicknames", "no user(s) found with email alias: %q", v)
 				}
 
-				foundUsers = append(foundUsers, (*resp.Model)[0])
+				foundUsers = append(foundUsers, *resp.Model...)
 			}
 
 		} else if mails, ok := d.Get("mails").([]interface{}); ok && len(mails) > 0 {
@@ -359,9 +358,14 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 	}
 
-	// Check that the right number of users were returned
-	if !returnAll && !ignoreMissing && len(foundUsers) != expectedCount {
-		return tf.ErrorDiagF(fmt.Errorf("expected: %d, actual: %d", expectedCount, len(foundUsers)), "Unexpected number of users returned")
+	// Check that a valid number of users was returned
+	if !returnAll && !ignoreMissing {
+		fmt.Println("############## HERE: ", expectedCount, len(foundUsers), filteredByNonUniqueField)
+		if !filteredByNonUniqueField && len(foundUsers) != expectedCount {
+			return tf.ErrorDiagF(fmt.Errorf("expected: %d, actual: %d", expectedCount, len(foundUsers)), "Unexpected number of users returned")
+		} else if filteredByNonUniqueField && len(foundUsers) < expectedCount {
+			return tf.ErrorDiagF(fmt.Errorf("expected at least %d, actual: %d", expectedCount, len(foundUsers)), "Unexpected number of users returned")
+		}
 	}
 
 	upns := make([]string, 0)

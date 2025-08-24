@@ -5,6 +5,7 @@ package users_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
@@ -84,6 +85,25 @@ func TestAccUsersDataSource_byMailNicknames(t *testing.T) {
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
 			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
+}
+
+func TestAccUsersDataSource_explicitDuplicateMailNicknames(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+
+	data.DataSourceTest(t, []acceptance.TestStep{{
+		Config: UsersDataSource{}.explicitDuplicateMailNicknames(data),
+		SkipFunc: func() (bool, error) {
+			fmt.Println(os.WriteFile("/Users/wyatt.fry/tests/TestAccUsersDataSource_explicitDuplicateMailNicknames.tf", []byte(UsersDataSource{}.explicitDuplicateMailNicknames(data)), 0666))
+			return true, nil
+		},
+		Check: acceptance.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("3"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("3"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("3"),
+			check.That(data.ResourceName).Key("users.#").HasValue("3"),
 		),
 	}})
 }
@@ -256,6 +276,16 @@ data "azuread_users" "test" {
   mail_nicknames = [azuread_user.testA.mail_nickname, azuread_user.testB.mail_nickname]
 }
 `, UserResource{}.threeUsersABC(data))
+}
+
+func (UsersDataSource) explicitDuplicateMailNicknames(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_users" "test" {
+  mail_nicknames = [azuread_user.testAlice.mail_nickname, azuread_user.testBob1.mail_nickname]
+}
+`, UserResource{}.explicitDuplicateMailNicknames(data))
 }
 
 func (UsersDataSource) byMailNicknamesIgnoreMissing(data acceptance.TestData) string {
