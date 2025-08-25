@@ -5,7 +5,6 @@ package users_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
@@ -94,10 +93,6 @@ func TestAccUsersDataSource_explicitDuplicateMailNicknames(t *testing.T) {
 
 	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.explicitDuplicateMailNicknames(data),
-		SkipFunc: func() (bool, error) {
-			fmt.Println(os.WriteFile("/Users/wyatt.fry/tests/TestAccUsersDataSource_explicitDuplicateMailNicknames.tf", []byte(UsersDataSource{}.explicitDuplicateMailNicknames(data)), 0666))
-			return true, nil
-		},
 		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("3"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("3"),
