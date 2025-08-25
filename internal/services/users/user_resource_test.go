@@ -282,6 +282,37 @@ resource "azuread_user" "testC" {
 `, data.RandomInteger, data.RandomPassword, data.RandomString)
 }
 
+func (UserResource) explicitDuplicateMailNicknames(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "testAlice" {
+  user_principal_name = "acctestUser.%[1]d.Alice@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-Alice"
+  mail_nickname       = "acctestUser-%[1]d-Alice"
+  password            = "%[2]s"
+}
+
+resource "azuread_user" "testBob1" {
+  user_principal_name = "acctestUser.%[1]d.Bob1@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-Bob1"
+  mail_nickname       = "acctestUser-%[1]d-Bob"
+  password            = "%[2]s"
+}
+
+resource "azuread_user" "testBob2" {
+  user_principal_name = "acctestUser.%[1]d.C@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-Bob2"
+  mail_nickname       = "acctestUser-%[1]d-Bob"
+  password            = "%[2]s"
+}
+`, data.RandomInteger, data.RandomPassword, data.RandomString)
+}
+
 func (UserResource) withRandomProvider(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
