@@ -360,7 +360,6 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 	// Check that a valid number of users was returned
 	if !returnAll && !ignoreMissing {
-		fmt.Println("############## HERE: ", expectedCount, len(foundUsers), filteredByNonUniqueField)
 		if !filteredByNonUniqueField && len(foundUsers) != expectedCount {
 			return tf.ErrorDiagF(fmt.Errorf("expected: %d, actual: %d", expectedCount, len(foundUsers)), "Unexpected number of users returned")
 		} else if filteredByNonUniqueField && len(foundUsers) < expectedCount {
