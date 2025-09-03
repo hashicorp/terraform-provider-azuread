@@ -70,7 +70,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Claims Mapping Policy can be imported using the object ID of the associated service principal and the ID of the claims mapping policy, e.g.
+Claims Mapping Policies can be imported using the `id`, e.g.
 
 ```shell
 terraform import azuread_claims_mapping_policy.my_policy /policies/claimsMappingPolicies/00000000-0000-0000-0000-000000000000
