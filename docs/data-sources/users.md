@@ -29,6 +29,9 @@ The following arguments are supported:
 * `employee_ids` - (Optional) The employee identifiers assigned to the users by the organisation.
 * `ignore_missing` - (Optional) Ignore missing users and return users that were found. The data source will still fail if no users are found. Cannot be specified with `return_all`. Defaults to `false`.
 * `mail_nicknames` - (Optional) The email aliases of the users.
+
+-> **Note:** `mail_nicknames` are not a unique identifier for users. If multiple users share the same `mail_nickname`, all matching users will be returned.
+
 * `mails` - (Optional) The SMTP email addresses of the users.
 * `object_ids` - (Optional) The object IDs of the users.
 * `return_all` - (Optional) When `true`, the data source will return all users. Cannot be used with `ignore_missing`. Defaults to `false`.
