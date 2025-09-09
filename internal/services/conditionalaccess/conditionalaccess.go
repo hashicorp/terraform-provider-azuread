@@ -89,7 +89,9 @@ func flattenConditionalAccessApplications(in stable.ConditionalAccessApplication
 		map[string]interface{}{
 			"included_applications": tf.FlattenStringSlicePtr(in.IncludeApplications),
 			"excluded_applications": tf.FlattenStringSlicePtr(in.ExcludeApplications),
+			"filter":                flattenConditionalAccessFilter(in.ApplicationFilter),
 			"included_user_actions": tf.FlattenStringSlicePtr(in.IncludeUserActions),
+			"included_authentication_context_class_references": tf.FlattenStringSlicePtr(in.IncludeAuthenticationContextClassReferences),
 		},
 	}
 }
@@ -449,11 +451,17 @@ func expandConditionalAccessApplications(in []interface{}) stable.ConditionalAcc
 
 	includeApplications := config["included_applications"].([]interface{})
 	excludeApplications := config["excluded_applications"].([]interface{})
+	applicationilter := config["filter"].([]interface{})
 	includeUserActions := config["included_user_actions"].([]interface{})
+	includeAuthenticationContextClassReferences := config["included_authentication_context_class_references"].([]interface{})
 
 	result.IncludeApplications = tf.ExpandStringSlicePtr(includeApplications)
 	result.ExcludeApplications = tf.ExpandStringSlicePtr(excludeApplications)
+	if len(applicationilter) > 0 {
+		result.ApplicationFilter = expandConditionalAccessFilter(applicationilter)
+	}
 	result.IncludeUserActions = tf.ExpandStringSlicePtr(includeUserActions)
+	result.IncludeAuthenticationContextClassReferences = tf.ExpandStringSlicePtr(includeAuthenticationContextClassReferences)
 
 	return result
 }
