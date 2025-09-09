@@ -45,7 +45,7 @@ resource "azuread_application" "widgets_app" {
 
     resource_access {
       # User.Read
-      id = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
+      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
       type = "Scope"
     }
   }
@@ -53,7 +53,7 @@ resource "azuread_application" "widgets_app" {
   required_resource_access {
     resource_app_id = azuread_application.widgets_service.application_id
 
-    dynamic resource_access {
+    dynamic "resource_access" {
       for_each = azuread_application.widgets_service.api.0.oauth2_permission_scope
       iterator = scope
 
