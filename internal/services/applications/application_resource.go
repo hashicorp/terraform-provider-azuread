@@ -1241,6 +1241,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// Attempt to patch the newly created application and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
+	// Our retry function also retries on 409.
 	uid, err := uuid.GenerateUUID()
 	if err != nil {
 		return tf.ErrorDiagF(err, "Failed to generate a UUID")

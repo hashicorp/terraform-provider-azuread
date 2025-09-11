@@ -27,7 +27,7 @@ import (
 
 func applicationUpdateRetryFunc() client.RequestRetryFunc {
 	return func(resp *http.Response, o *odata.OData) (bool, error) {
-		if response.WasNotFound(resp) {
+		if response.WasNotFound(resp) || response.WasConflict(resp) {
 			return true, nil
 		} else if response.WasBadRequest(resp) && o != nil && o.Error != nil {
 			return o.Error.Match("Permission (scope or role) cannot be deleted or updated unless disabled first"), nil
