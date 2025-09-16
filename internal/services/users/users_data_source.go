@@ -211,8 +211,6 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		"userType",
 	}
 
-	filteredByNonUniqueField := false
-
 	if returnAll {
 		resp, err := client.ListUsers(ctx, user.ListUsersOperationOptions{Select: &fieldsToSelect})
 		if err != nil {
@@ -276,7 +274,6 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 		} else if mailNicknames, ok := d.Get("mail_nicknames").([]interface{}); ok && len(mailNicknames) > 0 {
-			filteredByNonUniqueField = true
 			expectedCount = len(mailNicknames)
 			for _, v := range mailNicknames {
 				options := user.ListUsersOperationOptions{
@@ -358,12 +355,9 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 	}
 
-	// Check that a valid number of users was returned
 	if !returnAll && !ignoreMissing {
-		if !filteredByNonUniqueField && len(foundUsers) != expectedCount {
-			return tf.ErrorDiagF(fmt.Errorf("expected: %d, actual: %d", expectedCount, len(foundUsers)), "Unexpected number of users returned")
-		} else if filteredByNonUniqueField && len(foundUsers) < expectedCount {
-			return tf.ErrorDiagF(fmt.Errorf("expected at least %d, actual: %d", expectedCount, len(foundUsers)), "Unexpected number of users returned")
+		if len(foundUsers) < expectedCount {
+			return tf.ErrorDiagF(fmt.Errorf("expected at least: %d, actual: %d", expectedCount, len(foundUsers)), "Unexpected number of users returned")
 		}
 	}
 
