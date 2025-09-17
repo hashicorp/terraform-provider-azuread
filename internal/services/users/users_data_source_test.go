@@ -96,7 +96,7 @@ func TestAccUsersDataSource_explicitDuplicateMailNicknames(t *testing.T) {
 		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("3"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("3"),
-			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("3"),
 			check.That(data.ResourceName).Key("employee_ids.#").HasValue("3"),
 			check.That(data.ResourceName).Key("users.#").HasValue("3"),
 		),
