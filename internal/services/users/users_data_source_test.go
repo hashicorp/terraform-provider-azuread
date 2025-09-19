@@ -88,6 +88,21 @@ func TestAccUsersDataSource_byMailNicknames(t *testing.T) {
 	}})
 }
 
+func TestAccUsersDataSource_explicitDuplicateMailNicknames(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+
+	data.DataSourceTest(t, []acceptance.TestStep{{
+		Config: UsersDataSource{}.explicitDuplicateMailNicknames(data),
+		Check: acceptance.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("3"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("3"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("3"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("3"),
+			check.That(data.ResourceName).Key("users.#").HasValue("3"),
+		),
+	}})
+}
+
 func TestAccUsersDataSource_byMailNicknamesIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
@@ -256,6 +271,16 @@ data "azuread_users" "test" {
   mail_nicknames = [azuread_user.testA.mail_nickname, azuread_user.testB.mail_nickname]
 }
 `, UserResource{}.threeUsersABC(data))
+}
+
+func (UsersDataSource) explicitDuplicateMailNicknames(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_users" "test" {
+  mail_nicknames = [azuread_user.testAlice.mail_nickname, azuread_user.testBob1.mail_nickname]
+}
+`, UserResource{}.explicitDuplicateMailNicknames(data))
 }
 
 func (UsersDataSource) byMailNicknamesIgnoreMissing(data acceptance.TestData) string {
