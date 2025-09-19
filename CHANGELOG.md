@@ -1,3 +1,10 @@
+## 3.6.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* `data.azuread_named_location` - add support for the `object_id` property [GH-1703]
+* `azuread_named_location` - add support for the `object_id` property [GH-1703]
+
 ## 3.5.0 (August 08, 2025)
 
 ENHANCEMENTS:
