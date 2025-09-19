@@ -5,6 +5,10 @@ ENHANCEMENTS:
 * `data.azuread_named_location` - add support for the `object_id` property [GH-1703]
 * `azuread_named_location` - add support for the `object_id` property [GH-1703]
 
+BUG FIXES:
+
+* Data Source: `azuread_users` - queries that return multiple users with the same mail nickname no longer causes an error [GH-1762]
+
 ## 3.5.0 (August 08, 2025)
 
 ENHANCEMENTS:
