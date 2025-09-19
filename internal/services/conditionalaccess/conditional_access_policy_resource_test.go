@@ -463,6 +463,24 @@ func (r ConditionalAccessPolicyResource) Exists(ctx context.Context, clients *cl
 	return pointer.To(true), nil
 }
 
+func TestAccConditionalAccessPolicy_namedLocation(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.namedLocation(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (ConditionalAccessPolicyResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
@@ -1221,4 +1239,42 @@ resource "azuread_conditional_access_policy" "test" {
   }
 }
 `, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) namedLocation(data acceptance.TestData) string {
+	location := NamedLocationResource{}.basicIP(data)
+
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["browser"]
+
+    applications {
+      included_applications = ["None"]
+    }
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+
+    locations {
+      included_locations = ["All"]
+      excluded_locations = [azuread_named_location.test.object_id]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+
+%s
+`, data.RandomInteger, location)
 }
