@@ -35,7 +35,8 @@ The following attributes are exported:
 * `country` - A `country` block as documented below, which describes a country-based named location.
 * `id` - The ID of the named location.
 * `ip` - An `ip` block as documented below, which describes an IP-based named location.
-* 
+* `object_id` - The object ID of the named location.
+
 ---
 
 `country` block exports the following:

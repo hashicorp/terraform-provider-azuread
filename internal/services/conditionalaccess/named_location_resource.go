@@ -119,6 +119,12 @@ func namedLocationResource() *pluginsdk.Resource {
 					},
 				},
 			},
+
+			"object_id": {
+				Description: "The object ID of the named location",
+				Type:        pluginsdk.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -261,6 +267,7 @@ func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		}
 
 		tf.Set(d, "display_name", pointer.From(namedLocation.DisplayName))
+		tf.Set(d, "object_id", pointer.From(namedLocation.Id))
 		tf.Set(d, "ip", flattenIPNamedLocation(&namedLocation))
 
 	case stable.CountryNamedLocation:
@@ -269,6 +276,7 @@ func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		}
 
 		tf.Set(d, "display_name", pointer.From(namedLocation.DisplayName))
+		tf.Set(d, "object_id", pointer.From(namedLocation.Id))
 		tf.Set(d, "country", flattenCountryNamedLocation(&namedLocation))
 	}
 
