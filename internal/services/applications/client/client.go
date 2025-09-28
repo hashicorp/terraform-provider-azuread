@@ -5,8 +5,8 @@ package client
 
 import (
 	applicationBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/federatedidentitycredential"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/federatedidentitycredential"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/logo"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/owner"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applicationtemplates/stable/applicationtemplate"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
@@ -16,12 +16,12 @@ import (
 type ListFederatedIdentityCredentialsOperationResponse struct {
 	HttpResponse *http.Response
 	OData        *odata.OData
-	Model        *[]stable.FederatedIdentityCredential
+	Model        *[]beta.FederatedIdentityCredential
 }
 
 type ListFederatedIdentityCredentialsCompleteResult struct {
 	LatestHttpResponse *http.Response
-	Items              []stable.FederatedIdentityCredential
+	Items              []beta.FederatedIdentityCredential
 }
 
 type ListFederatedIdentityCredentialsOperationOptions struct {
@@ -99,7 +99,7 @@ func (p *ListFederatedIdentityCredentialsCustomPager) NextPageLink() *odata.Link
 
 // ListFederatedIdentityCredentials - List federatedIdentityCredentials. Get a list of the federatedIdentityCredential
 // objects and their properties.
-func (c FederatedIdentityCredentialClient) ListFederatedIdentityCredentials(ctx context.Context, id stable.ApplicationId, options ListFederatedIdentityCredentialsOperationOptions) (result ListFederatedIdentityCredentialsOperationResponse, err error) {
+func (c FederatedIdentityCredentialClient) ListFederatedIdentityCredentials(ctx context.Context, id beta.ApplicationId, options ListFederatedIdentityCredentialsOperationOptions) (result ListFederatedIdentityCredentialsOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
@@ -128,7 +128,7 @@ func (c FederatedIdentityCredentialClient) ListFederatedIdentityCredentials(ctx 
 	}
 
 	var values struct {
-		Values *[]stable.FederatedIdentityCredential `json:"value"`
+		Values *[]beta.FederatedIdentityCredential `json:"value"`
 	}
 	if err = resp.Unmarshal(&values); err != nil {
 		return
@@ -140,13 +140,13 @@ func (c FederatedIdentityCredentialClient) ListFederatedIdentityCredentials(ctx 
 }
 
 // ListFederatedIdentityCredentialsComplete retrieves all the results into a single object
-func (c FederatedIdentityCredentialClient) ListFederatedIdentityCredentialsComplete(ctx context.Context, id stable.ApplicationId, options ListFederatedIdentityCredentialsOperationOptions) (ListFederatedIdentityCredentialsCompleteResult, error) {
+func (c FederatedIdentityCredentialClient) ListFederatedIdentityCredentialsComplete(ctx context.Context, id beta.ApplicationId, options ListFederatedIdentityCredentialsOperationOptions) (ListFederatedIdentityCredentialsCompleteResult, error) {
 	return c.ListFederatedIdentityCredentialsCompleteMatchingPredicate(ctx, id, options, FederatedIdentityCredentialOperationPredicate{})
 }
 
 // ListFederatedIdentityCredentialsCompleteMatchingPredicate retrieves all the results and then applies the predicate
-func (c FederatedIdentityCredentialClient) ListFederatedIdentityCredentialsCompleteMatchingPredicate(ctx context.Context, id stable.ApplicationId, options ListFederatedIdentityCredentialsOperationOptions, predicate FederatedIdentityCredentialOperationPredicate) (result ListFederatedIdentityCredentialsCompleteResult, err error) {
-	items := make([]stable.FederatedIdentityCredential, 0)
+func (c FederatedIdentityCredentialClient) ListFederatedIdentityCredentialsCompleteMatchingPredicate(ctx context.Context, id beta.ApplicationId, options ListFederatedIdentityCredentialsOperationOptions, predicate FederatedIdentityCredentialOperationPredicate) (result ListFederatedIdentityCredentialsCompleteResult, err error) {
+	items := make([]beta.FederatedIdentityCredential, 0)
 
 	resp, err := c.ListFederatedIdentityCredentials(ctx, id, options)
 	if err != nil {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
@@ -51,7 +51,7 @@ func (o UpdateFederatedIdentityCredentialOperationOptions) ToQuery() *client.Que
 // object. By configuring a trust relationship between your Microsoft Entra application registration and the identity
 // provider for your compute platform, you can use tokens issued by that platform to authenticate with Microsoft
 // identity platform and call APIs in the Microsoft ecosystem. Maximum of 20 objects can be added to an application.
-func (c FederatedIdentityCredentialClient) UpdateFederatedIdentityCredential(ctx context.Context, id stable.ApplicationIdFederatedIdentityCredentialId, input stable.FederatedIdentityCredential, options UpdateFederatedIdentityCredentialOperationOptions) (result UpdateFederatedIdentityCredentialOperationResponse, err error) {
+func (c FederatedIdentityCredentialClient) UpdateFederatedIdentityCredential(ctx context.Context, id beta.ApplicationIdFederatedIdentityCredentialId, input beta.FederatedIdentityCredential, options UpdateFederatedIdentityCredentialOperationOptions) (result UpdateFederatedIdentityCredentialOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{

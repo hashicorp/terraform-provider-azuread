@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
@@ -50,9 +50,9 @@ func (o DeleteFederatedIdentityCredentialOperationOptions) ToQuery() *client.Que
 	return &out
 }
 
-// DeleteFederatedIdentityCredential - Delete federatedIdentityCredential. Delete a federatedIdentityCredential object
+// DeleteFederatedIdentityCredential - Delete federatedIdentityCredential. Deletes a federatedIdentityCredential object
 // from an application.
-func (c FederatedIdentityCredentialClient) DeleteFederatedIdentityCredential(ctx context.Context, id stable.ApplicationIdFederatedIdentityCredentialId, options DeleteFederatedIdentityCredentialOperationOptions) (result DeleteFederatedIdentityCredentialOperationResponse, err error) {
+func (c FederatedIdentityCredentialClient) DeleteFederatedIdentityCredential(ctx context.Context, id beta.ApplicationIdFederatedIdentityCredentialId, options DeleteFederatedIdentityCredentialOperationOptions) (result DeleteFederatedIdentityCredentialOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{

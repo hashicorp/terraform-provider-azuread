@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
@@ -15,7 +15,7 @@ import (
 type GetFederatedIdentityCredentialOperationResponse struct {
 	HttpResponse *http.Response
 	OData        *odata.OData
-	Model        *stable.FederatedIdentityCredential
+	Model        *beta.FederatedIdentityCredential
 }
 
 type GetFederatedIdentityCredentialOperationOptions struct {
@@ -57,7 +57,7 @@ func (o GetFederatedIdentityCredentialOperationOptions) ToQuery() *client.QueryP
 
 // GetFederatedIdentityCredential - Get federatedIdentityCredential. Read the properties and relationships of a
 // federatedIdentityCredential object.
-func (c FederatedIdentityCredentialClient) GetFederatedIdentityCredential(ctx context.Context, id stable.ApplicationIdFederatedIdentityCredentialId, options GetFederatedIdentityCredentialOperationOptions) (result GetFederatedIdentityCredentialOperationResponse, err error) {
+func (c FederatedIdentityCredentialClient) GetFederatedIdentityCredential(ctx context.Context, id beta.ApplicationIdFederatedIdentityCredentialId, options GetFederatedIdentityCredentialOperationOptions) (result GetFederatedIdentityCredentialOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
@@ -84,7 +84,7 @@ func (c FederatedIdentityCredentialClient) GetFederatedIdentityCredential(ctx co
 		return
 	}
 
-	var model stable.FederatedIdentityCredential
+	var model beta.FederatedIdentityCredential
 	result.Model = &model
 	if err = resp.Unmarshal(result.Model); err != nil {
 		return

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
@@ -57,7 +57,7 @@ func (o GetFederatedIdentityCredentialsCountOperationOptions) ToQuery() *client.
 }
 
 // GetFederatedIdentityCredentialsCount - Get the number of the resource
-func (c FederatedIdentityCredentialClient) GetFederatedIdentityCredentialsCount(ctx context.Context, id stable.ApplicationId, options GetFederatedIdentityCredentialsCountOperationOptions) (result GetFederatedIdentityCredentialsCountOperationResponse, err error) {
+func (c FederatedIdentityCredentialClient) GetFederatedIdentityCredentialsCount(ctx context.Context, id beta.ApplicationId, options GetFederatedIdentityCredentialsCountOperationOptions) (result GetFederatedIdentityCredentialsCountOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "text/plain",
 		ExpectedStatusCodes: []int{

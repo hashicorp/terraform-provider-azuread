@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
@@ -16,7 +16,7 @@ import (
 type CreateFederatedIdentityCredentialOperationResponse struct {
 	HttpResponse *http.Response
 	OData        *odata.OData
-	Model        *stable.FederatedIdentityCredential
+	Model        *beta.FederatedIdentityCredential
 }
 
 type CreateFederatedIdentityCredentialOperationOptions struct {
@@ -53,7 +53,7 @@ func (o CreateFederatedIdentityCredentialOperationOptions) ToQuery() *client.Que
 // and the identity provider for your compute platform, you can use tokens issued by that platform to authenticate with
 // Microsoft identity platform and call APIs in the Microsoft ecosystem. Maximum of 20 objects can be added to an
 // application.
-func (c FederatedIdentityCredentialClient) CreateFederatedIdentityCredential(ctx context.Context, id stable.ApplicationId, input stable.FederatedIdentityCredential, options CreateFederatedIdentityCredentialOperationOptions) (result CreateFederatedIdentityCredentialOperationResponse, err error) {
+func (c FederatedIdentityCredentialClient) CreateFederatedIdentityCredential(ctx context.Context, id beta.ApplicationId, input beta.FederatedIdentityCredential, options CreateFederatedIdentityCredentialOperationOptions) (result CreateFederatedIdentityCredentialOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
@@ -87,7 +87,7 @@ func (c FederatedIdentityCredentialClient) CreateFederatedIdentityCredential(ctx
 		return
 	}
 
-	var model stable.FederatedIdentityCredential
+	var model beta.FederatedIdentityCredential
 	result.Model = &model
 	if err = resp.Unmarshal(result.Model); err != nil {
 		return

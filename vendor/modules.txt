@@ -69,8 +69,8 @@ github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids
 ## explicit; go 1.24.1
 github.com/hashicorp/go-azure-sdk/microsoft-graph/administrativeunits/beta/administrativeunit
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application
+github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/federatedidentitycredential
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application
-github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/federatedidentitycredential
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/logo
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/owner
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applicationtemplates/stable/applicationtemplate
