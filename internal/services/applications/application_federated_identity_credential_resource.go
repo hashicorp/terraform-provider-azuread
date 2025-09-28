@@ -78,9 +78,17 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 			},
 
 			"subject": {
-				Description: "The identifier of the external software workload within the external identity provider. The combination of issuer and subject must be unique on the app.",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
+				Description:  "The identifier of the external software workload within the external identity provider. The combination of issuer and subject must be unique on the app.",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"subject", "claims_matching_expression"},
+			},
+
+			"claims_matching_expression": {
+				Description:  "The expression that subjects will be matched against.",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"subject", "claims_matching_expression"},
 			},
 
 			"description": {
@@ -126,6 +134,13 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		Issuer:      d.Get("issuer").(string),
 		Name:        d.Get("display_name").(string),
 		Subject:     nullable.Value(d.Get("subject").(string)),
+	}
+
+	if v, ok := d.GetOk("claims_matching_expression"); ok {
+		credential.ClaimsMatchingExpression = pointer.To(beta.FederatedIdentityExpression{
+			LanguageVersion: 1,
+			Value:           v.(string),
+		})
 	}
 
 	federatedIdentityCredentialResp, err := federatedIdentityCredentialClient.CreateFederatedIdentityCredential(ctx, *applicationId, credential, federatedidentitycredential.DefaultCreateFederatedIdentityCredentialOperationOptions())
@@ -203,6 +218,13 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 		Name: d.Get("display_name").(string),
 	}
 
+	if v, ok := d.GetOk("claims_matching_expression"); ok {
+		credential.ClaimsMatchingExpression = pointer.To(beta.FederatedIdentityExpression{
+			LanguageVersion: 1,
+			Value:           v.(string),
+		})
+	}
+
 	credentialId := beta.NewApplicationIdFederatedIdentityCredentialID(id.ObjectId, id.KeyId)
 
 	if _, err = federatedIdentityCredentialClient.UpdateFederatedIdentityCredential(ctx, credentialId, credential, federatedidentitycredential.DefaultUpdateFederatedIdentityCredentialOperationOptions()); err != nil {
@@ -245,7 +267,11 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 	tf.Set(d, "description", credential.Description.GetOrZero())
 	tf.Set(d, "display_name", credential.Name)
 	tf.Set(d, "issuer", credential.Issuer)
-	tf.Set(d, "subject", credential.Subject)
+	tf.Set(d, "subject", credential.Subject.GetOrZero())
+
+	if credential.ClaimsMatchingExpression != nil {
+		tf.Set(d, "claims_matching_expression", credential.ClaimsMatchingExpression.Value)
+	}
 
 	return nil
 }

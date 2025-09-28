@@ -53,6 +53,22 @@ func TestAccApplicationFederatedIdentityCredential_complete(t *testing.T) {
 	})
 }
 
+func TestAccApplicationFederatedIdentityCredential_flexible(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_federated_identity_credential", "test")
+	r := ApplicationFederatedIdentityCredentialResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.flexible(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("credential_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccApplicationFederatedIdentityCredential_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_federated_identity_credential", "test")
 	r := ApplicationFederatedIdentityCredentialResource{}
@@ -141,4 +157,19 @@ resource "azuread_application_federated_identity_credential" "test" {
   subject        = "%[3]s"
 }
 `, r.template(data), data.RandomString, data.UUID())
+}
+
+func (r ApplicationFederatedIdentityCredentialResource) flexible(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application_federated_identity_credential" "test" {
+  application_id             = azuread_application.test.id
+  display_name               = "hashitown.example.com-%[2]s"
+  description                = "Funtime tokens for HashiTown"
+  audiences                  = ["api://AzureADTokenExchange"]
+  issuer                     = "https://token.actions.githubusercontent.com"
+  claims_matching_expression = "claims['sub'] matches 'repo:contoso/contoso-repo:ref:refs/heads/*'"
+}
+`, r.template(data), data.RandomString)
 }

@@ -39,10 +39,13 @@ The following arguments are supported:
 
 * `application_id` - (Required) The resource ID of the application for which this federated identity credential should be created. Changing this field forces a new resource to be created.
 * `audiences` - (Required) List of audiences that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.
+* `claims_matching_expression` - (Optional) The expression that subjects will be matched against.
 * `description` - (Optional) A description for the federated identity credential.
 * `display_name` - (Required) A unique display name for the federated identity credential. Changing this forces a new resource to be created.
 * `issuer` - (Required) The URL of the external identity provider, which must match the issuer claim of the external token being exchanged. The combination of the values of issuer and subject must be unique on the app.
-* `subject` - (Required) The identifier of the external software workload within the external identity provider. The combination of issuer and subject must be unique on the app.
+* `subject` - (Optional) The identifier of the external software workload within the external identity provider. The combination of issuer and subject must be unique on the app.
+
+-> At least one of `subject` or `claims_matching_expression` must be specified.
 
 ## Attributes Reference
 
