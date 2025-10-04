@@ -481,6 +481,24 @@ func TestAccConditionalAccessPolicy_namedLocation(t *testing.T) {
 	})
 }
 
+func TestAccConditionalAccessPolicy_applicationFilter(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.applicationFilter(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (ConditionalAccessPolicyResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
@@ -1277,4 +1295,37 @@ resource "azuread_conditional_access_policy" "test" {
 
 %s
 `, data.RandomInteger, location)
+}
+
+func (ConditionalAccessPolicyResource) applicationFilter(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["all"]
+
+    applications {
+      included_applications = ["All"]
+
+      application_filter {
+        mode = "include"
+        rule = "CustomSecurityAttribute.Engineering_Project -eq \"Baker\""
+      }
+    }
+
+    users {
+      included_users = ["All"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+`, data.RandomInteger)
 }

@@ -75,6 +75,37 @@ resource "azuread_conditional_access_policy" "example" {
 }
 ```
 
+### Application filter
+
+```terraform
+resource "azuread_conditional_access_policy" "example" {
+  display_name = "example policy"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["all"]
+
+    applications {
+      included_applications = ["All"]
+
+      application_filter {
+        mode = "include"
+        rule = "CustomSecurityAttribute.Engineering_Project -eq \"Baker\""
+      }
+    }
+
+    users {
+      included_users = ["All"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["mfa"]
+  }
+}
+```
+
 ### Included client applications / service principals
 
 ```terraform
@@ -175,6 +206,7 @@ The following arguments are supported:
 
 `applications` block supports the following:
 
+* `application_filter` - (Optional) A `filter` block as documented below.
 * `excluded_applications` - (Optional) A list of application IDs explicitly excluded from the policy. Can also be set to `Office365`.
 * `included_applications` - (Optional) A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`, `None` or `Office365`. Cannot be specified with `included_user_actions`. One of `included_applications` or `included_user_actions` must be specified.
 * `included_user_actions` - (Optional) A list of user actions to include. Supported values are `urn:user:registerdevice` and `urn:user:registersecurityinfo`. Cannot be specified with `included_applications`. One of `included_applications` or `included_user_actions` must be specified.
