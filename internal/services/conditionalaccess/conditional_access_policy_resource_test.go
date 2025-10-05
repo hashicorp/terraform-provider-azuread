@@ -1313,7 +1313,7 @@ resource "azuread_conditional_access_policy" "test" {
 
       application_filter {
         mode = "include"
-        rule = "CustomSecurityAttribute.Engineering_Project -eq \"Baker\""
+        rule = "CustomSecurityAttribute.AzureADProviderTesting_Usage -contains \"Acceptance Tests\""
       }
     }
 
