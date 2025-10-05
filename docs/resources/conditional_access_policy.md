@@ -75,37 +75,6 @@ resource "azuread_conditional_access_policy" "example" {
 }
 ```
 
-### Application filter
-
-```terraform
-resource "azuread_conditional_access_policy" "example" {
-  display_name = "example policy"
-  state        = "disabled"
-
-  conditions {
-    client_app_types = ["all"]
-
-    applications {
-      included_applications = ["All"]
-
-      application_filter {
-        mode = "include"
-        rule = "CustomSecurityAttribute.Engineering_Project -eq \"Baker\""
-      }
-    }
-
-    users {
-      included_users = ["All"]
-    }
-  }
-
-  grant_controls {
-    operator          = "OR"
-    built_in_controls = ["mfa"]
-  }
-}
-```
-
 ### Included client applications / service principals
 
 ```terraform
