@@ -178,7 +178,7 @@ The following arguments are supported:
 * `principal_object_id` - (Required) The object ID of the user, group or service principal to be assigned this app role. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
 * `resource_object_id` - (Required) The object ID of the service principal representing the resource. Changing this forces a new resource to be created.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

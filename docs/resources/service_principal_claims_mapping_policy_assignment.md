@@ -30,7 +30,7 @@ The following arguments are supported:
 * `claims_mapping_policy_id` - (Required) The ID of the claims mapping policy to assign.
 * `service_principal_id` - (Required) The ID of the service principal for the policy assignment.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

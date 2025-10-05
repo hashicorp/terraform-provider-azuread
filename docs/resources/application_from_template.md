@@ -44,7 +44,7 @@ The following arguments are supported:
 * `display_name` - (Required) The display name for the application.
 * `template_id` - (Required) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this forces a new resource to be created.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

@@ -41,7 +41,7 @@ resource "azuread_access_package_resource_catalog_association" "example" {
 * `resource_origin_id` - (Required) The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group. Changing this forces a new resource to be created.
 * `resource_origin_system` - (Required) The type of the resource in the origin system, such as `SharePointOnline`, `AadApplication` or `AadGroup`. Changing this forces a new resource to be created.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

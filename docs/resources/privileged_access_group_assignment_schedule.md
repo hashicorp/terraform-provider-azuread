@@ -53,7 +53,7 @@ resource "azuread_privileged_access_group_assignment_schedule" "example" {
 
 At least one of `expiration_date`, `duration`, or `permanent_assignment` must be supplied. The role policy may limit the maximum duration which can be supplied.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

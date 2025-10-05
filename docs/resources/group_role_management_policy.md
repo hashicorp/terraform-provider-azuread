@@ -139,7 +139,7 @@ A `primary_approver` block supports the following:
 * `object_id` - (Required) The ID of the object which will act as an approver.
 * `type` - (Required) The type of object acting as an approver. Possible options are `singleUser` and `groupMembers`.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

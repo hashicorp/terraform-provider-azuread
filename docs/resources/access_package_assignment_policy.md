@@ -194,7 +194,7 @@ resource "azuread_access_package_assignment_policy" "example" {
 - `object_id` (Optional) The ID of the subject.
 - `subject_type` (Required) Specifies the type of users. Valid values are `singleUser`, `groupMembers`, `connectedOrganizationMembers`, `requestorManager`, `internalSponsors`, or `externalSponsors`.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

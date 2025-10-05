@@ -28,7 +28,7 @@ The following arguments are supported:
 
 * `display_name` - (Required) Specifies the display named of the named location to look up.
 
-## Attributes Reference 
+## Attribute Reference 
 
 The following attributes are exported:
 

@@ -36,7 +36,7 @@ The following arguments are supported:
 
 ~> One of `display_name`, `object_id` or `mail_nickname` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

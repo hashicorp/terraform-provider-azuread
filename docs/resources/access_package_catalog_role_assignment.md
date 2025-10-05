@@ -46,7 +46,7 @@ The following arguments are supported:
 * `principal_object_id` - (Required) The object ID of the principal for you want to create a role assignment. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
 * `role_id` - (Required) The object ID of the catalog role you want to assign. Changing this forces a new resource to be created.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

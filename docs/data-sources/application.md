@@ -37,7 +37,7 @@ The following arguments are supported:
 
 ~> One of `client_id`, `display_name`, `object_id`, or `identifier_uri` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

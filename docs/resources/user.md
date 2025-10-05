@@ -69,7 +69,7 @@ The following arguments are supported:
 * `usage_location` - (Optional) The usage location of the user. Required for users that will be assigned licenses due to legal requirement to check for availability of services in countries. The usage location is a two letter country code (ISO standard 3166). Examples include: `NO`, `JP`, and `GB`. Cannot be reset to null once set. 
 * `user_principal_name` - (Required) The user principal name (UPN) of the user.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

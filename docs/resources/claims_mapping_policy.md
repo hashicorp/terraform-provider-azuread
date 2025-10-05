@@ -53,7 +53,7 @@ The following arguments are supported:
 * `definition` - (Required) The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://www.terraform.io/language/functions/jsonencode) function can be used.
 * `display_name` - (Required) The display name for this Claims Mapping Policy.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

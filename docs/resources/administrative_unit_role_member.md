@@ -45,7 +45,7 @@ The following arguments are supported:
 * `member_object_id` - (Required) The object ID of the user, group or service principal you want to add as a member of the administrative unit. Changing this forces a new resource to be created.
 * `role_object_id` - (Required) The object ID of the directory role you want to assign. Changing this forces a new resource to be created.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

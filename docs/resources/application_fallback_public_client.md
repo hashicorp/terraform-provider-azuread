@@ -40,7 +40,7 @@ The following arguments are supported:
 
 -> Some configurations may require the Fallback Public Client setting to be `null`, for this case simply destroy this resource (or don't use it)
 
-## Attributes Reference
+## Attribute Reference
 
 No additional attributes are exported.
 

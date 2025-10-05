@@ -41,7 +41,7 @@ The following arguments are supported:
 
 ~> One of `display_name` or `object_id` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
 In additional to the arguments, the following attributes are exported:
 

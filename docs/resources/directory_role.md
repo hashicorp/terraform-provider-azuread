@@ -45,7 +45,7 @@ The following arguments are supported:
 
 ~> Either `display_name` or `template_id` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

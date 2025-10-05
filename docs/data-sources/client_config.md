@@ -24,7 +24,7 @@ output "object_id" {
 
 This data source does not have any arguments.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

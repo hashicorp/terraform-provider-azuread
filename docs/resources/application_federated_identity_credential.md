@@ -44,7 +44,7 @@ The following arguments are supported:
 * `issuer` - (Required) The URL of the external identity provider, which must match the issuer claim of the external token being exchanged. The combination of the values of issuer and subject must be unique on the app.
 * `subject` - (Required) The identifier of the external software workload within the external identity provider. The combination of issuer and subject must be unique on the app.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

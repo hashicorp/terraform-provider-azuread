@@ -367,7 +367,7 @@ The following arguments are supported:
 
 ---
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

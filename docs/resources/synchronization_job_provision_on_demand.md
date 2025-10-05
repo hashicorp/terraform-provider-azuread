@@ -102,7 +102,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 * `create` - (Defaults to 15 minutes) Used when creating the resource.
 
-## Attributes Reference
+## Attribute Reference
 
 No additional attributes are exported.
 

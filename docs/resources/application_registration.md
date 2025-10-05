@@ -53,7 +53,7 @@ The following arguments are supported:
 * `support_url` - (Optional) URL of the support page for the application.
 * `terms_of_service_url` - (Optional) URL of the terms of service statement for the application.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

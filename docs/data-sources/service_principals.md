@@ -63,7 +63,7 @@ The following arguments are supported:
 
 ~> Either `return_all`, or one of `client_ids`, `display_names` or `object_ids` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

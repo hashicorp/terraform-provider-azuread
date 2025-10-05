@@ -79,7 +79,7 @@ The following arguments are supported:
 
 -> At least one of `role_ids` or `scope_ids` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
 No additional attributes are exported.
 

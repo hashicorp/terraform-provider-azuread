@@ -69,7 +69,7 @@ The following arguments are supported:
 * `name` - The name of the optional claim.
 * `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
 
-## Attributes Reference
+## Attribute Reference
 
 No additional attributes are exported.
 

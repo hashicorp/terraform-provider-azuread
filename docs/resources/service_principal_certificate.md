@@ -76,7 +76,7 @@ The following arguments are supported:
 * `type` - (Required) The type of key/certificate. Must be one of `AsymmetricX509Cert` or `Symmetric`. Changing this fields forces a new resource to be created.
 * `value` - (Required) The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER. See also the `encoding` argument.
 
-## Attributes Reference
+## Attribute Reference
 
 No additional attributes are exported.
 

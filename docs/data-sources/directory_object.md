@@ -33,7 +33,7 @@ The following arguments are supported:
 
 * `object_id` - (Optional) Specifies the Object ID of the directory object to look up.
 
-## Attributes Reference 
+## Attribute Reference 
 
 The following attributes are exported:
 

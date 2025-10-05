@@ -131,7 +131,7 @@ The following arguments are supported:
 
 * `relay_state` - (Optional) The relative URI the service provider would redirect to after completion of the single sign-on flow.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

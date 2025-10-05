@@ -55,7 +55,7 @@ resource "azuread_application" "example" {
 
 This data source does not have any arguments.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

@@ -44,7 +44,7 @@ The following arguments are supported:
 ~> Either `object_id`, or both `catalog_id` and `display_name`, must be specified.
 
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to the above arguments, the following attributes are exported:
 

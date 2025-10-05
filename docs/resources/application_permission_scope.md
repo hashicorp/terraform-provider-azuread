@@ -77,7 +77,7 @@ The following arguments are supported:
 
 -> **Roles and Permission Scopes** In Azure Active Directory, application roles and permission scopes exported by an application share the same namespace and cannot contain duplicate values.
 
-## Attributes Reference
+## Attribute Reference
 
 No additional attributes are exported.
 

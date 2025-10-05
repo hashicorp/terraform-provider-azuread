@@ -31,7 +31,7 @@ The following arguments are supported:
 
 ~> One of `template_id` or `display_name` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

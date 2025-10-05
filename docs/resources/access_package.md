@@ -37,7 +37,7 @@ resource "azuread_access_package" "example" {
 * `display_name` - (Required) The display name of the access package.
 * `hidden` - (Optional) Whether the access package is hidden from the requestor.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

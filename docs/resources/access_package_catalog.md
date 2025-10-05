@@ -31,7 +31,7 @@ resource "azuread_access_package_catalog" "example" {
 * `externally_visible` - (Optional) Whether the access packages in this catalog can be requested by users outside the tenant.
 * `published` - (Optional) Whether the access packages in this catalog are available for management.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
