@@ -57,15 +57,14 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 			},
 
 			"access_type": {
-				Description: "The role of access type to the specified resource, valid values are `Member` and `Owner`",
+				Description: "The role of access type to the specified resource - for `AadGroup` valid values are `Member` and `Owner`, for `AadApplication` it must be a UUID and for `SharePointOnline` it must be a URL",
 				Type:        pluginsdk.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
-				Default:     "Member",
-				ValidateFunc: validation.StringInSlice([]string{
+				ValidateFunc: validation.Any(validation.StringInSlice([]string{
 					"Member",
 					"Owner",
-				}, false),
+				}, false), validation.IsUUID, validation.IsURLWithHTTPorHTTPS),
 			},
 		},
 	}
@@ -99,10 +98,23 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 
 	resource := pointer.To((*resourceResp.Model)[0])
 
+	var originId string
+	var displayName string
+	switch resource.OriginSystem.GetOrZero() {
+	case "AadGroup":
+		originId = fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)
+		displayName = accessType
+	case "AadApplication", "SharePointOnline":
+		originId = accessType
+		displayName = accessType
+	default:
+		return tf.ErrorDiagF(errors.New("unknown origin system"), "Retrieving origin id")
+	}
+
 	properties := beta.AccessPackageResourceRoleScope{
 		AccessPackageResourceRole: &beta.AccessPackageResourceRole{
-			DisplayName:  nullable.NoZero(accessType),
-			OriginId:     nullable.Value(fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)),
+			DisplayName:  nullable.NoZero(displayName),
+			OriginId:     nullable.Value(originId),
 			OriginSystem: resource.OriginSystem,
 			AccessPackageResource: &beta.AccessPackageResource{
 				Id:           resource.Id,
@@ -116,19 +128,17 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 		},
 	}
 
-	createMsg := `Creating Access Package Resource Association from resource %q@%q to access package %q`
-
 	resp, err := client.CreateEntitlementManagementAccessPackageResourceRoleScope(ctx, accessPackageId, properties, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultCreateEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+		return tf.ErrorDiagF(err, "Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 
 	resourceRoleScope := resp.Model
 	if resourceRoleScope == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+		return tf.ErrorDiagF(errors.New("model was nil"), "Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 	if resourceRoleScope.Id == nil {
-		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+		return tf.ErrorDiagF(errors.New("model has nil ID"), "Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 
 	resourceId := parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, accessType)
