@@ -825,7 +825,6 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *stable.Unified
 		}
 
 		if existingRule, ok := policyRules["AuthenticationContext_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyAuthenticationContextRule); ok {
-			rule.ClaimValue = existingRule.ClaimValue
 			rule.Target = existingRule.Target
 		}
 
