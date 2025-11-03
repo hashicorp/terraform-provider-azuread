@@ -119,10 +119,10 @@ func (r ApplicationFlexibleFederatedIdentityCredentialResource) basic(data accep
 
 resource "azuread_application_flexible_federated_identity_credential" "test" {
   application_id             = azuread_application.test.id
-  display_name   			 = "hashitown.example.com-%[2]s"
+  display_name               = "hashitown.example.com-%[2]s"
   claims_matching_expression = "claims['sub'] matches 'repo:contoso/contoso-repo:ref:refs/heads/*' and claims['job_workflow_ref'] matches 'contoso/contoso-prod/.github/workflows/*.yml@refs/heads/main'"
-  audience      			 = "api://HashiTownLikesAzureAD"
-  issuer         			 = "https://token.actions.githubusercontent.com"
+  audience                   = "api://HashiTownLikesAzureAD"
+  issuer                     = "https://token.actions.githubusercontent.com"
 }
 `, r.template(data), data.RandomString)
 }
