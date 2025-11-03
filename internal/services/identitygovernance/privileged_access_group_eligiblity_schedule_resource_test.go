@@ -105,8 +105,8 @@ resource "azuread_user" "member" {
 }
 
 resource "azuread_privileged_access_group_eligibility_schedule" "member" {
-  group_id        = azuread_group.pam.id
-  principal_id    = azuread_user.member.id
+  group_id        = azuread_group.pam.object_id
+  principal_id    = azuread_user.member.object_id
   assignment_type = "member"
   expiration_date = "%[3]s"
   justification   = "required"
@@ -148,8 +148,8 @@ resource "azuread_user" "eligibile_owner" {
 
 
 resource "azuread_privileged_access_group_eligibility_schedule" "owner" {
-  group_id        = azuread_group.pam.id
-  principal_id    = azuread_user.eligibile_owner.id
+  group_id        = azuread_group.pam.object_id
+  principal_id    = azuread_user.eligibile_owner.object_id
   assignment_type = "owner"
   duration        = "P30D"
   justification   = "required"
