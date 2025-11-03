@@ -14,12 +14,14 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/federatedidentitycredential"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/client/pollers"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/custompollers"
 )
 
 type flexibleFederatedIdentityCredentialResource struct{}
@@ -106,7 +108,7 @@ func (f flexibleFederatedIdentityCredentialResource) Create() sdk.ResourceFunc {
 		Timeout: 15 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.Applications.ApplicationClientBeta
-			federatedIdentityCredentialClient := metadata.Client.Applications.ApplicationFlexibleFederatedIdentityCredential
+			flexibleFederatedIdentityCredentialClient := metadata.Client.Applications.ApplicationFlexibleFederatedIdentityCredential
 
 			data := &flexibleFederatedIdentityCredentialModel{}
 
@@ -143,7 +145,7 @@ func (f flexibleFederatedIdentityCredentialResource) Create() sdk.ResourceFunc {
 				Name:        data.DisplayName,
 			}
 
-			federatedIdentityCredentialResp, err := federatedIdentityCredentialClient.CreateFederatedIdentityCredential(ctx, *applicationId, credential, federatedidentitycredential.DefaultCreateFederatedIdentityCredentialOperationOptions())
+			federatedIdentityCredentialResp, err := flexibleFederatedIdentityCredentialClient.CreateFederatedIdentityCredential(ctx, *applicationId, credential, federatedidentitycredential.DefaultCreateFederatedIdentityCredentialOperationOptions())
 			if err != nil {
 				return fmt.Errorf("adding flexible federated identity credential for %s", applicationId)
 			}
@@ -158,35 +160,11 @@ func (f flexibleFederatedIdentityCredentialResource) Create() sdk.ResourceFunc {
 
 			id := beta.NewApplicationIdFederatedIdentityCredentialID(applicationId.ApplicationId, *newCredential.Id)
 
-			// Wait for the credential to replicate
-			timeout, _ := ctx.Deadline()
-			polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-				Pending:                   []string{"Waiting"},
-				Target:                    []string{"Done"},
-				Timeout:                   time.Until(timeout),
-				MinTimeout:                1 * time.Second,
-				ContinuousTargetOccurence: 5,
-				Refresh: func() (interface{}, string, error) {
-					resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
-					if err != nil {
-						if response.WasNotFound(resp.HttpResponse) {
-							return nil, "Waiting", nil
-						}
-						return nil, "Error", err
-					}
-					credential := resp.Model
-					if credential == nil {
-						return nil, "Waiting", nil
-					}
-
-					return credential, "Done", nil
-				},
-			}).WaitForStateContext(ctx)
-
-			if err != nil {
-				return fmt.Errorf("waiting for %s: %+v", id, err)
-			} else if polledForCredential == nil {
-				return fmt.Errorf("waiting for flexible federated identity credential %s: flexible federated identity credential not found in application manifest", id)
+			pollerType := custompollers.NewApplicationFlexibleFederatedCredentialCreationPoller(flexibleFederatedIdentityCredentialClient, id)
+			poller := pollers.NewPoller(pollerType, 10*time.Second, pollers.DefaultNumberOfDroppedConnectionsToAllow)
+			// Wait for the credential to replicate - TODO This may need converting to a consistency.WaitForUpdate
+			if err := poller.PollUntilDone(ctx); err != nil {
+				return err
 			}
 
 			metadata.SetID(id)

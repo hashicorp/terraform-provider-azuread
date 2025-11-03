@@ -135,6 +135,7 @@ github.com/hashicorp/go-azure-sdk/sdk/auth
 github.com/hashicorp/go-azure-sdk/sdk/claims
 github.com/hashicorp/go-azure-sdk/sdk/client
 github.com/hashicorp/go-azure-sdk/sdk/client/msgraph
+github.com/hashicorp/go-azure-sdk/sdk/client/pollers
 github.com/hashicorp/go-azure-sdk/sdk/environments
 github.com/hashicorp/go-azure-sdk/sdk/internal/accept
 github.com/hashicorp/go-azure-sdk/sdk/internal/azurecli
