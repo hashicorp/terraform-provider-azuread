@@ -24,11 +24,12 @@ resource "azuread_application_registration" "example" {
 }
 
 resource "azuread_application_flexible_federated_identity_credential" "example" {
-  application_id = azuread_application_registration.example.id
-  display_name   = "my-repo-deploy"
-  description    = "Deployments for my-repo"
-  audiences      = ["api://AzureADTokenExchange"]
-  issuer         = "https://token.actions.githubusercontent.com"
+  application_id             = azuread_application_registration.example.id
+  claims_matching_expression = "claims['sub'] matches 'repo:contoso/contoso-repo:ref:refs/heads/*' and claims['job_workflow_ref'] matches 'contoso/contoso-prod/.github/workflows/*.yml@refs/heads/main'"
+  display_name               = "my-repo-deploy"
+  description                = "Deployments for my-repo"
+  audiences                  = ["api://AzureADTokenExchange"]
+  issuer                     = "https://token.actions.githubusercontent.com"
 }
 ```
 
