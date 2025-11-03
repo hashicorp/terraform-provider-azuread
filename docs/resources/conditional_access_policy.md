@@ -211,11 +211,11 @@ The following arguments are supported:
 
 * `excluded_groups` - (Optional) A list of group IDs excluded from scope of policy.
 * `excluded_guests_or_external_users` - (Optional) A `guests_or_external_users` block as documented below, which specifies internal guests and external users excluded from scope of policy.
-* `excluded_roles` - (Optional) A list of role IDs excluded from scope of policy.
+* `excluded_roles` - (Optional) A list of role template IDs excluded from scope of policy.
 * `excluded_users` - (Optional) A list of user IDs excluded from scope of policy and/or `GuestsOrExternalUsers`.
 * `included_groups` - (Optional) A list of group IDs in scope of policy unless explicitly excluded.
 * `included_guests_or_external_users` - (Optional) A `guests_or_external_users` block as documented below, which specifies internal guests and external users in scope of policy.
-* `included_roles` - (Optional) A list of role IDs in scope of policy unless explicitly excluded.
+* `included_roles` - (Optional) A list of role template IDs in scope of policy unless explicitly excluded.
 * `included_users` - (Optional) A list of user IDs in scope of policy unless explicitly excluded, or `None` or `All` or `GuestsOrExternalUsers`.
 
 -> At least one of `included_groups`, `included_guests_or_external_users`, `included_roles` or `included_users` must be specified.
