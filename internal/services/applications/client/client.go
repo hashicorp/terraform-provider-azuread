@@ -5,6 +5,7 @@ package client
 
 import (
 	applicationBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
+	flexibleFederatedIdentityCredential "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/federatedidentitycredential" // Flexible FIC Only available in beta currently, when it goes GA we should be able to flatten down to 1 client
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/federatedidentitycredential"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/logo"
@@ -16,13 +17,14 @@ import (
 )
 
 type Client struct {
-	ApplicationClient                      *application.ApplicationClient
-	ApplicationClientBeta                  *applicationBeta.ApplicationClient
-	ApplicationLogoClient                  *logo.LogoClient
-	ApplicationOwnerClient                 *owner.OwnerClient
-	ApplicationFederatedIdentityCredential *federatedidentitycredential.FederatedIdentityCredentialClient
-	ApplicationTemplateClient              *applicationtemplate.ApplicationTemplateClient
-	ServicePrincipalClient                 *serviceprincipal.ServicePrincipalClient
+	ApplicationClient                              *application.ApplicationClient
+	ApplicationClientBeta                          *applicationBeta.ApplicationClient
+	ApplicationLogoClient                          *logo.LogoClient
+	ApplicationOwnerClient                         *owner.OwnerClient
+	ApplicationFederatedIdentityCredential         *federatedidentitycredential.FederatedIdentityCredentialClient
+	ApplicationFlexibleFederatedIdentityCredential *flexibleFederatedIdentityCredential.FederatedIdentityCredentialClient
+	ApplicationTemplateClient                      *applicationtemplate.ApplicationTemplateClient
+	ServicePrincipalClient                         *serviceprincipal.ServicePrincipalClient
 }
 
 func NewClient(o *common.ClientOptions) (*Client, error) {
@@ -57,6 +59,12 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	}
 	o.Configure(applicationFederatedIdentityCredentialClient.Client)
 
+	applicationFlexibleFederatedIdentityCredentialClient, err := flexibleFederatedIdentityCredential.NewFederatedIdentityCredentialClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(applicationFlexibleFederatedIdentityCredentialClient.Client)
+
 	applicationTemplateClient, err := applicationtemplate.NewApplicationTemplateClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
@@ -76,12 +84,13 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	o.Configure(servicePrincipalClient.Client)
 
 	return &Client{
-		ApplicationClient:                      applicationClient,
-		ApplicationClientBeta:                  applicationClientBeta,
-		ApplicationLogoClient:                  applicationLogoClient,
-		ApplicationOwnerClient:                 applicationOwnerClient,
-		ApplicationFederatedIdentityCredential: applicationFederatedIdentityCredentialClient,
-		ApplicationTemplateClient:              applicationTemplateClient,
-		ServicePrincipalClient:                 servicePrincipalClient,
+		ApplicationClient:                              applicationClient,
+		ApplicationClientBeta:                          applicationClientBeta,
+		ApplicationLogoClient:                          applicationLogoClient,
+		ApplicationOwnerClient:                         applicationOwnerClient,
+		ApplicationFederatedIdentityCredential:         applicationFederatedIdentityCredentialClient,
+		ApplicationFlexibleFederatedIdentityCredential: applicationFlexibleFederatedIdentityCredentialClient,
+		ApplicationTemplateClient:                      applicationTemplateClient,
+		ServicePrincipalClient:                         servicePrincipalClient,
 	}, nil
 }
