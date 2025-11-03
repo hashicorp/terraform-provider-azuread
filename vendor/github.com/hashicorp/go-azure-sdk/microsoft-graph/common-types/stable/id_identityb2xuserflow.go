@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &IdentityB2xUserFlowId{}
 
-// IdentityB2xUserFlowId is a struct representing the Resource ID for a Identity B 2x User Flow
+// IdentityB2xUserFlowId is a struct representing the Resource ID for a Identity B 2 x User Flow
 type IdentityB2xUserFlowId struct {
 	B2xIdentityUserFlowId string
 }
@@ -67,7 +67,7 @@ func (id *IdentityB2xUserFlowId) FromParseResult(input resourceids.ParseResult) 
 	return nil
 }
 
-// ValidateIdentityB2xUserFlowID checks that 'input' can be parsed as a Identity B 2x User Flow ID
+// ValidateIdentityB2xUserFlowID checks that 'input' can be parsed as a Identity B 2 x User Flow ID
 func ValidateIdentityB2xUserFlowID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateIdentityB2xUserFlowID(input interface{}, key string) (warnings []st
 	return
 }
 
-// ID returns the formatted Identity B 2x User Flow ID
+// ID returns the formatted Identity B 2 x User Flow ID
 func (id IdentityB2xUserFlowId) ID() string {
 	fmtString := "/identity/b2xUserFlows/%s"
 	return fmt.Sprintf(fmtString, id.B2xIdentityUserFlowId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Identity B 2x User Flow ID
+// Segments returns a slice of Resource ID Segments which comprise this Identity B 2 x User Flow ID
 func (id IdentityB2xUserFlowId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("identity", "identity", "identity"),
@@ -97,10 +97,10 @@ func (id IdentityB2xUserFlowId) Segments() []resourceids.Segment {
 	}
 }
 
-// String returns a human-readable description of this Identity B 2x User Flow ID
+// String returns a human-readable description of this Identity B 2 x User Flow ID
 func (id IdentityB2xUserFlowId) String() string {
 	components := []string{
-		fmt.Sprintf("B 2x Identity User Flow: %q", id.B2xIdentityUserFlowId),
+		fmt.Sprintf("B 2 x Identity User Flow: %q", id.B2xIdentityUserFlowId),
 	}
-	return fmt.Sprintf("Identity B 2x User Flow (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Identity B 2 x User Flow (%s)", strings.Join(components, "\n"))
 }

@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &DeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryId{}
 
-// DeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryId is a struct representing the Resource ID for a Device Management Mac O S Software Update Account Summary Id Category Summary Id Update State Summary
+// DeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryId is a struct representing the Resource ID for a Device Management Mac OS Software Update Account Summary Id Category Summary Id Update State Summary
 type DeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryId struct {
 	MacOSSoftwareUpdateAccountSummaryId  string
 	MacOSSoftwareUpdateCategorySummaryId string
@@ -79,7 +79,7 @@ func (id *DeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUp
 	return nil
 }
 
-// ValidateDeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryID checks that 'input' can be parsed as a Device Management Mac O S Software Update Account Summary Id Category Summary Id Update State Summary ID
+// ValidateDeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryID checks that 'input' can be parsed as a Device Management Mac OS Software Update Account Summary Id Category Summary Id Update State Summary ID
 func ValidateDeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -94,13 +94,13 @@ func ValidateDeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryI
 	return
 }
 
-// ID returns the formatted Device Management Mac O S Software Update Account Summary Id Category Summary Id Update State Summary ID
+// ID returns the formatted Device Management Mac OS Software Update Account Summary Id Category Summary Id Update State Summary ID
 func (id DeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryId) ID() string {
 	fmtString := "/deviceManagement/macOSSoftwareUpdateAccountSummaries/%s/categorySummaries/%s/updateStateSummaries/%s"
 	return fmt.Sprintf(fmtString, id.MacOSSoftwareUpdateAccountSummaryId, id.MacOSSoftwareUpdateCategorySummaryId, id.MacOSSoftwareUpdateStateSummaryId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Device Management Mac O S Software Update Account Summary Id Category Summary Id Update State Summary ID
+// Segments returns a slice of Resource ID Segments which comprise this Device Management Mac OS Software Update Account Summary Id Category Summary Id Update State Summary ID
 func (id DeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("deviceManagement", "deviceManagement", "deviceManagement"),
@@ -113,12 +113,12 @@ func (id DeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpd
 	}
 }
 
-// String returns a human-readable description of this Device Management Mac O S Software Update Account Summary Id Category Summary Id Update State Summary ID
+// String returns a human-readable description of this Device Management Mac OS Software Update Account Summary Id Category Summary Id Update State Summary ID
 func (id DeviceManagementMacOSSoftwareUpdateAccountSummaryIdCategorySummaryIdUpdateStateSummaryId) String() string {
 	components := []string{
-		fmt.Sprintf("Mac O S Software Update Account Summary: %q", id.MacOSSoftwareUpdateAccountSummaryId),
-		fmt.Sprintf("Mac O S Software Update Category Summary: %q", id.MacOSSoftwareUpdateCategorySummaryId),
-		fmt.Sprintf("Mac O S Software Update State Summary: %q", id.MacOSSoftwareUpdateStateSummaryId),
+		fmt.Sprintf("Mac OS Software Update Account Summary: %q", id.MacOSSoftwareUpdateAccountSummaryId),
+		fmt.Sprintf("Mac OS Software Update Category Summary: %q", id.MacOSSoftwareUpdateCategorySummaryId),
+		fmt.Sprintf("Mac OS Software Update State Summary: %q", id.MacOSSoftwareUpdateStateSummaryId),
 	}
-	return fmt.Sprintf("Device Management Mac O S Software Update Account Summary Id Category Summary Id Update State Summary (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Device Management Mac OS Software Update Account Summary Id Category Summary Id Update State Summary (%s)", strings.Join(components, "\n"))
 }

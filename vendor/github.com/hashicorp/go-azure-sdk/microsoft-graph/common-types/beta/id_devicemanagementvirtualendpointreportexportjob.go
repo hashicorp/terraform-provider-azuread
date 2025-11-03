@@ -102,7 +102,7 @@ func (id DeviceManagementVirtualEndpointReportExportJobId) Segments() []resource
 // String returns a human-readable description of this Device Management Virtual Endpoint Report Export Job ID
 func (id DeviceManagementVirtualEndpointReportExportJobId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C Export Job: %q", id.CloudPCExportJobId),
+		fmt.Sprintf("Cloud PC Export Job: %q", id.CloudPCExportJobId),
 	}
 	return fmt.Sprintf("Device Management Virtual Endpoint Report Export Job (%s)", strings.Join(components, "\n"))
 }

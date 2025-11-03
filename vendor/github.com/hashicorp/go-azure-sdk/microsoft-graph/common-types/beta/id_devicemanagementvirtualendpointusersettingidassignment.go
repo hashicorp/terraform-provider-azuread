@@ -109,8 +109,8 @@ func (id DeviceManagementVirtualEndpointUserSettingIdAssignmentId) Segments() []
 // String returns a human-readable description of this Device Management Virtual Endpoint User Setting Id Assignment ID
 func (id DeviceManagementVirtualEndpointUserSettingIdAssignmentId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C User Setting: %q", id.CloudPCUserSettingId),
-		fmt.Sprintf("Cloud P C User Setting Assignment: %q", id.CloudPCUserSettingAssignmentId),
+		fmt.Sprintf("Cloud PC User Setting: %q", id.CloudPCUserSettingId),
+		fmt.Sprintf("Cloud PC User Setting Assignment: %q", id.CloudPCUserSettingAssignmentId),
 	}
 	return fmt.Sprintf("Device Management Virtual Endpoint User Setting Id Assignment (%s)", strings.Join(components, "\n"))
 }

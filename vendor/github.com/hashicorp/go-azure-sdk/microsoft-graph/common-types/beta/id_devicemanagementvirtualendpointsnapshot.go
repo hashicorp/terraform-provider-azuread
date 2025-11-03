@@ -101,7 +101,7 @@ func (id DeviceManagementVirtualEndpointSnapshotId) Segments() []resourceids.Seg
 // String returns a human-readable description of this Device Management Virtual Endpoint Snapshot ID
 func (id DeviceManagementVirtualEndpointSnapshotId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C Snapshot: %q", id.CloudPCSnapshotId),
+		fmt.Sprintf("Cloud PC Snapshot: %q", id.CloudPCSnapshotId),
 	}
 	return fmt.Sprintf("Device Management Virtual Endpoint Snapshot (%s)", strings.Join(components, "\n"))
 }

@@ -101,7 +101,7 @@ func (id DeviceManagementVirtualEndpointExternalPartnerSettingId) Segments() []r
 // String returns a human-readable description of this Device Management Virtual Endpoint External Partner Setting ID
 func (id DeviceManagementVirtualEndpointExternalPartnerSettingId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C External Partner Setting: %q", id.CloudPCExternalPartnerSettingId),
+		fmt.Sprintf("Cloud PC External Partner Setting: %q", id.CloudPCExternalPartnerSettingId),
 	}
 	return fmt.Sprintf("Device Management Virtual Endpoint External Partner Setting (%s)", strings.Join(components, "\n"))
 }

@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &DeviceManagementManagedDeviceWindowsOSImageId{}
 
-// DeviceManagementManagedDeviceWindowsOSImageId is a struct representing the Resource ID for a Device Management Managed Device Windows O S Image
+// DeviceManagementManagedDeviceWindowsOSImageId is a struct representing the Resource ID for a Device Management Managed Device Windows OS Image
 type DeviceManagementManagedDeviceWindowsOSImageId struct {
 	ManagedDeviceWindowsOperatingSystemImageId string
 }
@@ -67,7 +67,7 @@ func (id *DeviceManagementManagedDeviceWindowsOSImageId) FromParseResult(input r
 	return nil
 }
 
-// ValidateDeviceManagementManagedDeviceWindowsOSImageID checks that 'input' can be parsed as a Device Management Managed Device Windows O S Image ID
+// ValidateDeviceManagementManagedDeviceWindowsOSImageID checks that 'input' can be parsed as a Device Management Managed Device Windows OS Image ID
 func ValidateDeviceManagementManagedDeviceWindowsOSImageID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateDeviceManagementManagedDeviceWindowsOSImageID(input interface{}, ke
 	return
 }
 
-// ID returns the formatted Device Management Managed Device Windows O S Image ID
+// ID returns the formatted Device Management Managed Device Windows OS Image ID
 func (id DeviceManagementManagedDeviceWindowsOSImageId) ID() string {
 	fmtString := "/deviceManagement/managedDeviceWindowsOSImages/%s"
 	return fmt.Sprintf(fmtString, id.ManagedDeviceWindowsOperatingSystemImageId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Device Management Managed Device Windows O S Image ID
+// Segments returns a slice of Resource ID Segments which comprise this Device Management Managed Device Windows OS Image ID
 func (id DeviceManagementManagedDeviceWindowsOSImageId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("deviceManagement", "deviceManagement", "deviceManagement"),
@@ -97,10 +97,10 @@ func (id DeviceManagementManagedDeviceWindowsOSImageId) Segments() []resourceids
 	}
 }
 
-// String returns a human-readable description of this Device Management Managed Device Windows O S Image ID
+// String returns a human-readable description of this Device Management Managed Device Windows OS Image ID
 func (id DeviceManagementManagedDeviceWindowsOSImageId) String() string {
 	components := []string{
 		fmt.Sprintf("Managed Device Windows Operating System Image: %q", id.ManagedDeviceWindowsOperatingSystemImageId),
 	}
-	return fmt.Sprintf("Device Management Managed Device Windows O S Image (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Device Management Managed Device Windows OS Image (%s)", strings.Join(components, "\n"))
 }

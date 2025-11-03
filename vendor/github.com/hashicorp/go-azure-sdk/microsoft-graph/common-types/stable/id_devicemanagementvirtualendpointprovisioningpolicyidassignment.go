@@ -109,8 +109,8 @@ func (id DeviceManagementVirtualEndpointProvisioningPolicyIdAssignmentId) Segmen
 // String returns a human-readable description of this Device Management Virtual Endpoint Provisioning Policy Id Assignment ID
 func (id DeviceManagementVirtualEndpointProvisioningPolicyIdAssignmentId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C Provisioning Policy: %q", id.CloudPCProvisioningPolicyId),
-		fmt.Sprintf("Cloud P C Provisioning Policy Assignment: %q", id.CloudPCProvisioningPolicyAssignmentId),
+		fmt.Sprintf("Cloud PC Provisioning Policy: %q", id.CloudPCProvisioningPolicyId),
+		fmt.Sprintf("Cloud PC Provisioning Policy Assignment: %q", id.CloudPCProvisioningPolicyAssignmentId),
 	}
 	return fmt.Sprintf("Device Management Virtual Endpoint Provisioning Policy Id Assignment (%s)", strings.Join(components, "\n"))
 }

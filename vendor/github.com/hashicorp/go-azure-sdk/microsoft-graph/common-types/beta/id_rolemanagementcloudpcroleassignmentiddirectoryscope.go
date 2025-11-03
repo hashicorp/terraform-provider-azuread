@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &RoleManagementCloudPCRoleAssignmentIdDirectoryScopeId{}
 
-// RoleManagementCloudPCRoleAssignmentIdDirectoryScopeId is a struct representing the Resource ID for a Role Management Cloud P C Role Assignment Id Directory Scope
+// RoleManagementCloudPCRoleAssignmentIdDirectoryScopeId is a struct representing the Resource ID for a Role Management Cloud PC Role Assignment Id Directory Scope
 type RoleManagementCloudPCRoleAssignmentIdDirectoryScopeId struct {
 	UnifiedRoleAssignmentMultipleId string
 	DirectoryObjectId               string
@@ -73,7 +73,7 @@ func (id *RoleManagementCloudPCRoleAssignmentIdDirectoryScopeId) FromParseResult
 	return nil
 }
 
-// ValidateRoleManagementCloudPCRoleAssignmentIdDirectoryScopeID checks that 'input' can be parsed as a Role Management Cloud P C Role Assignment Id Directory Scope ID
+// ValidateRoleManagementCloudPCRoleAssignmentIdDirectoryScopeID checks that 'input' can be parsed as a Role Management Cloud PC Role Assignment Id Directory Scope ID
 func ValidateRoleManagementCloudPCRoleAssignmentIdDirectoryScopeID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -88,13 +88,13 @@ func ValidateRoleManagementCloudPCRoleAssignmentIdDirectoryScopeID(input interfa
 	return
 }
 
-// ID returns the formatted Role Management Cloud P C Role Assignment Id Directory Scope ID
+// ID returns the formatted Role Management Cloud PC Role Assignment Id Directory Scope ID
 func (id RoleManagementCloudPCRoleAssignmentIdDirectoryScopeId) ID() string {
 	fmtString := "/roleManagement/cloudPC/roleAssignments/%s/directoryScopes/%s"
 	return fmt.Sprintf(fmtString, id.UnifiedRoleAssignmentMultipleId, id.DirectoryObjectId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud P C Role Assignment Id Directory Scope ID
+// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud PC Role Assignment Id Directory Scope ID
 func (id RoleManagementCloudPCRoleAssignmentIdDirectoryScopeId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("roleManagement", "roleManagement", "roleManagement"),
@@ -106,11 +106,11 @@ func (id RoleManagementCloudPCRoleAssignmentIdDirectoryScopeId) Segments() []res
 	}
 }
 
-// String returns a human-readable description of this Role Management Cloud P C Role Assignment Id Directory Scope ID
+// String returns a human-readable description of this Role Management Cloud PC Role Assignment Id Directory Scope ID
 func (id RoleManagementCloudPCRoleAssignmentIdDirectoryScopeId) String() string {
 	components := []string{
 		fmt.Sprintf("Unified Role Assignment Multiple: %q", id.UnifiedRoleAssignmentMultipleId),
 		fmt.Sprintf("Directory Object: %q", id.DirectoryObjectId),
 	}
-	return fmt.Sprintf("Role Management Cloud P C Role Assignment Id Directory Scope (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Role Management Cloud PC Role Assignment Id Directory Scope (%s)", strings.Join(components, "\n"))
 }

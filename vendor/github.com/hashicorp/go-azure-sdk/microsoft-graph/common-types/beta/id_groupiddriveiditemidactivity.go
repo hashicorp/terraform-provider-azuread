@@ -126,7 +126,7 @@ func (id GroupIdDriveIdItemIdActivityId) String() string {
 		fmt.Sprintf("Group: %q", id.GroupId),
 		fmt.Sprintf("Drive: %q", id.DriveId),
 		fmt.Sprintf("Drive Item: %q", id.DriveItemId),
-		fmt.Sprintf("Item Activity O L D: %q", id.ItemActivityOLDId),
+		fmt.Sprintf("Item Activity OLD: %q", id.ItemActivityOLDId),
 	}
 	return fmt.Sprintf("Group Id Drive Id Item Id Activity (%s)", strings.Join(components, "\n"))
 }

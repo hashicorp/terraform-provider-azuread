@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &RoleManagementCloudPCResourceNamespaceIdResourceActionId{}
 
-// RoleManagementCloudPCResourceNamespaceIdResourceActionId is a struct representing the Resource ID for a Role Management Cloud P C Resource Namespace Id Resource Action
+// RoleManagementCloudPCResourceNamespaceIdResourceActionId is a struct representing the Resource ID for a Role Management Cloud PC Resource Namespace Id Resource Action
 type RoleManagementCloudPCResourceNamespaceIdResourceActionId struct {
 	UnifiedRbacResourceNamespaceId string
 	UnifiedRbacResourceActionId    string
@@ -73,7 +73,7 @@ func (id *RoleManagementCloudPCResourceNamespaceIdResourceActionId) FromParseRes
 	return nil
 }
 
-// ValidateRoleManagementCloudPCResourceNamespaceIdResourceActionID checks that 'input' can be parsed as a Role Management Cloud P C Resource Namespace Id Resource Action ID
+// ValidateRoleManagementCloudPCResourceNamespaceIdResourceActionID checks that 'input' can be parsed as a Role Management Cloud PC Resource Namespace Id Resource Action ID
 func ValidateRoleManagementCloudPCResourceNamespaceIdResourceActionID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -88,13 +88,13 @@ func ValidateRoleManagementCloudPCResourceNamespaceIdResourceActionID(input inte
 	return
 }
 
-// ID returns the formatted Role Management Cloud P C Resource Namespace Id Resource Action ID
+// ID returns the formatted Role Management Cloud PC Resource Namespace Id Resource Action ID
 func (id RoleManagementCloudPCResourceNamespaceIdResourceActionId) ID() string {
 	fmtString := "/roleManagement/cloudPC/resourceNamespaces/%s/resourceActions/%s"
 	return fmt.Sprintf(fmtString, id.UnifiedRbacResourceNamespaceId, id.UnifiedRbacResourceActionId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud P C Resource Namespace Id Resource Action ID
+// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud PC Resource Namespace Id Resource Action ID
 func (id RoleManagementCloudPCResourceNamespaceIdResourceActionId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("roleManagement", "roleManagement", "roleManagement"),
@@ -106,11 +106,11 @@ func (id RoleManagementCloudPCResourceNamespaceIdResourceActionId) Segments() []
 	}
 }
 
-// String returns a human-readable description of this Role Management Cloud P C Resource Namespace Id Resource Action ID
+// String returns a human-readable description of this Role Management Cloud PC Resource Namespace Id Resource Action ID
 func (id RoleManagementCloudPCResourceNamespaceIdResourceActionId) String() string {
 	components := []string{
 		fmt.Sprintf("Unified Rbac Resource Namespace: %q", id.UnifiedRbacResourceNamespaceId),
 		fmt.Sprintf("Unified Rbac Resource Action: %q", id.UnifiedRbacResourceActionId),
 	}
-	return fmt.Sprintf("Role Management Cloud P C Resource Namespace Id Resource Action (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Role Management Cloud PC Resource Namespace Id Resource Action (%s)", strings.Join(components, "\n"))
 }

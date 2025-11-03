@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &RoleManagementCloudPCRoleAssignmentId{}
 
-// RoleManagementCloudPCRoleAssignmentId is a struct representing the Resource ID for a Role Management Cloud P C Role Assignment
+// RoleManagementCloudPCRoleAssignmentId is a struct representing the Resource ID for a Role Management Cloud PC Role Assignment
 type RoleManagementCloudPCRoleAssignmentId struct {
 	UnifiedRoleAssignmentMultipleId string
 }
@@ -67,7 +67,7 @@ func (id *RoleManagementCloudPCRoleAssignmentId) FromParseResult(input resourcei
 	return nil
 }
 
-// ValidateRoleManagementCloudPCRoleAssignmentID checks that 'input' can be parsed as a Role Management Cloud P C Role Assignment ID
+// ValidateRoleManagementCloudPCRoleAssignmentID checks that 'input' can be parsed as a Role Management Cloud PC Role Assignment ID
 func ValidateRoleManagementCloudPCRoleAssignmentID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateRoleManagementCloudPCRoleAssignmentID(input interface{}, key string
 	return
 }
 
-// ID returns the formatted Role Management Cloud P C Role Assignment ID
+// ID returns the formatted Role Management Cloud PC Role Assignment ID
 func (id RoleManagementCloudPCRoleAssignmentId) ID() string {
 	fmtString := "/roleManagement/cloudPC/roleAssignments/%s"
 	return fmt.Sprintf(fmtString, id.UnifiedRoleAssignmentMultipleId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud P C Role Assignment ID
+// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud PC Role Assignment ID
 func (id RoleManagementCloudPCRoleAssignmentId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("roleManagement", "roleManagement", "roleManagement"),
@@ -98,10 +98,10 @@ func (id RoleManagementCloudPCRoleAssignmentId) Segments() []resourceids.Segment
 	}
 }
 
-// String returns a human-readable description of this Role Management Cloud P C Role Assignment ID
+// String returns a human-readable description of this Role Management Cloud PC Role Assignment ID
 func (id RoleManagementCloudPCRoleAssignmentId) String() string {
 	components := []string{
 		fmt.Sprintf("Unified Role Assignment Multiple: %q", id.UnifiedRoleAssignmentMultipleId),
 	}
-	return fmt.Sprintf("Role Management Cloud P C Role Assignment (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Role Management Cloud PC Role Assignment (%s)", strings.Join(components, "\n"))
 }

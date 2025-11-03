@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &RoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromId{}
 
-// RoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromId is a struct representing the Resource ID for a Role Management Cloud P C Role Definition Id Inherits Permissions From
+// RoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromId is a struct representing the Resource ID for a Role Management Cloud PC Role Definition Id Inherits Permissions From
 type RoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromId struct {
 	UnifiedRoleDefinitionId  string
 	UnifiedRoleDefinitionId1 string
@@ -73,7 +73,7 @@ func (id *RoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromId) FromPa
 	return nil
 }
 
-// ValidateRoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromID checks that 'input' can be parsed as a Role Management Cloud P C Role Definition Id Inherits Permissions From ID
+// ValidateRoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromID checks that 'input' can be parsed as a Role Management Cloud PC Role Definition Id Inherits Permissions From ID
 func ValidateRoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -88,13 +88,13 @@ func ValidateRoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromID(inpu
 	return
 }
 
-// ID returns the formatted Role Management Cloud P C Role Definition Id Inherits Permissions From ID
+// ID returns the formatted Role Management Cloud PC Role Definition Id Inherits Permissions From ID
 func (id RoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromId) ID() string {
 	fmtString := "/roleManagement/cloudPC/roleDefinitions/%s/inheritsPermissionsFrom/%s"
 	return fmt.Sprintf(fmtString, id.UnifiedRoleDefinitionId, id.UnifiedRoleDefinitionId1)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud P C Role Definition Id Inherits Permissions From ID
+// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud PC Role Definition Id Inherits Permissions From ID
 func (id RoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("roleManagement", "roleManagement", "roleManagement"),
@@ -106,11 +106,11 @@ func (id RoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromId) Segment
 	}
 }
 
-// String returns a human-readable description of this Role Management Cloud P C Role Definition Id Inherits Permissions From ID
+// String returns a human-readable description of this Role Management Cloud PC Role Definition Id Inherits Permissions From ID
 func (id RoleManagementCloudPCRoleDefinitionIdInheritsPermissionsFromId) String() string {
 	components := []string{
 		fmt.Sprintf("Unified Role Definition: %q", id.UnifiedRoleDefinitionId),
 		fmt.Sprintf("Unified Role Definition Id 1: %q", id.UnifiedRoleDefinitionId1),
 	}
-	return fmt.Sprintf("Role Management Cloud P C Role Definition Id Inherits Permissions From (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Role Management Cloud PC Role Definition Id Inherits Permissions From (%s)", strings.Join(components, "\n"))
 }

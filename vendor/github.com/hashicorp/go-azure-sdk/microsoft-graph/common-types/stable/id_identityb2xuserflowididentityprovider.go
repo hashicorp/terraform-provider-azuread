@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &IdentityB2xUserFlowIdIdentityProviderId{}
 
-// IdentityB2xUserFlowIdIdentityProviderId is a struct representing the Resource ID for a Identity B 2x User Flow Id Identity Provider
+// IdentityB2xUserFlowIdIdentityProviderId is a struct representing the Resource ID for a Identity B 2 x User Flow Id Identity Provider
 type IdentityB2xUserFlowIdIdentityProviderId struct {
 	B2xIdentityUserFlowId string
 	IdentityProviderId    string
@@ -73,7 +73,7 @@ func (id *IdentityB2xUserFlowIdIdentityProviderId) FromParseResult(input resourc
 	return nil
 }
 
-// ValidateIdentityB2xUserFlowIdIdentityProviderID checks that 'input' can be parsed as a Identity B 2x User Flow Id Identity Provider ID
+// ValidateIdentityB2xUserFlowIdIdentityProviderID checks that 'input' can be parsed as a Identity B 2 x User Flow Id Identity Provider ID
 func ValidateIdentityB2xUserFlowIdIdentityProviderID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -88,13 +88,13 @@ func ValidateIdentityB2xUserFlowIdIdentityProviderID(input interface{}, key stri
 	return
 }
 
-// ID returns the formatted Identity B 2x User Flow Id Identity Provider ID
+// ID returns the formatted Identity B 2 x User Flow Id Identity Provider ID
 func (id IdentityB2xUserFlowIdIdentityProviderId) ID() string {
 	fmtString := "/identity/b2xUserFlows/%s/identityProviders/%s"
 	return fmt.Sprintf(fmtString, id.B2xIdentityUserFlowId, id.IdentityProviderId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Identity B 2x User Flow Id Identity Provider ID
+// Segments returns a slice of Resource ID Segments which comprise this Identity B 2 x User Flow Id Identity Provider ID
 func (id IdentityB2xUserFlowIdIdentityProviderId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("identity", "identity", "identity"),
@@ -105,11 +105,11 @@ func (id IdentityB2xUserFlowIdIdentityProviderId) Segments() []resourceids.Segme
 	}
 }
 
-// String returns a human-readable description of this Identity B 2x User Flow Id Identity Provider ID
+// String returns a human-readable description of this Identity B 2 x User Flow Id Identity Provider ID
 func (id IdentityB2xUserFlowIdIdentityProviderId) String() string {
 	components := []string{
-		fmt.Sprintf("B 2x Identity User Flow: %q", id.B2xIdentityUserFlowId),
+		fmt.Sprintf("B 2 x Identity User Flow: %q", id.B2xIdentityUserFlowId),
 		fmt.Sprintf("Identity Provider: %q", id.IdentityProviderId),
 	}
-	return fmt.Sprintf("Identity B 2x User Flow Id Identity Provider (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Identity B 2 x User Flow Id Identity Provider (%s)", strings.Join(components, "\n"))
 }

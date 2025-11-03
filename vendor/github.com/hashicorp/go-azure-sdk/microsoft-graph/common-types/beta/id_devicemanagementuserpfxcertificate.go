@@ -100,7 +100,7 @@ func (id DeviceManagementUserPfxCertificateId) Segments() []resourceids.Segment 
 // String returns a human-readable description of this Device Management User Pfx Certificate ID
 func (id DeviceManagementUserPfxCertificateId) String() string {
 	components := []string{
-		fmt.Sprintf("User P F X Certificate: %q", id.UserPFXCertificateId),
+		fmt.Sprintf("User PFX Certificate: %q", id.UserPFXCertificateId),
 	}
 	return fmt.Sprintf("Device Management User Pfx Certificate (%s)", strings.Join(components, "\n"))
 }

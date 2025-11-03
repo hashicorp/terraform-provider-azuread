@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &RoleManagementCloudPCRoleDefinitionId{}
 
-// RoleManagementCloudPCRoleDefinitionId is a struct representing the Resource ID for a Role Management Cloud P C Role Definition
+// RoleManagementCloudPCRoleDefinitionId is a struct representing the Resource ID for a Role Management Cloud PC Role Definition
 type RoleManagementCloudPCRoleDefinitionId struct {
 	UnifiedRoleDefinitionId string
 }
@@ -67,7 +67,7 @@ func (id *RoleManagementCloudPCRoleDefinitionId) FromParseResult(input resourcei
 	return nil
 }
 
-// ValidateRoleManagementCloudPCRoleDefinitionID checks that 'input' can be parsed as a Role Management Cloud P C Role Definition ID
+// ValidateRoleManagementCloudPCRoleDefinitionID checks that 'input' can be parsed as a Role Management Cloud PC Role Definition ID
 func ValidateRoleManagementCloudPCRoleDefinitionID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateRoleManagementCloudPCRoleDefinitionID(input interface{}, key string
 	return
 }
 
-// ID returns the formatted Role Management Cloud P C Role Definition ID
+// ID returns the formatted Role Management Cloud PC Role Definition ID
 func (id RoleManagementCloudPCRoleDefinitionId) ID() string {
 	fmtString := "/roleManagement/cloudPC/roleDefinitions/%s"
 	return fmt.Sprintf(fmtString, id.UnifiedRoleDefinitionId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud P C Role Definition ID
+// Segments returns a slice of Resource ID Segments which comprise this Role Management Cloud PC Role Definition ID
 func (id RoleManagementCloudPCRoleDefinitionId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("roleManagement", "roleManagement", "roleManagement"),
@@ -98,10 +98,10 @@ func (id RoleManagementCloudPCRoleDefinitionId) Segments() []resourceids.Segment
 	}
 }
 
-// String returns a human-readable description of this Role Management Cloud P C Role Definition ID
+// String returns a human-readable description of this Role Management Cloud PC Role Definition ID
 func (id RoleManagementCloudPCRoleDefinitionId) String() string {
 	components := []string{
 		fmt.Sprintf("Unified Role Definition: %q", id.UnifiedRoleDefinitionId),
 	}
-	return fmt.Sprintf("Role Management Cloud P C Role Definition (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Role Management Cloud PC Role Definition (%s)", strings.Join(components, "\n"))
 }

@@ -101,7 +101,7 @@ func (id DeviceManagementVirtualEndpointBulkActionId) Segments() []resourceids.S
 // String returns a human-readable description of this Device Management Virtual Endpoint Bulk Action ID
 func (id DeviceManagementVirtualEndpointBulkActionId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C Bulk Action: %q", id.CloudPCBulkActionId),
+		fmt.Sprintf("Cloud PC Bulk Action: %q", id.CloudPCBulkActionId),
 	}
 	return fmt.Sprintf("Device Management Virtual Endpoint Bulk Action (%s)", strings.Join(components, "\n"))
 }
