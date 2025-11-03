@@ -5,8 +5,7 @@ package applications
 
 import (
 	"context"
-	"errors"
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -16,273 +15,312 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 )
 
-func applicationFlexibleFederatedIdentityCredentialResource() *pluginsdk.Resource {
-	return &pluginsdk.Resource{
-		CreateContext: applicationFlexibleFederatedIdentityCredentialResourceCreate,
-		UpdateContext: applicationFlexibleFederatedIdentityCredentialResourceUpdate,
-		ReadContext:   applicationFlexibleFederatedIdentityCredentialResourceRead,
-		DeleteContext: applicationFlexibleFederatedIdentityCredentialResourceDelete,
+type flexibleFederatedIdentityCredentialResource struct{}
 
-		Timeouts: &pluginsdk.ResourceTimeout{
-			Create: pluginsdk.DefaultTimeout(15 * time.Minute),
-			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
-			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
-			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
+var _ sdk.ResourceWithUpdate = &flexibleFederatedIdentityCredentialResource{}
+
+type flexibleFederatedIdentityCredentialModel struct {
+	ApplicationId            string `tfschema:"application_id"`
+	Audience                 string `tfschema:"audience"`
+	ClaimsMatchingExpression string `tfschema:"claims_matching_expression"`
+	Description              string `tfschema:"description"`
+	DisplayName              string `tfschema:"display_name"`
+	Issuer                   string `tfschema:"issuer"`
+	CredentialId             string `tfschema:"credential_id"`
+}
+
+func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"application_id": {
+			Description:  "The resource ID of the application for which this flexible federated identity credential should be created",
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: stable.ValidateApplicationID,
 		},
 
-		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			_, err := beta.ValidateApplicationIdFederatedIdentityCredentialID(id, "")
-			return errors.Join(err...)
-		}),
+		"audience": {
+			Description:  "The audience that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.",
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringLenBetween(1, 600),
+		},
 
-		Schema: map[string]*pluginsdk.Schema{
-			"application_id": {
-				Description:  "The resource ID of the application for which this flexible federated identity credential should be created",
-				Type:         pluginsdk.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: stable.ValidateApplicationID,
-			},
+		"claims_matching_expression": {
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringIsNotWhiteSpace,
+			Description:  "The expression to match for claims.",
+		},
 
-			"audience": {
-				Description:  "The audience that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.",
-				Type:         pluginsdk.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 600),
-			},
+		"display_name": {
+			Description:  "A unique display name for the flexible federated identity credential",
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringLenBetween(1, 120),
+		},
 
-			"claims_matching_expression": {
-				Type:         pluginsdk.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotWhiteSpace,
-				Description:  "The expression to match for claims.",
-			},
+		"issuer": {
+			Description: "The URL of the external identity provider, which must match the issuer claim of the external token being exchanged. The combination of the values of issuer and subject must be unique on the app.",
+			Type:        pluginsdk.TypeString,
+			Required:    true,
+		},
 
-			"display_name": {
-				Description:  "A unique display name for the flexible federated identity credential",
-				Type:         pluginsdk.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 120),
-			},
-
-			"issuer": {
-				Description: "The URL of the external identity provider, which must match the issuer claim of the external token being exchanged. The combination of the values of issuer and subject must be unique on the app.",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
-			},
-
-			"description": {
-				Description:  "A description for the flexible federated identity credential",
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 600),
-			},
-
-			"credential_id": {
-				Description: "A UUID used to uniquely identify this flexible federated identity credential",
-				Type:        pluginsdk.TypeString,
-				Computed:    true,
-			},
+		"description": {
+			Description:  "A description for the flexible federated identity credential",
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringLenBetween(0, 600),
 		},
 	}
 }
 
-func applicationFlexibleFederatedIdentityCredentialResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { // nolint
-	client := meta.(*clients.Client).Applications.ApplicationClientBeta
-	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFlexibleFederatedIdentityCredential
-
-	applicationId, err := beta.ParseApplicationID(d.Get("application_id").(string))
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`")
-	}
-
-	tf.LockByName(applicationResourceName, applicationId.ApplicationId)
-	defer tf.UnlockByName(applicationResourceName, applicationId.ApplicationId)
-
-	resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
-	if err != nil {
-		return tf.ErrorDiagF(err, "retrieving %s: %+v", applicationId, err)
-	}
-
-	app := resp.Model
-	if app == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), "retrieving %s", applicationId)
-	}
-
-	credential := beta.FederatedIdentityCredential{
-		Audiences: []string{d.Get("audience").(string)},
-		ClaimsMatchingExpression: &beta.FederatedIdentityExpression{
-			Value:           d.Get("claims_matching_expression").(string),
-			LanguageVersion: 1, // Note - from docs: the language version to be used. Should always be set to 1, and is required to be set/sent.
+func (f flexibleFederatedIdentityCredentialResource) Attributes() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"credential_id": {
+			Description: "A UUID used to uniquely identify this flexible federated identity credential",
+			Type:        pluginsdk.TypeString,
+			Computed:    true,
 		},
-		Description: nullable.Value(d.Get("description").(string)),
-		Issuer:      d.Get("issuer").(string),
-		Name:        d.Get("display_name").(string),
 	}
+}
 
-	federatedIdentityCredentialResp, err := federatedIdentityCredentialClient.CreateFederatedIdentityCredential(ctx, *applicationId, credential, federatedidentitycredential.DefaultCreateFederatedIdentityCredentialOperationOptions())
-	if err != nil {
-		return tf.ErrorDiagF(err, "Adding flexible federated identity credential for %s", applicationId)
+func (f flexibleFederatedIdentityCredentialResource) ModelObject() interface{} {
+	return &flexibleFederatedIdentityCredentialModel{}
+}
+
+func (f flexibleFederatedIdentityCredentialResource) ResourceType() string {
+	return "azuread_application_flexible_federated_identity_credential"
+}
+
+func (f flexibleFederatedIdentityCredentialResource) Create() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 15 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.Applications.ApplicationClientBeta
+			federatedIdentityCredentialClient := metadata.Client.Applications.ApplicationFlexibleFederatedIdentityCredential
+
+			data := &flexibleFederatedIdentityCredentialModel{}
+
+			if err := metadata.Decode(data); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			applicationId, err := beta.ParseApplicationID(data.ApplicationId)
+			if err != nil {
+				return err
+			}
+
+			tf.LockByName(applicationResourceName, applicationId.ApplicationId)
+			defer tf.UnlockByName(applicationResourceName, applicationId.ApplicationId)
+
+			resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
+			}
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
+			}
+
+			credential := beta.FederatedIdentityCredential{
+				Audiences: []string{data.Audience},
+				ClaimsMatchingExpression: &beta.FederatedIdentityExpression{
+					Value:           data.ClaimsMatchingExpression,
+					LanguageVersion: 1, // Note - from docs: the language version to be used. Should always be set to 1, and is required to be set/sent.
+				},
+				Description: nullable.Value(data.Description),
+				Issuer:      data.Issuer,
+				Name:        data.DisplayName,
+			}
+
+			federatedIdentityCredentialResp, err := federatedIdentityCredentialClient.CreateFederatedIdentityCredential(ctx, *applicationId, credential, federatedidentitycredential.DefaultCreateFederatedIdentityCredentialOperationOptions())
+			if err != nil {
+				return fmt.Errorf("adding flexible federated identity credential for %s", applicationId)
+			}
+
+			newCredential := federatedIdentityCredentialResp.Model
+			if newCredential == nil {
+				return fmt.Errorf("api error adding flexible federated identity credential for %s. nil credential received when adding flexible federated identity credential", applicationId)
+			}
+			if newCredential.Id == nil {
+				return fmt.Errorf("api error adding flexible federated identity credential for %s. nil or empty ID received", applicationId)
+			}
+
+			id := beta.NewApplicationIdFederatedIdentityCredentialID(applicationId.ApplicationId, *newCredential.Id)
+
+			// Wait for the credential to replicate
+			timeout, _ := ctx.Deadline()
+			polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+				Pending:                   []string{"Waiting"},
+				Target:                    []string{"Done"},
+				Timeout:                   time.Until(timeout),
+				MinTimeout:                1 * time.Second,
+				ContinuousTargetOccurence: 5,
+				Refresh: func() (interface{}, string, error) {
+					resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
+					if err != nil {
+						if response.WasNotFound(resp.HttpResponse) {
+							return nil, "Waiting", nil
+						}
+						return nil, "Error", err
+					}
+					credential := resp.Model
+					if credential == nil {
+						return nil, "Waiting", nil
+					}
+
+					return credential, "Done", nil
+				},
+			}).WaitForStateContext(ctx)
+
+			if err != nil {
+				return fmt.Errorf("waiting for %s: %+v", id, err)
+			} else if polledForCredential == nil {
+				return fmt.Errorf("waiting for flexible federated identity credential %s: flexible federated identity credential not found in application manifest", id)
+			}
+
+			metadata.SetID(id)
+
+			return nil
+		},
 	}
+}
 
-	newCredential := federatedIdentityCredentialResp.Model
-	if newCredential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential received when adding flexible federated identity credential"), "API error adding flexible federated identity credential for %s", applicationId)
-	}
-	if newCredential.Id == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty ID received"), "API error adding flexible federated identity credential for %s", applicationId)
-	}
+func (f flexibleFederatedIdentityCredentialResource) Read() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			federatedIdentityCredentialClient := metadata.Client.Applications.ApplicationFlexibleFederatedIdentityCredential
 
-	id := beta.NewApplicationIdFederatedIdentityCredentialID(applicationId.ApplicationId, *newCredential.Id)
+			state := flexibleFederatedIdentityCredentialModel{}
 
-	// Wait for the credential to replicate
-	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   time.Until(timeout),
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
+			id, err := beta.ParseApplicationIdFederatedIdentityCredentialID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, *id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
-					return nil, "Waiting", nil
+					return metadata.MarkAsGone(id)
 				}
-				return nil, "Error", err
-			}
-			credential := resp.Model
-			if credential == nil {
-				return nil, "Waiting", nil
+
+				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
 
-			return credential, "Done", nil
+			state.ApplicationId = beta.NewApplicationID(id.ApplicationId).ID()
+			state.CredentialId = id.FederatedIdentityCredentialId
+			if model := resp.Model; model != nil {
+				if model.ClaimsMatchingExpression != nil {
+					state.ClaimsMatchingExpression = model.ClaimsMatchingExpression.Value
+				}
+				if len(model.Audiences) > 0 {
+					state.Audience = model.Audiences[0]
+				}
+				state.Description = model.Description.GetOrZero()
+				state.DisplayName = model.Name
+				state.Issuer = model.Issuer
+			}
+
+			return metadata.Encode(&state)
 		},
-	}).WaitForStateContext(ctx)
-
-	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for %s", id)
-	} else if polledForCredential == nil {
-		return tf.ErrorDiagF(errors.New("flexible federated identity credential not found in application manifest"), "Waiting for flexible federated identity credential%s", id)
 	}
-
-	d.SetId(id.ID())
-
-	return applicationFlexibleFederatedIdentityCredentialResourceRead(ctx, d, meta)
 }
 
-func applicationFlexibleFederatedIdentityCredentialResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { // nolint
-	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFlexibleFederatedIdentityCredential
+func (f flexibleFederatedIdentityCredentialResource) Update() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			federatedIdentityCredentialClient := metadata.Client.Applications.ApplicationFlexibleFederatedIdentityCredential
 
-	id, err := beta.ParseApplicationIdFederatedIdentityCredentialID(d.Id())
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing flexible federated identity credential with ID %q", d.Id())
-	}
+			id, err := beta.ParseApplicationIdFederatedIdentityCredentialID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
 
-	tf.LockByName(applicationResourceName, id.ApplicationId)
-	defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
+			tf.LockByName(applicationResourceName, id.ApplicationId)
+			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-	credential := beta.FederatedIdentityCredential{
-		Id:          pointer.To(id.FederatedIdentityCredentialId),
-		Audiences:   []string{d.Get("audience").(string)},
-		Description: nullable.Value(d.Get("description").(string)),
-		Issuer:      d.Get("issuer").(string),
-		ClaimsMatchingExpression: &beta.FederatedIdentityExpression{
-			Value:           d.Get("claims_matching_expression").(string),
-			LanguageVersion: 1, // Note - from docs: the language version to be used. Should always be set to 1, and is required to be set/sent.
-		},
-		// Name is immutable but must be specified as it is a required field
-		Name: d.Get("display_name").(string),
-	}
+			data := &flexibleFederatedIdentityCredentialModel{}
 
-	if _, err = federatedIdentityCredentialClient.UpdateFederatedIdentityCredential(ctx, *id, credential, federatedidentitycredential.DefaultUpdateFederatedIdentityCredentialOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Updating flexible federated identity credential with ID %q for application with object ID %q", id.FederatedIdentityCredentialId, id.ApplicationId)
-	}
+			if err := metadata.Decode(data); err != nil {
+				return fmt.Errorf("decoding %s: %+v", id, err)
+			}
 
-	return applicationFlexibleFederatedIdentityCredentialResourceRead(ctx, d, meta)
-}
+			credential := beta.FederatedIdentityCredential{
+				Id:          pointer.To(id.FederatedIdentityCredentialId),
+				Audiences:   []string{data.Audience},
+				Description: nullable.Value(data.Description),
+				Issuer:      data.Issuer,
+				ClaimsMatchingExpression: &beta.FederatedIdentityExpression{
+					Value:           data.ClaimsMatchingExpression,
+					LanguageVersion: 1, // Note - from docs: the language version to be used. Should always be set to 1, and is required to be set/sent.
+				},
+				// Name is immutable but must be specified as it is a required field
+				Name: data.DisplayName,
+			}
 
-func applicationFlexibleFederatedIdentityCredentialResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { // nolint
-	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFlexibleFederatedIdentityCredential
+			if _, err = federatedIdentityCredentialClient.UpdateFederatedIdentityCredential(ctx, *id, credential, federatedidentitycredential.DefaultUpdateFederatedIdentityCredentialOperationOptions()); err != nil {
+				return fmt.Errorf("updating %s: %+v", id, err)
+			}
 
-	id, err := beta.ParseApplicationIdFederatedIdentityCredentialID(d.Id())
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing flexible federated identity credential with ID %q", d.Id())
-	}
-
-	applicationId := beta.NewApplicationID(id.ApplicationId)
-
-	resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, *id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
-	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			log.Printf("[DEBUG] Flexible Federated Identity Credential with ID %q for Application %s was not found - removing from state!", id.ApplicationId, id.FederatedIdentityCredentialId)
-			d.SetId("")
 			return nil
-		}
-		return tf.ErrorDiagPathF(err, "id", "Retrieving flexible federated identity credential with ID %q for application with object ID %q", id.FederatedIdentityCredentialId, id.ApplicationId)
+		},
 	}
-
-	credential := resp.Model
-	if credential == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), "retrieving %s", *id)
-	}
-
-	tf.Set(d, "application_id", applicationId.ID())
-	tf.Set(d, "credential_id", id.FederatedIdentityCredentialId)
-	if credential.ClaimsMatchingExpression != nil {
-		tf.Set(d, "claims_matching_expression", credential.ClaimsMatchingExpression.Value)
-	}
-	if len(credential.Audiences) > 0 {
-		tf.Set(d, "audience", credential.Audiences[0])
-	}
-	tf.Set(d, "description", credential.Description.GetOrZero())
-	tf.Set(d, "display_name", credential.Name)
-	tf.Set(d, "issuer", credential.Issuer)
-
-	return nil
 }
 
-func applicationFlexibleFederatedIdentityCredentialResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { // nolint
-	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFlexibleFederatedIdentityCredential
+func (f flexibleFederatedIdentityCredentialResource) Delete() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			federatedIdentityCredentialClient := metadata.Client.Applications.ApplicationFlexibleFederatedIdentityCredential
 
-	id, err := beta.ParseApplicationIdFederatedIdentityCredentialID(d.Id())
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing flexible federated identity credential with ID %q", d.Id())
-	}
-
-	tf.LockByName(applicationResourceName, id.ApplicationId)
-	defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
-
-	if _, err := federatedIdentityCredentialClient.DeleteFederatedIdentityCredential(ctx, *id, federatedidentitycredential.DefaultDeleteFederatedIdentityCredentialOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Removing %s", *id)
-	}
-
-	// Wait for credential to be deleted
-	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, *id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
-		if err != nil {
-			if response.WasNotFound(resp.HttpResponse) {
-				return pointer.To(false), nil
+			id, err := beta.ParseApplicationIdFederatedIdentityCredentialID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
 			}
-			return nil, err
-		}
-		credential := resp.Model
-		if credential == nil {
-			return pointer.To(false), nil
-		}
 
-		return pointer.To(true), nil
-	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of %s", *id)
+			tf.LockByName(applicationResourceName, id.ApplicationId)
+			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
+
+			if _, err = federatedIdentityCredentialClient.DeleteFederatedIdentityCredential(ctx, *id, federatedidentitycredential.DefaultDeleteFederatedIdentityCredentialOperationOptions()); err != nil {
+				return fmt.Errorf("deleting %s: %+v", id, err)
+			}
+
+			// Wait for credential to be deleted
+			if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+				resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, *id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
+				if err != nil {
+					if response.WasNotFound(resp.HttpResponse) {
+						return pointer.To(false), nil
+					}
+					return nil, err
+				}
+				credential := resp.Model
+				if credential == nil {
+					return pointer.To(false), nil
+				}
+
+				return pointer.To(true), nil
+			}); err != nil {
+				return fmt.Errorf("waiting for deletion of %s: %+v", id, err)
+			}
+
+			return nil
+		},
 	}
+}
 
-	return nil
+func (f flexibleFederatedIdentityCredentialResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+	return beta.ValidateApplicationIdFederatedIdentityCredentialID
 }
