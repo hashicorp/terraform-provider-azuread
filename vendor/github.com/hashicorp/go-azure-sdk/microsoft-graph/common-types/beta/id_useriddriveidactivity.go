@@ -117,7 +117,7 @@ func (id UserIdDriveIdActivityId) String() string {
 	components := []string{
 		fmt.Sprintf("User: %q", id.UserId),
 		fmt.Sprintf("Drive: %q", id.DriveId),
-		fmt.Sprintf("Item Activity O L D: %q", id.ItemActivityOLDId),
+		fmt.Sprintf("Item Activity OLD: %q", id.ItemActivityOLDId),
 	}
 	return fmt.Sprintf("User Id Drive Id Activity (%s)", strings.Join(components, "\n"))
 }

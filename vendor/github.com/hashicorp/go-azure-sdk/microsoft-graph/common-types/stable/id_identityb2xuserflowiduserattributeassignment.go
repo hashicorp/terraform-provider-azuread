@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &IdentityB2xUserFlowIdUserAttributeAssignmentId{}
 
-// IdentityB2xUserFlowIdUserAttributeAssignmentId is a struct representing the Resource ID for a Identity B 2x User Flow Id User Attribute Assignment
+// IdentityB2xUserFlowIdUserAttributeAssignmentId is a struct representing the Resource ID for a Identity B 2 x User Flow Id User Attribute Assignment
 type IdentityB2xUserFlowIdUserAttributeAssignmentId struct {
 	B2xIdentityUserFlowId                 string
 	IdentityUserFlowAttributeAssignmentId string
@@ -73,7 +73,7 @@ func (id *IdentityB2xUserFlowIdUserAttributeAssignmentId) FromParseResult(input 
 	return nil
 }
 
-// ValidateIdentityB2xUserFlowIdUserAttributeAssignmentID checks that 'input' can be parsed as a Identity B 2x User Flow Id User Attribute Assignment ID
+// ValidateIdentityB2xUserFlowIdUserAttributeAssignmentID checks that 'input' can be parsed as a Identity B 2 x User Flow Id User Attribute Assignment ID
 func ValidateIdentityB2xUserFlowIdUserAttributeAssignmentID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -88,13 +88,13 @@ func ValidateIdentityB2xUserFlowIdUserAttributeAssignmentID(input interface{}, k
 	return
 }
 
-// ID returns the formatted Identity B 2x User Flow Id User Attribute Assignment ID
+// ID returns the formatted Identity B 2 x User Flow Id User Attribute Assignment ID
 func (id IdentityB2xUserFlowIdUserAttributeAssignmentId) ID() string {
 	fmtString := "/identity/b2xUserFlows/%s/userAttributeAssignments/%s"
 	return fmt.Sprintf(fmtString, id.B2xIdentityUserFlowId, id.IdentityUserFlowAttributeAssignmentId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Identity B 2x User Flow Id User Attribute Assignment ID
+// Segments returns a slice of Resource ID Segments which comprise this Identity B 2 x User Flow Id User Attribute Assignment ID
 func (id IdentityB2xUserFlowIdUserAttributeAssignmentId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("identity", "identity", "identity"),
@@ -105,11 +105,11 @@ func (id IdentityB2xUserFlowIdUserAttributeAssignmentId) Segments() []resourceid
 	}
 }
 
-// String returns a human-readable description of this Identity B 2x User Flow Id User Attribute Assignment ID
+// String returns a human-readable description of this Identity B 2 x User Flow Id User Attribute Assignment ID
 func (id IdentityB2xUserFlowIdUserAttributeAssignmentId) String() string {
 	components := []string{
-		fmt.Sprintf("B 2x Identity User Flow: %q", id.B2xIdentityUserFlowId),
+		fmt.Sprintf("B 2 x Identity User Flow: %q", id.B2xIdentityUserFlowId),
 		fmt.Sprintf("Identity User Flow Attribute Assignment: %q", id.IdentityUserFlowAttributeAssignmentId),
 	}
-	return fmt.Sprintf("Identity B 2x User Flow Id User Attribute Assignment (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Identity B 2 x User Flow Id User Attribute Assignment (%s)", strings.Join(components, "\n"))
 }

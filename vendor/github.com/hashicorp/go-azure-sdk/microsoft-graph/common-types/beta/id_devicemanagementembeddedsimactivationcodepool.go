@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &DeviceManagementEmbeddedSIMActivationCodePoolId{}
 
-// DeviceManagementEmbeddedSIMActivationCodePoolId is a struct representing the Resource ID for a Device Management Embedded S I M Activation Code Pool
+// DeviceManagementEmbeddedSIMActivationCodePoolId is a struct representing the Resource ID for a Device Management Embedded SIM Activation Code Pool
 type DeviceManagementEmbeddedSIMActivationCodePoolId struct {
 	EmbeddedSIMActivationCodePoolId string
 }
@@ -67,7 +67,7 @@ func (id *DeviceManagementEmbeddedSIMActivationCodePoolId) FromParseResult(input
 	return nil
 }
 
-// ValidateDeviceManagementEmbeddedSIMActivationCodePoolID checks that 'input' can be parsed as a Device Management Embedded S I M Activation Code Pool ID
+// ValidateDeviceManagementEmbeddedSIMActivationCodePoolID checks that 'input' can be parsed as a Device Management Embedded SIM Activation Code Pool ID
 func ValidateDeviceManagementEmbeddedSIMActivationCodePoolID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateDeviceManagementEmbeddedSIMActivationCodePoolID(input interface{}, 
 	return
 }
 
-// ID returns the formatted Device Management Embedded S I M Activation Code Pool ID
+// ID returns the formatted Device Management Embedded SIM Activation Code Pool ID
 func (id DeviceManagementEmbeddedSIMActivationCodePoolId) ID() string {
 	fmtString := "/deviceManagement/embeddedSIMActivationCodePools/%s"
 	return fmt.Sprintf(fmtString, id.EmbeddedSIMActivationCodePoolId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Device Management Embedded S I M Activation Code Pool ID
+// Segments returns a slice of Resource ID Segments which comprise this Device Management Embedded SIM Activation Code Pool ID
 func (id DeviceManagementEmbeddedSIMActivationCodePoolId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("deviceManagement", "deviceManagement", "deviceManagement"),
@@ -97,10 +97,10 @@ func (id DeviceManagementEmbeddedSIMActivationCodePoolId) Segments() []resourcei
 	}
 }
 
-// String returns a human-readable description of this Device Management Embedded S I M Activation Code Pool ID
+// String returns a human-readable description of this Device Management Embedded SIM Activation Code Pool ID
 func (id DeviceManagementEmbeddedSIMActivationCodePoolId) String() string {
 	components := []string{
-		fmt.Sprintf("Embedded S I M Activation Code Pool: %q", id.EmbeddedSIMActivationCodePoolId),
+		fmt.Sprintf("Embedded SIM Activation Code Pool: %q", id.EmbeddedSIMActivationCodePoolId),
 	}
-	return fmt.Sprintf("Device Management Embedded S I M Activation Code Pool (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Device Management Embedded SIM Activation Code Pool (%s)", strings.Join(components, "\n"))
 }

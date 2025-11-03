@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &DeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceId{}
 
-// DeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceId is a struct representing the Resource ID for a Device Management User Experience Analytics App Health O S Version Performance
+// DeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceId is a struct representing the Resource ID for a Device Management User Experience Analytics App Health OS Version Performance
 type DeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceId struct {
 	UserExperienceAnalyticsAppHealthOSVersionPerformanceId string
 }
@@ -67,7 +67,7 @@ func (id *DeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceId
 	return nil
 }
 
-// ValidateDeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceID checks that 'input' can be parsed as a Device Management User Experience Analytics App Health O S Version Performance ID
+// ValidateDeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceID checks that 'input' can be parsed as a Device Management User Experience Analytics App Health OS Version Performance ID
 func ValidateDeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateDeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanc
 	return
 }
 
-// ID returns the formatted Device Management User Experience Analytics App Health O S Version Performance ID
+// ID returns the formatted Device Management User Experience Analytics App Health OS Version Performance ID
 func (id DeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceId) ID() string {
 	fmtString := "/deviceManagement/userExperienceAnalyticsAppHealthOSVersionPerformance/%s"
 	return fmt.Sprintf(fmtString, id.UserExperienceAnalyticsAppHealthOSVersionPerformanceId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Device Management User Experience Analytics App Health O S Version Performance ID
+// Segments returns a slice of Resource ID Segments which comprise this Device Management User Experience Analytics App Health OS Version Performance ID
 func (id DeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("deviceManagement", "deviceManagement", "deviceManagement"),
@@ -97,10 +97,10 @@ func (id DeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceId)
 	}
 }
 
-// String returns a human-readable description of this Device Management User Experience Analytics App Health O S Version Performance ID
+// String returns a human-readable description of this Device Management User Experience Analytics App Health OS Version Performance ID
 func (id DeviceManagementUserExperienceAnalyticsAppHealthOSVersionPerformanceId) String() string {
 	components := []string{
-		fmt.Sprintf("User Experience Analytics App Health O S Version Performance: %q", id.UserExperienceAnalyticsAppHealthOSVersionPerformanceId),
+		fmt.Sprintf("User Experience Analytics App Health OS Version Performance: %q", id.UserExperienceAnalyticsAppHealthOSVersionPerformanceId),
 	}
-	return fmt.Sprintf("Device Management User Experience Analytics App Health O S Version Performance (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Device Management User Experience Analytics App Health OS Version Performance (%s)", strings.Join(components, "\n"))
 }

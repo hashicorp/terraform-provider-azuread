@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &IdentityB2xUserFlowIdLanguageId{}
 
-// IdentityB2xUserFlowIdLanguageId is a struct representing the Resource ID for a Identity B 2x User Flow Id Language
+// IdentityB2xUserFlowIdLanguageId is a struct representing the Resource ID for a Identity B 2 x User Flow Id Language
 type IdentityB2xUserFlowIdLanguageId struct {
 	B2xIdentityUserFlowId           string
 	UserFlowLanguageConfigurationId string
@@ -73,7 +73,7 @@ func (id *IdentityB2xUserFlowIdLanguageId) FromParseResult(input resourceids.Par
 	return nil
 }
 
-// ValidateIdentityB2xUserFlowIdLanguageID checks that 'input' can be parsed as a Identity B 2x User Flow Id Language ID
+// ValidateIdentityB2xUserFlowIdLanguageID checks that 'input' can be parsed as a Identity B 2 x User Flow Id Language ID
 func ValidateIdentityB2xUserFlowIdLanguageID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -88,13 +88,13 @@ func ValidateIdentityB2xUserFlowIdLanguageID(input interface{}, key string) (war
 	return
 }
 
-// ID returns the formatted Identity B 2x User Flow Id Language ID
+// ID returns the formatted Identity B 2 x User Flow Id Language ID
 func (id IdentityB2xUserFlowIdLanguageId) ID() string {
 	fmtString := "/identity/b2xUserFlows/%s/languages/%s"
 	return fmt.Sprintf(fmtString, id.B2xIdentityUserFlowId, id.UserFlowLanguageConfigurationId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Identity B 2x User Flow Id Language ID
+// Segments returns a slice of Resource ID Segments which comprise this Identity B 2 x User Flow Id Language ID
 func (id IdentityB2xUserFlowIdLanguageId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("identity", "identity", "identity"),
@@ -105,11 +105,11 @@ func (id IdentityB2xUserFlowIdLanguageId) Segments() []resourceids.Segment {
 	}
 }
 
-// String returns a human-readable description of this Identity B 2x User Flow Id Language ID
+// String returns a human-readable description of this Identity B 2 x User Flow Id Language ID
 func (id IdentityB2xUserFlowIdLanguageId) String() string {
 	components := []string{
-		fmt.Sprintf("B 2x Identity User Flow: %q", id.B2xIdentityUserFlowId),
+		fmt.Sprintf("B 2 x Identity User Flow: %q", id.B2xIdentityUserFlowId),
 		fmt.Sprintf("User Flow Language Configuration: %q", id.UserFlowLanguageConfigurationId),
 	}
-	return fmt.Sprintf("Identity B 2x User Flow Id Language (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Identity B 2 x User Flow Id Language (%s)", strings.Join(components, "\n"))
 }

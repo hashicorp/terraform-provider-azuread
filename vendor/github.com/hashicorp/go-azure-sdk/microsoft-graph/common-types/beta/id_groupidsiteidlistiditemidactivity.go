@@ -135,7 +135,7 @@ func (id GroupIdSiteIdListIdItemIdActivityId) String() string {
 		fmt.Sprintf("Site: %q", id.SiteId),
 		fmt.Sprintf("List: %q", id.ListId),
 		fmt.Sprintf("List Item: %q", id.ListItemId),
-		fmt.Sprintf("Item Activity O L D: %q", id.ItemActivityOLDId),
+		fmt.Sprintf("Item Activity OLD: %q", id.ItemActivityOLDId),
 	}
 	return fmt.Sprintf("Group Id Site Id List Id Item Id Activity (%s)", strings.Join(components, "\n"))
 }

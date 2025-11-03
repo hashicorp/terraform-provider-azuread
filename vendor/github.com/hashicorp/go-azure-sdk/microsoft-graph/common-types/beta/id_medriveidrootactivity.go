@@ -110,7 +110,7 @@ func (id MeDriveIdRootActivityId) Segments() []resourceids.Segment {
 func (id MeDriveIdRootActivityId) String() string {
 	components := []string{
 		fmt.Sprintf("Drive: %q", id.DriveId),
-		fmt.Sprintf("Item Activity O L D: %q", id.ItemActivityOLDId),
+		fmt.Sprintf("Item Activity OLD: %q", id.ItemActivityOLDId),
 	}
 	return fmt.Sprintf("Me Drive Id Root Activity (%s)", strings.Join(components, "\n"))
 }

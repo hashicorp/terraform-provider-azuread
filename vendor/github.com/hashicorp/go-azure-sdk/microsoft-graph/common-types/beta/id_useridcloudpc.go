@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &UserIdCloudPCId{}
 
-// UserIdCloudPCId is a struct representing the Resource ID for a User Id Cloud P C
+// UserIdCloudPCId is a struct representing the Resource ID for a User Id Cloud PC
 type UserIdCloudPCId struct {
 	UserId    string
 	CloudPCId string
@@ -73,7 +73,7 @@ func (id *UserIdCloudPCId) FromParseResult(input resourceids.ParseResult) error 
 	return nil
 }
 
-// ValidateUserIdCloudPCID checks that 'input' can be parsed as a User Id Cloud P C ID
+// ValidateUserIdCloudPCID checks that 'input' can be parsed as a User Id Cloud PC ID
 func ValidateUserIdCloudPCID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -88,13 +88,13 @@ func ValidateUserIdCloudPCID(input interface{}, key string) (warnings []string, 
 	return
 }
 
-// ID returns the formatted User Id Cloud P C ID
+// ID returns the formatted User Id Cloud PC ID
 func (id UserIdCloudPCId) ID() string {
 	fmtString := "/users/%s/cloudPCs/%s"
 	return fmt.Sprintf(fmtString, id.UserId, id.CloudPCId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this User Id Cloud P C ID
+// Segments returns a slice of Resource ID Segments which comprise this User Id Cloud PC ID
 func (id UserIdCloudPCId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("users", "users", "users"),
@@ -104,11 +104,11 @@ func (id UserIdCloudPCId) Segments() []resourceids.Segment {
 	}
 }
 
-// String returns a human-readable description of this User Id Cloud P C ID
+// String returns a human-readable description of this User Id Cloud PC ID
 func (id UserIdCloudPCId) String() string {
 	components := []string{
 		fmt.Sprintf("User: %q", id.UserId),
-		fmt.Sprintf("Cloud P C: %q", id.CloudPCId),
+		fmt.Sprintf("Cloud PC: %q", id.CloudPCId),
 	}
-	return fmt.Sprintf("User Id Cloud P C (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("User Id Cloud PC (%s)", strings.Join(components, "\n"))
 }

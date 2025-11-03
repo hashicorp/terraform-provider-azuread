@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &IdentityB2xUserFlowIdLanguageIdDefaultPageId{}
 
-// IdentityB2xUserFlowIdLanguageIdDefaultPageId is a struct representing the Resource ID for a Identity B 2x User Flow Id Language Id Default Page
+// IdentityB2xUserFlowIdLanguageIdDefaultPageId is a struct representing the Resource ID for a Identity B 2 x User Flow Id Language Id Default Page
 type IdentityB2xUserFlowIdLanguageIdDefaultPageId struct {
 	B2xIdentityUserFlowId           string
 	UserFlowLanguageConfigurationId string
@@ -79,7 +79,7 @@ func (id *IdentityB2xUserFlowIdLanguageIdDefaultPageId) FromParseResult(input re
 	return nil
 }
 
-// ValidateIdentityB2xUserFlowIdLanguageIdDefaultPageID checks that 'input' can be parsed as a Identity B 2x User Flow Id Language Id Default Page ID
+// ValidateIdentityB2xUserFlowIdLanguageIdDefaultPageID checks that 'input' can be parsed as a Identity B 2 x User Flow Id Language Id Default Page ID
 func ValidateIdentityB2xUserFlowIdLanguageIdDefaultPageID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -94,13 +94,13 @@ func ValidateIdentityB2xUserFlowIdLanguageIdDefaultPageID(input interface{}, key
 	return
 }
 
-// ID returns the formatted Identity B 2x User Flow Id Language Id Default Page ID
+// ID returns the formatted Identity B 2 x User Flow Id Language Id Default Page ID
 func (id IdentityB2xUserFlowIdLanguageIdDefaultPageId) ID() string {
 	fmtString := "/identity/b2xUserFlows/%s/languages/%s/defaultPages/%s"
 	return fmt.Sprintf(fmtString, id.B2xIdentityUserFlowId, id.UserFlowLanguageConfigurationId, id.UserFlowLanguagePageId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Identity B 2x User Flow Id Language Id Default Page ID
+// Segments returns a slice of Resource ID Segments which comprise this Identity B 2 x User Flow Id Language Id Default Page ID
 func (id IdentityB2xUserFlowIdLanguageIdDefaultPageId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("identity", "identity", "identity"),
@@ -113,12 +113,12 @@ func (id IdentityB2xUserFlowIdLanguageIdDefaultPageId) Segments() []resourceids.
 	}
 }
 
-// String returns a human-readable description of this Identity B 2x User Flow Id Language Id Default Page ID
+// String returns a human-readable description of this Identity B 2 x User Flow Id Language Id Default Page ID
 func (id IdentityB2xUserFlowIdLanguageIdDefaultPageId) String() string {
 	components := []string{
-		fmt.Sprintf("B 2x Identity User Flow: %q", id.B2xIdentityUserFlowId),
+		fmt.Sprintf("B 2 x Identity User Flow: %q", id.B2xIdentityUserFlowId),
 		fmt.Sprintf("User Flow Language Configuration: %q", id.UserFlowLanguageConfigurationId),
 		fmt.Sprintf("User Flow Language Page: %q", id.UserFlowLanguagePageId),
 	}
-	return fmt.Sprintf("Identity B 2x User Flow Id Language Id Default Page (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Identity B 2 x User Flow Id Language Id Default Page (%s)", strings.Join(components, "\n"))
 }

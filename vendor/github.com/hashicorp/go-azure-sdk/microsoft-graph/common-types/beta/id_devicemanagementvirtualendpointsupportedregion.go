@@ -101,7 +101,7 @@ func (id DeviceManagementVirtualEndpointSupportedRegionId) Segments() []resource
 // String returns a human-readable description of this Device Management Virtual Endpoint Supported Region ID
 func (id DeviceManagementVirtualEndpointSupportedRegionId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C Supported Region: %q", id.CloudPCSupportedRegionId),
+		fmt.Sprintf("Cloud PC Supported Region: %q", id.CloudPCSupportedRegionId),
 	}
 	return fmt.Sprintf("Device Management Virtual Endpoint Supported Region (%s)", strings.Join(components, "\n"))
 }

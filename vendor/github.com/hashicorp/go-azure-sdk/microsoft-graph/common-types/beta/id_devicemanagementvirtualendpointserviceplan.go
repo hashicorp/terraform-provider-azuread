@@ -101,7 +101,7 @@ func (id DeviceManagementVirtualEndpointServicePlanId) Segments() []resourceids.
 // String returns a human-readable description of this Device Management Virtual Endpoint Service Plan ID
 func (id DeviceManagementVirtualEndpointServicePlanId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C Service Plan: %q", id.CloudPCServicePlanId),
+		fmt.Sprintf("Cloud PC Service Plan: %q", id.CloudPCServicePlanId),
 	}
 	return fmt.Sprintf("Device Management Virtual Endpoint Service Plan (%s)", strings.Join(components, "\n"))
 }

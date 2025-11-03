@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &MeCloudPCId{}
 
-// MeCloudPCId is a struct representing the Resource ID for a Me Cloud P C
+// MeCloudPCId is a struct representing the Resource ID for a Me Cloud PC
 type MeCloudPCId struct {
 	CloudPCId string
 }
@@ -67,7 +67,7 @@ func (id *MeCloudPCId) FromParseResult(input resourceids.ParseResult) error {
 	return nil
 }
 
-// ValidateMeCloudPCID checks that 'input' can be parsed as a Me Cloud P C ID
+// ValidateMeCloudPCID checks that 'input' can be parsed as a Me Cloud PC ID
 func ValidateMeCloudPCID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateMeCloudPCID(input interface{}, key string) (warnings []string, erro
 	return
 }
 
-// ID returns the formatted Me Cloud P C ID
+// ID returns the formatted Me Cloud PC ID
 func (id MeCloudPCId) ID() string {
 	fmtString := "/me/cloudPCs/%s"
 	return fmt.Sprintf(fmtString, id.CloudPCId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Me Cloud P C ID
+// Segments returns a slice of Resource ID Segments which comprise this Me Cloud PC ID
 func (id MeCloudPCId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("me", "me", "me"),
@@ -97,10 +97,10 @@ func (id MeCloudPCId) Segments() []resourceids.Segment {
 	}
 }
 
-// String returns a human-readable description of this Me Cloud P C ID
+// String returns a human-readable description of this Me Cloud PC ID
 func (id MeCloudPCId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C: %q", id.CloudPCId),
+		fmt.Sprintf("Cloud PC: %q", id.CloudPCId),
 	}
-	return fmt.Sprintf("Me Cloud P C (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Me Cloud PC (%s)", strings.Join(components, "\n"))
 }

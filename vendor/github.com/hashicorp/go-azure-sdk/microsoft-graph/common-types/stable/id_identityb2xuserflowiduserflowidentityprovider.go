@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &IdentityB2xUserFlowIdUserFlowIdentityProviderId{}
 
-// IdentityB2xUserFlowIdUserFlowIdentityProviderId is a struct representing the Resource ID for a Identity B 2x User Flow Id User Flow Identity Provider
+// IdentityB2xUserFlowIdUserFlowIdentityProviderId is a struct representing the Resource ID for a Identity B 2 x User Flow Id User Flow Identity Provider
 type IdentityB2xUserFlowIdUserFlowIdentityProviderId struct {
 	B2xIdentityUserFlowId  string
 	IdentityProviderBaseId string
@@ -73,7 +73,7 @@ func (id *IdentityB2xUserFlowIdUserFlowIdentityProviderId) FromParseResult(input
 	return nil
 }
 
-// ValidateIdentityB2xUserFlowIdUserFlowIdentityProviderID checks that 'input' can be parsed as a Identity B 2x User Flow Id User Flow Identity Provider ID
+// ValidateIdentityB2xUserFlowIdUserFlowIdentityProviderID checks that 'input' can be parsed as a Identity B 2 x User Flow Id User Flow Identity Provider ID
 func ValidateIdentityB2xUserFlowIdUserFlowIdentityProviderID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -88,13 +88,13 @@ func ValidateIdentityB2xUserFlowIdUserFlowIdentityProviderID(input interface{}, 
 	return
 }
 
-// ID returns the formatted Identity B 2x User Flow Id User Flow Identity Provider ID
+// ID returns the formatted Identity B 2 x User Flow Id User Flow Identity Provider ID
 func (id IdentityB2xUserFlowIdUserFlowIdentityProviderId) ID() string {
 	fmtString := "/identity/b2xUserFlows/%s/userFlowIdentityProviders/%s"
 	return fmt.Sprintf(fmtString, id.B2xIdentityUserFlowId, id.IdentityProviderBaseId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Identity B 2x User Flow Id User Flow Identity Provider ID
+// Segments returns a slice of Resource ID Segments which comprise this Identity B 2 x User Flow Id User Flow Identity Provider ID
 func (id IdentityB2xUserFlowIdUserFlowIdentityProviderId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("identity", "identity", "identity"),
@@ -105,11 +105,11 @@ func (id IdentityB2xUserFlowIdUserFlowIdentityProviderId) Segments() []resourcei
 	}
 }
 
-// String returns a human-readable description of this Identity B 2x User Flow Id User Flow Identity Provider ID
+// String returns a human-readable description of this Identity B 2 x User Flow Id User Flow Identity Provider ID
 func (id IdentityB2xUserFlowIdUserFlowIdentityProviderId) String() string {
 	components := []string{
-		fmt.Sprintf("B 2x Identity User Flow: %q", id.B2xIdentityUserFlowId),
+		fmt.Sprintf("B 2 x Identity User Flow: %q", id.B2xIdentityUserFlowId),
 		fmt.Sprintf("Identity Provider Base: %q", id.IdentityProviderBaseId),
 	}
-	return fmt.Sprintf("Identity B 2x User Flow Id User Flow Identity Provider (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Identity B 2 x User Flow Id User Flow Identity Provider (%s)", strings.Join(components, "\n"))
 }

@@ -65,7 +65,7 @@ github.com/hashicorp/go-azure-helpers/lang/pointer
 github.com/hashicorp/go-azure-helpers/lang/response
 github.com/hashicorp/go-azure-helpers/resourcemanager/features
 github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids
-# github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20250731.1192335
+# github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20251029.1173336
 ## explicit; go 1.24.1
 github.com/hashicorp/go-azure-sdk/microsoft-graph/administrativeunits/beta/administrativeunit
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application
@@ -128,7 +128,7 @@ github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synch
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/beta/user
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/manager
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user
-# github.com/hashicorp/go-azure-sdk/sdk v0.20250731.1192335
+# github.com/hashicorp/go-azure-sdk/sdk v0.20251029.1173336
 ## explicit; go 1.24.1
 github.com/hashicorp/go-azure-sdk/sdk/auth
 github.com/hashicorp/go-azure-sdk/sdk/claims

@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &DeviceManagementChromeOSOnboardingSettingId{}
 
-// DeviceManagementChromeOSOnboardingSettingId is a struct representing the Resource ID for a Device Management Chrome O S Onboarding Setting
+// DeviceManagementChromeOSOnboardingSettingId is a struct representing the Resource ID for a Device Management Chrome OS Onboarding Setting
 type DeviceManagementChromeOSOnboardingSettingId struct {
 	ChromeOSOnboardingSettingsId string
 }
@@ -67,7 +67,7 @@ func (id *DeviceManagementChromeOSOnboardingSettingId) FromParseResult(input res
 	return nil
 }
 
-// ValidateDeviceManagementChromeOSOnboardingSettingID checks that 'input' can be parsed as a Device Management Chrome O S Onboarding Setting ID
+// ValidateDeviceManagementChromeOSOnboardingSettingID checks that 'input' can be parsed as a Device Management Chrome OS Onboarding Setting ID
 func ValidateDeviceManagementChromeOSOnboardingSettingID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateDeviceManagementChromeOSOnboardingSettingID(input interface{}, key 
 	return
 }
 
-// ID returns the formatted Device Management Chrome O S Onboarding Setting ID
+// ID returns the formatted Device Management Chrome OS Onboarding Setting ID
 func (id DeviceManagementChromeOSOnboardingSettingId) ID() string {
 	fmtString := "/deviceManagement/chromeOSOnboardingSettings/%s"
 	return fmt.Sprintf(fmtString, id.ChromeOSOnboardingSettingsId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Device Management Chrome O S Onboarding Setting ID
+// Segments returns a slice of Resource ID Segments which comprise this Device Management Chrome OS Onboarding Setting ID
 func (id DeviceManagementChromeOSOnboardingSettingId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("deviceManagement", "deviceManagement", "deviceManagement"),
@@ -97,10 +97,10 @@ func (id DeviceManagementChromeOSOnboardingSettingId) Segments() []resourceids.S
 	}
 }
 
-// String returns a human-readable description of this Device Management Chrome O S Onboarding Setting ID
+// String returns a human-readable description of this Device Management Chrome OS Onboarding Setting ID
 func (id DeviceManagementChromeOSOnboardingSettingId) String() string {
 	components := []string{
-		fmt.Sprintf("Chrome O S Onboarding Settings: %q", id.ChromeOSOnboardingSettingsId),
+		fmt.Sprintf("Chrome OS Onboarding Settings: %q", id.ChromeOSOnboardingSettingsId),
 	}
-	return fmt.Sprintf("Device Management Chrome O S Onboarding Setting (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Device Management Chrome OS Onboarding Setting (%s)", strings.Join(components, "\n"))
 }

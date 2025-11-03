@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &DeviceManagementCloudPCConnectivityIssueId{}
 
-// DeviceManagementCloudPCConnectivityIssueId is a struct representing the Resource ID for a Device Management Cloud P C Connectivity Issue
+// DeviceManagementCloudPCConnectivityIssueId is a struct representing the Resource ID for a Device Management Cloud PC Connectivity Issue
 type DeviceManagementCloudPCConnectivityIssueId struct {
 	CloudPCConnectivityIssueId string
 }
@@ -67,7 +67,7 @@ func (id *DeviceManagementCloudPCConnectivityIssueId) FromParseResult(input reso
 	return nil
 }
 
-// ValidateDeviceManagementCloudPCConnectivityIssueID checks that 'input' can be parsed as a Device Management Cloud P C Connectivity Issue ID
+// ValidateDeviceManagementCloudPCConnectivityIssueID checks that 'input' can be parsed as a Device Management Cloud PC Connectivity Issue ID
 func ValidateDeviceManagementCloudPCConnectivityIssueID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateDeviceManagementCloudPCConnectivityIssueID(input interface{}, key s
 	return
 }
 
-// ID returns the formatted Device Management Cloud P C Connectivity Issue ID
+// ID returns the formatted Device Management Cloud PC Connectivity Issue ID
 func (id DeviceManagementCloudPCConnectivityIssueId) ID() string {
 	fmtString := "/deviceManagement/cloudPCConnectivityIssues/%s"
 	return fmt.Sprintf(fmtString, id.CloudPCConnectivityIssueId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Device Management Cloud P C Connectivity Issue ID
+// Segments returns a slice of Resource ID Segments which comprise this Device Management Cloud PC Connectivity Issue ID
 func (id DeviceManagementCloudPCConnectivityIssueId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("deviceManagement", "deviceManagement", "deviceManagement"),
@@ -97,10 +97,10 @@ func (id DeviceManagementCloudPCConnectivityIssueId) Segments() []resourceids.Se
 	}
 }
 
-// String returns a human-readable description of this Device Management Cloud P C Connectivity Issue ID
+// String returns a human-readable description of this Device Management Cloud PC Connectivity Issue ID
 func (id DeviceManagementCloudPCConnectivityIssueId) String() string {
 	components := []string{
-		fmt.Sprintf("Cloud P C Connectivity Issue: %q", id.CloudPCConnectivityIssueId),
+		fmt.Sprintf("Cloud PC Connectivity Issue: %q", id.CloudPCConnectivityIssueId),
 	}
-	return fmt.Sprintf("Device Management Cloud P C Connectivity Issue (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Device Management Cloud PC Connectivity Issue (%s)", strings.Join(components, "\n"))
 }

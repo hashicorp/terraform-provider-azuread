@@ -12,7 +12,7 @@ import (
 
 var _ resourceids.ResourceId = &DeviceManagementMacOSSoftwareUpdateAccountSummaryId{}
 
-// DeviceManagementMacOSSoftwareUpdateAccountSummaryId is a struct representing the Resource ID for a Device Management Mac O S Software Update Account Summary
+// DeviceManagementMacOSSoftwareUpdateAccountSummaryId is a struct representing the Resource ID for a Device Management Mac OS Software Update Account Summary
 type DeviceManagementMacOSSoftwareUpdateAccountSummaryId struct {
 	MacOSSoftwareUpdateAccountSummaryId string
 }
@@ -67,7 +67,7 @@ func (id *DeviceManagementMacOSSoftwareUpdateAccountSummaryId) FromParseResult(i
 	return nil
 }
 
-// ValidateDeviceManagementMacOSSoftwareUpdateAccountSummaryID checks that 'input' can be parsed as a Device Management Mac O S Software Update Account Summary ID
+// ValidateDeviceManagementMacOSSoftwareUpdateAccountSummaryID checks that 'input' can be parsed as a Device Management Mac OS Software Update Account Summary ID
 func ValidateDeviceManagementMacOSSoftwareUpdateAccountSummaryID(input interface{}, key string) (warnings []string, errors []error) {
 	v, ok := input.(string)
 	if !ok {
@@ -82,13 +82,13 @@ func ValidateDeviceManagementMacOSSoftwareUpdateAccountSummaryID(input interface
 	return
 }
 
-// ID returns the formatted Device Management Mac O S Software Update Account Summary ID
+// ID returns the formatted Device Management Mac OS Software Update Account Summary ID
 func (id DeviceManagementMacOSSoftwareUpdateAccountSummaryId) ID() string {
 	fmtString := "/deviceManagement/macOSSoftwareUpdateAccountSummaries/%s"
 	return fmt.Sprintf(fmtString, id.MacOSSoftwareUpdateAccountSummaryId)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this Device Management Mac O S Software Update Account Summary ID
+// Segments returns a slice of Resource ID Segments which comprise this Device Management Mac OS Software Update Account Summary ID
 func (id DeviceManagementMacOSSoftwareUpdateAccountSummaryId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("deviceManagement", "deviceManagement", "deviceManagement"),
@@ -97,10 +97,10 @@ func (id DeviceManagementMacOSSoftwareUpdateAccountSummaryId) Segments() []resou
 	}
 }
 
-// String returns a human-readable description of this Device Management Mac O S Software Update Account Summary ID
+// String returns a human-readable description of this Device Management Mac OS Software Update Account Summary ID
 func (id DeviceManagementMacOSSoftwareUpdateAccountSummaryId) String() string {
 	components := []string{
-		fmt.Sprintf("Mac O S Software Update Account Summary: %q", id.MacOSSoftwareUpdateAccountSummaryId),
+		fmt.Sprintf("Mac OS Software Update Account Summary: %q", id.MacOSSoftwareUpdateAccountSummaryId),
 	}
-	return fmt.Sprintf("Device Management Mac O S Software Update Account Summary (%s)", strings.Join(components, "\n"))
+	return fmt.Sprintf("Device Management Mac OS Software Update Account Summary (%s)", strings.Join(components, "\n"))
 }
