@@ -1,3 +1,9 @@
+## 3.7.0 (Unreleased)
+
+EHANCEMENTS:
+
+* dependencies: update `go-azure-sdk` to `v0.20251029.1173336` [GH-1787]
+
 ## 3.6.0 (September 25, 2025)
 
 ENHANCEMENTS:
