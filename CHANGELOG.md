@@ -4,6 +4,10 @@ EHANCEMENTS:
 
 * dependencies: update `go-azure-sdk` to `v0.20251029.1173336` [GH-1787]
 
+BUG FIXES:
+
+* `azuread_group_role_management_policy` - fix update for `activation_rule.required_conditional_access_authentication_context` [GH-1783]
+
 ## 3.6.0 (September 25, 2025)
 
 ENHANCEMENTS:
