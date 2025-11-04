@@ -2,7 +2,8 @@
 
 EHANCEMENTS:
 
-* dependencies: update `go-azure-sdk` to `v0.20251029.1173336` [GH-1787]
+* Dependencies: `go-azure-sdk` updated to `v0.20251029.1173336` [GH-1787]
+* Dependencies: `Go` updated to `v1.25.3` [GH-1792]
 
 BUG FIXES:
 
