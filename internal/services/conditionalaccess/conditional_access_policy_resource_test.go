@@ -529,6 +529,8 @@ resource "azuread_conditional_access_policy" "test" {
       excluded_applications = []
     }
 
+    authentication_flow_transfer_methods = ["deviceCodeFlow"]
+
     devices {
       filter {
         mode = "exclude"

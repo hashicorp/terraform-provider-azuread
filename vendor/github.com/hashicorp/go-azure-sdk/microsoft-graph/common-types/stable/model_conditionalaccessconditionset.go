@@ -8,7 +8,7 @@ type ConditionalAccessConditionSet struct {
 	Applications ConditionalAccessApplications `json:"applications"`
 
 	// Authentication flows included in the policy scope.
-	AuthenticationFlows *ConditionalAccessAuthenticationFlows `json:"authenticationFlows,omitempty"`
+	AuthenticationFlows *ConditionalAccessAuthenticationFlows `json:"authenticationFlows"`
 
 	// Client application types included in the policy. Possible values are: all, browser, mobileAppsAndDesktopClients,
 	// exchangeActiveSync, easSupported, other. Required. The easUnsupported enumeration member will be deprecated in favor
