@@ -71,9 +71,10 @@ func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*plu
 		},
 
 		"issuer": {
-			Description: "The URL of the external identity provider, which must match the issuer claim of the external token being exchanged. The combination of the values of issuer and subject must be unique on the app.",
-			Type:        pluginsdk.TypeString,
-			Required:    true,
+			Description:  "The URL of the external identity provider, which must match the issuer claim of the external token being exchanged. The combination of the values of issuer and subject must be unique on the app.",
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringIsNotWhiteSpace,
 		},
 
 		"description": {
