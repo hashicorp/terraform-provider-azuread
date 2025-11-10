@@ -1,5 +1,8 @@
 ## 3.7.0 (Unreleased)
 
+FEATURES:
+* **New Resource:** `azuread_flexible_federated_identity_credential`  [GH-1788]
+
 EHANCEMENTS:
 
 * Dependencies: `go-azure-sdk` updated to `v0.20251029.1173336` [GH-1787]
