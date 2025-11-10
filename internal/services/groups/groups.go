@@ -25,6 +25,7 @@ func groupDefaultMailNickname() string {
 	return resultString[:8] + "-" + resultString[8:]
 }
 
+// NEVER call this function without a timeout context --> CustomDiff for example
 func groupFindByName(ctx context.Context, client *groupBeta.GroupClient, displayName string) (*[]beta.Group, error) {
 	options := groupBeta.ListGroupsOperationOptions{
 		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),

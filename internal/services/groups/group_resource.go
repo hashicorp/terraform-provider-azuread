@@ -43,7 +43,7 @@ func groupResource() *pluginsdk.Resource {
 		UpdateContext: groupResourceUpdate,
 		DeleteContext: groupResourceDelete,
 
-		CustomizeDiff: groupResourceCustomizeDiff,
+		CustomizeDiff: groupResourceCustomizeDiff(5 * time.Minute),
 
 		Timeouts: &pluginsdk.ResourceTimeout{
 			Create: pluginsdk.DefaultTimeout(20 * time.Minute),
@@ -334,98 +334,106 @@ func groupResource() *pluginsdk.Resource {
 	}
 }
 
-func groupResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
-	client := meta.(*clients.Client).Groups.GroupClientBeta
+func groupResourceCustomizeDiff(groupReadTimeout time.Duration) pluginsdk.CustomizeDiffFunc {
+	return func(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
+		client := meta.(*clients.Client).Groups.GroupClientBeta
 
-	// Check for duplicate names
-	oldDisplayName, newDisplayName := diff.GetChange("display_name")
-	if pluginsdk.ValueIsNotEmptyOrUnknown(diff.Id()) && diff.Get("prevent_duplicate_names").(bool) && pluginsdk.ValueIsNotEmptyOrUnknown(newDisplayName) &&
-		(oldDisplayName.(string) == "" || oldDisplayName.(string) != newDisplayName.(string)) {
-		result, err := groupFindByName(ctx, client, newDisplayName.(string))
-		if err != nil {
-			return fmt.Errorf("could not check for existing group(s): %+v", err)
-		}
-		if result != nil && len(*result) > 0 {
-			for _, existingGroup := range *result {
-				if existingGroup.Id == nil {
-					return fmt.Errorf("API error: group returned with nil object ID during duplicate name check")
-				}
-				if diff.Id() == "" || diff.Id() == *existingGroup.Id {
-					return tf.ImportAsDuplicateError("azuread_group", *existingGroup.Id, newDisplayName.(string))
+		// CustomizeDiff does not have access to a ResourceData to call d.Timeout(...).
+		// We have to specify our own timeout here.
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, groupReadTimeout)
+		defer cancel()
+
+		// Check for duplicate names
+		oldDisplayName, newDisplayName := diff.GetChange("display_name")
+		if pluginsdk.ValueIsNotEmptyOrUnknown(diff.Id()) && diff.Get("prevent_duplicate_names").(bool) && pluginsdk.ValueIsNotEmptyOrUnknown(newDisplayName) &&
+			(oldDisplayName.(string) == "" || oldDisplayName.(string) != newDisplayName.(string)) {
+			result, err := groupFindByName(ctx, client, newDisplayName.(string))
+			if err != nil {
+				return fmt.Errorf("could not check for existing group(s): %+v", err)
+			}
+			if result != nil && len(*result) > 0 {
+				for _, existingGroup := range *result {
+					if existingGroup.Id == nil {
+						return fmt.Errorf("API error: group returned with nil object ID during duplicate name check")
+					}
+					if diff.Id() == "" || diff.Id() == *existingGroup.Id {
+						return tf.ImportAsDuplicateError("azuread_group", *existingGroup.Id, newDisplayName.(string))
+					}
 				}
 			}
 		}
-	}
 
-	mailEnabled := diff.Get("mail_enabled").(bool)
-	securityEnabled := diff.Get("security_enabled").(bool)
-	groupTypes := make([]string, 0)
-	for _, v := range diff.Get("types").(*pluginsdk.Set).List() {
-		groupTypes = append(groupTypes, v.(string))
-	}
-
-	if slices.Contains(groupTypes, GroupTypeDynamicMembership) && diff.Get("dynamic_membership.#").(int) == 0 {
-		return fmt.Errorf("`dynamic_membership` must be specified when `types` contains %q", GroupTypeDynamicMembership)
-	}
-
-	if mailEnabled && !slices.Contains(groupTypes, GroupTypeUnified) {
-		return fmt.Errorf("`types` must contain %q for mail-enabled groups", GroupTypeUnified)
-	}
-
-	if !mailEnabled && slices.Contains(groupTypes, GroupTypeUnified) {
-		return fmt.Errorf("`mail_enabled` must be true for unified groups")
-	}
-
-	if mailNickname := diff.Get("mail_nickname").(string); mailEnabled && mailNickname == "" {
-		return fmt.Errorf("`mail_nickname` is required for mail-enabled groups")
-	}
-
-	if diff.Get("assignable_to_role").(bool) && !securityEnabled {
-		return fmt.Errorf("`assignable_to_role` can only be `true` for security-enabled groups")
-	}
-
-	visibilityOld, visibilityNew := diff.GetChange("visibility")
-
-	if !slices.Contains(groupTypes, GroupTypeUnified) {
-		if autoSubscribeNewMembers, ok := diff.GetOk("auto_subscribe_new_members"); ok && autoSubscribeNewMembers.(bool) {
-			return fmt.Errorf("`auto_subscribe_new_members` is only supported for unified groups")
+		mailEnabled := diff.Get("mail_enabled").(bool)
+		securityEnabled := diff.Get("security_enabled").(bool)
+		groupTypes := make([]string, 0)
+		for _, v := range diff.Get("types").(*pluginsdk.Set).List() {
+			groupTypes = append(groupTypes, v.(string))
 		}
 
-		if behaviors, ok := diff.GetOk("behaviors"); ok && len(behaviors.(*pluginsdk.Set).List()) > 0 {
-			return fmt.Errorf("`behaviors` is only supported for unified groups")
+		if slices.Contains(groupTypes, GroupTypeDynamicMembership) && diff.Get("dynamic_membership.#").(int) == 0 {
+			return fmt.Errorf("`dynamic_membership` must be specified when `types` contains %q", GroupTypeDynamicMembership)
 		}
 
-		if allowExternalSenders, ok := diff.GetOk("external_senders_allowed"); ok && allowExternalSenders.(bool) {
-			return fmt.Errorf("`external_senders_allowed` is only supported for unified groups")
+		if mailEnabled && !slices.Contains(groupTypes, GroupTypeUnified) {
+			return fmt.Errorf("`types` must contain %q for mail-enabled groups", GroupTypeUnified)
 		}
 
-		if hideFromAddressLists, ok := diff.GetOk("hide_from_address_lists"); ok && hideFromAddressLists.(bool) {
-			return fmt.Errorf("`hide_from_address_lists` is only supported for unified groups")
+		if !mailEnabled && slices.Contains(groupTypes, GroupTypeUnified) {
+			return fmt.Errorf("`mail_enabled` must be true for unified groups")
 		}
 
-		if hideFromOutlookClients, ok := diff.GetOk("hide_from_outlook_clients"); ok && hideFromOutlookClients.(bool) {
-			return fmt.Errorf("`hide_from_outlook_clients` is only supported for unified groups")
+		if mailNickname := diff.Get("mail_nickname").(string); mailEnabled && mailNickname == "" {
+			return fmt.Errorf("`mail_nickname` is required for mail-enabled groups")
 		}
 
-		if provisioning, ok := diff.GetOk("provisioning_options"); ok && len(provisioning.(*pluginsdk.Set).List()) > 0 {
-			return fmt.Errorf("`provisioning_options` is only supported for unified groups")
+		if diff.Get("assignable_to_role").(bool) && !securityEnabled {
+			return fmt.Errorf("`assignable_to_role` can only be `true` for security-enabled groups")
 		}
 
-		if theme := diff.Get("theme"); theme.(string) != "" {
-			return fmt.Errorf("`theme` is only supported for unified groups")
+		visibilityOld, visibilityNew := diff.GetChange("visibility")
+
+		if !slices.Contains(groupTypes, GroupTypeUnified) {
+			if autoSubscribeNewMembers, ok := diff.GetOk("auto_subscribe_new_members"); ok && autoSubscribeNewMembers.(bool) {
+				return fmt.Errorf("`auto_subscribe_new_members` is only supported for unified groups")
+			}
+
+			if behaviors, ok := diff.GetOk("behaviors"); ok && len(behaviors.(*pluginsdk.Set).List()) > 0 {
+				return fmt.Errorf("`behaviors` is only supported for unified groups")
+			}
+
+			if allowExternalSenders, ok := diff.GetOk("external_senders_allowed"); ok && allowExternalSenders.(bool) {
+				return fmt.Errorf("`external_senders_allowed` is only supported for unified groups")
+			}
+
+			if hideFromAddressLists, ok := diff.GetOk("hide_from_address_lists"); ok && hideFromAddressLists.(bool) {
+				return fmt.Errorf("`hide_from_address_lists` is only supported for unified groups")
+			}
+
+			if hideFromOutlookClients, ok := diff.GetOk("hide_from_outlook_clients"); ok && hideFromOutlookClients.(bool) {
+				return fmt.Errorf("`hide_from_outlook_clients` is only supported for unified groups")
+			}
+
+			if provisioning, ok := diff.GetOk("provisioning_options"); ok && len(provisioning.(*pluginsdk.Set).List()) > 0 {
+				return fmt.Errorf("`provisioning_options` is only supported for unified groups")
+			}
+
+			if theme := diff.Get("theme"); theme.(string) != "" {
+				return fmt.Errorf("`theme` is only supported for unified groups")
+			}
+
+			if visibilityNew.(string) == GroupVisibilityHiddenMembership {
+				return fmt.Errorf("`visibility` can only be %q for unified groups", GroupVisibilityHiddenMembership)
+			}
 		}
 
-		if visibilityNew.(string) == GroupVisibilityHiddenMembership {
-			return fmt.Errorf("`visibility` can only be %q for unified groups", GroupVisibilityHiddenMembership)
+		if (visibilityOld.(string) == GroupVisibilityPrivate || visibilityOld.(string) == GroupVisibilityPublic) &&
+			visibilityNew.(string) == GroupVisibilityHiddenMembership {
+			diff.ForceNew("visibility")
 		}
+
+		return nil
 	}
-
-	if (visibilityOld.(string) == GroupVisibilityPrivate || visibilityOld.(string) == GroupVisibilityPublic) &&
-		visibilityNew.(string) == GroupVisibilityHiddenMembership {
-		diff.ForceNew("visibility")
-	}
-
-	return nil
 }
 
 func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
