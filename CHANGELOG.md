@@ -11,7 +11,7 @@ EHANCEMENTS:
 BUG FIXES:
 
 * `azuread_group_role_management_policy` - fix update for `activation_rule.required_conditional_access_authentication_context` [GH-1783]
-* `application` - allow retry on `409 Conflict` during creation [GH-1768]
+* `azuread_application` - allow retry on `409 Conflict` during creation [GH-1768]
 
 ## 3.6.0 (September 25, 2025)
 
