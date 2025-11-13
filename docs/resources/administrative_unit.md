@@ -24,7 +24,7 @@ resource "azuread_administrative_unit" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

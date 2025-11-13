@@ -54,7 +54,7 @@ data "azuread_groups" "security_only" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

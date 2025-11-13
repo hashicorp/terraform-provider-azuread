@@ -56,7 +56,7 @@ resource "azuread_group_role_management_policy" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 * `activation_rules` - (Optional) An `activation_rules` block as defined below.
 * `active_assignment_rules` - (Optional) An `active_assignment_rules` block as defined below.

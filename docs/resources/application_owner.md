@@ -39,7 +39,7 @@ resource "azuread_application_owner" "example_jane" {
 
 -> **Tip** For managing more application owners, create additional instances of this resource
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

@@ -23,7 +23,7 @@ resource "azuread_service_principal_claims_mapping_policy_assignment" "app" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

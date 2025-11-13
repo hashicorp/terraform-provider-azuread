@@ -27,7 +27,7 @@ output "object_type" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

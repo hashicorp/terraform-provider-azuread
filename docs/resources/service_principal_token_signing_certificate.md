@@ -52,7 +52,7 @@ resource "azuread_service_principal_token_signing_certificate" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

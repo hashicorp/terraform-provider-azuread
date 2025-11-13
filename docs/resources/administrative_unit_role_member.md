@@ -37,7 +37,7 @@ resource "azuread_administrative_unit_role_member" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

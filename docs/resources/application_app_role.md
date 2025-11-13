@@ -60,7 +60,7 @@ resource "azuread_application_app_role" "example_administer" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

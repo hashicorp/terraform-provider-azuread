@@ -33,7 +33,7 @@ resource "azuread_application_federated_identity_credential" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

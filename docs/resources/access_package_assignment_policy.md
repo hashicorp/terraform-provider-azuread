@@ -72,7 +72,7 @@ resource "azuread_access_package_assignment_policy" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 - `access_package_id` (Required) The ID of the access package that will contain the policy.
 - `approval_settings` (Optional) An `approval_settings` block to specify whether approvals are required and how they are obtained, as documented below.
@@ -107,7 +107,15 @@ resource "azuread_access_package_assignment_policy" "example" {
 
 ---
 
-`approval_settings.approval_stage.primary_approver` and `approval_settings.approval_stage.alternative_approver` blocks support the following:
+`approval_settings.approval_stage.primary_approver` block supports the following:
+
+- `backup` (Optional) For a user in an approval stage, this property indicates whether the user is a backup fallback approver.
+- `object_id` (Optional) The ID of the subject.
+- `subject_type` (Required) Specifies the type of users. Valid values are `singleUser`, `groupMembers`, `connectedOrganizationMembers`, `requestorManager`, `internalSponsors`, or `externalSponsors`.
+
+---
+
+ `approval_settings.approval_stage.alternative_approver` block supports the following:
 
 - `backup` (Optional) For a user in an approval stage, this property indicates whether the user is a backup fallback approver.
 - `object_id` (Optional) The ID of the subject.

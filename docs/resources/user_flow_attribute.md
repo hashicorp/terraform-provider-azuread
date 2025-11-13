@@ -25,7 +25,7 @@ resource "azuread_user_flow_attribute" "example" {
 ```
 
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

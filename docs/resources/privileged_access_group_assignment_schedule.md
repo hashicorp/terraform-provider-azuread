@@ -38,7 +38,7 @@ resource "azuread_privileged_access_group_assignment_schedule" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 * `group_id` (Required) The Object ID of the Azure AD group to which the principal will be assigned.
 * `principal_id` (Required) The Object ID of the principal to be assigned to the above group. Can be either a user or a group.

@@ -30,7 +30,7 @@ data "azuread_access_package_catalog_role" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

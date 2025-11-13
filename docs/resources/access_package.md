@@ -30,7 +30,7 @@ resource "azuread_access_package" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 * `catalog_id` - (Required) The ID of the Catalog this access package will be created in.
 * `description` - (Required) The description of the access package.

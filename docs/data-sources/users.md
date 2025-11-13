@@ -22,7 +22,7 @@ data "azuread_users" "users" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

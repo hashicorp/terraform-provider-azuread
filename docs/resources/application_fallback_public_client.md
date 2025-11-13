@@ -31,7 +31,7 @@ resource "azuread_application_fallback_public_client" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

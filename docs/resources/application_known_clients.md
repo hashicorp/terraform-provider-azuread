@@ -37,7 +37,7 @@ resource "azuread_application_known_clients" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

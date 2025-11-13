@@ -55,7 +55,7 @@ resource "azuread_authentication_strength_policy" "example2" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

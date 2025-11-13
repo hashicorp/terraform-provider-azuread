@@ -51,7 +51,7 @@ data "azuread_service_principals" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

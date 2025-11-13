@@ -20,7 +20,7 @@ output "object_id" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 This data source does not have any arguments.
 

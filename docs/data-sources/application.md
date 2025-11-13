@@ -26,7 +26,7 @@ output "application_object_id" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -41,9 +41,9 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `api` - An `api` block as documented below.
+* `api` - An `api` block as defined below.
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
-* `app_roles` - A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `app_roles` - One or more `app_role` blocks as defined below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `client_id` - The Client ID for the application.
 * `description` - A description of the application, as shown to end users.
 * `device_only_auth_enabled` - Specifies whether this application supports device authentication without a user.
@@ -60,19 +60,19 @@ The following attributes are exported:
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `oauth2_post_response_required` - Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. When `false`, only GET requests are allowed.
 * `object_id` - The application's object ID.
-* `optional_claims` - An `optional_claims` block as documented below.
+* `optional_claims` - An `optional_claims` block as defined below.
 * `owners` - A list of object IDs of principals that are assigned ownership of the application.
 * `privacy_statement_url` - URL of the application's privacy statement.
-* `public_client` - A `public_client` block as documented below.
+* `public_client` - A `public_client` block as defined below.
 * `publisher_domain` - The verified publisher domain for the application.
-* `required_resource_access` - A collection of `required_resource_access` blocks as documented below.
+* `required_resource_access` - One or more `required_resource_access` blocks as defined below.
 * `service_management_reference` - References application context information from a Service or Asset Management database.
 * `sign_in_audience` - The Microsoft account types that are supported for the current application. One of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
-* `single_page_application` - A `single_page_application` block as documented below.
+* `single_page_application` - A `single_page_application` block as defined below.
 * `support_url` - URL of the application's support page.
 * `tags` - A list of tags applied to the application.
 * `terms_of_service_url` - URL of the application's terms of service statement.
-* `web` - A `web` block as documented below.
+* `web` - A `web` block as defined below.
 
 ---
 
@@ -80,7 +80,7 @@ The following attributes are exported:
 
 * `known_client_applications` - A set of application IDs (client IDs), used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app.
 * `mapped_claims_enabled` - Allows an application to use claims mapping without specifying a custom signing key.
-* `oauth2_permission_scopes` - One or more `oauth2_permission_scope` blocks as documented below, to describe delegated permissions exposed by the web API represented by this application.
+* `oauth2_permission_scopes` - One or more `oauth2_permission_scope` blocks as defined below, to describe delegated permissions exposed by the web API represented by this application.
 * `requested_access_token_version` - The access token version expected by this resource. Possible values are `1` or `2`.
 
 ---
@@ -120,9 +120,9 @@ The following attributes are exported:
 
 `optional_claims` block exports the following:
 
-* `access_token` - One or more `access_token` blocks as documented below.
-* `id_token` - One or more `id_token` blocks as documented below.
-* `saml2_token` - One or more `saml2_token` blocks as documented below.
+* `access_token` - One or more `access_token` blocks as defined below.
+* `id_token` - One or more `id_token` blocks as defined below.
+* `saml2_token` - One or more `saml2_token` blocks as defined below.
 
 ---
 
@@ -143,7 +143,7 @@ The following attributes are exported:
 
 `required_resource_access` block exports the following:
 
-* `resource_access` - A collection of `resource_access` blocks as documented below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
+* `resource_access` - One or more `resource_access` blocks as defined below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
 * `resource_app_id` - The unique identifier for the resource that the application requires access to. This is the Application ID of the target application.
 
 ---
@@ -164,7 +164,7 @@ The following attributes are exported:
 `web` block exports the following:
 
 * `homepage_url` - Home page or landing page of the application.
-* `implicit_grant` - An `implicit_grant` block as documented above.
+* `implicit_grant` - An `implicit_grant` block as defined above.
 * `logout_url` - The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols.
 * `redirect_uris` - A list of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
 

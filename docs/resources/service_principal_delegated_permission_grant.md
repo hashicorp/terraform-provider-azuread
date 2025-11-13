@@ -102,7 +102,7 @@ resource "azuread_service_principal_delegated_permission_grant" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

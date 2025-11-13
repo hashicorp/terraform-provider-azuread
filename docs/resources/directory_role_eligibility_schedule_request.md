@@ -35,7 +35,7 @@ resource "azuread_directory_role_eligibility_schedule_request" "example" {
 
 ~> Note the use of the `template_id` attribute when referencing built-in roles.
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

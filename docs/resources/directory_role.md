@@ -36,7 +36,7 @@ resource "azuread_directory_role" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

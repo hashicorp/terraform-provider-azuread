@@ -46,7 +46,7 @@ resource "azuread_claims_mapping_policy" "my_policy" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

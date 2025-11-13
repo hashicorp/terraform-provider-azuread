@@ -61,7 +61,7 @@ resource "azuread_application_redirect_uris" "example_web" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

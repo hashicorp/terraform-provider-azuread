@@ -53,11 +53,11 @@ resource "azuread_invitation" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `message` - (Optional) A `message` block as documented below, which configures the message being sent to the invited user. If this block is omitted, no message will be sent.
+* `message` - (Optional) A `message` block as defined below, which configures the message being sent to the invited user. If this block is omitted, no message will be sent.
 * `redirect_url` - (Required) The URL that the user should be redirected to once the invitation is redeemed.
 * `user_display_name` - (Optional) The display name of the user being invited.
 * `user_email_address` - (Required) The email address of the user being invited.

@@ -53,7 +53,7 @@ resource "azuread_application_identifier_uri" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

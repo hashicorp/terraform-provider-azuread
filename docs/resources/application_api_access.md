@@ -68,7 +68,7 @@ resource "azuread_application_api_access" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

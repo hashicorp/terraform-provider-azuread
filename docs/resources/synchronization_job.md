@@ -51,7 +51,7 @@ resource "azuread_synchronization_job" "example" {
 ```
 
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 

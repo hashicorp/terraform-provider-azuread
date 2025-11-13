@@ -24,7 +24,7 @@ resource "azuread_access_package_catalog" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 * `description` - (Required) The description of the access package catalog.
 * `display_name` - (Required) The display name of the access package catalog.
