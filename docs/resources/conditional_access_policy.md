@@ -146,10 +146,10 @@ resource "azuread_conditional_access_policy" "example" {
 
 The following arguments are supported:
 
-* `conditions` - (Required) A `conditions` block as documented below, which specifies the rules that must be met for the policy to apply.
+* `conditions` - (Required) A `conditions` block as defined below, which specifies the rules that must be met for the policy to apply.
 * `display_name` - (Required) The friendly name for this Conditional Access Policy.
-* `grant_controls` - (Optional) A `grant_controls` block as documented below, which specifies the grant controls that must be fulfilled to pass the policy.
-* `session_controls` - (Optional) A `session_controls` block as documented below, which specifies the session controls that are enforced after sign-in.
+* `grant_controls` - (Optional) A `grant_controls` block as defined below, which specifies the grant controls that must be fulfilled to pass the policy.
+* `session_controls` - (Optional) A `session_controls` block as defined below, which specifies the session controls that are enforced after sign-in.
 
 ~> Note: At least one of `grant_controls` and/or `session_controls` blocks must be specified.
 
@@ -159,17 +159,17 @@ The following arguments are supported:
 
 `conditions` block supports the following:
 
-* `applications` - (Required) An `applications` block as documented below, which specifies applications and user actions included in and excluded from the policy.
+* `applications` - (Required) An `applications` block as defined below, which specifies applications and user actions included in and excluded from the policy.
 * `client_app_types` - (Required) A list of client application types included in the policy. Possible values are: `all`, `browser`, `mobileAppsAndDesktopClients`, `exchangeActiveSync`, `easSupported` and `other`.
-* `client_applications` - (Optional) An `client_applications` block as documented below, which specifies service principals included in and excluded from the policy.
-* `devices` - (Optional) A `devices` block as documented below, which describes devices to be included in and excluded from the policy. A `devices` block can be added to an existing policy, but removing the `devices` block forces a new resource to be created.
+* `client_applications` - (Optional) An `client_applications` block as defined below, which specifies service principals included in and excluded from the policy.
+* `devices` - (Optional) A `devices` block as defined below, which describes devices to be included in and excluded from the policy. A `devices` block can be added to an existing policy, but removing the `devices` block forces a new resource to be created.
 * `insider_risk_levels` - (Optional) The insider risk level in the policy. Possible values are: `minor`, `moderate`, `elevated`, `unknownFutureValue`.
-* `locations` - (Optional) A `locations` block as documented below, which specifies locations included in and excluded from the policy.
-* `platforms` - (Optional) A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
+* `locations` - (Optional) A `locations` block as defined below, which specifies locations included in and excluded from the policy.
+* `platforms` - (Optional) A `platforms` block as defined below, which specifies platforms included in and excluded from the policy.
 * `service_principal_risk_levels` - (Optional) A list of service principal sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `none`, `unknownFutureValue`.
 * `sign_in_risk_levels` - (Optional) A list of user sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `user_risk_levels` - (Optional) A list of user risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
-* `users` - (Required) A `users` block as documented below, which specifies users, groups, and roles included in and excluded from the policy.
+* `users` - (Required) A `users` block as defined below, which specifies users, groups, and roles included in and excluded from the policy.
 
 ---
 
@@ -184,7 +184,7 @@ The following arguments are supported:
 `client_applications` block supports the following:
 
 * `excluded_service_principals` - (Optional) A list of service principal IDs explicitly excluded in the policy.
-* `filter` - (Optional) A `filter` block as documented below.
+* `filter` - (Optional) A `filter` block as defined below.
 
 ~> **Note:** Specifying `filter` requires the `Attribute Definition Reader` role, this is not included in the `Global Administrator` or other administrator roles and must be separately assigned.
 
@@ -194,7 +194,7 @@ The following arguments are supported:
 
 `devices` block supports the following:
 
-* `filter` - (Optional) A `filter` block as documented below.
+* `filter` - (Optional) A `filter` block as defined below.
 
 -> **Note:** For more information on device filters, see the [official documentation](https://docs.microsoft.com/en-us/azure/active-directory/conditional-access/concept-condition-filters-for-devices#supported-operators-and-device-properties-for-filters).
 
@@ -210,11 +210,11 @@ The following arguments are supported:
 `users` block supports the following:
 
 * `excluded_groups` - (Optional) A list of group IDs excluded from scope of policy.
-* `excluded_guests_or_external_users` - (Optional) A `guests_or_external_users` block as documented below, which specifies internal guests and external users excluded from scope of policy.
+* `excluded_guests_or_external_users` - (Optional) A `guests_or_external_users` block as defined below, which specifies internal guests and external users excluded from scope of policy.
 * `excluded_roles` - (Optional) A list of role IDs excluded from scope of policy.
 * `excluded_users` - (Optional) A list of user IDs excluded from scope of policy and/or `GuestsOrExternalUsers`.
 * `included_groups` - (Optional) A list of group IDs in scope of policy unless explicitly excluded.
-* `included_guests_or_external_users` - (Optional) A `guests_or_external_users` block as documented below, which specifies internal guests and external users in scope of policy.
+* `included_guests_or_external_users` - (Optional) A `guests_or_external_users` block as defined below, which specifies internal guests and external users in scope of policy.
 * `included_roles` - (Optional) A list of role IDs in scope of policy unless explicitly excluded.
 * `included_users` - (Optional) A list of user IDs in scope of policy unless explicitly excluded, or `None` or `All` or `GuestsOrExternalUsers`.
 
@@ -224,7 +224,7 @@ The following arguments are supported:
 
 `guests_or_external_users` block supports the following:
 
-* `external_tenants` - (Optional) An `external_tenants` block as documented below, which specifies external tenants in a policy scope.
+* `external_tenants` - (Optional) An `external_tenants` block as defined below, which specifies external tenants in a policy scope.
 * `guest_or_external_user_types` - (Required) A list of guest or external user types. Possible values are: `b2bCollaborationGuest`, `b2bCollaborationMember`, `b2bDirectConnectUser`, `internalGuest`, `none`, `otherExternalUser`, `serviceProvider`, `unknownFutureValue`.
 
 ---

@@ -53,10 +53,10 @@ resource "azuread_application_optional_claims" "example" {
 
 The following arguments are supported:
 
-* `access_token` - (Optional) One or more `access_token` blocks as documented below.
+* `access_token` - (Optional) One or more `access_token` blocks as defined below.
 * `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
-* `id_token` - (Optional) One or more `id_token` blocks as documented below.
-* `saml2_token` - (Optional) One or more `saml2_token` blocks as documented below.
+* `id_token` - (Optional) One or more `id_token` blocks as defined below.
+* `saml2_token` - (Optional) One or more `saml2_token` blocks as defined below.
 
 -> At least one of `access_token`, `id_token` or `saml2_token` must be specified
 

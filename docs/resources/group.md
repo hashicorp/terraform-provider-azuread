@@ -122,7 +122,7 @@ The following arguments are supported:
 * `behaviors` - (Optional) A set of behaviors for a Microsoft 365 group. Possible values are `AllowOnlyMembersToPost`, `HideGroupInOutlook`, `SkipExchangeInstantOn`, `SubscribeMembersToCalendarEventsDisabled`, `SubscribeNewGroupMembers` and `WelcomeEmailDisabled`. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for more details. Changing this forces a new resource to be created.
 * `description` - (Optional) The description for the group.
 * `display_name` - (Required) The display name for the group.
-* `dynamic_membership` - (Optional) A `dynamic_membership` block as documented below. Required when `types` contains `DynamicMembership`. Cannot be used with the `members` property.
+* `dynamic_membership` - (Optional) A `dynamic_membership` block as defined below. Required when `types` contains `DynamicMembership`. Cannot be used with the `members` property.
 * `external_senders_allowed` - (Optional) Indicates whether people external to the organization can send messages to the group. Can only be set for Unified groups.
 
 ~> **Known Permissions Issue** The `external_senders_allowed` property can only be set when authenticating as a Member user of the tenant and _not_ when authenticating as a Guest user or as a service principal. Please see the [Microsoft Graph Known Issues](https://docs.microsoft.com/en-us/graph/known-issues#groups) documentation.

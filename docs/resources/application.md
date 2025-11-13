@@ -193,8 +193,8 @@ resource "azuread_service_principal" "example" {
 
 The following arguments are supported:
 
-* `api` - (Optional) An `api` block as documented below, which configures API related settings for this application.
-* `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `api` - (Optional) An `api` block as defined below, which configures API related settings for this application.
+* `app_role` - (Optional) A collection of `app_role` blocks as defined below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `description` - (Optional) A description of the application, as shown to end users.
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
@@ -209,25 +209,25 @@ The following arguments are supported:
 * `marketing_url` - (Optional) URL of the application's marketing page.
 * `notes` - (Optional) User-specified notes relevant for the management of the application.
 * `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. Defaults to `false`, which specifies that only GET requests are allowed.
-* `optional_claims` - (Optional) An `optional_claims` block as documented below.
+* `optional_claims` - (Optional) An `optional_claims` block as defined below.
 * `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.
 
 -> **Ownership of Applications** It's recommended to always specify one or more application owners, including the principal being used to execute Terraform, such as in the example above.
 
-* `password` - (Optional) A single `password` block as documented below. The password is generated during creation. By default, no password is generated.
+* `password` - (Optional) A single `password` block as defined below. The password is generated during creation. By default, no password is generated.
 
 -> **Creating a Password** The `password` block supports a single password for the application, and is provided so that a password can be generated when a new application is created. This helps to make new applications available for authentication more quickly. To add additional passwords to an application, see the [azuread_application_password](application_password.html) resource.
 
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
 * `privacy_statement_url` - (Optional) URL of the application's privacy statement.
-* `public_client` - (Optional) A `public_client` block as documented below, which configures non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.
-* `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below.
+* `public_client` - (Optional) A `public_client` block as defined below, which configures non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.
+* `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as defined below.
 * `service_management_reference` - (Optional) References application context information from a Service or Asset Management database.
 * `sign_in_audience` - (Optional) The Microsoft account types that are supported for the current application. Must be one of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`. Defaults to `AzureADMyOrg`.
 
 ~> **Changing `sign_in_audience` for existing applications** When updating an existing application to use a `sign_in_audience` value of `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`, your configuration may no longer be valid. Refer to [official documentation](https://docs.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation) to understand the differences in supported configurations. Where possible, the provider will attempt to validate your configuration and try to avoid applying unsupported settings to your application.
 
-* `single_page_application` - (Optional) A `single_page_application` block as documented below, which configures single-page application (SPA) related settings for this application.
+* `single_page_application` - (Optional) A `single_page_application` block as defined below, which configures single-page application (SPA) related settings for this application.
 * `support_url` - (Optional) URL of the application's support page.
 * `tags` - (Optional) A set of tags to apply to the application for configuring specific behaviours of the application and linked service principals. Note that these are not provided for use by practitioners. Cannot be used together with the `feature_tags` block.
 
@@ -238,7 +238,7 @@ The following arguments are supported:
 -> **Tip for Gallery Applications** This resource can  be used to instantiate a gallery application, however it will also attempt to manage the properties of the resulting application. If this is not desired, consider using the [azuread_application_registration](application_registration.html) resource instead.
 
 * `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
-* `web` - (Optional) A `web` block as documented below, which configures web related settings for this application.
+* `web` - (Optional) A `web` block as defined below, which configures web related settings for this application.
 
 -> **Application Name Uniqueness** Application names are not unique within Azure Active Directory. Use the `prevent_duplicate_names` argument to check for existing applications if you want to avoid name collisions.
 
@@ -248,7 +248,7 @@ The following arguments are supported:
 
 * `known_client_applications` - (Optional) A set of client IDs, used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app.
 * `mapped_claims_enabled` - (Optional) Allows an application to use claims mapping without specifying a custom signing key. Defaults to `false`.
-* `oauth2_permission_scope` - (Optional) One or more `oauth2_permission_scope` blocks as documented below, to describe delegated permissions exposed by the web API represented by this application.
+* `oauth2_permission_scope` - (Optional) One or more `oauth2_permission_scope` blocks as defined below, to describe delegated permissions exposed by the web API represented by this application.
 * `requested_access_token_version` - (Optional) The access token version expected by this resource. Must be one of `1` or `2`, and must be `2` when `sign_in_audience` is either `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount` Defaults to `1`.
 
 ---
@@ -300,9 +300,9 @@ The following arguments are supported:
 
 `optional_claims` block supports the following:
 
-* `access_token` - (Optional) One or more `access_token` blocks as documented below.
-* `id_token` - (Optional) One or more `id_token` blocks as documented below.
-* `saml2_token` - (Optional) One or more `saml2_token` blocks as documented below.
+* `access_token` - (Optional) One or more `access_token` blocks as defined below.
+* `id_token` - (Optional) One or more `id_token` blocks as defined below.
+* `saml2_token` - (Optional) One or more `saml2_token` blocks as defined below.
 
 ---
 
@@ -331,7 +331,7 @@ The following arguments are supported:
 
 `required_resource_access` block supports the following:
 
-* `resource_access` - (Required) A collection of `resource_access` blocks as documented below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
+* `resource_access` - (Required) A collection of `resource_access` blocks as defined below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
 * `resource_app_id` - (Required) The unique identifier for the resource that the application requires access to. This should be the Application ID of the target application.
 
 -> **Note:** Documentation on `resource_app_id` values for Microsoft APIs can be difficult to find, but you can use the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az_ad_sp_list) to find them. (e.g. `az ad sp list --display-name "Microsoft Graph" --query '[].{appDisplayName:appDisplayName, appId:appId}'`)
@@ -354,7 +354,7 @@ The following arguments are supported:
 `web` block supports the following:
 
 * `homepage_url` - (Optional) Home page or landing page of the application.
-* `implicit_grant` - (Optional) An `implicit_grant` block as documented above.
+* `implicit_grant` - (Optional) An `implicit_grant` block as defined above.
 * `logout_url` - (Optional) The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols.
 * `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent. Must be a valid `http` URL or a URN.
 
@@ -378,7 +378,7 @@ In addition to all arguments above, the following attributes are exported:
 * `logo_url` - CDN URL to the application's logo, as uploaded with the `logo_image` property.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `object_id` - The application's object ID.
-* `password` - A `password` block as documented below. Note that this block is a set rather than a list, and you will need to convert or iterate it to address its attributes (see the usage example above).
+* `password` - A `password` block as defined below. Note that this block is a set rather than a list, and you will need to convert or iterate it to address its attributes (see the usage example above).
 * `publisher_domain` - The verified publisher domain for the application.
 
 ---

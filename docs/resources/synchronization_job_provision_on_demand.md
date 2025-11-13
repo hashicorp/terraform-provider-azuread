@@ -78,7 +78,7 @@ The following arguments are supported:
 
 
 * `synchronization_job_id` (Required) The ID of the synchronization job.
-* `parameter` (Required) One or more `parameter` blocks as documented below.
+* `parameter` (Required) One or more `parameter` blocks as defined below.
 * `service_principal_id` (Required) The ID of the service principal for the synchronization job.
 * `triggers` (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html). 
 
@@ -87,7 +87,7 @@ The following arguments are supported:
 `parameter` block supports the following:
 
 * `rule_id` (Required) The identifier of the synchronization rule to be applied. This rule ID is defined in the schema for a given synchronization job or template.
-* `subject` (Required) One or more `subject` blocks as documented below.
+* `subject` (Required) One or more `subject` blocks as defined below.
 
 ---
 

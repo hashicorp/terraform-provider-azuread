@@ -46,9 +46,9 @@ resource "azuread_named_location" "example-country" {
 
 The following arguments are supported:
 
-* `country` - (Optional) A `country` block as documented below, which configures a country-based named location.
+* `country` - (Optional) A `country` block as defined below, which configures a country-based named location.
 * `display_name` - (Required) The friendly name for this named location.
-* `ip` - (Optional) An `ip` block as documented below, which configures an IP-based named location.
+* `ip` - (Optional) An `ip` block as defined below, which configures an IP-based named location.
 
 -> Exactly one of `ip` or `country` must be specified. Changing between these forces a new resource to be created.
 

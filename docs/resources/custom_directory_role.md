@@ -52,7 +52,7 @@ The following arguments are supported:
 * `description` - (Optional) The description of the custom directory role.
 * `display_name` - (Required) The display name of the custom directory role.
 * `enabled` - (Required) Indicates whether the role is enabled for assignment.
-* `permissions` - (Required) A collection of `permissions` blocks as documented below.
+* `permissions` - (Required) A collection of `permissions` blocks as defined below.
 * `template_id` - (Optional) Custom template identifier that is typically used if one needs an identifier to be the same across different directories. Changing this forces a new resource to be created.
 * `version` - (Required) - The version of the role definition. This can be any arbitrary string between 1-128 characters.
 

@@ -49,7 +49,7 @@ resource "azuread_synchronization_secret" "example" {
 
 The following arguments are supported:
 
-* `credential` - (Optional) One or more `credential` blocks as documented below.
+* `credential` - (Optional) One or more `credential` blocks as defined below.
 * `service_principal_id` - (Required) The ID of the service principal for which this synchronization secrets should be stored. Changing this field forces a new resource to be created.
 
 ---
