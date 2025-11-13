@@ -62,12 +62,32 @@ The following arguments are supported:
 
 ---
 
-`access_token`, `id_token` and `saml2_token` blocks support the following:
+`access_token`  block supports the following:
 
 * `additional_properties` - List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. Possible values are: `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
 * `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
 * `name` - The name of the optional claim.
 * `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
+
+---
+
+`id_token`  block supports the following:
+
+* `additional_properties` - List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. Possible values are: `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
+* `name` - The name of the optional claim.
+* `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
+
+---
+
+`saml2_token` block supports the following:
+
+* `additional_properties` - List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. Possible values are: `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
+* `name` - The name of the optional claim.
+* `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
+
+---
 
 ## Attribute Reference
 

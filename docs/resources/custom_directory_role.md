@@ -52,13 +52,13 @@ The following arguments are supported:
 * `description` - (Optional) The description of the custom directory role.
 * `display_name` - (Required) The display name of the custom directory role.
 * `enabled` - (Required) Indicates whether the role is enabled for assignment.
-* `permissions` - (Required) A collection of `permissions` blocks as defined below.
+* `permissions` - (Required) One or more `permissions` blocks as defined below.
 * `template_id` - (Optional) Custom template identifier that is typically used if one needs an identifier to be the same across different directories. Changing this forces a new resource to be created.
 * `version` - (Required) - The version of the role definition. This can be any arbitrary string between 1-128 characters.
 
 ---
 
-`permissions` blocks support the following:
+The `permissions` block supports the following:
 
 * `allowed_resource_actions` - (Required) A set of tasks that can be performed on a resource. For more information, see the [Permissions Reference](https://docs.microsoft.com/en-us/azure/active-directory/roles/permissions-reference) documentation.
 

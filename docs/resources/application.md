@@ -194,7 +194,7 @@ resource "azuread_service_principal" "example" {
 The following arguments are supported:
 
 * `api` - (Optional) An `api` block as defined below, which configures API related settings for this application.
-* `app_role` - (Optional) A collection of `app_role` blocks as defined below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `app_role` - (Optional) One or more `app_role` blocks as defined below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `description` - (Optional) A description of the application, as shown to end users.
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
@@ -221,7 +221,7 @@ The following arguments are supported:
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
 * `privacy_statement_url` - (Optional) URL of the application's privacy statement.
 * `public_client` - (Optional) A `public_client` block as defined below, which configures non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.
-* `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as defined below.
+* `required_resource_access` - (Optional) One or more `required_resource_access` blocks as defined below.
 * `service_management_reference` - (Optional) References application context information from a Service or Asset Management database.
 * `sign_in_audience` - (Optional) The Microsoft account types that are supported for the current application. Must be one of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`. Defaults to `AzureADMyOrg`.
 
@@ -253,7 +253,7 @@ The following arguments are supported:
 
 ---
 
-`oauth2_permission_scope` blocks support the following:
+`oauth2_permission_scope` block supports the following:
 
 * `admin_consent_description` - (Required) Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.
 * `admin_consent_display_name` - (Required) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.
@@ -306,7 +306,25 @@ The following arguments are supported:
 
 ---
 
-`access_token`, `id_token` and `saml2_token` blocks support the following:
+`access_token` block supports the following:
+
+* `additional_properties` - List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. Possible values are: `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
+* `name` - The name of the optional claim.
+* `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
+
+---
+
+`id_token` block supports the following:
+
+* `additional_properties` - List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. Possible values are: `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
+* `name` - The name of the optional claim.
+* `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
+
+---
+
+`saml2_token` block supports the following:
 
 * `additional_properties` - List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. Possible values are: `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
 * `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
@@ -331,7 +349,7 @@ The following arguments are supported:
 
 `required_resource_access` block supports the following:
 
-* `resource_access` - (Required) A collection of `resource_access` blocks as defined below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
+* `resource_access` - (Required) One or more `resource_access` blocks as defined below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
 * `resource_app_id` - (Required) The unique identifier for the resource that the application requires access to. This should be the Application ID of the target application.
 
 -> **Note:** Documentation on `resource_app_id` values for Microsoft APIs can be difficult to find, but you can use the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az_ad_sp_list) to find them. (e.g. `az ad sp list --display-name "Microsoft Graph" --query '[].{appDisplayName:appDisplayName, appId:appId}'`)
