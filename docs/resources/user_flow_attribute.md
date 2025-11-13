@@ -25,7 +25,7 @@ resource "azuread_user_flow_attribute" "example" {
 ```
 
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -33,7 +33,7 @@ The following arguments are supported:
 * `description` - (Required) The description of the user flow attribute that is shown to the user at the time of sign-up.
 * `display_name` - (Required) The display name of the user flow attribute. Changing this forces a new resource to be created.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

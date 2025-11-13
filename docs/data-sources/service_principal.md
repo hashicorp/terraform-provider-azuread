@@ -40,7 +40,7 @@ data "azuread_service_principal" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -50,7 +50,7 @@ The following arguments are supported:
 
 ~> One of `client_id`, `display_name` or `object_id` must be specified.
 
-## Attribute Reference
+## Attributes Reference
 
 The following attributes are exported:
 

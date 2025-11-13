@@ -26,7 +26,7 @@ output "application_object_id" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -37,7 +37,7 @@ The following arguments are supported:
 
 ~> One of `client_id`, `display_name`, `object_id`, or `identifier_uri` must be specified.
 
-## Attribute Reference
+## Attributes Reference
 
 The following attributes are exported:
 

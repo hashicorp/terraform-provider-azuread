@@ -54,7 +54,7 @@ data "azuread_groups" "security_only" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -68,7 +68,7 @@ The following arguments are supported:
 
 ~> One of `display_names`, `display_name_prefix`, `object_ids` or `return_all` should be specified. Either `display_name` or `object_ids` _may_ be specified as an empty list, in which case no results will be returned.
 
-## Attribute Reference
+## Attributes Reference
 
 The following attributes are exported:
 

@@ -33,7 +33,7 @@ data "azuread_access_package" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -44,7 +44,7 @@ The following arguments are supported:
 ~> Either `object_id`, or both `catalog_id` and `display_name`, must be specified.
 
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to the above arguments, the following attributes are exported:
 

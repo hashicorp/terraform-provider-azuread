@@ -49,7 +49,7 @@ resource "azuread_application_optional_claims" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -89,7 +89,7 @@ The following arguments are supported:
 
 ---
 
-## Attribute Reference
+## Attributes Reference
 
 No additional attributes are exported.
 

@@ -61,7 +61,7 @@ resource "azuread_application_redirect_uris" "example_web" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -69,7 +69,7 @@ The following arguments are supported:
 * `redirect_uris` - (Required) A set of redirect URIs to assign to the application.
 * `type` - (Required) The type of redirect URIs to manage. Must be one of: `PublicClient`, `SPA`, or `Web`. Changing this forces a new resource to be created.
 
-## Attribute Reference
+## Attributes Reference
 
 No additional attributes are exported.
 

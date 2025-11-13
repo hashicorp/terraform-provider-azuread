@@ -39,14 +39,14 @@ resource "azuread_application_owner" "example_jane" {
 
 -> **Tip** For managing more application owners, create additional instances of this resource
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
 * `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
 * `owner_object_id` - (Required) The object ID of the owner to assign to the application, typically a user or service principal. Changing this forces a new resource to be created.
 
-## Attribute Reference
+## Attributes Reference
 
 No additional attributes are exported.
 

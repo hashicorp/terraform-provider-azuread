@@ -45,7 +45,7 @@ resource "azuread_synchronization_secret" "example" {
 ```
 
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -59,7 +59,7 @@ The following arguments are supported:
 * `key` - (Required) The key of the secret.
 * `value` - (Required) The value of the secret.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

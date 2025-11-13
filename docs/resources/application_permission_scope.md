@@ -59,7 +59,7 @@ resource "azuread_application_permission_scope" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -77,7 +77,7 @@ The following arguments are supported:
 
 -> **Roles and Permission Scopes** In Azure Active Directory, application roles and permission scopes exported by an application share the same namespace and cannot contain duplicate values.
 
-## Attribute Reference
+## Attributes Reference
 
 No additional attributes are exported.
 

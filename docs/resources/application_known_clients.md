@@ -37,14 +37,14 @@ resource "azuread_application_known_clients" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
 * `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
 * `known_client_ids` - (Required) A set of client IDs for the known applications.
 
-## Attribute Reference
+## Attributes Reference
 
 No additional attributes are exported.
 

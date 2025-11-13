@@ -24,14 +24,14 @@ resource "azuread_access_package_catalog" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 * `description` - (Required) The description of the access package catalog.
 * `display_name` - (Required) The display name of the access package catalog.
 * `externally_visible` - (Optional) Whether the access packages in this catalog can be requested by users outside the tenant.
 * `published` - (Optional) Whether the access packages in this catalog are available for management.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

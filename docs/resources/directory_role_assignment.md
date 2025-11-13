@@ -85,7 +85,7 @@ resource "azuread_directory_role_assignment" "example" {
 
 ~> Note the use of the `template_id` attribute when referencing built-in roles.
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -94,7 +94,7 @@ The following arguments are supported:
 * `principal_object_id` - (Required) The object ID of the principal for you want to create a role assignment. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
 * `role_id` - (Required) The template ID (in the case of built-in roles) or object ID (in the case of custom roles) of the directory role you want to assign. Changing this forces a new resource to be created.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

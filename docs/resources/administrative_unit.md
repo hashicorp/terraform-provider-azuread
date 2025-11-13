@@ -24,7 +24,7 @@ resource "azuread_administrative_unit" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -38,7 +38,7 @@ The following arguments are supported:
 
 * `hidden_membership_enabled` - (Optional) Whether the administrative unit and its members are hidden or publicly viewable in the directory.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

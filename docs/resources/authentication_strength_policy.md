@@ -55,7 +55,7 @@ resource "azuread_authentication_strength_policy" "example2" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -63,7 +63,7 @@ The following arguments are supported:
 - `description` - (Optional) The description for this authentication strength policy.
 - `display_name` - (Required) The friendly name for this authentication strength policy.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

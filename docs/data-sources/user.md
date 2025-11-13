@@ -22,7 +22,7 @@ data "azuread_user" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -34,7 +34,7 @@ The following arguments are supported:
 
 ~> One of `user_principal_name`, `object_id`, `mail`, `mail_nickname` or `employee_id` must be specified.
 
-## Attribute Reference
+## Attributes Reference
 
 The following attributes are exported:
 

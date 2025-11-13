@@ -23,7 +23,7 @@ data "azuread_group" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -36,7 +36,7 @@ The following arguments are supported:
 
 ~> One of `display_name`, `object_id` or `mail_nickname` must be specified.
 
-## Attribute Reference
+## Attributes Reference
 
 The following attributes are exported:
 

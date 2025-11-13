@@ -72,7 +72,7 @@ resource "azuread_synchronization_job_provision_on_demand" "example" {
 
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -102,7 +102,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 * `create` - (Defaults to 15 minutes) Used when creating the resource.
 
-## Attribute Reference
+## Attributes Reference
 
 No additional attributes are exported.
 

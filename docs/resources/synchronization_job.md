@@ -51,7 +51,7 @@ resource "azuread_synchronization_job" "example" {
 ```
 
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -59,7 +59,7 @@ The following arguments are supported:
 * `service_principal_id` - (Required) The ID of the service principal for which this synchronization job should be created. Changing this field forces a new resource to be created.
 * `template_id` - (Required) Identifier of the synchronization template this job is based on.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

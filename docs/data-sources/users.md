@@ -22,7 +22,7 @@ data "azuread_users" "users" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -39,7 +39,7 @@ The following arguments are supported:
 
 ~> Either `return_all`, or one of `user_principal_names`, `object_ids`, `mail_nicknames`, `mails`, or `employee_ids` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
 
-## Attribute Reference
+## Attributes Reference
 
 The following attributes are exported:
 

@@ -22,13 +22,13 @@ data "azuread_named_location" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
 * `display_name` - (Required) Specifies the display named of the named location to look up.
 
-## Attribute Reference 
+## Attributes Reference 
 
 The following attributes are exported:
 

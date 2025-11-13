@@ -68,7 +68,7 @@ resource "azuread_application_api_access" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -79,7 +79,7 @@ The following arguments are supported:
 
 -> At least one of `role_ids` or `scope_ids` must be specified.
 
-## Attribute Reference
+## Attributes Reference
 
 No additional attributes are exported.
 

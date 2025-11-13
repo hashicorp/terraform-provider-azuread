@@ -22,7 +22,7 @@ output "application_template_id" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -31,7 +31,7 @@ The following arguments are supported:
 
 ~> One of `template_id` or `display_name` must be specified.
 
-## Attribute Reference
+## Attributes Reference
 
 The following attributes are exported:
 

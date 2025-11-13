@@ -27,13 +27,13 @@ output "object_type" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
 * `object_id` - (Optional) Specifies the Object ID of the directory object to look up.
 
-## Attribute Reference 
+## Attributes Reference 
 
 The following attributes are exported:
 

@@ -86,7 +86,7 @@ resource "azuread_service_principal" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -131,7 +131,7 @@ The following arguments are supported:
 
 * `relay_state` - (Optional) The relative URI the service provider would redirect to after completion of the single sign-on flow.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

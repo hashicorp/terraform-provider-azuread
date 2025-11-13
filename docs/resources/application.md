@@ -189,7 +189,7 @@ resource "azuread_service_principal" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -385,7 +385,7 @@ The following arguments are supported:
 
 ---
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

@@ -60,7 +60,7 @@ resource "azuread_application_pre_authorized" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -68,7 +68,7 @@ The following arguments are supported:
 * `authorized_client_id` - (Required) The client ID of the application being authorized. Changing this field forces a new resource to be created.
 * `permission_ids` - (Required) A set of permission scope IDs required by the authorized application.
 
-## Attribute Reference
+## Attributes Reference
 
 No additional attributes are exported.
 
