@@ -43,7 +43,7 @@ The following attributes are exported:
 
 * `api` - An `api` block as defined below.
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
-* `app_roles` - A collection of `app_role` blocks as defined below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `app_roles` - One or more `app_role` blocks as defined below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `client_id` - The Client ID for the application.
 * `description` - A description of the application, as shown to end users.
 * `device_only_auth_enabled` - Specifies whether this application supports device authentication without a user.
@@ -65,7 +65,7 @@ The following attributes are exported:
 * `privacy_statement_url` - URL of the application's privacy statement.
 * `public_client` - A `public_client` block as defined below.
 * `publisher_domain` - The verified publisher domain for the application.
-* `required_resource_access` - A collection of `required_resource_access` blocks as defined below.
+* `required_resource_access` - One or more `required_resource_access` blocks as defined below.
 * `service_management_reference` - References application context information from a Service or Asset Management database.
 * `sign_in_audience` - The Microsoft account types that are supported for the current application. One of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
 * `single_page_application` - A `single_page_application` block as defined below.
@@ -143,7 +143,7 @@ The following attributes are exported:
 
 `required_resource_access` block exports the following:
 
-* `resource_access` - A collection of `resource_access` blocks as defined below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
+* `resource_access` - One or more `resource_access` blocks as defined below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
 * `resource_app_id` - The unique identifier for the resource that the application requires access to. This is the Application ID of the target application.
 
 ---
