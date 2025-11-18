@@ -69,17 +69,18 @@ func flattenConditionalAccessConditionSet(in *stable.ConditionalAccessConditionS
 
 	return []interface{}{
 		map[string]interface{}{
-			"applications":                  flattenConditionalAccessApplications(in.Applications),
-			"client_applications":           flattenConditionalAccessClientApplications(in.ClientApplications),
-			"users":                         flattenConditionalAccessUsers(in.Users),
-			"client_app_types":              clientAppTypes,
-			"devices":                       flattenConditionalAccessDevices(in.Devices),
-			"locations":                     flattenConditionalAccessLocations(in.Locations),
-			"platforms":                     flattenConditionalAccessPlatforms(in.Platforms),
-			"service_principal_risk_levels": servicePrincipalRiskLevels,
-			"sign_in_risk_levels":           signInRiskLevels,
-			"user_risk_levels":              userRiskLevels,
-			"insider_risk_levels":           insiderRiskLevels,
+			"applications":                         flattenConditionalAccessApplications(in.Applications),
+			"authentication_flow_transfer_methods": flattenAuthenticationFlowTransferMethods(in.AuthenticationFlows),
+			"client_applications":                  flattenConditionalAccessClientApplications(in.ClientApplications),
+			"users":                                flattenConditionalAccessUsers(in.Users),
+			"client_app_types":                     clientAppTypes,
+			"devices":                              flattenConditionalAccessDevices(in.Devices),
+			"locations":                            flattenConditionalAccessLocations(in.Locations),
+			"platforms":                            flattenConditionalAccessPlatforms(in.Platforms),
+			"service_principal_risk_levels":        servicePrincipalRiskLevels,
+			"sign_in_risk_levels":                  signInRiskLevels,
+			"user_risk_levels":                     userRiskLevels,
+			"insider_risk_levels":                  insiderRiskLevels,
 		},
 	}
 }
@@ -364,6 +365,20 @@ func flattenIPNamedLocationIPRange(in []stable.IPRange) []interface{} {
 	return tf.FlattenStringSlice(result)
 }
 
+func flattenAuthenticationFlowTransferMethods(in *stable.ConditionalAccessAuthenticationFlows) []interface{} {
+	result := make([]interface{}, 0)
+
+	if in == nil || in.TransferMethods == nil {
+		return result
+	}
+
+	for _, m := range strings.Split(pointer.FromEnum(in.TransferMethods), ",") {
+		result = append(result, m)
+	}
+
+	return result
+}
+
 func expandConditionalAccessConditionSet(in []interface{}) *stable.ConditionalAccessConditionSet {
 	if len(in) == 0 || in[0] == nil {
 		return nil
@@ -373,6 +388,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *stable.ConditionalAc
 	config := in[0].(map[string]interface{})
 
 	applications := config["applications"].([]interface{})
+	authenticationFlowTransferMethods := config["authentication_flow_transfer_methods"].(*pluginsdk.Set).List()
 	clientApplications := config["client_applications"].([]interface{})
 	devices := config["devices"].([]interface{})
 	locations := config["locations"].([]interface{})
@@ -404,6 +420,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *stable.ConditionalAc
 	}
 
 	result.Applications = expandConditionalAccessApplications(applications)
+	result.AuthenticationFlows = expandAuthenticationFlowTransferMethods(authenticationFlowTransferMethods)
 	result.ClientAppTypes = clientAppTypes
 	result.ClientApplications = expandConditionalAccessClientApplications(clientApplications)
 	result.Devices = expandConditionalAccessDevices(devices)
@@ -757,4 +774,14 @@ func expandIPNamedLocationIPRange(in []interface{}) []stable.IPRange {
 	}
 
 	return result
+}
+
+func expandAuthenticationFlowTransferMethods(in []interface{}) *stable.ConditionalAccessAuthenticationFlows {
+	if len(in) == 0 {
+		return nil
+	}
+
+	return &stable.ConditionalAccessAuthenticationFlows{
+		TransferMethods: pointer.ToEnum[stable.ConditionalAccessTransferMethods](strings.Join(tf.ExpandStringSlice(in), ",")),
+	}
 }
