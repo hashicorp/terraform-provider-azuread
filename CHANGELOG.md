@@ -1,3 +1,20 @@
+## 3.7.0 (November 18, 2025)
+
+FEATURES:
+* **New Resource:** `azuread_flexible_federated_identity_credential`  ([#1788](https://github.com/hashicorp/terraform-provider-azuread/issues/1788))
+
+EHANCEMENTS:
+
+* Dependencies: `go-azure-sdk` updated to `v0.20251029.1173336` ([#1787](https://github.com/hashicorp/terraform-provider-azuread/issues/1787))
+* Dependencies: `Go` updated to `v1.25.3` ([#1792](https://github.com/hashicorp/terraform-provider-azuread/issues/1792))
+
+BUG FIXES:
+
+* `azuread_application` - allow retry on `409 Conflict` during creation ([#1768](https://github.com/hashicorp/terraform-provider-azuread/issues/1768))
+* `azuread_conditional_access_policy` - add support for the `authentication_flow_transfer_methods` property ([#1796](https://github.com/hashicorp/terraform-provider-azuread/issues/1796))
+* `azuread_group_role_management_policy` - fix update for `activation_rule.required_conditional_access_authentication_context` ([#1783](https://github.com/hashicorp/terraform-provider-azuread/issues/1783))
+
+
 ## 3.6.0 (September 25, 2025)
 
 ENHANCEMENTS:
