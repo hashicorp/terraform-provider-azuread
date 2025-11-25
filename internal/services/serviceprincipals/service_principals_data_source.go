@@ -40,7 +40,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_ids", "display_names", "object_ids", "return_all"},
+				ExactlyOneOf: []string{"client_ids", "display_names", "object_ids", "return_all", "filter"},
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.IsUUID,
@@ -52,7 +52,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_ids", "display_names", "object_ids", "return_all"},
+				ExactlyOneOf: []string{"client_ids", "display_names", "object_ids", "return_all", "filter"},
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.StringIsNotEmpty,
@@ -64,7 +64,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_ids", "display_names", "object_ids", "return_all"},
+				ExactlyOneOf: []string{"client_ids", "display_names", "object_ids", "return_all", "filter"},
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.IsUUID,
@@ -85,7 +85,16 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"ignore_missing"},
-				ExactlyOneOf:  []string{"client_ids", "display_names", "object_ids", "return_all"},
+				ExactlyOneOf:  []string{"client_ids", "display_names", "object_ids", "return_all", "filter"},
+			},
+
+			"filter": {
+				Description:   "Use a OData filter to search for service principals.",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"ignore_missing"},
+				ExactlyOneOf:  []string{"client_ids", "display_names", "object_ids", "return_all", "filter"},
 			},
 
 			"service_principals": {
@@ -186,6 +195,7 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	var expectedCount int
 	ignoreMissing := d.Get("ignore_missing").(bool)
 	returnAll := d.Get("return_all").(bool)
+	filter := d.Get("filter").(string)
 
 	fieldsToSelect := []string{
 		"accountEnabled",
@@ -212,6 +222,20 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		}
 		if len(*resp.Model) == 0 {
 			return tf.ErrorDiagPathF(err, "return_all", "No service principals found")
+		}
+
+		servicePrincipals = append(servicePrincipals, *resp.Model...)
+
+	} else if filter != "" {
+		resp, err := client.ListServicePrincipals(ctx, serviceprincipal.ListServicePrincipalsOperationOptions{Select: &fieldsToSelect, Filter: &filter})
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve service principals")
+		}
+		if resp.Model == nil {
+			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+		}
+		if len(*resp.Model) == 0 {
+			return tf.ErrorDiagPathF(err, "filter", "No service principals found")
 		}
 
 		servicePrincipals = append(servicePrincipals, *resp.Model...)
@@ -292,7 +316,7 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	}
 
 	// Check that the right number of service principals were returned
-	if !returnAll && !ignoreMissing && len(servicePrincipals) != expectedCount {
+	if !returnAll && filter == "" && !ignoreMissing && len(servicePrincipals) != expectedCount {
 		return tf.ErrorDiagF(fmt.Errorf("expected: %d, actual: %d", expectedCount, len(servicePrincipals)), "Unexpected number of service principals returned")
 	}
 
