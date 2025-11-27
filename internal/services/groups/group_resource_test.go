@@ -6,6 +6,7 @@ package groups_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -536,6 +537,50 @@ func TestAccGroup_writebackUnified(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+	})
+}
+
+func TestAccGroup_delayParameter(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.withDelayParameter(data, 0),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("group_name_verification_delay_seconds").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withDelayParameter(data, 10),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("group_name_verification_delay_seconds").HasValue("10"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withDelayParameter(data, 120),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("group_name_verification_delay_seconds").HasValue("120"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccGroup_delayParameterValidation(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config:      r.withDelayParameter(data, -1),
+			ExpectError: regexp.MustCompile("expected group_name_verification_delay_seconds to be at least"),
+		},
 	})
 }
 
@@ -1157,4 +1202,14 @@ resource "azuread_group" "test" {
   onpremises_group_type = "UniversalSecurityGroup"
 }
 `, data.RandomInteger)
+}
+
+func (GroupResource) withDelayParameter(data acceptance.TestData, delaySeconds int) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name                         = "acctestGroup-%[1]d"
+  security_enabled                     = true
+  group_name_verification_delay_seconds = %[2]d
+}
+`, data.RandomInteger, delaySeconds)
 }
