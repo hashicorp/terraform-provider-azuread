@@ -123,6 +123,7 @@ The following arguments are supported:
 * `custom_single_sign_on` - (Optional) Whether this service principal represents a custom SAML application. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag. Defaults to `false`.
 * `enterprise` - (Optional) Whether this service principal represents an Enterprise Application. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag. Defaults to `false`.
 * `gallery` - (Optional) Whether this service principal represents a gallery application. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag. Defaults to `false`.
+* `global_secure_access` - (Optional) Whether this service principal represents a Global Secure Access application. Enabling this will assign the `IsAccessibleViaZTNAClient` and `PrivateAccessNonWebApplication` tags. Defaults to `false`.
 * `hide` - (Optional) Whether this app is invisible to users in My Apps and Office 365 Launcher. Enabling this will assign the `HideApp` tag. Defaults to `false`.
 
 ---
