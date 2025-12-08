@@ -31,7 +31,6 @@ import (
 	ownerBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/go-uuid"
 )
 
 func groupWithoutMembersResource() *pluginsdk.Resource {
@@ -692,28 +691,21 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	id := beta.NewGroupID(groupObjectId)
 	d.SetId(id.ID())
 
-	// Attempt to patch the newly created group and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
+	// Attempt to patch the newly created group and set the display name, which will tell us whether it exists yet.
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
-	uid, err := uuid.GenerateUUID()
-	if err != nil {
-		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	updateOptions := groupBeta.UpdateGroupOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			return response.WasNotFound(resp), nil
+		},
 	}
-	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
-	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
-		updateOptions := groupBeta.UpdateGroupOperationOptions{
-			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
-				return response.WasNotFound(resp), nil
-			},
+	resp, err := client.UpdateGroup(ctx, id, beta.Group{
+		DisplayName: nullable.Value(displayName),
+	}, updateOptions)
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new %s to be replicated in Azure AD", id)
 		}
-		resp, err := client.UpdateGroup(ctx, id, beta.Group{
-			DisplayName: nullable.Value(displayNameToSet),
-		}, updateOptions)
-		if err != nil {
-			if response.WasNotFound(resp.HttpResponse) {
-				return tf.ErrorDiagF(err, "Timed out whilst waiting for new %s to be replicated in Azure AD", id)
-			}
-			return tf.ErrorDiagF(err, "Failed to patch %s after creating", id)
-		}
+		return tf.ErrorDiagF(err, "Failed to patch %s after creating", id)
 	}
 
 	// Wait for DisplayName to be updated
