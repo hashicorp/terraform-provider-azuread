@@ -40,11 +40,6 @@ checksum:
   algorithm: sha256
 
 signs:
-  - artifacts: all
-    id: cosign
-    cmd: cosign
-    signature: "${artifact}.sigstore.json"
-    args: [ "sign-blob", "--bundle=${signature}", "${artifact}", "--yes" ]
   - artifacts: checksum
     args:
       # if you are using this in a GitHub action or some other automated pipeline, you
