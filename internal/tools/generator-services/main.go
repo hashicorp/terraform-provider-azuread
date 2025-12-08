@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/provider"
-	"github.com/hashicorp/terraform-provider-azuread/internal/sdk" // nolint: typecheck
+	"github.com/glueckkanja/terraform-provider-azuread/internal/provider"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/sdk" // nolint: typecheck
 )
 
 // Packages in this list are deprecated and cannot be run due to breaking API changes
@@ -65,19 +65,19 @@ dependencies:
     - vendor/**/*
 documentation:
 - changed-files:
-  - any-glob-to-any-file: 
+  - any-glob-to-any-file:
     - docs/**/*
     - examples/**/*
 tooling:
 - changed-files:
-  - any-glob-to-any-file: 
+  - any-glob-to-any-file:
     - .github/**/*
     - internal/tools/**/*
     - scripts/**/*
     - GNUmakefile
 state-migration:
 - changed-files:
-  - any-glob-to-any-file: 
+  - any-glob-to-any-file:
     - internal/services/**/migration/**/*
 `
 

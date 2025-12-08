@@ -24,9 +24,9 @@ jobs:
   save-artifacts-on-fail:
     needs: golint
     if: ${{ failure() }}
-    uses: hashicorp/terraform-provider-azuread/.github/workflows/save-artifacts.yaml@latest
+    uses: glueckkanja/terraform-provider-azuread/.github/workflows/save-artifacts.yaml@latest
 
   comment-on-fail:
     needs: golint
     if: ${{ failure() }}
-    uses: hashicorp/terraform-provider-azuread/.github/workflows/comment-failure.yaml@latest
+    uses: glueckkanja/terraform-provider-azuread/.github/workflows/comment-failure.yaml@latest

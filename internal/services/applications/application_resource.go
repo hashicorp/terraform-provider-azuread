@@ -12,6 +12,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/applications"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/credentials"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/applications/migrations"
+	applicationsValidate "github.com/glueckkanja/terraform-provider-azuread/internal/services/applications/validate"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	applicationBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
@@ -26,15 +35,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/credentials"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
-	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 )
 
 func applicationResource() *pluginsdk.Resource {
@@ -1127,7 +1127,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	api := expandApplicationApi(d.Get("api").([]interface{}))
 
 	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
-	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
+	// See https://github.com/glueckkanja/terraform-provider-azuread/issues/914
 	var acceptMappedClaims nullable.Type[bool]
 	if api.AcceptMappedClaims.GetOrZero() {
 		acceptMappedClaims = api.AcceptMappedClaims
@@ -1241,7 +1241,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// Attempt to patch the newly created application and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
-	// Due to an unusual implementation on this service, the retry function also retries on 409. See https://github.com/hashicorp/terraform-provider-azuread/issues/1764#issuecomment-3282278691 for more information.
+	// Due to an unusual implementation on this service, the retry function also retries on 409. See https://github.com/glueckkanja/terraform-provider-azuread/issues/1764#issuecomment-3282278691 for more information.
 	uid, err := uuid.GenerateUUID()
 	if err != nil {
 		return tf.ErrorDiagF(err, "Failed to generate a UUID")
@@ -1274,7 +1274,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 
 	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
-	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
+	// See https://github.com/glueckkanja/terraform-provider-azuread/issues/914
 	if !acceptMappedClaims.IsNull() && acceptMappedClaims.IsSet() {
 		api.AcceptMappedClaims = acceptMappedClaims
 		if _, err = client.UpdateApplication(ctx, id, stable.Application{Api: api}, application.UpdateApplicationOperationOptions{

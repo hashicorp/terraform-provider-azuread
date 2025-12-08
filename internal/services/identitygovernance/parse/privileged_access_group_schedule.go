@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 type PrivilegedAccessGroupScheduleId struct {

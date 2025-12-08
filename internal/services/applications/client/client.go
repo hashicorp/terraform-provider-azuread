@@ -4,6 +4,7 @@
 package client
 
 import (
+	"github.com/glueckkanja/terraform-provider-azuread/internal/common"
 	applicationBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
 	flexibleFederatedIdentityCredential "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/federatedidentitycredential" // Flexible FIC Only available in beta currently, when it goes GA we should be able to flatten down to 1 client
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applicationtemplates/stable/applicationtemplate"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryobjects/stable/directoryobject"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 type Client struct {

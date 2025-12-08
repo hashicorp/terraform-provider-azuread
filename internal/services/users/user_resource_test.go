@@ -9,14 +9,14 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance/check"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
 
 type UserResource struct{}

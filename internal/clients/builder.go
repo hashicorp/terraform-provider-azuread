@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/common"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 type ClientBuilder struct {

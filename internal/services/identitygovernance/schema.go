@@ -4,9 +4,9 @@
 package identitygovernance
 
 import (
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/suppress"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/suppress"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func schemaLocalizedContent() *pluginsdk.Resource {

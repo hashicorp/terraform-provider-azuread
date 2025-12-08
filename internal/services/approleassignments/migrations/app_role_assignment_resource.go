@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/approleassignments/parse"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/parse"
 )
 
 func ResourceAppRoleAssignmentInstanceResourceV0() *pluginsdk.Resource {

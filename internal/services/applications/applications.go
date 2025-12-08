@@ -12,6 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/applications"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/credentials"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
@@ -19,15 +23,11 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/credentials"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 func applicationUpdateRetryFunc() client.RequestRetryFunc {
 	return func(resp *http.Response, o *odata.OData) (bool, error) {
-		// inconsistent state on this resource can result in a 409 Conflict being returned, in this exception case we retry as per the service design, see  https://github.com/hashicorp/terraform-provider-azuread/issues/1764#issuecomment-3282278691 for more information.
+		// inconsistent state on this resource can result in a 409 Conflict being returned, in this exception case we retry as per the service design, see  https://github.com/glueckkanja/terraform-provider-azuread/issues/1764#issuecomment-3282278691 for more information.
 		if response.WasNotFound(resp) || response.WasConflict(resp) {
 			return true, nil
 		} else if response.WasBadRequest(resp) && o != nil && o.Error != nil {

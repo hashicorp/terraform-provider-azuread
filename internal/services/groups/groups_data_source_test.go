@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance/check"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
 
 type GroupsDataSource struct{}

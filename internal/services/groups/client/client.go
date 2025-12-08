@@ -4,6 +4,7 @@
 package client
 
 import (
+	"github.com/glueckkanja/terraform-provider-azuread/internal/common"
 	administrativeunitmemberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/beta/administrativeunitmember"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryobjects/stable/directoryobject"
 	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
@@ -11,7 +12,6 @@ import (
 	memberofBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/memberof"
 	ownerBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner"
 	transitivememberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/transitivemember"
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 // Note: Whilst it is technically possible that we could use both the Stable and Beta APIs for groups (retaining use of
@@ -48,7 +48,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	}
 	o.Configure(groupClientBeta.Client)
 
-	// Group members not returned in full when using v1.0 API, see https://github.com/hashicorp/terraform-provider-azuread/issues/1018
+	// Group members not returned in full when using v1.0 API, see https://github.com/glueckkanja/terraform-provider-azuread/issues/1018
 	memberClientBeta, err := memberBeta.NewMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	}
 	o.Configure(ownerClientBeta.Client)
 
-	// Group members not returned in full when using v1.0 API, see https://github.com/hashicorp/terraform-provider-azuread/issues/1018
+	// Group members not returned in full when using v1.0 API, see https://github.com/glueckkanja/terraform-provider-azuread/issues/1018
 	transitiveMemberClientBeta, err := transitivememberBeta.NewTransitiveMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err

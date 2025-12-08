@@ -6,9 +6,9 @@ package validate
 import (
 	"regexp"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 // RoleScopeClaimValue checks whether a value is valid for use in a `role` or `scp` claim, as used in App Roles and OAuth 2.0 Permission Scopes in Applications.

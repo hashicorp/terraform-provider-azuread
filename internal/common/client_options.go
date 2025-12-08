@@ -12,12 +12,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/glueckkanja/terraform-provider-azuread/version"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/hashicorp/go-azure-sdk/sdk/client/msgraph"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
-	"github.com/hashicorp/terraform-provider-azuread/version"
 )
 
 type contextKey string

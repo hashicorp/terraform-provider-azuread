@@ -6,8 +6,8 @@ package main
 import (
 	"flag"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/hashicorp/terraform-provider-azuread/internal/provider"
 )
 
 func main() {

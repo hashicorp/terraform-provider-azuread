@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+project_name: terraform-provider-azuread
+
+builds:
+  - binary: terraform-provider-azuread
+    id: terraform-provider-azuread
+    env:
+      - CGO_ENABLED=0
+
+    flags:
+      - "-trimpath"
+
+    ldflags:
+      - -s -w -X "main.version={{.RawVersion}}"
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats:
+      - zip
+      - tar.gz
+    ids:
+      - terraform-provider-azuread
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{- .Os }}_{{- .Arch }}"
+
+signs:
+  - artifacts: all
+    id: cosign
+    cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    args: [ "sign-blob", "--bundle=${signature}", "${artifact}", "--yes" ]
+
+changelog:
+  use: github-native
+
+release:
+  prerelease: auto
+  draft: true

@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance/types"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/types"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
 
 // DeleteResourceFunc returns a TestCheckFunc which deletes the resource within Azure
