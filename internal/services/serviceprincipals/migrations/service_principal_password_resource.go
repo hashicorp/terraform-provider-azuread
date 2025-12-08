@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 )
 
 func ResourceServicePrincipalPasswordInstanceResourceV0() *pluginsdk.Resource {

@@ -6,8 +6,8 @@ package directoryroles_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance/check"
 )
 
 type DirectoryRolesDataSource struct{}

@@ -11,6 +11,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
@@ -19,11 +24,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func invitationResource() *pluginsdk.Resource {

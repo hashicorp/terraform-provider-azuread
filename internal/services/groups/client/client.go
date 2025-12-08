@@ -4,6 +4,7 @@
 package client
 
 import (
+	"github.com/glueckkanja/terraform-provider-azuread/internal/common"
 	administrativeunitmemberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/beta/administrativeunitmember"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryobjects/stable/directoryobject"
 	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
@@ -11,7 +12,6 @@ import (
 	memberofBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/memberof"
 	ownerBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner"
 	transitivememberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/transitivemember"
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 // Note: Whilst it is technically possible that we could use both the Stable and Beta APIs for groups (retaining use of

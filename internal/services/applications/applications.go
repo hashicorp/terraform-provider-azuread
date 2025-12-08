@@ -12,6 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/applications"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/credentials"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
@@ -19,10 +23,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/credentials"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 func applicationUpdateRetryFunc() client.RequestRetryFunc {

@@ -9,10 +9,10 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
 
 type SynchronizationJobProvisionOnDemandResource struct{}

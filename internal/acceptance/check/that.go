@@ -9,13 +9,13 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance/helpers"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance/testclient"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/acceptance/types"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/testclient"
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/types"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 type withTenantType struct {

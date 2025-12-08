@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-azuread
+module github.com/glueckkanja/terraform-provider-azuread
 
 require (
 	github.com/google/go-cmp v0.7.0

@@ -4,6 +4,7 @@
 package client
 
 import (
+	"github.com/glueckkanja/terraform-provider-azuread/internal/common"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryobjects/stable/directoryobject"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/oauth2permissiongrants/stable/oauth2permissiongrant"
 	serviceprincipalBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/beta/serviceprincipal"
@@ -11,7 +12,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/owner"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synchronizationjob"
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 type Client struct {

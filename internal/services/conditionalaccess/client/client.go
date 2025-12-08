@@ -4,9 +4,9 @@
 package client
 
 import (
+	"github.com/glueckkanja/terraform-provider-azuread/internal/common"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccessnamedlocation"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccesspolicy"
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 // CAUTION!

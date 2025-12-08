@@ -3,7 +3,7 @@
 
 package approleassignments
 
-import "github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+import "github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 
 type Registration struct{}
 

@@ -4,11 +4,11 @@
 package client
 
 import (
+	"github.com/glueckkanja/terraform-provider-azuread/internal/common"
 	administrativeunitBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/administrativeunits/beta/administrativeunit"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunit"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitmember"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitscopedrolemember"
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 type Client struct {

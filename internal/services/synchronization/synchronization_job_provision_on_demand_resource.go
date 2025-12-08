@@ -8,6 +8,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
@@ -15,9 +18,6 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func synchronizationJobProvisionOnDemandResource() *schema.Resource {

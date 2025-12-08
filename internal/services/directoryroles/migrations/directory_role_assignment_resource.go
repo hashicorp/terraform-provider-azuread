@@ -7,8 +7,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 func ResourceDirectoryRoleAssignmentInstanceResourceV0() *pluginsdk.Resource {

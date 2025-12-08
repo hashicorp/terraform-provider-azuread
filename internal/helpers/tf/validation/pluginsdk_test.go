@@ -6,7 +6,7 @@ package validation
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 func TestValidateFloatInSlice(t *testing.T) {

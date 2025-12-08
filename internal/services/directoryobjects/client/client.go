@@ -4,8 +4,8 @@
 package client
 
 import (
+	"github.com/glueckkanja/terraform-provider-azuread/internal/common"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryobjects/stable/directoryobject"
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 type Client struct {

@@ -10,6 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/applications"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
@@ -17,11 +22,6 @@ import (
 	serviceprincipalBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/beta/serviceprincipal"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func servicePrincipalData() *pluginsdk.Resource {

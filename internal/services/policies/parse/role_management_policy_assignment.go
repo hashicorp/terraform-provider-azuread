@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 type RoleManagementPolicyAssignmentId struct {

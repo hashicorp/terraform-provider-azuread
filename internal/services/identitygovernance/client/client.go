@@ -4,7 +4,7 @@
 package client
 
 import (
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/common"
 
 	// Beta clients
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"

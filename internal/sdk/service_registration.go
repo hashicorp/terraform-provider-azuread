@@ -4,7 +4,7 @@
 package sdk
 
 import (
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 // TypedServiceRegistration is a Service Registration using Types

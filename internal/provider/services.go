@@ -4,22 +4,22 @@
 package provider
 
 import (
-	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryobjects"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/domains"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/invitations"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/policies"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/userflows"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/users"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/sdk"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/administrativeunits"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/applications"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/approleassignments"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/conditionalaccess"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/directoryobjects"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/directoryroles"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/domains"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/groups"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/identitygovernance"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/invitations"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/policies"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/serviceprincipals"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/synchronization"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/userflows"
+	"github.com/glueckkanja/terraform-provider-azuread/internal/services/users"
 )
 
 //go:generate go run ../tools/generator-services/main.go -path=../../

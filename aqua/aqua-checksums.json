@@ -1,0 +1,59 @@
+{
+  "checksums": [
+    {
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.1/goreleaser_Darwin_all.tar.gz",
+      "checksum": "C7B5C26953E59B7E4B50913738C7FF2C371C95B5145BD0A2F93CFA5571D3BE97",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.1/goreleaser_Linux_arm64.tar.gz",
+      "checksum": "97051DE56BDCC4A76B2AA552FA85B633EBFFEA47B44BED85CD3580F12FC82651",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.1/goreleaser_Linux_x86_64.tar.gz",
+      "checksum": "04764528D7344BC5EFAE80EF62467480578A37DB0BB98EA2CEE185E04AEB1A7D",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.1/goreleaser_Windows_arm64.zip",
+      "checksum": "B4BAB00ED850E7E30054A462587FB7076A548CC137C5587694D2B8E5E65DFFA6",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/goreleaser/goreleaser/v2.13.1/goreleaser_Windows_x86_64.zip",
+      "checksum": "25CB285AB0481A9456CA8EF8E39147D4CF018F0990BC560EFA3ED2A14E9D7DA7",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sigstore/cosign/v3.0.2/cosign-darwin-amd64",
+      "checksum": "0FC2B6F16B900ABDFDA3153B11FC435A8CBE3830E8E820FE8AD5FE4149A5B472",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sigstore/cosign/v3.0.2/cosign-darwin-arm64",
+      "checksum": "3823B044DE184DA21E300BC5E20DD29D3FA9243AF3BA70C4A5DA1712F3385D46",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sigstore/cosign/v3.0.2/cosign-linux-amd64",
+      "checksum": "46DBDCB5467A3DFEC2526923D0B3365E40C8D9DC00EC23D5ACA3437449E8CBFD",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sigstore/cosign/v3.0.2/cosign-linux-arm64",
+      "checksum": "17FD784737CA54D7D8A343C82DA6C5D6DBDEE971E66644D923D1B057FB97D7ED",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sigstore/cosign/v3.0.2/cosign-windows-amd64.exe",
+      "checksum": "7A137280D8686665CEB4D8565DF2A0AC63F28031E014CDCAE5D56891A6C8A400",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.444.0/registry.yaml",
+      "checksum": "529A890C667CFC10A3F567D92D381DF66219ADD4BA587BE3EFFBA12D390A1B43AC8051BEBFCC6DCC0E7F84DC40A72F8897764E186F49C3D72B2059E9EE1B1A24",
+      "algorithm": "sha512"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 
 package serviceprincipals
 
-import "github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+import "github.com/glueckkanja/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 
 func schemaAppRolesComputed() *pluginsdk.Schema {
 	return &pluginsdk.Schema{

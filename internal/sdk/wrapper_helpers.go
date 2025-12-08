@@ -6,8 +6,8 @@ package sdk
 import (
 	"fmt"
 
+	"github.com/glueckkanja/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
 
 // combineSchema combines the arguments (user-configurable) and attributes (read-only) schema fields
