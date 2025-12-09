@@ -213,6 +213,20 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	d.SetId(id.String())
 	d.Set("value", newCredential.SecretText.GetOrZero())
 
+	// Wait for the password credential to replicate
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return nil, err
+		}
+		return pointer.To(resp.Model != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Adding password for %s: timed out waiting for replication of new password credential", applicationId)
+	}
+
 	return applicationPasswordResourceRead(ctx, d, meta)
 }
 

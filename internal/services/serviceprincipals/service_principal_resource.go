@@ -498,6 +498,20 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	id := stable.NewServicePrincipalID(*servicePrincipal.Id)
 	d.SetId(id.ID())
 
+	// Wait for the service principal to replicate
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetServicePrincipal(ctx, id, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return nil, err
+		}
+		return pointer.To(resp.Model != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Creating %s: timed out waiting for replication of new service principal", id)
+	}
+
 	// Attempt to patch the newly created service principal with the correct description, which will tell us whether it exists yet
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
 	if resp, err := client.UpdateServicePrincipal(ctx, id, stable.ServicePrincipal{
