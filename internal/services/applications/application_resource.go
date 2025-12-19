@@ -1081,7 +1081,6 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 						for _, servicePrincipal := range *servicePrincipalsResp.Model {
 							// Validate the appId and applicationTemplateId match the application
 							if servicePrincipalId := servicePrincipal.Id; servicePrincipalId != nil && servicePrincipal.AppId.GetOrZero() == app.AppId.GetOrZero() && servicePrincipal.ApplicationTemplateId.GetOrZero() == appTemplateId {
-
 								// Now we have found the application and service principal construct an ApplicationServicePrincipal
 								// struct as we _should_ be getting from the Instantiate API.
 								return stable.ApplicationServicePrincipal{
@@ -1095,7 +1094,6 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 				return nil, "Waiting", nil
 			},
 		}).WaitForStateContext(ctx)
-
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not instantiate application from template")
 		}
@@ -1281,6 +1279,36 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		if _, err = ownerClient.AddOwnerRef(ctx, id, ref, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", id.ApplicationId)
 		}
+
+		// during testing, encountered test failures where additional owners were missing on refresh
+		// to ensure consistency, we'll need to poll
+		ownerId, err := stable.ParseDirectoryObjectID(strings.TrimPrefix(pointer.From(ref.ODataId), client.Client.BaseUri))
+		if err != nil {
+			tf.ErrorDiagF(err, "parsing Directory Object ID (%q)", pointer.From(ref.ODataId))
+		}
+
+		err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			resp, err := ownerClient.ListOwnersComplete(ctx, id, owner.DefaultListOwnersOperationOptions())
+			if err != nil {
+				if response.WasNotFound(resp.LatestHttpResponse) {
+					return pointer.To(false), nil
+				}
+				return pointer.To(false), err
+			}
+
+			for _, o := range resp.Items {
+				if pointer.From(o.DirectoryObject().Id) == ownerId.DirectoryObjectId {
+					log.Printf("additional owner (%q) found", ownerId.DirectoryObjectId)
+					return pointer.To(true), nil
+				}
+			}
+
+			log.Printf("additional owner (%q) not yet present", ownerId.DirectoryObjectId)
+			return pointer.To(false), nil
+		})
+		if err != nil {
+			return tf.ErrorDiagF(err, "waiting for addition of %s", ownerId)
+		}
 	}
 
 	// If the calling principal was not included in configuration, remove it now
@@ -1288,6 +1316,31 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		ownerId := stable.NewApplicationIdOwnerID(id.ApplicationId, callerId)
 		if _, err = ownerClient.RemoveOwnerRef(ctx, ownerId, owner.DefaultRemoveOwnerRefOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not remove initial owner from application with object ID: %q", id.ApplicationId)
+		}
+
+		// during testing, encountered test failures where calling principal was still present on refresh
+		// to ensure consistency, we'll need to poll
+		err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			resp, err := ownerClient.ListOwnersComplete(ctx, id, owner.DefaultListOwnersOperationOptions())
+			if err != nil {
+				if response.WasNotFound(resp.LatestHttpResponse) {
+					return pointer.To(false), nil
+				}
+				return pointer.To(false), err
+			}
+
+			for _, o := range resp.Items {
+				if pointer.From(o.DirectoryObject().Id) == ownerId.DirectoryObjectId {
+					log.Printf("calling principal owner (%q) still exists", ownerId.DirectoryObjectId)
+					return pointer.To(false), nil
+				}
+			}
+
+			log.Printf("calling principal owner (%q) gone", ownerId.DirectoryObjectId)
+			return pointer.To(true), nil
+		})
+		if err != nil {
+			return tf.ErrorDiagF(err, "waiting for removal of %s", ownerId)
 		}
 	}
 
@@ -1531,8 +1584,38 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	properties.Api = api
 
-	if _, err = client.UpdateApplication(ctx, *id, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Could not update application with object ID: %q", id.ApplicationId)
+	// Due to eventual consistency, we must ensure that the API is returning the modified/expected values.
+	// checking each changed value is tedious, so instead we'll send 2 updates, one with a modified DisplayName
+	// once we receive the correct DisplayName, the updates must have been applied.
+	// TODO: this **should** work but is untested due to our inability to repro EC (as of 2025-12-19) at the moment. May need to handle any potential 409s on the PATCH requests using a RetryFunc
+	for _, name := range []string{fmt.Sprintf("TERRAFORM_UPDATE_%s", displayName), displayName} {
+		properties.DisplayName = nullable.Value(name)
+		if _, err = client.UpdateApplication(ctx, *id, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+			return tf.ErrorDiagF(err, "Could not update application with object ID: %q", id.ApplicationId)
+		}
+	}
+
+	err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return pointer.To(false), err
+		}
+
+		if resp.Model == nil {
+			return pointer.To(false), nil
+		}
+
+		if resp.Model.DisplayName.GetOrZero() != displayName {
+			return pointer.To(false), nil
+		}
+
+		return pointer.To(true), nil
+	})
+	if err != nil {
+		return tf.ErrorDiagF(err, "waiting for updates to %s to take effect", id)
 	}
 
 	if d.HasChange("oauth2_post_response_required") {
@@ -1569,12 +1652,16 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 			if _, err = ownerClient.AddOwnerRef(ctx, *id, request, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", id.ApplicationId)
 			}
+
+			// TODO: consistency check to ensure owner was added
 		}
 
 		for _, o := range ownersForRemoval {
 			if _, err = ownerClient.RemoveOwnerRef(ctx, stable.NewApplicationIdOwnerID(id.ApplicationId, o), owner.DefaultRemoveOwnerRefOperationOptions()); err != nil {
-				return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", id.ApplicationId)
+				return tf.ErrorDiagF(err, "Could not remove owners from application with object ID: %q", id.ApplicationId)
 			}
+
+			// TODO: consistency check to ensure owner was removed
 		}
 	}
 
