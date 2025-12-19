@@ -1587,44 +1587,68 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 	// Due to eventual consistency, we must ensure that the API is returning the modified/expected values.
 	// checking each changed value is tedious, so instead we'll send 2 updates, one with a modified DisplayName
 	// once we receive the correct DisplayName, the updates must have been applied.
-	// TODO: this **should** work but is untested due to our inability to repro EC (as of 2025-12-19) at the moment. May need to handle any potential 409s on the PATCH requests using a RetryFunc
 	for _, name := range []string{fmt.Sprintf("TERRAFORM_UPDATE_%s", displayName), displayName} {
 		properties.DisplayName = nullable.Value(name)
 		if _, err = client.UpdateApplication(ctx, *id, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not update application with object ID: %q", id.ApplicationId)
 		}
-	}
 
-	err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions())
-		if err != nil {
-			if response.WasNotFound(resp.HttpResponse) {
+		err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions())
+			if err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
+					return pointer.To(false), nil
+				}
+				return nil, err
+			}
+
+			if resp.Model == nil {
 				return pointer.To(false), nil
 			}
-			return pointer.To(false), err
-		}
 
-		if resp.Model == nil {
-			return pointer.To(false), nil
-		}
+			if resp.Model.DisplayName.GetOrZero() != name {
+				return pointer.To(false), nil
+			}
 
-		if resp.Model.DisplayName.GetOrZero() != displayName {
-			return pointer.To(false), nil
+			return pointer.To(true), nil
+		})
+		if err != nil {
+			return tf.ErrorDiagF(err, "waiting for updates to %s to take effect", id)
 		}
-
-		return pointer.To(true), nil
-	})
-	if err != nil {
-		return tf.ErrorDiagF(err, "waiting for updates to %s to take effect", id)
 	}
 
 	if d.HasChange("oauth2_post_response_required") {
+		oauth2PostResponseRequired := d.Get("oauth2_post_response_required").(bool)
+
 		// API bug: the v1.0 API does not recognize the `oauth2RequiredPostResponse` field, so set it using the beta API
 		// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
 		if _, err := clientBeta.UpdateApplication(ctx, betaId, beta.Application{
-			OAuth2RequirePostResponse: pointer.To(d.Get("oauth2_post_response_required").(bool)),
+			OAuth2RequirePostResponse: pointer.To(oauth2PostResponseRequired),
 		}, applicationBeta.DefaultUpdateApplicationOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Failed to set `oauth2_post_response_required` for %s", id)
+		}
+
+		err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			resp, err := clientBeta.GetApplication(ctx, betaId, applicationBeta.DefaultGetApplicationOperationOptions())
+			if err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
+					return pointer.To(false), nil
+				}
+				return nil, err
+			}
+
+			if resp.Model == nil {
+				return pointer.To(false), nil
+			}
+
+			if pointer.From(resp.Model.OAuth2RequirePostResponse) != oauth2PostResponseRequired {
+				return pointer.To(false), nil
+			}
+
+			return pointer.To(true), nil
+		})
+		if err != nil {
+			return tf.ErrorDiagF(err, "waiting for updates to %s to take effect", id)
 		}
 	}
 

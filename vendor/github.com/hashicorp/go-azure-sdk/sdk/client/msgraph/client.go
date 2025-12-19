@@ -74,6 +74,9 @@ func (c *Client) NewRequest(ctx context.Context, input client.RequestOptions) (*
 	req.Client = c
 	query := url.Values{}
 
+	// TODO: remove, this is required for now to test with eventual consistency
+	req.Header.Add("ConsistencyLevel", "Eventual")
+
 	if input.OptionsObject != nil {
 		if h := input.OptionsObject.ToHeaders(); h != nil {
 			for k, v := range h.Headers() {
