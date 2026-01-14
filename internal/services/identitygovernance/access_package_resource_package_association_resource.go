@@ -171,6 +171,14 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 		return nil
 	}
 
+	if roleScope.Id != nil {
+		newId := parse.NewAccessPackageResourcePackageAssociationID(resourceId.AccessPackageId, *roleScope.Id, resourceId.OriginId, resourceId.AccessType)
+		if newId.ID() != resourceId.ID() {
+			log.Printf("[DEBUG] %s ID has changed from %q to %q - updating state!", id, d.Id(), newId)
+			d.SetId(newId.ID())
+		}
+	}
+
 	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(resourceId.AccessPackageId)
 
 	accessPackageResp, err := accessPackageClient.GetEntitlementManagementAccessPackage(ctx, accessPackageId, entitlementmanagementaccesspackage.DefaultGetEntitlementManagementAccessPackageOperationOptions())
@@ -194,6 +202,7 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 
 func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
+	accessPackageClient := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
 	resourceId, err := parse.AccessPackageResourcePackageAssociationID(d.Id())
 	if err != nil {
@@ -202,6 +211,27 @@ func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, 
 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
 
+	if _, err = client.DeleteEntitlementManagementAccessPackageResourceRoleScope(ctx, id, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultDeleteEntitlementManagementAccessPackageResourceRoleScopeOperationOptions()); err != nil {
+		log.Printf("[DEBUG] %s ID was not found for deletion, falling back to old id format", id)
+	}
+
+	roleScope, err := GetAccessPackageResourcesRoleScope(ctx, accessPackageClient, id)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
+	}
+
+	if roleScope == nil {
+		err = errors.New("roleScope was nil")
+		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
+	}
+
+	if roleScope.AccessPackageResourceRole == nil || roleScope.AccessPackageResourceRole.Id == nil ||
+		roleScope.AccessPackageResourceScope == nil || roleScope.AccessPackageResourceScope.Id == nil {
+		err = errors.New("roleScope does not contain resourceRole or resourceScope ID")
+		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
+	}
+
+	id = beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, fmt.Sprintf("%s_%s", *roleScope.AccessPackageResourceRole.Id, *roleScope.AccessPackageResourceScope.Id))
 	if _, err = client.DeleteEntitlementManagementAccessPackageResourceRoleScope(ctx, id, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultDeleteEntitlementManagementAccessPackageResourceRoleScopeOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}

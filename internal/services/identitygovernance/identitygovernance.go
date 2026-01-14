@@ -42,6 +42,18 @@ func GetAccessPackageResourcesRoleScope(ctx context.Context, client *entitlement
 		if roleScope.Id != nil && *roleScope.Id == id.AccessPackageResourceRoleScopeId {
 			return &roleScope, nil
 		}
+		if strings.Contains(id.AccessPackageResourceRoleScopeId, "_") {
+			parts := strings.Split(id.AccessPackageResourceRoleScopeId, "_")
+			if len(parts) != 2 {
+				continue
+			}
+			accessPackageResourceRoleId := parts[0]
+			accessPackageResourceScopeId := parts[1]
+			if roleScope.AccessPackageResourceRole != nil && roleScope.AccessPackageResourceRole.Id != nil && *roleScope.AccessPackageResourceRole.Id == accessPackageResourceRoleId &&
+				roleScope.AccessPackageResourceScope != nil && roleScope.AccessPackageResourceScope.Id != nil && *roleScope.AccessPackageResourceScope.Id == accessPackageResourceScopeId {
+				return &roleScope, nil
+			}
+		}
 	}
 
 	return nil, nil
