@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
@@ -411,19 +410,12 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 		tags = tf.ExpandStringSlice(d.Get("tags").(*pluginsdk.Set).List())
 	}
 
-	// Set a temporary description as we'll attempt to patch the service principal with the correct description after creating it
-	uid, err := uuid.GenerateUUID()
-	if err != nil {
-		return tf.ErrorDiagF(err, "Failed to generate a UUID")
-	}
-	tempDescription := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
-
 	properties := stable.ServicePrincipal{
 		AccountEnabled:             nullable.Value(d.Get("account_enabled").(bool)),
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*pluginsdk.Set).List()),
 		AppId:                      nullable.Value(clientId),
 		AppRoleAssignmentRequired:  pointer.To(d.Get("app_role_assignment_required").(bool)),
-		Description:                nullable.NoZero(tempDescription),
+		Description:                nullable.NoZero(d.Get("description").(string)),
 		LoginUrl:                   nullable.NoZero(d.Get("login_url").(string)),
 		Notes:                      nullable.NoZero(d.Get("notes").(string)),
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*pluginsdk.Set).List()),
@@ -498,15 +490,18 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	id := stable.NewServicePrincipalID(*servicePrincipal.Id)
 	d.SetId(id.ID())
 
-	// Attempt to patch the newly created service principal with the correct description, which will tell us whether it exists yet
-	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
-	if resp, err := client.UpdateServicePrincipal(ctx, id, stable.ServicePrincipal{
-		Description: nullable.NoZero(d.Get("description").(string)),
-	}, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagF(err, "Timed out whilst waiting for new service principal to be replicated in Azure AD")
+	// Wait for the service principal to be available
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetServicePrincipal(ctx, id, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return pointer.To(false), err
 		}
-		return tf.ErrorDiagF(err, "Failed to patch service principal after creating")
+		return pointer.To(resp.Model != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "waiting for creation of %s", id)
 	}
 
 	// Add any remaining owners after the service principal is created
