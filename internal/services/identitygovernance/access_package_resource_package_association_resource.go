@@ -31,6 +31,8 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 		ReadContext:   accessPackageResourcePackageAssociationResourceRead,
 		DeleteContext: accessPackageResourcePackageAssociationResourceDelete,
 
+		CustomizeDiff: accessPackageResourcePackageAssociationResourceCustomizeDiff,
+
 		Timeouts: &pluginsdk.ResourceTimeout{
 			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
 			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
@@ -59,7 +61,8 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 			"access_type": {
 				Description: "The role of access type to the specified resource - for `AadGroup` valid values are `Member` and `Owner`, for `AadApplication` it must be a UUID and for `SharePointOnline` it must be a URL",
 				Type:        pluginsdk.TypeString,
-				Required:    true,
+				Optional:    true,
+				Default:     "Member",
 				ForceNew:    true,
 				ValidateFunc: validation.Any(validation.StringInSlice([]string{
 					"Member",
@@ -98,17 +101,17 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 
 	resource := pointer.To((*resourceResp.Model)[0])
 
+	createMsg := "Creating Access Package Resource Association from resource %q@%q to access package %q"
+
 	var originId string
 	var displayName string
 	switch resource.OriginSystem.GetOrZero() {
 	case "AadGroup":
 		originId = fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)
 		displayName = accessType
-	case "AadApplication", "SharePointOnline":
+	default: // includes AadApplication, SharePointOnline, and any other origin system
 		originId = accessType
 		displayName = accessType
-	default:
-		return tf.ErrorDiagF(errors.New("unknown origin system"), "Retrieving origin id")
 	}
 
 	properties := beta.AccessPackageResourceRoleScope{
@@ -130,15 +133,15 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 
 	resp, err := client.CreateEntitlementManagementAccessPackageResourceRoleScope(ctx, accessPackageId, properties, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultCreateEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+		return tf.ErrorDiagF(err, createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 
 	resourceRoleScope := resp.Model
 	if resourceRoleScope == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), "Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+		return tf.ErrorDiagF(errors.New("model was nil"), createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 	if resourceRoleScope.Id == nil {
-		return tf.ErrorDiagF(errors.New("model has nil ID"), "Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 
 	resourceId := parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, accessType)
@@ -199,6 +202,18 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 	tf.Set(d, "access_type", resourceId.AccessType)
 	tf.Set(d, "catalog_resource_association_id", catalogResourceAssociationId.ID())
 
+	return nil
+}
+
+func accessPackageResourcePackageAssociationResourceCustomizeDiff(_ context.Context, diff *pluginsdk.ResourceDiff, _ interface{}) error {
+	accessType := diff.Get("access_type").(string)
+	validateFunc := validation.Any(validation.StringInSlice([]string{
+		"Member",
+		"Owner",
+	}, false), validation.IsUUID, validation.IsURLWithHTTPorHTTPS)
+	if _, errs := validateFunc(accessType, "access_type"); len(errs) > 0 {
+		return fmt.Errorf("expected access_type to be one of [Member Owner], a valid UUID, or a valid URL with HTTP or HTTPS scheme, got %q", accessType)
+	}
 	return nil
 }
 

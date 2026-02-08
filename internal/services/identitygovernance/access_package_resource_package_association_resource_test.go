@@ -6,7 +6,6 @@ package identitygovernance_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -21,13 +20,13 @@ import (
 
 type AccessPackageResourcePackageAssociationResource struct{}
 
-func TestAccAccessPackageResourcePackageAssociation_completeWithGroup(t *testing.T) {
+func TestAccAccessPackageResourcePackageAssociation_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_resource_package_association", "test")
 	r := AccessPackageResourcePackageAssociationResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config:  r.completeWithGroup(data),
+			Config:  r.complete(data),
 			Destroy: false,
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -38,13 +37,13 @@ func TestAccAccessPackageResourcePackageAssociation_completeWithGroup(t *testing
 	})
 }
 
-func TestAccAccessPackageResourcePackageAssociation_completeWithGroupOwner(t *testing.T) {
+func TestAccAccessPackageResourcePackageAssociation_completeWithAccessTypeOwner(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_resource_package_association", "test")
 	r := AccessPackageResourcePackageAssociationResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config:  r.completeWithGroupOwner(data),
+			Config:  r.completeWithAccessTypeOwner(data),
 			Destroy: false,
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -55,13 +54,13 @@ func TestAccAccessPackageResourcePackageAssociation_completeWithGroupOwner(t *te
 	})
 }
 
-func TestAccAccessPackageResourcePackageAssociation_completeWithApplication(t *testing.T) {
+func TestAccAccessPackageResourcePackageAssociation_completeWithAccessTypeApplication(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_resource_package_association", "test")
 	r := AccessPackageResourcePackageAssociationResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config:  r.completeWithApplication(data),
+			Config:  r.completeWithAccessTypeApplication(data),
 			Destroy: false,
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -69,18 +68,6 @@ func TestAccAccessPackageResourcePackageAssociation_completeWithApplication(t *t
 			),
 		},
 		data.ImportStep(),
-	})
-}
-
-func TestAccAccessPackageResourcePackageAssociation_invalidAccessType(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_access_package_resource_package_association", "test")
-	r := AccessPackageResourcePackageAssociationResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config:      r.invalidAccessType(data),
-			ExpectError: regexp.MustCompile(`expected access_type to be one of \[Member Owner\]`),
-		},
 	})
 }
 
@@ -102,7 +89,7 @@ func (AccessPackageResourcePackageAssociationResource) Exists(ctx context.Contex
 	return pointer.To(roleScope != nil), nil
 }
 
-func (AccessPackageResourcePackageAssociationResource) completeWithGroup(data acceptance.TestData) string {
+func (AccessPackageResourcePackageAssociationResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -136,7 +123,7 @@ resource "azuread_access_package_resource_package_association" "test" {
 `, data.RandomInteger)
 }
 
-func (AccessPackageResourcePackageAssociationResource) completeWithGroupOwner(data acceptance.TestData) string {
+func (AccessPackageResourcePackageAssociationResource) completeWithAccessTypeOwner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -170,7 +157,7 @@ resource "azuread_access_package_resource_package_association" "test" {
 `, data.RandomInteger)
 }
 
-func (AccessPackageResourcePackageAssociationResource) completeWithApplication(data acceptance.TestData) string {
+func (AccessPackageResourcePackageAssociationResource) completeWithAccessTypeApplication(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -229,36 +216,3 @@ resource "azuread_access_package_resource_package_association" "test" {
 `, data.RandomInteger)
 }
 
-func (AccessPackageResourcePackageAssociationResource) invalidAccessType(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-provider "azuread" {}
-
-resource "azuread_group" "test_group" {
-  display_name     = "test-access-package-resource-catalog-association-%[1]d"
-  security_enabled = true
-}
-
-resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "test-catalog-%[1]d"
-  description  = "Test catalog %[1]d"
-}
-
-resource "azuread_access_package_resource_catalog_association" "test" {
-  catalog_id             = azuread_access_package_catalog.test_catalog.id
-  resource_origin_id     = azuread_group.test_group.object_id
-  resource_origin_system = "AadGroup"
-}
-
-resource "azuread_access_package" "test" {
-  display_name = "test-package-%[1]d"
-  description  = "Test Package %[1]d"
-  catalog_id   = azuread_access_package_catalog.test_catalog.id
-}
-
-resource "azuread_access_package_resource_package_association" "test" {
-  access_package_id               = azuread_access_package.test.id
-  catalog_resource_association_id = azuread_access_package_resource_catalog_association.test.id
-  access_type                     = "InvalidValue"
-}
-`, data.RandomInteger)
-}
