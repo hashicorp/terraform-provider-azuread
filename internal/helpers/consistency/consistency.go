@@ -121,3 +121,44 @@ func WaitForUpdateWithTimeoutDelayStart(ctx context.Context, timeout, delay time
 	}
 	return res.(bool), err
 }
+
+func WaitForCreation(ctx context.Context, f ChangeFunc) error {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return errors.New("context has no deadline")
+	}
+
+	timeout := time.Until(deadline)
+	_, err := WaitForCreationWithTimeout(ctx, timeout, f)
+
+	return err
+}
+
+func WaitForCreationWithTimeout(ctx context.Context, timeout time.Duration, f ChangeFunc) (bool, error) {
+	res, err := (&pluginsdk.StateChangeConf{
+		Pending:                   []string{"Waiting"},
+		Target:                    []string{"Created"},
+		Timeout:                   timeout,
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 3, // Require 3 successful checks
+		Refresh: func() (interface{}, string, error) {
+			exists, err := f(ctx)
+			if err != nil {
+				return nil, "Error", fmt.Errorf("checking resource: %+v", err)
+			}
+			if exists == nil {
+				return nil, "Error", fmt.Errorf("checking resource: exists was nil")
+			}
+			if *exists {
+				return "stub", "Created", nil
+			}
+			return "stub", "Waiting", nil
+		},
+	}).WaitForStateContext(ctx)
+
+	if res == nil {
+		return false, err
+	}
+
+	return true, err
+}
