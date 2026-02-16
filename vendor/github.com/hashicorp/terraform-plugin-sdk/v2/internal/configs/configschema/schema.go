@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package configschema
@@ -95,6 +95,16 @@ type Attribute struct {
 	// Practitioners that choose a value for this attribute with older
 	// versions of Terraform will receive an error.
 	WriteOnly bool
+
+	// RequiredForImport, if set to true, specifies that an omitted or null value is
+	// not permitted when importing by the identity. This field conflicts with OptionalForImport.
+	// Only valid for identity schemas.
+	RequiredForImport bool
+
+	// OptionalForImport, if set to true, specifies that an omitted or null value is
+	// permitted when importing by the identity. This field conflicts with RequiredForImport.
+	// Only valid for identity schemas.
+	OptionalForImport bool
 }
 
 // NestedBlock represents the embedding of one block within another.
