@@ -20,9 +20,11 @@ jobs:
       - run: make docs-lint
 
   save-artifacts-on-fail:
-    if: ${{ needs.docs-lint.result }} == 'failure'
+    needs: [ docs-lint ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/save-artifacts.yaml
 
   comment-on-fail:
-    if: ${{ needs.depscheck.result }} == 'failure'
+    needs: [ docs-lint ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/comment-failure.yaml

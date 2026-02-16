@@ -29,9 +29,11 @@ jobs:
       - run: GOARCH=386 GOOS=linux go build -o 32bitbuild .
 
   save-artifacts-on-fail:
-    if: ${{ needs.compatibility-32bit-test.result }} == 'failure'
+    needs: [ compatibility-32bit-test ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/save-artifacts.yaml
 
   comment-on-fail:
-    if: ${{ needs.compatibility-32bit-test.result }} == 'failure'
+    needs: [ compatibility-32bit-test ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/comment-failure.yaml
