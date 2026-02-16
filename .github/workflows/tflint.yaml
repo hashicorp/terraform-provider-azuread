@@ -29,9 +29,11 @@ jobs:
       - run: make tflint
 
   save-artifacts-on-fail:
-    if: ${{ needs.tflint.result }} == 'failure'
+    needs: [ tflint ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/save-artifacts.yaml
 
   comment-on-fail:
-    if: ${{ needs.tflint.result }} == 'failure'
+    needs: [ tflint ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/comment-failure.yaml
