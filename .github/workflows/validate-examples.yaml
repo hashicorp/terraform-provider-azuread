@@ -29,9 +29,11 @@ jobs:
       - run: make validate-examples
 
   save-artifacts-on-fail:
-    if: ${{ needs.validate-examples.result }} == 'failure'
+    needs: [ validate-examples ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/save-artifacts.yaml
 
   comment-on-fail:
-    if: ${{ needs.validate-examples.result }} == 'failure'
+    needs: [ validate-examples ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/comment-failure.yaml
