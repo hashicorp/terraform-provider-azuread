@@ -1,3 +1,9 @@
+## 3.8.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_group_role_management_policy` - added Eventual Consistency check to avoid misreporting not found during create [GH-1836]
+
 ## 3.7.0 (November 18, 2025)
 
 FEATURES:
