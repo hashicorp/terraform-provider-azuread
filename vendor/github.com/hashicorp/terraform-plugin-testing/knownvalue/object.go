@@ -106,7 +106,7 @@ func createDeltaString[T any, V any](mapA map[string]T, mapB map[string]V, msgPr
 	for i, k := range deltaKeys {
 		if i == 0 {
 			deltaMsg += msgPrefix
-		} else if i != 0 {
+		} else {
 			deltaMsg += ", "
 		}
 		deltaMsg += fmt.Sprintf("%q", k)
