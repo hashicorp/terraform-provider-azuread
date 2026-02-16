@@ -5,7 +5,8 @@ on:
     types: ["opened", "synchronize"]
     paths:
       - '.github/workflows/provider-test.yaml'
-      - 'internal/**.go'
+      - 'go.mod'
+      - 'internal/provider/*.go'
       - 'vendor/github.com/hashicorp/go-azure-sdk/sdk/auth/**'
       - 'vendor/github.com/hashicorp/go-azure-sdk/sdk/environments/**'
 
@@ -43,8 +44,13 @@ jobs:
         with:
           go-version-file: ./.go-version
 
-#      - name: Azure CLI login
-#        run: az login --output none --username="${{ secrets.AZCLI_USERNAME }}" --password="${{ secrets.AZCLI_PASSWORD }}"
+      - name: Azure CLI login (using OIDC)
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
 
       - name: Set OIDC Token
         run: |
@@ -84,9 +90,11 @@ jobs:
         if: always()
 
   save-artifacts-on-fail:
-    if: ${{ needs.secrets-check.result }} == 'failure' || ${{ needs.provider-tests.result }} == 'failure'
+    needs: [ provider-tests, secrets-check ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/save-artifacts.yaml
 
   comment-on-fail:
-    if: ${{ needs.secrets-check.result }} == 'failure'
+    needs: [ provider-tests, secrets-check ]
+    if: ${{ failure() }}
     uses: ./.github/workflows/comment-failure.yaml
