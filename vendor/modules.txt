@@ -91,6 +91,11 @@ github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/member
 github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/memberof
 github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner
 github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/transitivemember
+github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/stable/group
+github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/stable/member
+github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/stable/memberof
+github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/stable/owner
+github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/stable/transitivemember
 github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccessnamedlocation
 github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccesspolicy
 github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/userflowattribute

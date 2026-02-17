@@ -44,9 +44,9 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 		CustomizeDiff: groupWithoutMembersResourceCustomizeDiff,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
-			Create: pluginsdk.DefaultTimeout(20 * time.Minute),
+			Create: pluginsdk.DefaultTimeout(30 * time.Minute),
 			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
-			Update: pluginsdk.DefaultTimeout(20 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(30 * time.Minute),
 			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -311,6 +311,8 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 
 func groupWithoutMembersResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
 	client := meta.(*clients.Client).Groups.GroupClientBeta
+	ctx, cancel := context.WithTimeout(ctx, time.Minute*5)
+	defer cancel()
 
 	// Check for duplicate names
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
@@ -760,16 +762,16 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 				}
 
 				// Wait for Description to be removed
-				if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-					resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
-					if err != nil {
-						return nil, err
-					}
-					group := resp.Model
-					return pointer.To(group != nil && group.Description.IsNull()), nil
-				}); err != nil {
-					return tf.ErrorDiagF(err, "Waiting to remove `description` for %s", id)
-				}
+				// if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				// 	resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				// 	group := resp.Model
+				// 	return pointer.To(group != nil && group.Description.IsNull()), nil
+				// }); err != nil {
+				// 	return tf.ErrorDiagF(err, "Waiting to remove `description` for %s", id)
+				// }
 			}
 		}
 

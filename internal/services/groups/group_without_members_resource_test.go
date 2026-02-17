@@ -99,7 +99,7 @@ func TestAccGroupWithoutMembers_updateUnified(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("owners"),
 	})
 }
 

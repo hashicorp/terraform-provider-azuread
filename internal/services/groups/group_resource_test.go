@@ -382,7 +382,7 @@ func TestAccGroup_provisioning(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("proxy_address"), // Test Env policy forces additional entries :(
 	})
 }
 
