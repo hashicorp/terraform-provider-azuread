@@ -63,7 +63,7 @@ func TestAccGroupWithoutMembers_completeUnified(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("proxy_addresses"), // additional entries added by Azure Test Tenant enforced settings
 	})
 }
 
@@ -327,14 +327,14 @@ func TestAccGroupWithoutMembers_visibility(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("proxy_addresses"), // additional entries added by Azure Test Tenant enforced settings
 		{
 			Config: r.visibility(data, "Public"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("proxy_addresses"), // additional entries added by Azure Test Tenant enforced settings
 	})
 }
 
