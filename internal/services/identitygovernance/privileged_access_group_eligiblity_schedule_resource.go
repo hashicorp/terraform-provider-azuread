@@ -6,6 +6,7 @@ package identitygovernance
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -124,7 +125,11 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Read() sdk.ResourceFun
 
 			id := stable.NewIdentityGovernancePrivilegedAccessGroupEligibilityScheduleID(resourceId.ID())
 
-			scheduleResp, err := scheduleClient.GetPrivilegedAccessGroupEligibilitySchedule(ctx, id, privilegedaccessgroupeligibilityschedule.DefaultGetPrivilegedAccessGroupEligibilityScheduleOperationOptions())
+			scheduleResp, err := scheduleClient.GetPrivilegedAccessGroupEligibilitySchedule(ctx, id, privilegedaccessgroupeligibilityschedule.GetPrivilegedAccessGroupEligibilityScheduleOperationOptions{
+				RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+					return response.WasStatusCode(resp, http.StatusTooManyRequests), nil
+				},
+			})
 			if err != nil && !response.WasNotFound(scheduleResp.HttpResponse) {
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
@@ -141,6 +146,9 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Read() sdk.ResourceFun
 					Field:     "createdDateTime",
 					Direction: odata.Descending,
 				}),
+				RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+					return response.WasStatusCode(resp, http.StatusTooManyRequests), nil
+				},
 			}
 			requestsResp, err := requestsClient.ListPrivilegedAccessGroupEligibilityScheduleRequests(ctx, options)
 			if err != nil {
