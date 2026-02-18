@@ -111,6 +111,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
+
+									"application_filter": schemaConditionalAccessFilter(),
 								},
 							},
 						},
