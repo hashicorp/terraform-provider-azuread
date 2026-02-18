@@ -139,10 +139,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Read() sdk.ResourceFunc
 			id := stable.NewIdentityGovernancePrivilegedAccessGroupAssignmentScheduleID(resourceId.ID())
 
 			scheduleResp, err := scheduleClient.GetPrivilegedAccessGroupAssignmentSchedule(ctx, id, privilegedaccessgroupassignmentschedule.DefaultGetPrivilegedAccessGroupAssignmentScheduleOperationOptions())
-			if err != nil {
-				if response.WasNotFound(scheduleResp.HttpResponse) {
-					return metadata.MarkAsGone(id)
-				}
+			if err != nil && !response.WasNotFound(scheduleResp.HttpResponse) {
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
 
