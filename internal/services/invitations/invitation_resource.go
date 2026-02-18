@@ -204,6 +204,17 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 		return tf.ErrorDiagF(err, "Failed to patch guest user (2) after creating invitation")
 	}
 
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		if u, err := userClient.GetUser(ctx, userId, user.DefaultGetUserOperationOptions()); err != nil {
+			if !response.WasNotFound(u.HttpResponse) {
+				return pointer.To(false), fmt.Errorf("update invitation for %s: %+v", userId, err)
+			}
+		}
+		return pointer.To(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for creation of invited %s", userId)
+	}
+
 	return invitationResourceRead(ctx, d, meta)
 }
 
