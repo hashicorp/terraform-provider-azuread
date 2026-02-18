@@ -762,16 +762,16 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 				}
 
 				// Wait for Description to be removed
-				// if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-				// 	resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
-				// 	if err != nil {
-				// 		return nil, err
-				// 	}
-				// 	group := resp.Model
-				// 	return pointer.To(group != nil && group.Description.IsNull()), nil
-				// }); err != nil {
-				// 	return tf.ErrorDiagF(err, "Waiting to remove `description` for %s", id)
-				// }
+				if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+					resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
+					if err != nil {
+						return nil, err
+					}
+					group := resp.Model
+					return pointer.To(group != nil && group.Description.IsNull()), nil
+				}); err != nil {
+					return tf.ErrorDiagF(err, "Waiting to remove `description` for %s", id)
+				}
 			}
 		}
 
