@@ -1,3 +1,24 @@
+## 3.8.0 (February 19, 2026)
+
+ENHANCEMENTS:
+
+* dependencies: update `go` version to `1.25.5` ([#1842](https://github.com/hashicorp/terraform-provider-azuread/issues/1842))
+* dependencies: update `go-azure-helpers` to `v0.76.2` ([#1842](https://github.com/hashicorp/terraform-provider-azuread/issues/1842))
+* dependencies: update `go-azure-sdk` to `v0.20260212.1143955` ([#1842](https://github.com/hashicorp/terraform-provider-azuread/issues/1842))
+* dependencies: update `hashicorp/terraform-plugin-sdk/v2` to `v2.38.2` ([#1842](https://github.com/hashicorp/terraform-provider-azuread/issues/1842))
+* dependencies: update `hashicorp/terraform-plugin-testing` to `v1.14.0` ([#1842](https://github.com/hashicorp/terraform-provider-azuread/issues/1842))
+* dependencies: update `x/crypto` to `v0.48.0` ([#1842](https://github.com/hashicorp/terraform-provider-azuread/issues/1842))
+* `azuread_group` - increase default timeout for Create and Update to 30 minutes ([#1541](https://github.com/hashicorp/terraform-provider-azuread/issues/1541))
+* `azuread_group_without_members` - increase default timeout for Create and Update to 30 minutes ([#1541](https://github.com/hashicorp/terraform-provider-azuread/issues/1541))
+
+BUG FIXES:
+
+* `azuread_group` - add a deadline to the context used in the CustomizeDiff ([#1541](https://github.com/hashicorp/terraform-provider-azuread/issues/1541))
+* `azuread_group_without_members` - add a deadline to the context used in the CustomizeDiff ([#1541](https://github.com/hashicorp/terraform-provider-azuread/issues/1541))
+* `azuread_group_role_management_policy` - added Eventual Consistency check to avoid misreporting not found during create ([#1836](https://github.com/hashicorp/terraform-provider-azuread/issues/1836))
+* `azuread_invitation` - added Eventual Consistency check to avoid misreporting not found during create ([#1844](https://github.com/hashicorp/terraform-provider-azuread/issues/1844))
+* `azuread_privileged_access_group_assignment_schedule` - added Eventual Consistency check to avoid misreporting not found during create ([#1845](https://github.com/hashicorp/terraform-provider-azuread/issues/1845))
+
 ## 3.7.0 (November 18, 2025)
 
 FEATURES:
