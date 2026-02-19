@@ -8,9 +8,13 @@ ENHANCEMENTS:
 * dependencies: update `hashicorp/terraform-plugin-sdk/v2` to `v2.38.2` [GH-1842]
 * dependencies: update `hashicorp/terraform-plugin-testing` to `v1.14.0` [GH-1842]
 * dependencies: update `x/crypto` to `v0.48.0` [GH-1842]
+* `azuread_group` - increase default timeout for Create and Update to 30 minutes [GH-1541]
+* `azuread_group_without_members` - increase default timeout for Create and Update to 30 minutes [GH-1541]
 
 BUG FIXES:
 
+* `azuread_group` - add a deadline to the context used in the CustomizeDiff [GH-1541]
+* `azuread_group_without_members` - add a deadline to the context used in the CustomizeDiff [GH-1541]
 * `azuread_group_role_management_policy` - added Eventual Consistency check to avoid misreporting not found during create [GH-1836]
 * `azuread_invitation` - added Eventual Consistency check to avoid misreporting not found during create [GH-1844]
 * `azuread_privileged_access_group_assignment_schedule` - added Eventual Consistency check to avoid misreporting not found during create [GH-1845]
