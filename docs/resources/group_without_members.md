@@ -160,9 +160,9 @@ In addition to all arguments above, the following attributes are exported:
 
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 20 minutes) Used when creating the resource.
+* `create` - (Defaults to 30 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
-* `update` - (Defaults to 20 minutes) Used when updating the resource.
+* `update` - (Defaults to 30 minutes) Used when updating the resource.
 * `delete` - (Defaults to 5 minutes) Used when deleting the resource.
 
 ## Import
