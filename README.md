@@ -10,7 +10,7 @@
 - [AzureAD Provider Documentation](https://terraform.io/docs/providers/azuread/)
 - [AzureAD Provider Usage Examples](https://github.com/hashicorp/terraform-provider-azuread/tree/main/examples)
 - [Learn Tutorial](https://learn.hashicorp.com/tutorials/terraform/azure-ad)
-- [Slack Workspace for Contributors](https://terraform-azure.slack.com) ([Request Invite](https://join.slack.com/t/terraform-azure/shared_invite/enQtNDMzNjQ5NzcxMDc3LWNiY2ZhNThhNDgzNmY0MTM0N2MwZjE4ZGU0MjcxYjUyMzRmN2E5NjZhZmQ0ZTA1OTExMGNjYzA4ZDkwZDYxNDE))
+- [Slack Workspace for Contributors](https://terraform-azure.slack.com) ([Request Invite](https://join.slack.com/t/terraform-azure/shared_invite/zt-3qcv2dj6v-aKas6O6FSBZaxSSZph~Uvg))
 
 
 ## Usage Example
