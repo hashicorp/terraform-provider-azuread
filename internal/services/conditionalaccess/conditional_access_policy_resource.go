@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -86,7 +87,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									"included_applications": {
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
-										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions", "conditions.0.applications.0.included_authentication_context_class_references"},
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -102,13 +103,43 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										},
 									},
 
+									"filter": {
+										Type:     pluginsdk.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &pluginsdk.Resource{
+											Schema: map[string]*pluginsdk.Schema{
+												"mode": {
+													Type:         pluginsdk.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(stable.PossibleValuesForFilterMode(), false),
+												},
+
+												"rule": {
+													Type:         pluginsdk.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringIsNotEmpty,
+												},
+											},
+										},
+									},
+
 									"included_user_actions": {
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
-										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions", "conditions.0.applications.0.included_authentication_context_class_references"},
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
+										},
+									},
+
+									"included_authentication_context_class_references": {
+										Type:     pluginsdk.TypeList,
+										Optional: true,
+										Elem: &pluginsdk.Schema{
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringMatch(regexp.MustCompile("^c([1-9]|[1-9][0-9])$"), ""),
 										},
 									},
 								},
