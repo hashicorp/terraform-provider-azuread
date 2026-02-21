@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
@@ -123,18 +124,34 @@ func AzureADProvider() *schema.Provider {
 				Description: "The cloud environment which should be used. Possible values are: `global` (also `public`), `usgovernmentl4` (also `usgovernment`), `usgovernmentl5` (also `dod`), and `china`. Defaults to `global`. Not used and should not be specified when `metadata_host` is specified.",
 			},
 
-			"metadata_host": {
-				Type:        pluginsdk.TypeString,
-				Required:    true,
-				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_METADATA_HOSTNAME", ""),
-				Description: "The Hostname which should be used for the Azure Metadata Service.",
-			},
+		"metadata_host": {
+			Type:        pluginsdk.TypeString,
+			Required:    true,
+			DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_METADATA_HOSTNAME", ""),
+			Description: "The Hostname which should be used for the Azure Metadata Service.",
+		},
 
-			// Client Certificate specific fields
-			"client_certificate": {
-				Type:        pluginsdk.TypeString,
-				Optional:    true,
-				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE", ""),
+		"microsoft_graph_endpoint": {
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			DefaultFunc:  pluginsdk.EnvDefaultFunc("ARM_MS_GRAPH_ENDPOINT", ""),
+			Description:  "Override the Microsoft Graph base endpoint (e.g. a reverse proxy). Do not include `/v1.0` or `/beta`.",
+			ValidateFunc: validation.IsHttpOrHttpsUrl,
+		},
+
+		"microsoft_graph_resource_id": {
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			DefaultFunc:  pluginsdk.EnvDefaultFunc("ARM_MS_GRAPH_RESOURCE_ID", ""),
+			Description:  "Override the Microsoft Graph resource identifier used to request tokens (e.g. `api://<app-id>` for a proxy).",
+			ValidateFunc: validation.IsUriFunc([]string{"http", "https", "api"}, true, false, false),
+		},
+
+		// Client Certificate specific fields
+		"client_certificate": {
+			Type:        pluginsdk.TypeString,
+			Optional:    true,
+			DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE", ""),
 				Description: "Base64 encoded PKCS#12 certificate bundle to use when authenticating as a Service Principal using a Client Certificate",
 			},
 
@@ -314,6 +331,25 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			logEntry("[DEBUG] Configuring built-in cloud environment by name: %q", envName)
 			if env, err = environments.FromName(envName); err != nil {
 				return nil, pluginsdk.DiagFromErr(err)
+			}
+		}
+
+		graphEndpoint := strings.TrimRight(d.Get("microsoft_graph_endpoint").(string), "/")
+		graphResourceId := d.Get("microsoft_graph_resource_id").(string)
+		if graphEndpoint != "" || graphResourceId != "" {
+			// Preserve the Graph application ID while allowing endpoint/resource overrides.
+			var appId *string
+			if env.MicrosoftGraph != nil {
+				if v, ok := env.MicrosoftGraph.AppId(); ok {
+					appId = v
+				}
+			}
+
+			if graphEndpoint != "" {
+				env.MicrosoftGraph = environments.NewApiEndpoint("MicrosoftGraph", graphEndpoint, appId)
+			}
+			if graphResourceId != "" {
+				env.MicrosoftGraph = env.MicrosoftGraph.WithResourceIdentifier(graphResourceId)
 			}
 		}
 
