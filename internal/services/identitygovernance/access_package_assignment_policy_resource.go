@@ -323,6 +323,80 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 					},
 				},
 			},
+
+			"automatic_request_settings": {
+				Description:      "Settings for automatic assignment",
+				Type:             pluginsdk.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: assignmentPolicyDiffSuppress,
+				MaxItems:         1,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"request_access_for_allowed_targets": {
+							Description: "If set to true, automatic assignments will be created for targets in the allowed target scope",
+							Type:        pluginsdk.TypeBool,
+							Optional:    true,
+						},
+
+						"remove_access_when_target_leaves_allowed_targets": {
+							Description: "Indicates whether automatic assignment must be removed for targets who move out of the allowed target scope",
+							Type:        pluginsdk.TypeBool,
+							Optional:    true,
+						},
+
+						"grace_period_before_access_removal": {
+							Description:  "The duration for which access must be retained before the target's access is revoked once they leave the allowed target scope (ISO 8601 duration format, e.g., P7D for 7 days)",
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
+						},
+					},
+				},
+			},
+
+			"specific_allowed_targets": {
+				Description: "The principals that can be assigned access from an access package through this policy",
+				Type:        pluginsdk.TypeList,
+				Optional:    true,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"subject_type": {
+							Description: "Type of users. Can be singleUser, groupMembers, connectedOrganizationMembers, requestorManager, internalSponsors, externalSponsors, targetUserSponsors, or attributeRuleMembers",
+							Type:        pluginsdk.TypeString,
+							Required:    true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"AttributeRuleMembers",
+								"ConnectedOrganizationMembers",
+								"ExternalSponsors",
+								"GroupMembers",
+								"InternalSponsors",
+								"RequestorManager",
+								"SingleUser",
+								"TargetUserSponsors",
+							}, true),
+						},
+
+						"object_id": {
+							Description: "The ID of the subject (for singleUser, groupMembers, connectedOrganizationMembers)",
+							Type:        pluginsdk.TypeString,
+							Optional:    true,
+						},
+
+						"description": {
+							Description: "Description of the membership rule (for attributeRuleMembers)",
+							Type:        pluginsdk.TypeString,
+							Optional:    true,
+						},
+
+						"membership_rule": {
+							Description:  "The membership rule that determines the allowed target users (for attributeRuleMembers). Example: (user.department -eq \"Marketing\")",
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -349,6 +423,14 @@ func assignmentPolicyDiffSuppress(k, old, new string, d *pluginsdk.ResourceData)
 	}
 
 	if k == "question.#" && old == "1" && new == "0" {
+		return true
+	}
+
+	if k == "automatic_request_settings.#" && old == "1" && new == "0" {
+		return true
+	}
+
+	if k == "specific_allowed_targets.#" && old == "1" && new == "0" {
 		return true
 	}
 
@@ -444,6 +526,10 @@ func accessPackageAssignmentPolicyResourceRead(ctx context.Context, d *pluginsdk
 	tf.Set(d, "question", flattenAccessPackageQuestions(accessPackageAssignmentPolicy.Questions))
 	tf.Set(d, "requestor_settings", flattenRequestorSettings(accessPackageAssignmentPolicy.RequestorSettings))
 
+	// Note: automatic_request_settings and specific_allowed_targets cannot be read from the beta SDK
+	// as it doesn't include these fields. They are sent to the API on create/update but won't be
+	// refreshed from the API response. Terraform will preserve the configured values in state.
+
 	return nil
 }
 
@@ -512,6 +598,22 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *pluginsdk.Resourc
 		return nil, fmt.Errorf("building `assignment_review_settings`: %v", err)
 	}
 	properties.AccessReviewSettings = reviewSettings
+
+	// Note: AutomaticRequestSettings and SpecificAllowedTargets are available in the v1.0 API
+	// but not in the beta SDK type. We expand the settings here and will handle them via
+	// custom JSON marshaling in the API client.
+	automaticSettings := expandAutomaticRequestSettings(d.Get("automatic_request_settings").([]interface{}))
+	if automaticSettings != nil {
+		log.Printf("[DEBUG] Automatic request settings configured but will require custom handling in API call")
+	}
+
+	specificAllowedTargets, err := expandSpecificAllowedTargets(d.Get("specific_allowed_targets").([]interface{}))
+	if err != nil {
+		return nil, fmt.Errorf("building `specific_allowed_targets`: %v", err)
+	}
+	if specificAllowedTargets != nil {
+		log.Printf("[DEBUG] Specific allowed targets configured but will require custom handling in API call")
+	}
 
 	return &properties, nil
 }

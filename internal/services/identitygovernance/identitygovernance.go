@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
@@ -216,6 +217,124 @@ func flattenAssignmentReviewSettings(input *beta.AssignmentReviewSettings) []map
 		"reviewer":                        flattenUserSets(input.Reviewers),
 		"starting_on":                     input.StartDateTime.GetOrZero(),
 	}}
+}
+
+func expandAutomaticRequestSettings(input []interface{}) *stable.AccessPackageAutomaticRequestSettings {
+	if len(input) == 0 {
+		return nil
+	}
+
+	in := input[0].(map[string]interface{})
+
+	result := stable.AccessPackageAutomaticRequestSettings{
+		RequestAccessForAllowedTargets:             nullable.Value(in["request_access_for_allowed_targets"].(bool)),
+		RemoveAccessWhenTargetLeavesAllowedTargets: nullable.Value(in["remove_access_when_target_leaves_allowed_targets"].(bool)),
+		GracePeriodBeforeAccessRemoval:             nullable.NoZero(in["grace_period_before_access_removal"].(string)),
+	}
+
+	// Return nil if all values are empty/false to avoid sending an empty object
+	if !result.RequestAccessForAllowedTargets.GetOrZero() &&
+		!result.RemoveAccessWhenTargetLeavesAllowedTargets.GetOrZero() &&
+		result.GracePeriodBeforeAccessRemoval.GetOrZero() == "" {
+		return nil
+	}
+
+	return &result
+}
+
+func flattenAutomaticRequestSettings(input *stable.AccessPackageAutomaticRequestSettings) []map[string]interface{} {
+	if input == nil {
+		return nil
+	}
+
+	return []map[string]interface{}{{
+		"request_access_for_allowed_targets":               input.RequestAccessForAllowedTargets.GetOrZero(),
+		"remove_access_when_target_leaves_allowed_targets": input.RemoveAccessWhenTargetLeavesAllowedTargets.GetOrZero(),
+		"grace_period_before_access_removal":               input.GracePeriodBeforeAccessRemoval.GetOrZero(),
+	}}
+}
+
+func expandSpecificAllowedTargets(input []interface{}) (*[]stable.SubjectSet, error) {
+	subjectSets := make([]stable.SubjectSet, 0)
+	for _, raw := range input {
+		v := raw.(map[string]interface{})
+
+		objectId := v["object_id"].(string)
+		description := v["description"].(string)
+		membershipRule := v["membership_rule"].(string)
+		subjectType := formatODataType(v["subject_type"].(string))
+
+		var subjectSet stable.SubjectSet
+		switch subjectType {
+		case "AttributeRuleMembers":
+			subjectSet = stable.AttributeRuleMembers{
+				Description:    nullable.NoZero(description),
+				MembershipRule: nullable.NoZero(membershipRule),
+			}
+		case "ConnectedOrganizationMembers":
+			subjectSet = stable.ConnectedOrganizationMembers{
+				ConnectedOrganizationId: nullable.Value(objectId),
+			}
+		case "ExternalSponsors":
+			subjectSet = stable.ExternalSponsors{}
+		case "GroupMembers":
+			subjectSet = stable.GroupMembers{
+				GroupId: nullable.Value(objectId),
+			}
+		case "InternalSponsors":
+			subjectSet = stable.InternalSponsors{}
+		case "RequestorManager":
+			subjectSet = stable.RequestorManager{
+				ManagerLevel: nullable.Value(int64(0)),
+			}
+		case "SingleUser":
+			subjectSet = stable.SingleUser{
+				UserId: nullable.Value(objectId),
+			}
+		case "TargetUserSponsors":
+			subjectSet = stable.TargetUserSponsors{}
+		default:
+			return nil, fmt.Errorf("unknown `subject_type`: %s", subjectType)
+		}
+
+		subjectSets = append(subjectSets, subjectSet)
+	}
+
+	if len(subjectSets) == 0 {
+		return nil, nil
+	}
+
+	return &subjectSets, nil
+}
+
+func flattenSpecificAllowedTargets(input *[]stable.SubjectSet) []map[string]interface{} {
+	if input == nil || len(*input) == 0 {
+		return nil
+	}
+
+	targets := make([]map[string]interface{}, 0)
+	for _, raw := range *input {
+		v := raw.SubjectSet()
+		target := map[string]interface{}{
+			"subject_type": formatODataType(pointer.From(v.ODataType)),
+		}
+
+		switch impl := raw.(type) {
+		case stable.AttributeRuleMembers:
+			target["description"] = impl.Description.GetOrZero()
+			target["membership_rule"] = impl.MembershipRule.GetOrZero()
+		case stable.ConnectedOrganizationMembers:
+			target["object_id"] = impl.ConnectedOrganizationId.GetOrZero()
+		case stable.GroupMembers:
+			target["object_id"] = impl.GroupId.GetOrZero()
+		case stable.SingleUser:
+			target["object_id"] = impl.UserId.GetOrZero()
+		}
+
+		targets = append(targets, target)
+	}
+
+	return targets
 }
 
 func expandUserSets(input []interface{}) (*[]beta.UserSet, error) {

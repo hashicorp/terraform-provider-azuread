@@ -123,6 +123,57 @@ func TestAccAccessPackageAssignmentPolicy_removeQuestion(t *testing.T) {
 	})
 }
 
+func TestAccAccessPackageAssignmentPolicy_automaticRequestSettings(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_access_package_assignment_policy", "test")
+	r := AccessPackageAssignmentPolicyResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.withAutomaticRequestSettings(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("automatic_request_settings.#").HasValue("1"),
+				check.That(data.ResourceName).Key("automatic_request_settings.0.request_access_for_allowed_targets").HasValue("true"),
+				check.That(data.ResourceName).Key("automatic_request_settings.0.remove_access_when_target_leaves_allowed_targets").HasValue("true"),
+				check.That(data.ResourceName).Key("automatic_request_settings.0.grace_period_before_access_removal").HasValue("P7D"),
+				check.That(data.ResourceName).Key("specific_allowed_targets.#").HasValue("1"),
+				check.That(data.ResourceName).Key("specific_allowed_targets.0.subject_type").HasValue("GroupMembers"),
+			),
+		},
+		data.ImportStep("access_package_id"),
+	})
+}
+
+func TestAccAccessPackageAssignmentPolicy_automaticRequestSettingsUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_access_package_assignment_policy", "test")
+	r := AccessPackageAssignmentPolicyResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.simple(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("access_package_id"),
+		{
+			Config: r.withAutomaticRequestSettings(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("automatic_request_settings.#").HasValue("1"),
+			),
+		},
+		data.ImportStep("access_package_id"),
+		{
+			Config: r.simple(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("access_package_id"),
+	})
+}
+
 func (AccessPackageAssignmentPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.AccessPackageAssignmentPolicyClient
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageAssignmentPolicyID(state.ID)
@@ -410,6 +461,77 @@ resource "azuread_access_package_assignment_policy" "test" {
     text {
       default_text = "Hello Why again"
     }
+  }
+
+  automatic_request_settings {
+    request_access_for_allowed_targets                   = true
+    remove_access_when_target_leaves_allowed_targets     = true
+    grace_period_before_access_removal                   = "P30D"
+  }
+
+  specific_allowed_targets {
+    subject_type = "GroupMembers"
+    object_id    = azuread_group.requestor.object_id
+  }
+
+  specific_allowed_targets {
+    subject_type = "SingleUser"
+    object_id    = azuread_group.first_approver.object_id
+  }
+
+  specific_allowed_targets {
+    subject_type     = "AttributeRuleMembers"
+    description      = "Users in Marketing Department"
+    membership_rule  = "(user.department -eq \"Marketing\")"
+  }
+}
+`, data.RandomInteger)
+}
+
+func (AccessPackageAssignmentPolicyResource) withAutomaticRequestSettings(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_group" "test" {
+  display_name     = "test-group-%[1]d"
+  security_enabled = true
+}
+
+resource "azuread_access_package_catalog" "test_catalog" {
+  display_name = "test-catalog-%[1]d"
+  description  = "Test Catalog %[1]d"
+}
+
+resource "azuread_access_package" "test" {
+  display_name = "access-package-%[1]d"
+  description  = "Test Access Package %[1]d"
+  catalog_id   = azuread_access_package_catalog.test_catalog.id
+}
+
+resource "azuread_access_package_assignment_policy" "test" {
+  display_name      = "access-package-assignment-policy-%[1]d"
+  description       = "Test Access Package Assignment Policy %[1]d with automatic request settings"
+  duration_in_days  = 90
+  access_package_id = azuread_access_package.test.id
+
+  requestor_settings {
+    scope_type = "SpecificDirectorySubjects"
+
+    requestor {
+      object_id    = azuread_group.test.object_id
+      subject_type = "GroupMembers"
+    }
+  }
+
+  automatic_request_settings {
+    request_access_for_allowed_targets                   = true
+    remove_access_when_target_leaves_allowed_targets     = true
+    grace_period_before_access_removal                   = "P7D"
+  }
+
+  specific_allowed_targets {
+    subject_type = "GroupMembers"
+    object_id    = azuread_group.test.object_id
   }
 }
 `, data.RandomInteger)

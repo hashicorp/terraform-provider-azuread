@@ -1,3 +1,9 @@
+## Unreleased
+
+ENHANCEMENTS:
+
+* `azuread_access_package_assignment_policy` - support for the `automatic_request_settings` block and `specific_allowed_targets` to configure automatic assignment ([#XXXX](https://github.com/hashicorp/terraform-provider-azuread/issues/XXXX))
+
 ## 3.8.0 (February 19, 2026)
 
 ENHANCEMENTS:

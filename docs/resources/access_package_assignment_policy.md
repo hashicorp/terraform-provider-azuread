@@ -64,6 +64,23 @@ resource "azuread_access_package_assignment_policy" "example" {
     access_review_timeout_behavior = "keepAccess"
   }
 
+  automatic_request_settings {
+    request_access_for_allowed_targets                   = true
+    remove_access_when_target_leaves_allowed_targets     = true
+    grace_period_before_access_removal                   = "P7D"
+  }
+
+  specific_allowed_targets {
+    subject_type = "groupMembers"
+    object_id    = azuread_group.example.object_id
+  }
+
+  specific_allowed_targets {
+    subject_type    = "attributeRuleMembers"
+    description     = "Users in Marketing Department"
+    membership_rule = "(user.department -eq \"Marketing\")"
+  }
+
   question {
     text {
       default_text = "hello, how are you?"
@@ -77,6 +94,7 @@ resource "azuread_access_package_assignment_policy" "example" {
 - `access_package_id` (Required) The ID of the access package that will contain the policy.
 - `approval_settings` (Optional) An `approval_settings` block to specify whether approvals are required and how they are obtained, as documented below.
 - `assignment_review_settings` (Optional) An `assignment_review_settings` block, to specify whether assignment review is needed and how it is conducted, as documented below.
+- `automatic_request_settings` (Optional) An `automatic_request_settings` block to configure automatic assignment, as documented below.
 - `description` (Required) The description of the policy.
 - `display_name` (Required) The display name of the policy.
 - `duration_in_days` (Optional) How many days this assignment is valid for.
@@ -84,6 +102,7 @@ resource "azuread_access_package_assignment_policy" "example" {
 - `extension_enabled` (Optional) Whether users will be able to request extension of their access to this package before their access expires.
 - `question` (Optional) One or more `question` blocks for the requestor, as documented below.
 - `requestor_settings` (Optional) A `requestor_settings` block to configure the users who can request access, as documented below.
+- `specific_allowed_targets` (Optional) One or more `specific_allowed_targets` blocks to specify the principals that can be assigned access, as documented below.
 
 ---
 
@@ -134,6 +153,16 @@ resource "azuread_access_package_assignment_policy" "example" {
 - `backup` (Optional) For a user in an approval stage, this property indicates whether the user is a backup approver.
 - `object_id` (Optional) The ID of the subject.
 - `subject_type` (Required) Specifies the type of users. Valid values are `singleUser`, `groupMembers`, `connectedOrganizationMembers`, `requestorManager`, `internalSponsors`, or `externalSponsors`.
+
+---
+
+`automatic_request_settings` block supports the following:
+
+- `grace_period_before_access_removal` (Optional) The duration for which access must be retained before the target's access is revoked once they leave the allowed target scope. This must be specified as an ISO 8601 duration string (e.g., `P7D` for 7 days, `P1M` for 1 month).
+- `remove_access_when_target_leaves_allowed_targets` (Optional) Indicates whether automatic assignment must be removed for targets who move out of the allowed target scope.
+- `request_access_for_allowed_targets` (Optional) If set to `true`, automatic assignments will be created for targets in the allowed target scope.
+
+~> **Note** The `automatic_request_settings` block configures automatic assignment based on the `requestor_settings` scope. When enabled, access is automatically granted to users within the allowed target scope without requiring them to submit a request.
 
 ---
 
@@ -193,6 +222,17 @@ resource "azuread_access_package_assignment_policy" "example" {
 
 - `object_id` (Optional) The ID of the subject.
 - `subject_type` (Required) Specifies the type of users. Valid values are `singleUser`, `groupMembers`, `connectedOrganizationMembers`, `requestorManager`, `internalSponsors`, or `externalSponsors`.
+
+---
+
+`specific_allowed_targets` block supports the following:
+
+- `description` (Optional) A description of the membership rule (only used with `attributeRuleMembers` subject type).
+- `membership_rule` (Optional) The membership rule that determines the allowed target users for this policy (only used with `attributeRuleMembers` subject type). For more information about the syntax of the membership rule, see [Membership Rules syntax](https://learn.microsoft.com/en-us/azure/active-directory/enterprise-users/groups-dynamic-membership).
+- `object_id` (Optional) The ID of the subject (only used with `singleUser`, `groupMembers`, or `connectedOrganizationMembers` subject types).
+- `subject_type` (Required) Specifies the type of users. Valid values are `attributeRuleMembers`, `singleUser`, `groupMembers`, `connectedOrganizationMembers`, `requestorManager`, `internalSponsors`, `externalSponsors`, or `targetUserSponsors`.
+
+~> **Note** The `specific_allowed_targets` block specifies the principals that can be assigned access from an access package through this policy. It works in conjunction with `automatic_request_settings` to define which users are eligible for automatic assignment. Use `attributeRuleMembers` with `membership_rule` to dynamically define users based on their attributes (similar to dynamic groups), or use other subject types to explicitly specify users or groups.
 
 ## Attributes Reference
 
