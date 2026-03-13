@@ -9,7 +9,6 @@ import (
 	// Beta clients
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageaccesspackageresourcerolescope"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageassignmentpolicy"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalog"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogaccesspackageresource"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageresourcerequest"
@@ -17,6 +16,9 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/beta/entitlementmanagementroledefinition"
 
 	// Stable clients
+	stableassignmentpolicynested "github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/entitlementmanagementaccesspackageassignmentpolicy"
+	stableassignmentpolicy "github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/entitlementmanagementassignmentpolicy"
+
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupassignmentschedule"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupassignmentscheduleinstance"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupassignmentschedulerequest"
@@ -26,14 +28,15 @@ import (
 )
 
 type Client struct {
-	AccessPackageAssignmentPolicyClient  *entitlementmanagementaccesspackageassignmentpolicy.EntitlementManagementAccessPackageAssignmentPolicyClient
-	AccessPackageCatalogClient           *entitlementmanagementaccesspackagecatalog.EntitlementManagementAccessPackageCatalogClient
-	AccessPackageCatalogResourceClient   *entitlementmanagementaccesspackagecatalogaccesspackageresource.EntitlementManagementAccessPackageCatalogAccessPackageResourceClient
-	AccessPackageClient                  *entitlementmanagementaccesspackage.EntitlementManagementAccessPackageClient
-	AccessPackageResourceRequestClient   *entitlementmanagementaccesspackageresourcerequest.EntitlementManagementAccessPackageResourceRequestClient
-	AccessPackageResourceRoleScopeClient *entitlementmanagementaccesspackageaccesspackageresourcerolescope.EntitlementManagementAccessPackageAccessPackageResourceRoleScopeClient
-	RoleAssignmentClient                 *entitlementmanagementroleassignment.EntitlementManagementRoleAssignmentClient
-	RoleDefinitionClient                 *entitlementmanagementroledefinition.EntitlementManagementRoleDefinitionClient
+	AccessPackageAssignmentPolicyClient       *stableassignmentpolicy.EntitlementManagementAssignmentPolicyClient
+	AccessPackageAssignmentPolicyNestedClient *stableassignmentpolicynested.EntitlementManagementAccessPackageAssignmentPolicyClient
+	AccessPackageCatalogClient                *entitlementmanagementaccesspackagecatalog.EntitlementManagementAccessPackageCatalogClient
+	AccessPackageCatalogResourceClient        *entitlementmanagementaccesspackagecatalogaccesspackageresource.EntitlementManagementAccessPackageCatalogAccessPackageResourceClient
+	AccessPackageClient                       *entitlementmanagementaccesspackage.EntitlementManagementAccessPackageClient
+	AccessPackageResourceRequestClient        *entitlementmanagementaccesspackageresourcerequest.EntitlementManagementAccessPackageResourceRequestClient
+	AccessPackageResourceRoleScopeClient      *entitlementmanagementaccesspackageaccesspackageresourcerolescope.EntitlementManagementAccessPackageAccessPackageResourceRoleScopeClient
+	RoleAssignmentClient                      *entitlementmanagementroleassignment.EntitlementManagementRoleAssignmentClient
+	RoleDefinitionClient                      *entitlementmanagementroledefinition.EntitlementManagementRoleDefinitionClient
 
 	PrivilegedAccessGroupAssignmentScheduleClient          *privilegedaccessgroupassignmentschedule.PrivilegedAccessGroupAssignmentScheduleClient
 	PrivilegedAccessGroupAssignmentScheduleInstanceClient  *privilegedaccessgroupassignmentscheduleinstance.PrivilegedAccessGroupAssignmentScheduleInstanceClient
@@ -44,11 +47,17 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) (*Client, error) {
-	accessPackageAssignmentPolicyClient, err := entitlementmanagementaccesspackageassignmentpolicy.NewEntitlementManagementAccessPackageAssignmentPolicyClientWithBaseURI(o.Environment.MicrosoftGraph)
+	accessPackageAssignmentPolicyClient, err := stableassignmentpolicy.NewEntitlementManagementAssignmentPolicyClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
 	}
 	o.Configure(accessPackageAssignmentPolicyClient.Client)
+
+	accessPackageAssignmentPolicyNestedClient, err := stableassignmentpolicynested.NewEntitlementManagementAccessPackageAssignmentPolicyClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(accessPackageAssignmentPolicyNestedClient.Client)
 
 	accessPackageCatalogClient, err := entitlementmanagementaccesspackagecatalog.NewEntitlementManagementAccessPackageCatalogClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
@@ -129,14 +138,15 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	o.Configure(privilegedAccessGroupEligibilityScheduleRequestClient.Client)
 
 	return &Client{
-		AccessPackageAssignmentPolicyClient:  accessPackageAssignmentPolicyClient,
-		AccessPackageCatalogClient:           accessPackageCatalogClient,
-		AccessPackageCatalogResourceClient:   accessPackageCatalogResourceClient,
-		AccessPackageClient:                  accessPackageClient,
-		AccessPackageResourceRequestClient:   accessPackageResourceRequestClient,
-		AccessPackageResourceRoleScopeClient: accessPackageResourceRoleScopeClient,
-		RoleAssignmentClient:                 roleAssignmentClient,
-		RoleDefinitionClient:                 roleDefinitionClient,
+		AccessPackageAssignmentPolicyClient:       accessPackageAssignmentPolicyClient,
+		AccessPackageAssignmentPolicyNestedClient: accessPackageAssignmentPolicyNestedClient,
+		AccessPackageCatalogClient:                accessPackageCatalogClient,
+		AccessPackageCatalogResourceClient:        accessPackageCatalogResourceClient,
+		AccessPackageClient:                       accessPackageClient,
+		AccessPackageResourceRequestClient:        accessPackageResourceRequestClient,
+		AccessPackageResourceRoleScopeClient:      accessPackageResourceRoleScopeClient,
+		RoleAssignmentClient:                      roleAssignmentClient,
+		RoleDefinitionClient:                      roleDefinitionClient,
 
 		PrivilegedAccessGroupAssignmentScheduleClient:          privilegedAccessGroupAssignmentScheduleClient,
 		PrivilegedAccessGroupAssignmentScheduleInstanceClient:  privilegedAccessGroupAssignmentScheduleInstanceClient,

@@ -12,10 +12,11 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageassignmentpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/entitlementmanagementaccesspackageassignmentpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/entitlementmanagementassignmentpolicy"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
@@ -54,6 +55,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 				Description:  "The ID of the access package that will contain the policy",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IsUUID,
 			},
 
@@ -265,7 +267,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 							Description:  "What actions the system takes if reviewers don't respond in time",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(beta.PossibleValuesForAccessReviewTimeoutBehavior(), false),
+							ValidateFunc: validation.StringInSlice(stable.PossibleValuesForAccessReviewExpirationBehavior(), false),
 						},
 					},
 				},
@@ -370,14 +372,16 @@ func assignmentPolicyCustomizeDiff(ctx context.Context, diff *pluginsdk.Resource
 }
 
 func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
+	nestedClient := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyNestedClient
+
+	accessPackageId := stable.NewIdentityGovernanceEntitlementManagementAccessPackageID(d.Get("access_package_id").(string))
 
 	properties, err := buildAssignmentPolicyResourceData(ctx, d, meta)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Building resource data from supplied parameters")
 	}
 
-	resp, err := client.CreateEntitlementManagementAccessPackageAssignmentPolicy(ctx, *properties, entitlementmanagementaccesspackageassignmentpolicy.DefaultCreateEntitlementManagementAccessPackageAssignmentPolicyOperationOptions())
+	resp, err := nestedClient.CreateEntitlementManagementAccessPackageAssignmentPolicy(ctx, accessPackageId, *properties, entitlementmanagementaccesspackageassignmentpolicy.DefaultCreateEntitlementManagementAccessPackageAssignmentPolicyOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating access package assignment policy %q", d.Get("display_name").(string))
 	}
@@ -386,16 +390,18 @@ func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *plugins
 		return tf.ErrorDiagF(errors.New("model was nil"), "Creating access package assignment policy")
 	}
 
-	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageAssignmentPolicyID(*resp.Model.Id)
-	d.SetId(id.AccessPackageAssignmentPolicyId)
+	d.SetId(pointer.From(resp.Model.Id))
 
 	return accessPackageAssignmentPolicyResourceRead(ctx, d, meta)
 }
 
 func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
+	nestedClient := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyNestedClient
 
-	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageAssignmentPolicyID(d.Id())
+	id := stable.NewIdentityGovernanceEntitlementManagementAccessPackageIdAssignmentPolicyID(
+		d.Get("access_package_id").(string),
+		d.Id(),
+	)
 
 	properties, err := buildAssignmentPolicyResourceData(ctx, d, meta)
 	if err != nil {
@@ -405,7 +411,7 @@ func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *plugins
 	tf.LockByName(accessPackageAssignmentPolicyResourceName, id.AccessPackageAssignmentPolicyId)
 	defer tf.UnlockByName(accessPackageAssignmentPolicyResourceName, id.AccessPackageAssignmentPolicyId)
 
-	if _, err = client.SetEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, *properties, entitlementmanagementaccesspackageassignmentpolicy.DefaultSetEntitlementManagementAccessPackageAssignmentPolicyOperationOptions()); err != nil {
+	if _, err = nestedClient.UpdateEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, *properties, entitlementmanagementaccesspackageassignmentpolicy.DefaultUpdateEntitlementManagementAccessPackageAssignmentPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 
@@ -415,9 +421,13 @@ func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *plugins
 func accessPackageAssignmentPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
 
-	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageAssignmentPolicyID(d.Id())
+	id := stable.NewIdentityGovernanceEntitlementManagementAssignmentPolicyID(d.Id())
 
-	resp, err := client.GetEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, entitlementmanagementaccesspackageassignmentpolicy.DefaultGetEntitlementManagementAccessPackageAssignmentPolicyOperationOptions())
+	options := entitlementmanagementassignmentpolicy.GetEntitlementManagementAssignmentPolicyOperationOptions{
+		Expand: &odata.Expand{Relationship: "accessPackage($select=id)"},
+	}
+
+	resp, err := client.GetEntitlementManagementAssignmentPolicy(ctx, id, options)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state!", id)
@@ -433,16 +443,32 @@ func accessPackageAssignmentPolicyResourceRead(ctx context.Context, d *pluginsdk
 		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 	}
 
-	tf.Set(d, "access_package_id", accessPackageAssignmentPolicy.AccessPackageId.GetOrZero())
+	accessPackageId := ""
+	if accessPackageAssignmentPolicy.AccessPackage != nil && accessPackageAssignmentPolicy.AccessPackage.Id != nil {
+		accessPackageId = pointer.From(accessPackageAssignmentPolicy.AccessPackage.Id)
+	}
+
+	expiration := accessPackageAssignmentPolicy.Expiration
+	durationInDays := 0
+	expirationDate := ""
+	if expiration != nil {
+		if expiration.Type != nil && *expiration.Type == stable.ExpirationPatternType_AfterDuration {
+			durationInDays = parseISO8601Days(expiration.Duration.GetOrZero())
+		} else if expiration.Type != nil && *expiration.Type == stable.ExpirationPatternType_AfterDateTime {
+			expirationDate = expiration.EndDateTime.GetOrZero()
+		}
+	}
+
+	tf.Set(d, "access_package_id", accessPackageId)
 	tf.Set(d, "approval_settings", flattenApprovalSettings(accessPackageAssignmentPolicy.RequestApprovalSettings))
-	tf.Set(d, "assignment_review_settings", flattenAssignmentReviewSettings(accessPackageAssignmentPolicy.AccessReviewSettings))
+	tf.Set(d, "assignment_review_settings", flattenAssignmentReviewSettings(accessPackageAssignmentPolicy.ReviewSettings))
 	tf.Set(d, "description", accessPackageAssignmentPolicy.Description.GetOrZero())
 	tf.Set(d, "display_name", accessPackageAssignmentPolicy.DisplayName.GetOrZero())
-	tf.Set(d, "duration_in_days", int(accessPackageAssignmentPolicy.DurationInDays.GetOrZero()))
-	tf.Set(d, "expiration_date", accessPackageAssignmentPolicy.ExpirationDateTime.GetOrZero())
-	tf.Set(d, "extension_enabled", accessPackageAssignmentPolicy.CanExtend.GetOrZero())
+	tf.Set(d, "duration_in_days", durationInDays)
+	tf.Set(d, "expiration_date", expirationDate)
+	tf.Set(d, "extension_enabled", false)
 	tf.Set(d, "question", flattenAccessPackageQuestions(accessPackageAssignmentPolicy.Questions))
-	tf.Set(d, "requestor_settings", flattenRequestorSettings(accessPackageAssignmentPolicy.RequestorSettings))
+	tf.Set(d, "requestor_settings", flattenRequestorSettings(accessPackageAssignmentPolicy.AllowedTargetScope, accessPackageAssignmentPolicy.SpecificAllowedTargets))
 
 	return nil
 }
@@ -450,15 +476,15 @@ func accessPackageAssignmentPolicyResourceRead(ctx context.Context, d *pluginsdk
 func accessPackageAssignmentPolicyResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
 
-	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageAssignmentPolicyID(d.Id())
+	id := stable.NewIdentityGovernanceEntitlementManagementAssignmentPolicyID(d.Id())
 
-	if _, err := client.DeleteEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, entitlementmanagementaccesspackageassignmentpolicy.DefaultDeleteEntitlementManagementAccessPackageAssignmentPolicyOperationOptions()); err != nil {
+	if _, err := client.DeleteEntitlementManagementAssignmentPolicy(ctx, id, entitlementmanagementassignmentpolicy.DefaultDeleteEntitlementManagementAssignmentPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 
-	// Wait for user object to be deleted
+	// Wait for object to be deleted
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if resp, err := client.GetEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, entitlementmanagementaccesspackageassignmentpolicy.DefaultGetEntitlementManagementAccessPackageAssignmentPolicyOperationOptions()); err != nil {
+		if resp, err := client.GetEntitlementManagementAssignmentPolicy(ctx, id, entitlementmanagementassignmentpolicy.DefaultGetEntitlementManagementAssignmentPolicyOperationOptions()); err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}
@@ -472,28 +498,29 @@ func accessPackageAssignmentPolicyResourceDelete(ctx context.Context, d *plugins
 	return nil
 }
 
-func buildAssignmentPolicyResourceData(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) (*beta.AccessPackageAssignmentPolicy, error) {
-	accessPackageClient := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
-	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(d.Get("access_package_id").(string))
+func buildAssignmentPolicyResourceData(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) (*stable.AccessPackageAssignmentPolicy, error) {
+	properties := stable.AccessPackageAssignmentPolicy{
+		Description: nullable.NoZero(d.Get("description").(string)),
+		DisplayName: nullable.NoZero(d.Get("display_name").(string)),
+		Questions:   expandAccessPackageQuestions(d.Get("question").([]interface{})),
+	}
 
-	resp, err := accessPackageClient.GetEntitlementManagementAccessPackage(ctx, id, entitlementmanagementaccesspackage.DefaultGetEntitlementManagementAccessPackageOperationOptions())
-	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			log.Printf("[DEBUG] %s was not found - removing from state!", id)
+	// Map duration_in_days / expiration_date to stable Expiration pattern
+	durationInDays := d.Get("duration_in_days").(int)
+	expirationDate := d.Get("expiration_date").(string)
+	if durationInDays > 0 {
+		properties.Expiration = &stable.ExpirationPattern{
+			Duration: nullable.Value(fmt.Sprintf("P%dD", durationInDays)),
+			Type:     pointer.To(stable.ExpirationPatternType_AfterDuration),
 		}
-
-		return nil, fmt.Errorf("retrieving %s: %v", id, err)
+	} else if expirationDate != "" {
+		properties.Expiration = &stable.ExpirationPattern{
+			EndDateTime: nullable.Value(expirationDate),
+			Type:        pointer.To(stable.ExpirationPatternType_AfterDateTime),
+		}
 	}
 
-	properties := beta.AccessPackageAssignmentPolicy{
-		AccessPackageId:    nullable.NoZero(d.Get("access_package_id").(string)),
-		CanExtend:          nullable.Value(d.Get("extension_enabled").(bool)),
-		Description:        nullable.NoZero(d.Get("description").(string)),
-		DisplayName:        nullable.NoZero(d.Get("display_name").(string)),
-		DurationInDays:     nullable.Value(int64(d.Get("duration_in_days").(int))),
-		ExpirationDateTime: nullable.NoZero(d.Get("expiration_date").(string)),
-		Questions:          expandAccessPackageQuestions(d.Get("question").([]interface{})),
-	}
+	// extension_enabled (CanExtend) has no equivalent in the stable API; silently ignored.
 
 	requestApprovalSettings, err := expandApprovalSettings(d.Get("approval_settings").([]interface{}))
 	if err != nil {
@@ -501,17 +528,19 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *pluginsdk.Resourc
 	}
 	properties.RequestApprovalSettings = requestApprovalSettings
 
-	requestorSettings, err := expandRequestorSettings(d.Get("requestor_settings").([]interface{}))
+	// requestor_settings maps to AllowedTargetScope and SpecificAllowedTargets on the policy
+	scope, targets, err := expandRequestorSettings(d.Get("requestor_settings").([]interface{}))
 	if err != nil {
 		return nil, fmt.Errorf("building `requestor_settings`: %v", err)
 	}
-	properties.RequestorSettings = requestorSettings
+	properties.AllowedTargetScope = scope
+	properties.SpecificAllowedTargets = targets
 
 	reviewSettings, err := expandAssignmentReviewSettings(d.Get("assignment_review_settings").([]interface{}))
 	if err != nil {
 		return nil, fmt.Errorf("building `assignment_review_settings`: %v", err)
 	}
-	properties.AccessReviewSettings = reviewSettings
+	properties.ReviewSettings = reviewSettings
 
 	return &properties, nil
 }

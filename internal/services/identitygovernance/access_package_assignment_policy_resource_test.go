@@ -10,8 +10,8 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageassignmentpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/entitlementmanagementassignmentpolicy"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -125,9 +125,9 @@ func TestAccAccessPackageAssignmentPolicy_removeQuestion(t *testing.T) {
 
 func (AccessPackageAssignmentPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.AccessPackageAssignmentPolicyClient
-	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageAssignmentPolicyID(state.ID)
+	id := stable.NewIdentityGovernanceEntitlementManagementAssignmentPolicyID(state.ID)
 
-	resp, err := client.GetEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, entitlementmanagementaccesspackageassignmentpolicy.DefaultGetEntitlementManagementAccessPackageAssignmentPolicyOperationOptions())
+	resp, err := client.GetEntitlementManagementAssignmentPolicy(ctx, id, entitlementmanagementassignmentpolicy.DefaultGetEntitlementManagementAssignmentPolicyOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
