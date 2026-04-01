@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupeligibilityschedulerequest"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
@@ -49,6 +50,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Create() sdk.ResourceF
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestClient
+			scheduleClient := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleClient
 
 			var model PrivilegedAccessGroupScheduleModel
 			if err := metadata.Decode(&model); err != nil {
@@ -99,6 +101,20 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Create() sdk.ResourceF
 			}
 
 			metadata.SetID(resourceId)
+
+			id := stable.NewIdentityGovernancePrivilegedAccessGroupEligibilityScheduleID(resourceId.ID())
+			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				resp, err := scheduleClient.GetPrivilegedAccessGroupEligibilitySchedule(ctx, id, privilegedaccessgroupeligibilityschedule.DefaultGetPrivilegedAccessGroupEligibilityScheduleOperationOptions())
+				if err != nil {
+					if response.WasNotFound(resp.HttpResponse) {
+						return pointer.To(false), nil
+					}
+					return nil, fmt.Errorf("waiting for creation of %s: %+v", id, err)
+				}
+				return pointer.To(true), nil
+			}); err != nil {
+				return fmt.Errorf("retrieving %s: %+v", id, err)
+			}
 
 			return nil
 		},
