@@ -224,6 +224,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFu
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestClient
+			scheduleClient := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleClient
 
 			resourceId, err := parse.ParsePrivilegedAccessGroupScheduleID(metadata.ResourceData.Id())
 			if err != nil {
@@ -271,6 +272,27 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFu
 
 			if pointer.From(request.Status) == PrivilegedAccessGroupScheduleRequestStatusFailed {
 				return fmt.Errorf("creating updated assignment schedule request: request is in a failed state")
+			}
+
+			newResourceId, err := parse.ParsePrivilegedAccessGroupScheduleID(request.TargetScheduleId.GetOrZero())
+			if err != nil {
+				return err
+			}
+
+			metadata.SetID(newResourceId)
+
+			id := stable.NewIdentityGovernancePrivilegedAccessGroupAssignmentScheduleID(newResourceId.ID())
+			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				resp, err := scheduleClient.GetPrivilegedAccessGroupAssignmentSchedule(ctx, id, privilegedaccessgroupassignmentschedule.DefaultGetPrivilegedAccessGroupAssignmentScheduleOperationOptions())
+				if err != nil {
+					if response.WasNotFound(resp.HttpResponse) {
+						return pointer.To(false), nil
+					}
+					return nil, fmt.Errorf("waiting for update of %s: %+v", id, err)
+				}
+				return pointer.To(true), nil
+			}); err != nil {
+				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
 
 			return nil
