@@ -127,6 +127,8 @@ func (PrivilegedAccessGroupAssignmentScheduleResource) owner(data acceptance.Tes
 	return fmt.Sprintf(`
 provider "azuread" {}
 
+data "azuread_client_config" "current" {}
+
 data "azuread_domains" "test" {
   only_initial = true
 }
@@ -142,7 +144,9 @@ resource "azuread_group" "pam" {
   mail_enabled     = false
   security_enabled = true
 
-  owners = [azuread_user.manual_owner.object_id]
+  # Include the current SP as an owner so it has sufficient privileges to
+  # delete the group during test clean-up.
+  owners = [azuread_user.manual_owner.object_id, data.azuread_client_config.current.object_id]
 
   lifecycle {
     ignore_changes = [owners]
