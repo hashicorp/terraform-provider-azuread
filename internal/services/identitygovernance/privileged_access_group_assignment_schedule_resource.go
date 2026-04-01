@@ -104,10 +104,12 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Create() sdk.ResourceFu
 
 			id := stable.NewIdentityGovernancePrivilegedAccessGroupAssignmentScheduleID(resourceId.ID())
 			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-				if u, err := scheduleClient.GetPrivilegedAccessGroupAssignmentSchedule(ctx, id, privilegedaccessgroupassignmentschedule.DefaultGetPrivilegedAccessGroupAssignmentScheduleOperationOptions()); err != nil {
-					if !response.WasNotFound(u.HttpResponse) {
-						return pointer.To(false), fmt.Errorf("waiting for creation of %s: %+v", id, err)
+				resp, err := scheduleClient.GetPrivilegedAccessGroupAssignmentSchedule(ctx, id, privilegedaccessgroupassignmentschedule.DefaultGetPrivilegedAccessGroupAssignmentScheduleOperationOptions())
+				if err != nil {
+					if response.WasNotFound(resp.HttpResponse) {
+						return pointer.To(false), nil
 					}
+					return nil, fmt.Errorf("waiting for creation of %s: %+v", id, err)
 				}
 				return pointer.To(true), nil
 			}); err != nil {
