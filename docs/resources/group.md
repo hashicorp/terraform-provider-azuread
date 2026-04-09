@@ -10,13 +10,14 @@ Manages a group within Azure Active Directory.
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires one of the following application roles: `Group.ReadWrite.All` or `Directory.ReadWrite.All`.
+When authenticated with a service principal, the least privileged permissions that are required are: `Group.Create` and `User.Read.All`, `Application.Read.All` or `Directory.Read.All` - [Microsoft Graph Permissions](https://learn.microsoft.com/en-us/graph/api/group-post-groups?view=graph-rest-1.0&tabs=http#permissions).
 
-Alternatively, if the authenticated service principal is also an owner of the group being managed, this resource can use the application role: `Group.Create`.
+
+- `User.Read.All` is required to create the group with users as owners or members.
+- `Application.Read.All` is required to create the group with other service principals as owners or members.
+- `Directory.Read.All` is required to create the group with either users or service principals as owners or members.
 
 If using the `assignable_to_role` property, this resource additionally requires the `RoleManagement.ReadWrite.Directory` application role.
-
-If specifying owners for a group, which are user principals, this resource additionally requires one of the following application roles: `User.Read.All`, `User.ReadWrite.All`, `Directory.Read.All` or `Directory.ReadWrite.All`
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Groups Administrator`, `User Administrator` or `Global Administrator`
 
