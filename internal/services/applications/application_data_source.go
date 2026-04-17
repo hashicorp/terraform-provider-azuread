@@ -236,6 +236,12 @@ func applicationDataSource() *pluginsdk.Resource {
 				Computed:    true,
 			},
 
+			"native_authentication_apis_enabled": {
+				Description: " Specifies whether the Native Authentication APIs are enabled for the application. The possible values are: none and all",
+				Type:        pluginsdk.TypeString,
+				Computed:    true,
+			},
+
 			"feature_tags": {
 				Description: "Block of features configured for this application using tags",
 				Type:        pluginsdk.TypeList,
@@ -593,6 +599,7 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	tf.Set(d, "disabled_by_microsoft", app.DisabledByMicrosoftStatus.GetOrZero())
 	tf.Set(d, "display_name", app.DisplayName.GetOrZero())
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient.GetOrZero())
+	tf.Set(d, "native_authentication_apis_enabled", app.NativeAuthenticationApisEnabled)
 	tf.Set(d, "feature_tags", applications.FlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
