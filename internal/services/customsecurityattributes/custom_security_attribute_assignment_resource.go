@@ -178,7 +178,7 @@ func customSecurityAttributeAssignmentDiff(_ context.Context, d *pluginsdk.Resou
 //	{
 //	  "customSecurityAttributes": {
 //	    "<attributeSet>": {
-//	      "@odata.type": "#microsoft.graph.customSecurityAttributeValue",
+//	      "@odata.type": "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
 //	      "<name>": "singleValue",
 //	      "<name>@odata.type": "#Collection(String)",
 //	      "<name>": ["val1", "val2"],
@@ -188,7 +188,7 @@ func customSecurityAttributeAssignmentDiff(_ context.Context, d *pluginsdk.Resou
 //	}
 func expandCustomSecurityAttributes(attributeSet string, input []interface{}) (map[string]interface{}, error) {
 	setPayload := map[string]interface{}{
-		"@odata.type": "#microsoft.graph.customSecurityAttributeValue",
+		"@odata.type": "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
 	}
 
 	for _, rawAttr := range input {
@@ -341,7 +341,7 @@ func resolveObjectPath(ctx context.Context, c *msgraph.Client, objectId string) 
 }
 
 func customSecurityAttributeAssignmentResourceCreateUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	spClient := meta.(*clients.Client).CustomSecurityAttributes.ServicePrincipalClientBeta
+	spClient := meta.(*clients.Client).CustomSecurityAttributes.ServicePrincipalClient
 
 	principalId := d.Get("principal_id").(string)
 	attributeSet := d.Get("attribute_set").(string)
@@ -401,7 +401,7 @@ func customSecurityAttributeAssignmentResourceCreateUpdate(ctx context.Context, 
 }
 
 func customSecurityAttributeAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	spClient := meta.(*clients.Client).CustomSecurityAttributes.ServicePrincipalClientBeta
+	spClient := meta.(*clients.Client).CustomSecurityAttributes.ServicePrincipalClient
 
 	principalId, attributeSet, err := parseResourceID(d.Id())
 	if err != nil {
@@ -470,7 +470,7 @@ func customSecurityAttributeAssignmentResourceRead(ctx context.Context, d *plugi
 }
 
 func customSecurityAttributeAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	spClient := meta.(*clients.Client).CustomSecurityAttributes.ServicePrincipalClientBeta
+	spClient := meta.(*clients.Client).CustomSecurityAttributes.ServicePrincipalClient
 
 	principalId, attributeSet, err := parseResourceID(d.Id())
 	if err != nil {
@@ -511,7 +511,7 @@ func customSecurityAttributeAssignmentResourceDelete(ctx context.Context, d *plu
 // buildClearPayload constructs a payload that nulls out every attribute tracked by this resource.
 func buildClearPayload(attributeSet string, input []interface{}) map[string]interface{} {
 	setPayload := map[string]interface{}{
-		"@odata.type": "#microsoft.graph.customSecurityAttributeValue",
+		"@odata.type": "#Microsoft.DirectoryServices.CustomSecurityAttributeValue",
 	}
 
 	for _, rawAttr := range input {

@@ -4,22 +4,22 @@
 package client
 
 import (
-	serviceprincipalBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/beta/serviceprincipal"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 type Client struct {
-	ServicePrincipalClientBeta *serviceprincipalBeta.ServicePrincipalClient
+	ServicePrincipalClient *serviceprincipal.ServicePrincipalClient
 }
 
 func NewClient(o *common.ClientOptions) (*Client, error) {
-	servicePrincipalClientBeta, err := serviceprincipalBeta.NewServicePrincipalClientWithBaseURI(o.Environment.MicrosoftGraph)
+	servicePrincipalClient, err := serviceprincipal.NewServicePrincipalClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
 	}
-	o.Configure(servicePrincipalClientBeta.Client)
+	o.Configure(servicePrincipalClient.Client)
 
 	return &Client{
-		ServicePrincipalClientBeta: servicePrincipalClientBeta,
+		ServicePrincipalClient: servicePrincipalClient,
 	}, nil
 }
