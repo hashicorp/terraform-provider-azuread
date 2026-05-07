@@ -11,8 +11,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
-	serviceprincipalBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/beta/serviceprincipal"
 	sdkClient "github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -147,7 +145,7 @@ func TestAccCustomSecurityAttributeAssignment_requiresImport(t *testing.T) {
 // ── Exists helper ─────────────────────────────────────────────────────────────
 
 // Exists checks that the custom security attribute assignment exists in Azure by
-// reading the customSecurityAttributes property from the service principal.
+// reading the customSecurityAttributes property from the principal via raw HTTP.
 func (r CustomSecurityAttributeAssignmentResource) Exists(ctx context.Context, c *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	// Parse the composite ID: <principalId>/<attributeSet>
 	id := state.ID
@@ -163,29 +161,12 @@ func (r CustomSecurityAttributeAssignmentResource) Exists(ctx context.Context, c
 		return nil, fmt.Errorf("could not parse resource ID %q: expected <principalId>/<attributeSet>", id)
 	}
 
-	spId := beta.NewServicePrincipalID(principalId)
-	opts := serviceprincipalBeta.GetServicePrincipalOperationOptions{
-		Select: pointer.To([]string{"id", "customSecurityAttributes"}),
-	}
-
-	resp, err := c.CustomSecurityAttributes.ServicePrincipalClientBeta.GetServicePrincipal(ctx, spId, opts)
-	if err != nil {
-		return pointer.To(false), fmt.Errorf("retrieving service principal %q: %+v", principalId, err)
-	}
-	if resp.Model == nil {
-		return pointer.To(false), nil
-	}
-
-	// Read customSecurityAttributes via raw JSON since the SDK type is a stub
-	csaClient := c.CustomSecurityAttributes.ServicePrincipalClientBeta
-	req, err := csaClient.Client.NewRequest(ctx, sdkClient.RequestOptions{
+	req, err := c.CustomSecurityAttributes.ServicePrincipalClient.Client.NewRequest(ctx, sdkClient.RequestOptions{
 		ContentType:         "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{http.StatusOK},
 		HttpMethod:          http.MethodGet,
 		Path:                fmt.Sprintf("/servicePrincipals/%s", principalId),
-		OptionsObject: &selectOpts{
-			fields: []string{"id", "customSecurityAttributes"},
-		},
+		OptionsObject:       &selectOpts{fields: []string{"id", "customSecurityAttributes"}},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("building GET request: %+v", err)
