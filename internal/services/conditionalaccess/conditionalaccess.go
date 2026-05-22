@@ -91,6 +91,7 @@ func flattenConditionalAccessApplications(in stable.ConditionalAccessApplication
 			"included_applications": tf.FlattenStringSlicePtr(in.IncludeApplications),
 			"excluded_applications": tf.FlattenStringSlicePtr(in.ExcludeApplications),
 			"included_user_actions": tf.FlattenStringSlicePtr(in.IncludeUserActions),
+			"filter":                flattenConditionalAccessFilter(in.ApplicationFilter),
 		},
 	}
 }
@@ -467,10 +468,15 @@ func expandConditionalAccessApplications(in []interface{}) stable.ConditionalAcc
 	includeApplications := config["included_applications"].([]interface{})
 	excludeApplications := config["excluded_applications"].([]interface{})
 	includeUserActions := config["included_user_actions"].([]interface{})
+	filter := config["filter"].([]interface{})
 
 	result.IncludeApplications = tf.ExpandStringSlicePtr(includeApplications)
 	result.ExcludeApplications = tf.ExpandStringSlicePtr(excludeApplications)
 	result.IncludeUserActions = tf.ExpandStringSlicePtr(includeUserActions)
+
+	if len(filter) > 0 {
+		result.ApplicationFilter = expandConditionalAccessFilter(filter)
+	}
 
 	return result
 }
