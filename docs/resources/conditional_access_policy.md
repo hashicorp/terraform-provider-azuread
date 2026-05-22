@@ -175,7 +175,7 @@ The following arguments are supported:
 
 `applications` block supports the following:
 
-* `application_filter` - (Optional) A `filter` block as documented below.
+* `filter` - (Optional) A `filter` block as documented below.
 
 ~> **Note:** Specifying `filter` requires the `Attribute Definition Reader` role, this is not included in the `Global Administrator` or other administrator roles and must be separately assigned.
 

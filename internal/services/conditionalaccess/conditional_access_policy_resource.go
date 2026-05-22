@@ -112,7 +112,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										},
 									},
 
-									"application_filter": schemaConditionalAccessFilter(),
+									"filter": schemaConditionalAccessFilter(),
 								},
 							},
 						},

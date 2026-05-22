@@ -1311,7 +1311,7 @@ resource "azuread_conditional_access_policy" "test" {
     applications {
       included_applications = ["All"]
 
-      application_filter {
+      filter {
         mode = "include"
         rule = "CustomSecurityAttribute.AzureADProviderTesting_Usage -contains \"Acceptance Tests\""
       }
