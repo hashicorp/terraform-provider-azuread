@@ -1,3 +1,7 @@
+## 3.9.0 (Unreleased)
+
+* `azuread_conditional_access_policy` - add support for the `conditions.applications.filter` property [GH-1780]
+
 ## 3.8.0 (February 19, 2026)
 
 ENHANCEMENTS:
