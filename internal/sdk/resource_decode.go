@@ -54,7 +54,7 @@ func decodeReflectedType(input interface{}, stateRetriever stateRetriever, debug
 	objType := reflect.TypeOf(input).Elem()
 	for i := 0; i < objType.NumField(); i++ {
 		field := objType.Field(i)
-		debugLogger.Infof("Field", field)
+		debugLogger.Infof("Field: %#v", field)
 
 		if val, exists := field.Tag.Lookup("tfschema"); exists {
 			tfschemaValue, valExists := stateRetriever.GetOkExists(val)
@@ -62,8 +62,8 @@ func decodeReflectedType(input interface{}, stateRetriever stateRetriever, debug
 				continue
 			}
 
-			debugLogger.Infof("TFSchemaValue: ", tfschemaValue)
-			debugLogger.Infof("Input Type: ", reflect.ValueOf(input).Elem().Field(i).Type())
+			debugLogger.Infof("TFSchemaValue: %+v", tfschemaValue)
+			debugLogger.Infof("Input Type: %+v", reflect.ValueOf(input).Elem().Field(i).Type())
 
 			fieldName := reflect.ValueOf(input).Elem().Field(i).String()
 			if err := setValue(input, tfschemaValue, i, fieldName, debugLogger); err != nil {
@@ -181,15 +181,15 @@ func setListValue(input interface{}, index int, fieldName string, v []interface{
 
 	default:
 		valueToSet := reflect.MakeSlice(reflect.ValueOf(input).Elem().Field(index).Type(), 0, 0)
-		debugLogger.Infof("List Type", valueToSet.Type())
+		debugLogger.Infof("List Type `%s`", valueToSet.Type())
 
 		for _, mapVal := range v {
 			if test, ok := mapVal.(map[string]interface{}); ok && test != nil {
 				elem := reflect.New(fieldType.Elem())
-				debugLogger.Infof("element ", elem)
+				debugLogger.Infof("element `%s`", elem)
 				for j := 0; j < elem.Type().Elem().NumField(); j++ {
 					nestedField := elem.Type().Elem().Field(j)
-					debugLogger.Infof("nestedField ", nestedField)
+					debugLogger.Infof("nestedField `%s`", nestedField.Name)
 
 					if val, exists := nestedField.Tag.Lookup("tfschema"); exists {
 						nestedTFSchemaValue := test[val]
@@ -209,7 +209,7 @@ func setListValue(input interface{}, index int, fieldName string, v []interface{
 					valueToSet = reflect.Append(valueToSet, elem)
 				}
 
-				debugLogger.Infof("value to set type after changes", valueToSet.Type())
+				debugLogger.Infof("value to set type after changes `%s`", valueToSet.Type())
 			}
 		}
 
