@@ -1,5 +1,7 @@
 ## 3.9.0 (Unreleased)
 
+* dependencies: update `go` version to `1.26.3` [GH-1872]
+* dependencies: update `go-azure-helpers` to `0.80.0` [GH-1872]
 * `azuread_conditional_access_policy` - add support for the `conditions.applications.filter` property [GH-1780]
 
 ## 3.8.0 (February 19, 2026)
