@@ -50,12 +50,20 @@ func TestAccPrivilegedAccessGroupEligibilitySchedule_owner(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.owner(data),
+			Config: r.owner(data, "P30D", "required"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				// There is a minimum life of 5 minutes for a schedule request to exist.
 				// Attempting to delete the request within this time frame will result in
 				// a 400 error on destroy, which we can't trap.
+				helpers.SleepCheck(5*time.Minute+15*time.Second),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.owner(data, "P45D", "updated justification"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
 				helpers.SleepCheck(5*time.Minute+15*time.Second),
 			),
 		},
@@ -114,9 +122,11 @@ resource "azuread_privileged_access_group_eligibility_schedule" "member" {
 `, data.RandomString, data.RandomPassword, endTime.Format(time.RFC3339))
 }
 
-func (PrivilegedAccessGroupEligibilityScheduleResource) owner(data acceptance.TestData) string {
+func (PrivilegedAccessGroupEligibilityScheduleResource) owner(data acceptance.TestData, duration string, justification string) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
+
+data "azuread_client_config" "current" {}
 
 data "azuread_domains" "test" {
   only_initial = true
@@ -133,7 +143,9 @@ resource "azuread_group" "pam" {
   mail_enabled     = false
   security_enabled = true
 
-  owners = [azuread_user.manual_owner.object_id]
+  # Include the current SP as an owner so it has sufficient privileges to
+  # delete the group during test clean-up.
+  owners = [azuread_user.manual_owner.object_id, data.azuread_client_config.current.object_id]
 
   lifecycle {
     ignore_changes = [owners]
@@ -151,8 +163,8 @@ resource "azuread_privileged_access_group_eligibility_schedule" "owner" {
   group_id        = azuread_group.pam.object_id
   principal_id    = azuread_user.eligibile_owner.object_id
   assignment_type = "owner"
-  duration        = "P30D"
-  justification   = "required"
+  duration        = "%[3]s"
+  justification   = "%[4]s"
 }
-`, data.RandomString, data.RandomPassword)
+`, data.RandomString, data.RandomPassword, duration, justification)
 }
