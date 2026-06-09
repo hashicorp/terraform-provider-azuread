@@ -2,7 +2,7 @@
 
 ENHANCEMENTS:
 
-* dependencies: update `go` version to `1.26.3` [GH-1872]
+* dependencies: update `go` version to `1.26.4` [GH-1874]
 * dependencies: update `go-azure-helpers` to `0.80.0` [GH-1872]
 * `azuread_conditional_access_policy` - add support for the `conditions.applications.filter` property [GH-1780]
 * `azuread_privileged_access_group_assignment_schedule` - add additional checks for confirming resource existence [GH-1856]
