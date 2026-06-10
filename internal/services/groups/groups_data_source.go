@@ -65,6 +65,39 @@ func groupsDataSource() *pluginsdk.Resource {
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
+			"groups": {
+				Description: "A list of groups",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"display_name": {
+							Description: "The display name of the group",
+							Type:        pluginsdk.TypeString,
+							Computed:    true,
+						},
+
+						"mail_enabled": {
+							Description: "Whether the group is mail-enabled",
+							Type:        pluginsdk.TypeBool,
+							Computed:    true,
+						},
+
+						"object_id": {
+							Description: "The object ID of the group",
+							Type:        pluginsdk.TypeString,
+							Computed:    true,
+						},
+
+						"security_enabled": {
+							Description: "Whether the group is security-enabled",
+							Type:        pluginsdk.TypeBool,
+							Computed:    true,
+						},
+					},
+				},
+			},
+
 			"ignore_missing": {
 				Description:   "Ignore missing groups and return groups that were found. The data source will still fail if no groups are found",
 				Type:          pluginsdk.TypeBool,
@@ -210,6 +243,8 @@ func groupsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta i
 
 	newDisplayNames := make([]string, 0)
 	newObjectIds := make([]string, 0)
+	groupList := make([]map[string]interface{}, 0)
+
 	for _, group := range groups {
 		if group.Id == nil {
 			return tf.ErrorDiagF(errors.New("group ID was nil"), "Bad API response")
@@ -220,6 +255,13 @@ func groupsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta i
 
 		newObjectIds = append(newObjectIds, *group.Id)
 		newDisplayNames = append(newDisplayNames, group.DisplayName.GetOrZero())
+
+		g := make(map[string]interface{})
+		g["display_name"] = group.DisplayName.GetOrZero()
+		g["mail_enabled"] = group.MailEnabled.GetOrZero()
+		g["object_id"] = group.Id
+		g["security_enabled"] = group.SecurityEnabled.GetOrZero()
+		groupList = append(groupList, g)
 	}
 
 	h := sha1.New()
@@ -232,6 +274,7 @@ func groupsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta i
 	tf.Set(d, "object_ids", newObjectIds)
 	tf.Set(d, "display_names", newDisplayNames)
 	tf.Set(d, "display_name_prefix", displayNamePrefix)
+	tf.Set(d, "groups", groupList)
 
 	return nil
 }

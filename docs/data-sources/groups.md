@@ -73,7 +73,17 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `display_names` - The display names of the groups.
+* `groups` - A list of groups. Each `group` object provides the attributes documented below.
 * `object_ids` - The object IDs of the groups.
+
+---
+
+`group` object exports the following:
+
+* `display_name` - The display name of the group.
+* `mail_enabled` - Whether the group is mail-enabled.
+* `object_id` - The object ID of the group.
+* `security_enabled` - Whether the group is security-enabled.
 
 ## Timeouts
 
