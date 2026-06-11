@@ -132,6 +132,12 @@ func servicePrincipalResource() *pluginsdk.Resource {
 							Optional:    true,
 						},
 
+						"global_secure_access": {
+							Description: "Whether this service principal represents a Global Secure Access application",
+							Type:        pluginsdk.TypeBool,
+							Optional:    true,
+						},
+
 						"hide": {
 							Description: "Whether this app is invisible to users in My Apps and Office 365 Launcher",
 							Type:        pluginsdk.TypeBool,
@@ -164,6 +170,12 @@ func servicePrincipalResource() *pluginsdk.Resource {
 
 						"gallery_application": {
 							Description: "Whether this service principal represents a gallery application",
+							Type:        pluginsdk.TypeBool,
+							Optional:    true,
+						},
+
+						"global_secure_access_application": {
+							Description: "Whether this service principal represents a Global Secure Access application",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},

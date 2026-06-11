@@ -64,6 +64,7 @@ The following attributes are exported:
 * `description` - A description of the service principal provided for internal end-users.
 * `display_name` - The display name of the application associated with this service principal.
 * `features` - A `features` block as described below.
+* `feature_tags` - A `feature_tags` block as described below.
 * `homepage_url` - Home page or landing page of the associated application.
 * `login_url` - The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps.
 * `logout_url` - The URL that will be used by Microsoft's authorization service to logout an user using OpenId Connect front-channel, back-channel or SAML logout protocols, taken from the associated application.
@@ -99,7 +100,18 @@ The following attributes are exported:
 * `custom_single_sign_on_app` - Whether this service principal represents a custom SAML application.
 * `enterprise_application` - Whether this service principal represents an Enterprise Application.
 * `gallery_application` - Whether this service principal represents a gallery application.
+* `global_secure_access_application` - Whether this service principal represents a Global Secure Access application.
 * `visible_to_users` - Whether this app is visible to users in My Apps and Office 365 Launcher.
+
+---
+
+`feature_tags` block exports the following:
+
+* `custom_single_sign_on` - Whether this service principal represents a custom SAML application.
+* `enterprise` - Whether this service principal represents an Enterprise Application.
+* `gallery` - Whether this service principal represents a gallery application.
+* `global_secure_access` - Whether this service principal represents a Global Secure Access application.
+* `hide` - Whether this app is visible to users in My Apps and Office 365 Launcher.
 
 ---
 
