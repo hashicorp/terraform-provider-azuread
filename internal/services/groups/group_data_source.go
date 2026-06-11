@@ -255,6 +255,12 @@ func groupDataSource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
+			"include_members": {
+				Description: "Whether the member object_ids are fetched from azure.",
+				Type:        pluginsdk.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
 		},
 	}
 }
@@ -457,6 +463,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	tf.Set(d, "hide_from_address_lists", hideFromAddressLists)
 	tf.Set(d, "hide_from_outlook_clients", hideFromOutlookClients)
 
+	includeMembers := d.Get("include_members").(bool)
 	includeTransitiveMembers := d.Get("include_transitive_members").(bool)
 	var members *[]string
 	if includeTransitiveMembers {
@@ -471,7 +478,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 			members = &transitiveMembers
 		}
-	} else {
+	} else if includeMembers {
 		resp, err := memberClient.ListMembers(ctx, beta.GroupId(id), memberBeta.DefaultListMembersOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group members for group with object ID: %q", d.Id())
@@ -483,6 +490,8 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 			members = &directMembers
 		}
+	} else {
+		members = &[]string{}
 	}
 	tf.Set(d, "members", members)
 
