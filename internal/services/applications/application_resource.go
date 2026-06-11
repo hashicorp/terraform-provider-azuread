@@ -286,6 +286,12 @@ func applicationResource() *pluginsdk.Resource {
 				Optional:    true,
 			},
 
+			"native_authentication_apis_enabled": {
+				Description: " Specifies whether the Native Authentication APIs are enabled for the application. The possible values are: none and all",
+				Type:        pluginsdk.TypeString,
+				Computed:    true,
+			},
+
 			"feature_tags": {
 				Description:   "Block of features to configure for this application using tags",
 				Type:          pluginsdk.TypeList,
@@ -1148,17 +1154,18 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 			SupportUrl:          nullable.NoZero(d.Get("support_url").(string)),
 			TermsOfServiceUrl:   nullable.NoZero(d.Get("terms_of_service_url").(string)),
 		},
-		IsDeviceOnlyAuthSupported:  nullable.Value(d.Get("device_only_auth_enabled").(bool)),
-		IsFallbackPublicClient:     nullable.Value(d.Get("fallback_public_client_enabled").(bool)),
-		Notes:                      nullable.NoZero(d.Get("notes").(string)),
-		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*pluginsdk.Set).List()),
-		ServiceManagementReference: nullable.NoZero(d.Get("service_management_reference").(string)),
-		SignInAudience:             nullable.Value(d.Get("sign_in_audience").(string)),
-		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
-		Tags:                       &tags,
-		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
+		IsDeviceOnlyAuthSupported:       nullable.Value(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:          nullable.Value(d.Get("fallback_public_client_enabled").(bool)),
+		NativeAuthenticationApisEnabled: d.Get("native_authentication_apis_enabled").(*stable.NativeAuthenticationApisEnabled),
+		Notes:                           nullable.NoZero(d.Get("notes").(string)),
+		OptionalClaims:                  expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		PublicClient:                    expandApplicationPublicClient(d.Get("public_client").([]interface{})),
+		RequiredResourceAccess:          expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*pluginsdk.Set).List()),
+		ServiceManagementReference:      nullable.NoZero(d.Get("service_management_reference").(string)),
+		SignInAudience:                  nullable.Value(d.Get("sign_in_audience").(string)),
+		Spa:                             expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                            &tags,
+		Web:                             expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	// Generate an application password, if specified
@@ -1494,15 +1501,16 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 			SupportUrl:          nullable.NoZero(d.Get("support_url").(string)),
 			TermsOfServiceUrl:   nullable.NoZero(d.Get("terms_of_service_url").(string)),
 		},
-		IsDeviceOnlyAuthSupported:  nullable.Value(d.Get("device_only_auth_enabled").(bool)),
-		IsFallbackPublicClient:     nullable.Value(d.Get("fallback_public_client_enabled").(bool)),
-		Notes:                      nullable.NoZero(d.Get("notes").(string)),
-		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		ServiceManagementReference: nullable.NoZero(d.Get("service_management_reference").(string)),
-		SignInAudience:             nullable.Value(d.Get("sign_in_audience").(string)),
-		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
-		Tags:                       &tags,
-		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
+		IsDeviceOnlyAuthSupported:       nullable.Value(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:          nullable.Value(d.Get("fallback_public_client_enabled").(bool)),
+		NativeAuthenticationApisEnabled: d.Get("native_authentication_apis_enabled").(*stable.NativeAuthenticationApisEnabled),
+		Notes:                           nullable.NoZero(d.Get("notes").(string)),
+		PublicClient:                    expandApplicationPublicClient(d.Get("public_client").([]interface{})),
+		ServiceManagementReference:      nullable.NoZero(d.Get("service_management_reference").(string)),
+		SignInAudience:                  nullable.Value(d.Get("sign_in_audience").(string)),
+		Spa:                             expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                            &tags,
+		Web:                             expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	api := expandApplicationApi(d.Get("api").([]interface{}))
@@ -1633,6 +1641,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus.GetOrZero()))
 	tf.Set(d, "display_name", app.DisplayName.GetOrZero())
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient.GetOrZero())
+	tf.Set(d, "native_authentication_apis_enabled", app.NativeAuthenticationApisEnabled)
 	tf.Set(d, "feature_tags", applications.FlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
