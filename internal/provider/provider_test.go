@@ -558,11 +558,109 @@ func TestAccProvider_adoOidcAuth(t *testing.T) {
 	}
 }
 
+func TestAccProvider_graphEndpointOverride(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("TF_ACC not set")
+	}
+	if os.Getenv("ARM_CLIENT_ID") == "" {
+		t.Skip("ARM_CLIENT_ID not set")
+	}
+	if os.Getenv("ARM_CLIENT_SECRET") == "" {
+		t.Skip("ARM_CLIENT_SECRET not set")
+	}
+	if os.Getenv("ARM_TENANT_ID") == "" {
+		t.Skip("ARM_TENANT_ID not set")
+	}
+
+	// Ensure deterministic configuration that exercises providerConfigure.
+	t.Setenv("ARM_ENVIRONMENT", "global")
+	t.Setenv("ARM_CLIENT_ID_FILE_PATH", "")
+	t.Setenv("ARM_CLIENT_SECRET_FILE_PATH", "")
+	t.Setenv("ARM_USE_CLI", "false")
+	t.Setenv("ARM_USE_MSI", "false")
+	t.Setenv("ARM_USE_OIDC", "false")
+	t.Setenv("ARM_MS_GRAPH_RESOURCE_ID", "")
+	t.Setenv("ARM_MS_GRAPH_ENDPOINT", "https://graph.microsoft.com/")
+
+	provider := AzureADProvider()
+	ctx := context.Background()
+
+	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	if d != nil && d.HasError() {
+		t.Fatalf("err: %+v", d)
+	}
+
+	if errs := testCheckProviderWithGraph(provider, "https://graph.microsoft.com", "", true); len(errs) > 0 {
+		for _, err := range errs {
+			t.Error(err)
+		}
+	}
+}
+
+func TestAccProvider_graphEndpointAndResourceIdOverride(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("TF_ACC not set")
+	}
+	if os.Getenv("ARM_CLIENT_ID") == "" {
+		t.Skip("ARM_CLIENT_ID not set")
+	}
+	if os.Getenv("ARM_CLIENT_SECRET") == "" {
+		t.Skip("ARM_CLIENT_SECRET not set")
+	}
+	if os.Getenv("ARM_TENANT_ID") == "" {
+		t.Skip("ARM_TENANT_ID not set")
+	}
+
+	// Ensure deterministic configuration that exercises providerConfigure.
+	t.Setenv("ARM_ENVIRONMENT", "global")
+	t.Setenv("ARM_CLIENT_ID_FILE_PATH", "")
+	t.Setenv("ARM_CLIENT_SECRET_FILE_PATH", "")
+	t.Setenv("ARM_USE_CLI", "false")
+	t.Setenv("ARM_USE_MSI", "false")
+	t.Setenv("ARM_USE_OIDC", "false")
+	t.Setenv("ARM_MS_GRAPH_ENDPOINT", "https://graph.microsoft.com/")
+	t.Setenv("ARM_MS_GRAPH_RESOURCE_ID", "https://graph.microsoft.com")
+
+	provider := AzureADProvider()
+	ctx := context.Background()
+
+	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	if d != nil && d.HasError() {
+		t.Fatalf("err: %+v", d)
+	}
+
+	if errs := testCheckProviderWithGraph(provider, "https://graph.microsoft.com", "https://graph.microsoft.com", true); len(errs) > 0 {
+		for _, err := range errs {
+			t.Error(err)
+		}
+	}
+}
+
 func testCheckProvider(provider *schema.Provider) (errs []error) {
+	return testCheckProviderWithGraph(provider, "", "", false)
+}
+
+func testCheckProviderWithGraph(provider *schema.Provider, expectedGraphEndpoint, expectedGraphResourceId string, requireGraphAppId bool) (errs []error) {
 	client := provider.Meta().(*clients.Client)
 
 	if endpoint, ok := client.Environment.MicrosoftGraph.Endpoint(); !ok || *endpoint == "" {
 		errs = append(errs, fmt.Errorf("MsGraphEndpoint was empty in client.Environment"))
+	} else if expectedGraphEndpoint != "" && *endpoint != expectedGraphEndpoint {
+		errs = append(errs, fmt.Errorf("unexpected Microsoft Graph endpoint %q (expected %q)", *endpoint, expectedGraphEndpoint))
+	}
+
+	if expectedGraphResourceId != "" {
+		if resourceIdentifier, ok := client.Environment.MicrosoftGraph.ResourceIdentifier(); !ok || *resourceIdentifier == "" {
+			errs = append(errs, fmt.Errorf("Microsoft Graph resource identifier was empty in client.Environment"))
+		} else if *resourceIdentifier != expectedGraphResourceId {
+			errs = append(errs, fmt.Errorf("unexpected Microsoft Graph resource identifier %q (expected %q)", *resourceIdentifier, expectedGraphResourceId))
+		}
+	}
+
+	if requireGraphAppId {
+		if appId, ok := client.Environment.MicrosoftGraph.AppId(); !ok || *appId == "" {
+			errs = append(errs, fmt.Errorf("Microsoft Graph AppId was empty in client.Environment"))
+		}
 	}
 
 	if client.ClientID == "" {
