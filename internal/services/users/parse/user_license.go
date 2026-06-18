@@ -22,8 +22,16 @@ func NewUserLicenseID(userId, skuId string) UserLicenseId {
 	}
 }
 
-func (id UserLicenseId) String() string {
+func (id UserLicenseId) ID() string {
 	return fmt.Sprintf("%s/license/%s", id.UserId, id.SkuId)
+}
+
+func (id UserLicenseId) String() string {
+	components := []string{
+		fmt.Sprintf("User ID %q", id.UserId),
+		fmt.Sprintf("SKU ID %q", id.SkuId),
+	}
+	return fmt.Sprintf("User License (%s)", strings.Join(components, " / "))
 }
 
 func UserLicenseID(idString string) (*UserLicenseId, error) {

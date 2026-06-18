@@ -3,7 +3,10 @@
 
 package users
 
-import "github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+import (
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
+)
 
 type Registration struct{}
 
@@ -36,5 +39,17 @@ func (r Registration) SupportedDataSources() map[string]*pluginsdk.Resource {
 func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 	return map[string]*pluginsdk.Resource{
 		"azuread_user": userResource(),
+	}
+}
+
+// DataSources returns the typed DataSources supported by this service
+func (r Registration) DataSources() []sdk.DataSource {
+	return []sdk.DataSource{}
+}
+
+// Resources returns the typed Resources supported by this service
+func (r Registration) Resources() []sdk.Resource {
+	return []sdk.Resource{
+		UserLicenseResource{},
 	}
 }
