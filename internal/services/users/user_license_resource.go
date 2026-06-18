@@ -97,7 +97,6 @@ func (r UserLicenseResource) Create() sdk.ResourceFunc {
 			tf.LockByName(userResourceName, model.UserId)
 			defer tf.UnlockByName(userResourceName, model.UserId)
 
-			// Retrieve the user to verify its presence, check the usage location prerequisite, and detect existing assignments
 			resp, err := client.GetUser(ctx, userId, user.GetUserOperationOptions{
 				Select: &[]string{"id", "usageLocation", "assignedLicenses", "licenseAssignmentStates"},
 			})
@@ -144,7 +143,6 @@ func (r UserLicenseResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("assigning %s: %+v", id, err)
 			}
 
-			// Wait for the license assignment to be reflected on the user, as the Graph API is eventually consistent
 			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
 				resp, err := client.GetUser(ctx, userId, user.GetUserOperationOptions{
 					Select: &[]string{"id", "assignedLicenses", "licenseAssignmentStates"},
