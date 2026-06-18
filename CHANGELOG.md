@@ -1,3 +1,9 @@
+## 3.10.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `azuread_user_license` [GH-1057]
+
 ## 3.9.0 (June 18, 2026)
 
 ENHANCEMENTS:
