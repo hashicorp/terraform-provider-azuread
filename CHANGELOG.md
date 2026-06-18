@@ -1,3 +1,18 @@
+## 3.9.0 (June 18, 2026)
+
+ENHANCEMENTS:
+
+* dependencies: update `go` version to `1.26.4` ([#1874](https://github.com/hashicorp/terraform-provider-azuread/issues/1874))
+* dependencies: update `go-azure-helpers` to `0.80.0` ([#1872](https://github.com/hashicorp/terraform-provider-azuread/issues/1872))
+* `azuread_conditional_access_policy` - add support for the `conditions.applications.filter` property ([#1780](https://github.com/hashicorp/terraform-provider-azuread/issues/1780))
+* `azuread_privileged_access_group_assignment_schedule` - add additional checks for confirming resource existence ([#1856](https://github.com/hashicorp/terraform-provider-azuread/issues/1856))
+* `azuread_privileged_access_group_eligibility_schedule` - add additional checks for confirming resource existence ([#1856](https://github.com/hashicorp/terraform-provider-azuread/issues/1856))
+
+BUG:
+
+* `azuread_privileged_access_group_assignment_schedule` - fix update functionality preventing `RoleAssignmentExists` errors ([#1856](https://github.com/hashicorp/terraform-provider-azuread/issues/1856))
+* `azuread_privileged_access_group_eligibility_schedule` - fix update functionality preventing `RoleAssignmentExists` errors ([#1856](https://github.com/hashicorp/terraform-provider-azuread/issues/1856))
+
 ## 3.8.0 (February 19, 2026)
 
 ENHANCEMENTS:
