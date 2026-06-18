@@ -40,7 +40,7 @@ func TestAccAccessPackageCatalogDataSource_byDisplayName(t *testing.T) {
 func (AccessPackageCatalogDataSource) testCheckFunc(data acceptance.TestData) acceptance.TestCheckFunc {
 	return acceptance.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("description").HasValue(fmt.Sprintf("Test access package catalog %[1]d", data.RandomInteger)),
-		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("test-access-package-catalog-%[1]d", data.RandomInteger)),
+		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-access-package-catalog-%[1]d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("externally_visible").HasValue("false"),
 		check.That(data.ResourceName).Key("published").HasValue("false"),
 	)

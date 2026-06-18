@@ -80,12 +80,12 @@ func (r AccessPackageResourceCatalogAssociationResource) complete(data acceptanc
 provider "azuread" {}
 
 resource "azuread_group" "test_group" {
-  display_name     = "test-access-package-resource-catalog-association-%[1]d"
+  display_name     = "acctest-access-package-resource-catalog-association-%[1]d"
   security_enabled = true
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "test-catalog-%[1]d"
+  display_name = "acctest-catalog-%[1]d"
   description  = "Test catalog %[1]d"
 }
 

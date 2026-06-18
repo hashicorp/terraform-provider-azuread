@@ -71,7 +71,6 @@ func TestAccGroupRoleManagementPolicy_owner(t *testing.T) {
 		},
 		data.ImportStep(),
 	})
-
 }
 
 func (GroupRoleManagementPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
@@ -107,7 +106,7 @@ func (GroupRoleManagementPolicyResource) activationRules(data acceptance.TestDat
 provider "azuread" {}
 
 resource "azuread_group" "this" {
-  display_name     = "PAM Basic Test %[1]s"
+  display_name     = "acctest PAM Basic Test %[1]s"
   security_enabled = true
 }
 
@@ -127,7 +126,7 @@ func (GroupRoleManagementPolicyResource) member(data acceptance.TestData) string
 provider "azuread" {}
 
 resource "azuread_group" "pam" {
-  display_name     = "PAM Member Test %[1]s"
+  display_name     = "acctest PAM Member Test %[1]s"
   mail_enabled     = false
   security_enabled = true
 }
@@ -159,12 +158,12 @@ data "azuread_domains" "test" {
 
 resource "azuread_user" "approver" {
   user_principal_name = "pam-approver-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "PAM Approver Test %[1]s"
+  display_name        = "acctest PAM Approver Test %[1]s"
   password            = "%[2]s"
 }
 
 resource "azuread_group" "pam" {
-  display_name     = "PAM Owner Test %[1]s"
+  display_name     = "acctest PAM Owner Test %[1]s"
   mail_enabled     = false
   security_enabled = true
 }

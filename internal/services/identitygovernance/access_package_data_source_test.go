@@ -40,7 +40,7 @@ func TestAccAccessPackageDataSource_byDisplayName(t *testing.T) {
 func (AccessPackageDataSource) testCheckFunc(data acceptance.TestData) acceptance.TestCheckFunc {
 	return acceptance.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("description").HasValue(fmt.Sprintf("Access Package %[1]d", data.RandomInteger)),
-		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("access-package-%[1]d", data.RandomInteger)),
+		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-access-package-%[1]d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("hidden").HasValue("true"),
 		check.That(data.ResourceName).Key("catalog_id").Exists(),
 	)

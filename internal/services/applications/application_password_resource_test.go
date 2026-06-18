@@ -181,7 +181,7 @@ func (r ApplicationPasswordResource) complete(data acceptance.TestData, startDat
 
 resource "azuread_application_password" "test" {
   application_id = azuread_application.test.id
-  display_name   = "terraform-%[2]s"
+  display_name   = "acctest-terraform-%[2]s"
   start_date     = "%[3]s"
   end_date       = "%[4]s"
 }
@@ -194,7 +194,7 @@ func (r ApplicationPasswordResource) relativeEndDate(data acceptance.TestData) s
 
 resource "azuread_application_password" "test" {
   application_id    = azuread_application.test.id
-  display_name      = "terraform-%[2]s"
+  display_name      = "acctest-terraform-%[2]s"
   end_date_relative = "8760h"
 }
 `, r.template(data), data.RandomString)

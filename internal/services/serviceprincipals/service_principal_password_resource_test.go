@@ -136,7 +136,7 @@ func (r ServicePrincipalPasswordResource) complete(data acceptance.TestData, sta
 
 resource "azuread_service_principal_password" "test" {
   service_principal_id = azuread_service_principal.test.id
-  display_name         = "terraform-%[2]s"
+  display_name         = "acctest-terraform-%[2]s"
   start_date           = "%[3]s"
   end_date             = "%[4]s"
 }
@@ -149,7 +149,7 @@ func (r ServicePrincipalPasswordResource) relativeEndDate(data acceptance.TestDa
 
 resource "azuread_service_principal_password" "test" {
   service_principal_id = azuread_service_principal.test.id
-  display_name         = "terraform-%[2]s"
+  display_name         = "acctest-terraform-%[2]s"
   end_date_relative    = "8760h"
 }
 `, r.template(data), data.RandomString)
