@@ -143,18 +143,18 @@ func (AccessPackageAssignmentPolicyResource) simple(data acceptance.TestData) st
 provider "azuread" {}
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "test-catalog-%[1]d"
+  display_name = "acctest-catalog-%[1]d"
   description  = "Test Catalog %[1]d"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "access-package-%[1]d"
+  display_name = "acctest-access-package-%[1]d"
   description  = "Test Access Package %[1]d"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 
 resource "azuread_access_package_assignment_policy" "test" {
-  display_name      = "access-package-assignment-policy-%[1]d"
+  display_name      = "acctest-access-package-assignment-policy-%[1]d"
   description       = "Test Access Package Assignnment Policy %[1]d"
   access_package_id = azuread_access_package.test.id
 }
@@ -166,23 +166,23 @@ func (AccessPackageAssignmentPolicyResource) basic(data acceptance.TestData) str
 provider "azuread" {}
 
 resource "azuread_group" "test" {
-  display_name     = "test-group-%[1]d"
+  display_name     = "acctest-group-%[1]d"
   security_enabled = true
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "testacc-access-assignment-%[1]d"
+  display_name = "acctest-access-assignment-%[1]d"
   description  = "TestAcc Catalog %[1]d for access assignment policy"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "testacc-access-assignment-%[1]d"
+  display_name = "acctest-access-assignment-%[1]d"
   description  = "TestAcc Access Package %[1]d for access assignment policy"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 
 resource "azuread_access_package_assignment_policy" "test" {
-  display_name      = "testacc-access-assignment-%[1]d"
+  display_name      = "acctest-access-assignment-%[1]d"
   description       = "TestAcc Access Package Assignnment Policy %[1]d"
   duration_in_days  = 90
   access_package_id = azuread_access_package.test.id
@@ -225,23 +225,23 @@ func (AccessPackageAssignmentPolicyResource) basicWithoutQuestion(data acceptanc
 provider "azuread" {}
 
 resource "azuread_group" "test" {
-  display_name     = "test-group-%[1]d"
+  display_name     = "acctest-group-%[1]d"
   security_enabled = true
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "testacc-access-assignment-%[1]d"
+  display_name = "acctest-access-assignment-%[1]d"
   description  = "TestAcc Catalog %[1]d for access assignment policy"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "testacc-access-assignment-%[1]d"
+  display_name = "acctest-access-assignment-%[1]d"
   description  = "TestAcc Access Package %[1]d for access assignment policy"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 
 resource "azuread_access_package_assignment_policy" "test" {
-  display_name      = "testacc-access-assignment-%[1]d"
+  display_name      = "acctest-access-assignment-%[1]d"
   description       = "TestAcc Access Package Assignnment Policy %[1]d"
   duration_in_days  = 90
   access_package_id = azuread_access_package.test.id
@@ -278,33 +278,33 @@ func (AccessPackageAssignmentPolicyResource) complete(data acceptance.TestData) 
 provider "azuread" {}
 
 resource "azuread_group" "requestor" {
-  display_name     = "test-requestor-%[1]d"
+  display_name     = "acctest-requestor-%[1]d"
   security_enabled = true
 }
 
 resource "azuread_group" "first_approver" {
-  display_name     = "test-approver-%[1]d"
+  display_name     = "acctest-approver-%[1]d"
   security_enabled = true
 }
 
 resource "azuread_group" "second_approver" {
-  display_name     = "test-s-approver-%[1]d"
+  display_name     = "acctest-s-approver-%[1]d"
   security_enabled = true
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "testacc-access-assignment-%[1]d"
+  display_name = "acctest-access-assignment-%[1]d"
   description  = "TestAcc Catalog %[1]d for access assignment policy"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "testacc-access-assignment-%[1]d"
+  display_name = "acctest-access-assignment-%[1]d"
   description  = "Test Access Package %[1]d for assignment policy"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 
 resource "azuread_access_package_assignment_policy" "test" {
-  display_name      = "access-package-assignment-policy-%[1]d"
+  display_name      = "acctest-access-package-assignment-policy-%[1]d"
   description       = "Test Access Package Assignnment Policy %[1]d"
   extension_enabled = true
   expiration_date   = "2096-09-23T01:02:03Z"

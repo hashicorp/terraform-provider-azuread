@@ -99,7 +99,7 @@ func (AccessPackageCatalogResource) basic(data acceptance.TestData) string {
 provider "azuread" {}
 
 resource "azuread_access_package_catalog" "test" {
-  display_name = "test-access-package-catalog-%[1]d"
+  display_name = "acctest-access-package-catalog-%[1]d"
   description  = "Test access package catalog %[1]d"
 }
 `, data.RandomInteger)
@@ -110,7 +110,7 @@ func (AccessPackageCatalogResource) complete(data acceptance.TestData) string {
 provider "azuread" {}
 
 resource "azuread_access_package_catalog" "test" {
-  display_name       = "test-access-package-catalog-%[1]d"
+  display_name       = "acctest-access-package-catalog-%[1]d"
   description        = "Test access package catalog %[1]d"
   externally_visible = false
   published          = false

@@ -69,7 +69,6 @@ func TestAccPrivilegedAccessGroupAssignmentSchedule_owner(t *testing.T) {
 		},
 		data.ImportStep(),
 	})
-
 }
 
 func (PrivilegedAccessGroupAssignmentScheduleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
@@ -98,7 +97,7 @@ func (PrivilegedAccessGroupAssignmentScheduleResource) member(data acceptance.Te
 provider "azuread" {}
 
 resource "azuread_group" "pam" {
-  display_name     = "Privileged Assignment %[1]s"
+  display_name     = "acctest Privileged Assignment %[1]s"
   mail_enabled     = false
   security_enabled = true
 }
@@ -109,7 +108,7 @@ data "azuread_domains" "test" {
 
 resource "azuread_user" "member" {
   user_principal_name = "pam-member-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "PAM Member %[1]s"
+  display_name        = "acctest PAM Member %[1]s"
   password            = "%[2]s"
 }
 
@@ -135,12 +134,12 @@ data "azuread_domains" "test" {
 
 resource "azuread_user" "manual_owner" {
   user_principal_name = "pam-eligible-owner-manual-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "PAM Owner (Manual) %[1]s"
+  display_name        = "acctest PAM Owner (Manual) %[1]s"
   password            = "%[2]s"
 }
 
 resource "azuread_group" "pam" {
-  display_name     = "Privileged Assignment %[1]s"
+  display_name     = "acctest Privileged Assignment %[1]s"
   mail_enabled     = false
   security_enabled = true
 
@@ -155,7 +154,7 @@ resource "azuread_group" "pam" {
 
 resource "azuread_user" "eligibile_owner" {
   user_principal_name = "pam-eligible-owner-eligible-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "PAM Owner (Eligible) %[1]s"
+  display_name        = "acctest PAM Owner (Eligible) %[1]s"
   password            = "%[2]s"
 }
 

@@ -98,12 +98,12 @@ func (AccessPackageResource) basic(data acceptance.TestData) string {
 provider "azuread" {}
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "test-catalog-%[1]d"
+  display_name = "acctest-catalog-%[1]d"
   description  = "Test catalog %[1]d"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "access-package-%[1]d"
+  display_name = "acctest-access-package-%[1]d"
   description  = "Access Package %[1]d"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
@@ -115,12 +115,12 @@ func (AccessPackageResource) complete(data acceptance.TestData) string {
 provider "azuread" {}
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "test-catalog-%[1]d"
+  display_name = "acctest-catalog-%[1]d"
   description  = "Test catalog %[1]d"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "access-package-%[1]d"
+  display_name = "acctest-access-package-%[1]d"
   description  = "Access Package %[1]d"
   hidden       = true
   catalog_id   = azuread_access_package_catalog.test_catalog.id
