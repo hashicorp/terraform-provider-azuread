@@ -21,20 +21,10 @@ import (
 
 type UserLicenseResource struct{}
 
-// These acceptance tests require a license SKU that is available in the test tenant. As license
-// availability is tenant-specific, the SKU ID (and optionally a service plan ID to disable) must be
-// provided via environment variables, otherwise the tests are skipped.
-const (
-	skuIdEnvVar         = "AZUREAD_TEST_SKU_ID"
-	disabledPlanEnvVar  = "AZUREAD_TEST_DISABLED_PLAN_ID"
-	skipMessageNoSkuId  = "skipping as `" + skuIdEnvVar + "` is not specified"
-	skipMessageNoPlanId = "skipping as `" + disabledPlanEnvVar + "` is not specified"
-)
-
 func TestAccUserLicense_basic(t *testing.T) {
-	skuId := os.Getenv(skuIdEnvVar)
+	skuId := os.Getenv("AZUREAD_TEST_SKU_ID")
 	if skuId == "" {
-		t.Skip(skipMessageNoSkuId)
+		t.Skip("AZUREAD_TEST_SKU_ID not set")
 	}
 
 	data := acceptance.BuildTestData(t, "azuread_user_license", "test")
@@ -54,9 +44,9 @@ func TestAccUserLicense_basic(t *testing.T) {
 }
 
 func TestAccUserLicense_requiresImport(t *testing.T) {
-	skuId := os.Getenv(skuIdEnvVar)
+	skuId := os.Getenv("AZUREAD_TEST_SKU_ID")
 	if skuId == "" {
-		t.Skip(skipMessageNoSkuId)
+		t.Skip("AZUREAD_TEST_SKU_ID not set")
 	}
 
 	data := acceptance.BuildTestData(t, "azuread_user_license", "test")
@@ -74,13 +64,13 @@ func TestAccUserLicense_requiresImport(t *testing.T) {
 }
 
 func TestAccUserLicense_disabledPlans(t *testing.T) {
-	skuId := os.Getenv(skuIdEnvVar)
+	skuId := os.Getenv("AZUREAD_TEST_SKU_ID")
 	if skuId == "" {
-		t.Skip(skipMessageNoSkuId)
+		t.Skip("AZUREAD_TEST_SKU_ID not set")
 	}
-	disabledPlanId := os.Getenv(disabledPlanEnvVar)
+	disabledPlanId := os.Getenv("AZUREAD_TEST_DISABLED_PLAN_ID")
 	if disabledPlanId == "" {
-		t.Skip(skipMessageNoPlanId)
+		t.Skip("AZUREAD_TEST_DISABLED_PLAN_ID not set")
 	}
 
 	data := acceptance.BuildTestData(t, "azuread_user_license", "test")
