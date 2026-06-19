@@ -123,11 +123,18 @@ func (r UserLicenseResource) Create() sdk.ResourceFunc {
 				return metadata.ResourceRequiresImport(r.ResourceType(), id)
 			}
 
+			// Microsoft Graph requires disabledPlans to be a non-null collection, so default a nil slice
+			// (when disabled_plans is unset) to an empty slice rather than sending a null value.
+			disabledPlans := model.DisabledPlans
+			if disabledPlans == nil {
+				disabledPlans = []string{}
+			}
+
 			properties := user.AssignLicenseRequest{
 				AddLicenses: &[]stable.AssignedLicense{
 					{
 						SkuId:         nullable.Value(model.SkuId),
-						DisabledPlans: pointer.To(model.DisabledPlans),
+						DisabledPlans: &disabledPlans,
 					},
 				},
 				RemoveLicenses: &[]string{},
