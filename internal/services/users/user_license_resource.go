@@ -255,36 +255,21 @@ func (r UserLicenseResource) Delete() sdk.ResourceFunc {
 	}
 }
 
-// findDirectLicenseAssignment returns the directly-assigned license matching the given SKU ID, or nil if
-// the user has no such direct assignment. Licenses inherited via group-based licensing (which carry a
-// non-null `assignedByGroup` in their assignment state) are not considered, so this resource never adopts
-// a license it did not assign directly.
-func findDirectLicenseAssignment(u *stable.User, skuId string) *stable.AssignedLicense {
-	if u == nil {
+// findDirectLicenseAssignment returns the directly-assigned license state matching the given SKU ID, or
+// nil if the user has no such direct assignment. Licenses inherited via group-based licensing (which carry
+// a non-null `assignedByGroup`) are ignored, so this resource never adopts a license it did not assign
+// directly. The assignment state is used (rather than the aggregated `assignedLicenses` entry) so that the
+// returned `disabledPlans` reflect this direct assignment specifically, and are not skewed when the same
+// SKU is additionally assigned to the user via a group.
+func findDirectLicenseAssignment(u *stable.User, skuId string) *stable.LicenseAssignmentState {
+	if u == nil || u.LicenseAssignmentStates == nil {
 		return nil
 	}
 
-	// Determine whether a direct (non group-based) assignment exists for this SKU
-	directlyAssigned := false
-	if u.LicenseAssignmentStates != nil {
-		for _, state := range *u.LicenseAssignmentStates {
-			if state.SkuId.GetOrZero() == skuId && state.AssignedByGroup.GetOrZero() == "" {
-				directlyAssigned = true
-				break
-			}
-		}
-	}
-
-	if !directlyAssigned {
-		return nil
-	}
-
-	if u.AssignedLicenses != nil {
-		for _, license := range *u.AssignedLicenses {
-			if license.SkuId.GetOrZero() == skuId {
-				assignedLicense := license
-				return &assignedLicense
-			}
+	for _, state := range *u.LicenseAssignmentStates {
+		if state.SkuId.GetOrZero() == skuId && state.AssignedByGroup.GetOrZero() == "" {
+			assignmentState := state
+			return &assignmentState
 		}
 	}
 
