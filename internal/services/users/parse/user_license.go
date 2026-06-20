@@ -3,61 +3,38 @@
 
 package parse
 
-import (
-	"fmt"
-	"strings"
-
-	"github.com/hashicorp/go-uuid"
-)
+import "fmt"
 
 type UserLicenseId struct {
+	ObjectSubResourceId
 	UserId string
 	SkuId  string
 }
 
 func NewUserLicenseID(userId, skuId string) UserLicenseId {
 	return UserLicenseId{
-		UserId: userId,
-		SkuId:  skuId,
+		ObjectSubResourceId: NewObjectSubResourceID(userId, "license", skuId),
+		UserId:              userId,
+		SkuId:               skuId,
 	}
 }
 
+// ID returns the fully formatted ID for this Resource ID, as required by the typed SDK resource interface.
 func (id UserLicenseId) ID() string {
-	return fmt.Sprintf("%s/license/%s", id.UserId, id.SkuId)
-}
-
-func (id UserLicenseId) String() string {
-	components := []string{
-		fmt.Sprintf("User ID %q", id.UserId),
-		fmt.Sprintf("SKU ID %q", id.SkuId),
-	}
-	return fmt.Sprintf("User License (%s)", strings.Join(components, " / "))
+	return id.ObjectSubResourceId.String()
 }
 
 func UserLicenseID(idString string) (*UserLicenseId, error) {
-	parts := strings.Split(idString, "/")
-	if len(parts) != 3 {
-		return nil, fmt.Errorf("User License ID should be in the format {userId}/license/{skuId} - but got %q", idString)
+	id, err := ObjectSubResourceID(idString, "license")
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse User License ID: %v", err)
 	}
 
-	if parts[1] != "license" {
-		return nil, fmt.Errorf("Type in {userId}/license/{skuId} was expected to be \"license\", got %q", parts[1])
-	}
-
-	id := UserLicenseId{
-		UserId: parts[0],
-		SkuId:  parts[2],
-	}
-
-	if _, err := uuid.ParseUUID(id.UserId); err != nil {
-		return nil, fmt.Errorf("User ID isn't a valid UUID (%q): %+v", id.UserId, err)
-	}
-
-	if _, err := uuid.ParseUUID(id.SkuId); err != nil {
-		return nil, fmt.Errorf("SKU ID isn't a valid UUID (%q): %+v", id.SkuId, err)
-	}
-
-	return &id, nil
+	return &UserLicenseId{
+		ObjectSubResourceId: *id,
+		UserId:              id.objectId,
+		SkuId:               id.subId,
+	}, nil
 }
 
 func ValidateUserLicenseID(input interface{}, key string) (warnings []string, errors []error) {
