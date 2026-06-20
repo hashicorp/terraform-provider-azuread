@@ -230,13 +230,7 @@ func (r UserLicenseResource) Delete() sdk.ResourceFunc {
 				RemoveLicenses: &[]string{id.SkuId},
 			}
 
-			options := user.AssignLicenseOperationOptions{
-				RetryFunc: func(resp *http.Response, _ *odata.OData) (bool, error) {
-					return response.WasNotFound(resp), nil
-				},
-			}
-
-			if _, err = client.AssignLicense(ctx, userId, properties, options); err != nil {
+			if _, err = client.AssignLicense(ctx, userId, properties, user.DefaultAssignLicenseOperationOptions()); err != nil {
 				return fmt.Errorf("removing %s: %+v", id, err)
 			}
 
