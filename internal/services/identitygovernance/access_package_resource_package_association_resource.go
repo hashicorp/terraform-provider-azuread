@@ -57,15 +57,17 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 			},
 
 			"access_type": {
-				Description: "The role of access type to the specified resource, valid values are `Member` and `Owner`",
-				Type:        pluginsdk.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Default:     "Member",
-				ValidateFunc: validation.StringInSlice([]string{
-					"Member",
-					"Owner",
-				}, false),
+				// The accepted value is the resource role's originId, whose format depends on the
+				// resource's origin system: `Member`/`Owner` for `AadGroup`, the app role id for
+				// `AadApplication`, and a SharePoint role id (e.g. a numeric group id or a URL) for
+				// `SharePointOnline`. The origin system isn't known until apply, so we only validate
+				// that a value is present and let the Graph API reject genuinely invalid roles.
+				Description:  "The resource role originId to attach. For `AadGroup` use `Member` or `Owner`; for `AadApplication` the app role id; for `SharePointOnline` the site role id.",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "Member",
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 		},
 	}
@@ -99,24 +101,44 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 
 	resource := pointer.To((*resourceResp.Model)[0])
 
-	properties := beta.AccessPackageResourceRoleScope{
-		AccessPackageResourceRole: &beta.AccessPackageResourceRole{
-			DisplayName:  nullable.NoZero(accessType),
-			OriginId:     nullable.Value(fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)),
-			OriginSystem: resource.OriginSystem,
-			AccessPackageResource: &beta.AccessPackageResource{
-				Id:           resource.Id,
-				ResourceType: resource.ResourceType,
-				OriginId:     resource.OriginId,
-			},
-		},
-		AccessPackageResourceScope: &beta.AccessPackageResourceScope{
-			OriginSystem: resource.OriginSystem,
-			OriginId:     nullable.Value(catalogResourceAssociationId.OriginId),
+	createMsg := "Creating Access Package Resource Association from resource %q@%q to access package %q"
+
+	role := beta.AccessPackageResourceRole{
+		OriginId:     nullable.Value(accessType),
+		OriginSystem: resource.OriginSystem,
+		AccessPackageResource: &beta.AccessPackageResource{
+			Id:           resource.Id,
+			ResourceType: resource.ResourceType,
+			OriginId:     resource.OriginId,
 		},
 	}
 
-	createMsg := `Creating Access Package Resource Association from resource %q@%q to access package %q`
+	scope := beta.AccessPackageResourceScope{
+		OriginSystem: resource.OriginSystem,
+		OriginId:     nullable.Value(catalogResourceAssociationId.OriginId),
+	}
+
+	switch resource.OriginSystem.GetOrZero() {
+	case "AadGroup":
+		// The role is one of the fixed Member/Owner roles, addressed as
+		// "<accessType>_<resourceOriginId>"; the access_type doubles as the display name.
+		role.OriginId = nullable.Value(fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId))
+		role.DisplayName = nullable.Value(accessType)
+	case "SharePointOnline":
+		// SharePoint resources expose a single root scope; the role's display name is derived
+		// by the service from its originId, so it is left unset.
+		scope.IsRootScope = nullable.Value(true)
+		scope.DisplayName = nullable.Value("Root")
+		scope.Description = nullable.Value("Root Scope")
+	default:
+		// AadApplication and any other origin system: access_type is the role originId
+		// verbatim; the display name is derived by the service.
+	}
+
+	properties := beta.AccessPackageResourceRoleScope{
+		AccessPackageResourceRole:  &role,
+		AccessPackageResourceScope: &scope,
+	}
 
 	resp, err := client.CreateEntitlementManagementAccessPackageResourceRoleScope(ctx, accessPackageId, properties, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultCreateEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
 	if err != nil {
@@ -131,7 +153,16 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 
-	resourceId := parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, accessType)
+	// For AadGroup the originId/accessType are "/"-free and kept in the legacy 4-segment ID.
+	// For AadApplication (UUID) and especially SharePointOnline (role URL) they may contain
+	// "/", so they're omitted from the ID and recovered from the API on read.
+	var resourceId parse.AccessPackageResourcePackageAssociationId
+	switch resource.OriginSystem.GetOrZero() {
+	case "AadGroup":
+		resourceId = parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, accessType)
+	default:
+		resourceId = parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, "", "")
+	}
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
 
 	// Poll for AccessPackageResourceRoleScope
@@ -183,10 +214,24 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", accessPackageId)
 	}
 
-	catalogResourceAssociationId := parse.NewAccessPackageResourceCatalogAssociationID(accessPackage.CatalogId.GetOrZero(), resourceId.OriginId)
+	// Legacy 4-segment IDs carry originId/accessType directly. The 2-segment ID (used for
+	// AadApplication/SharePointOnline, whose role identifiers may contain "/") leaves them
+	// empty, so recover them from the role scope returned by the API.
+	accessType := resourceId.AccessType
+	resourceOriginId := resourceId.OriginId
+	if accessType == "" {
+		if roleScope.AccessPackageResourceRole != nil {
+			accessType = roleScope.AccessPackageResourceRole.OriginId.GetOrZero()
+		}
+		if roleScope.AccessPackageResourceScope != nil {
+			resourceOriginId = roleScope.AccessPackageResourceScope.OriginId.GetOrZero()
+		}
+	}
+
+	catalogResourceAssociationId := parse.NewAccessPackageResourceCatalogAssociationID(accessPackage.CatalogId.GetOrZero(), resourceOriginId)
 
 	tf.Set(d, "access_package_id", resourceId.AccessPackageId)
-	tf.Set(d, "access_type", resourceId.AccessType)
+	tf.Set(d, "access_type", accessType)
 	tf.Set(d, "catalog_resource_association_id", catalogResourceAssociationId.ID())
 
 	return nil
