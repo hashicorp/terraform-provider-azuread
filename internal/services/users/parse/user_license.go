@@ -19,7 +19,6 @@ func NewUserLicenseID(userId, skuId string) UserLicenseId {
 	}
 }
 
-// ID returns the fully formatted ID for this Resource ID, as required by the typed SDK resource interface.
 func (id UserLicenseId) ID() string {
 	return id.ObjectSubResourceId.String()
 }

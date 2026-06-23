@@ -75,3 +75,5 @@ User Licenses can be imported using the object ID of the user and the SKU ID of 
 ```shell
 terraform import azuread_user_license.example 00000000-0000-0000-0000-000000000000/license/11111111-1111-1111-1111-111111111111
 ```
+
+-> This ID format is unique to Terraform and is composed of the Azure AD User Object ID and the license SKU ID in the format `{UserObjectID}/license/{SkuID}`.
