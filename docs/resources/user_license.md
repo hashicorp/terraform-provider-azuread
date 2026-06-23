@@ -50,9 +50,9 @@ resource "azuread_user_license" "example" {
 
 The following arguments are supported:
 
-* `user_id` - (Required) The object ID of the user to which the license should be assigned. Changing this forces a new resource to be created.
-* `sku_id` - (Required) The unique identifier (GUID) for the SKU (license) to assign to the user. Changing this forces a new resource to be created.
 * `disabled_plans` - (Optional) A set of unique identifiers (GUIDs) for the service plans to disable for this license. Changing this forces a new resource to be created.
+* `sku_id` - (Required) The unique identifier (GUID) for the SKU (license) to assign to the user. Changing this forces a new resource to be created.
+* `user_id` - (Required) The object ID of the user to which the license should be assigned. Changing this forces a new resource to be created.
 
 ~> **Group-based licensing** This resource only manages licenses assigned directly to a user. Licenses inherited via group-based licensing are ignored and are not managed by this resource.
 
