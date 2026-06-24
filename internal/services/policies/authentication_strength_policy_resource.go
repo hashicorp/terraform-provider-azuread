@@ -95,6 +95,83 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 					},
 				},
 			},
+
+			"fido2_combination_configuration": {
+				Description: "Restrictions applied to the `fido2` authentication method combination",
+				Type:        pluginsdk.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"allowed_aaguids": {
+							Description: "A list of AAGUIDs allowed to be used as part of the `fido2` combination",
+							Type:        pluginsdk.TypeSet,
+							Required:    true,
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+							},
+						},
+
+						"id": {
+							Description: "The system-generated ID of the combination configuration",
+							Type:        pluginsdk.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
+
+			"x509_certificate_combination_configuration": {
+				Description: "Restrictions applied to the `x509Certificate` authentication method combinations",
+				Type:        pluginsdk.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"applies_to_combinations": {
+							Description: "The x509 certificate authentication method combinations this configuration applies to",
+							Type:        pluginsdk.TypeSet,
+							Required:    true,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									string(stable.AuthenticationMethodModes_X509CertificateSingleFactor),
+									string(stable.AuthenticationMethodModes_X509CertificateMultiFactor),
+								}, false),
+							},
+						},
+
+						"allowed_issuer_skis": {
+							Description:  "A list of allowed subject key identifier values",
+							Type:         pluginsdk.TypeSet,
+							Optional:     true,
+							AtLeastOneOf: []string{"x509_certificate_combination_configuration.0.allowed_issuer_skis", "x509_certificate_combination_configuration.0.allowed_policy_oids"},
+							Elem: &pluginsdk.Schema{
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+						},
+
+						"allowed_policy_oids": {
+							Description:  "A list of allowed certificate policy OIDs",
+							Type:         pluginsdk.TypeSet,
+							Optional:     true,
+							AtLeastOneOf: []string{"x509_certificate_combination_configuration.0.allowed_issuer_skis", "x509_certificate_combination_configuration.0.allowed_policy_oids"},
+							Elem: &pluginsdk.Schema{
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+						},
+
+						"id": {
+							Description: "The system-generated ID of the combination configuration",
+							Type:        pluginsdk.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
