@@ -53,6 +53,37 @@ resource "azuread_authentication_strength_policy" "example2" {
     "x509CertificateSingleFactor",
   ]
 }
+
+resource "azuread_authentication_strength_policy" "example3" {
+  display_name         = "Example Authentication Strength Policy with FIDO2 restrictions"
+  description          = "Only allow specific security keys"
+  allowed_combinations = ["fido2"]
+
+  fido2_combination_configuration {
+    allowed_aaguids = [
+      "de1e552d-db1d-4423-a619-566b625cdc84",
+      "90a3ccdf-635c-4729-a248-9b709135078f",
+    ]
+  }
+}
+
+resource "azuread_authentication_strength_policy" "example4" {
+  display_name = "Example Authentication Strength Policy with x509 restrictions"
+  description  = "Only allow certificates from specific issuers"
+  allowed_combinations = [
+    "x509CertificateSingleFactor",
+    "x509CertificateMultiFactor",
+  ]
+
+  x509_certificate_combination_configuration {
+    applies_to_combinations = [
+      "x509CertificateSingleFactor",
+      "x509CertificateMultiFactor",
+    ]
+    allowed_issuer_skis = ["9af52a26d8e4bd7d5e8f43e9c7c5e2f4a3b1c0d9"]
+    allowed_policy_oids = ["1.2.3.4.5"]
+  }
+}
 ```
 
 ## Argument Reference
@@ -62,12 +93,30 @@ The following arguments are supported:
 - `allowed_combinations` - (Required) List of allowed authentication methods for this authentication strength policy.
 - `description` - (Optional) The description for this authentication strength policy.
 - `display_name` - (Required) The friendly name for this authentication strength policy.
+- `fido2_combination_configuration` - (Optional) A `fido2_combination_configuration` block as documented below. Requires `fido2` to be present in `allowed_combinations`.
+- `x509_certificate_combination_configuration` - (Optional) A `x509_certificate_combination_configuration` block as documented below. Requires a matching `x509Certificate*` value in `allowed_combinations`.
+
+---
+
+A `fido2_combination_configuration` block supports the following:
+
+- `allowed_aaguids` - (Required) A list of Authenticator Attestation GUIDs (AAGUIDs) allowed to satisfy the `fido2` combination.
+
+---
+
+A `x509_certificate_combination_configuration` block supports the following:
+
+- `applies_to_combinations` - (Required) A list of x509 certificate authentication method combinations this configuration applies to. Possible values are `x509CertificateSingleFactor` and `x509CertificateMultiFactor`.
+- `allowed_issuer_skis` - (Optional) A list of allowed certificate issuer subject key identifier (SKI) values. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
+- `allowed_policy_oids` - (Optional) A list of allowed certificate policy OIDs. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - The ID of the authentication strength policy.
+- `fido2_combination_configuration.id` - The system-generated ID of the FIDO2 combination configuration.
+- `x509_certificate_combination_configuration.id` - The system-generated ID of the x509 certificate combination configuration.
 
 ## Timeouts
 
