@@ -106,16 +106,16 @@ A `fido2_combination_configuration` block supports the following:
 
 A `x509_certificate_combination_configuration` block supports the following:
 
-- `applies_to_combinations` - (Required) A list of x509 certificate authentication method combinations this configuration applies to. Possible values are `x509CertificateSingleFactor` and `x509CertificateMultiFactor`.
 - `allowed_issuer_skis` - (Optional) A list of allowed certificate issuer subject key identifier (SKI) values. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
 - `allowed_policy_oids` - (Optional) A list of allowed certificate policy OIDs. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
+- `applies_to_combinations` - (Required) A list of x509 certificate authentication method combinations this configuration applies to. Possible values are `x509CertificateSingleFactor` and `x509CertificateMultiFactor`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - The ID of the authentication strength policy.
 - `fido2_combination_configuration.id` - The system-generated ID of the FIDO2 combination configuration.
+- `id` - The ID of the authentication strength policy.
 - `x509_certificate_combination_configuration.id` - The system-generated ID of the x509 certificate combination configuration.
 
 ## Timeouts
