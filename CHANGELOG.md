@@ -1,3 +1,9 @@
+## 3.10.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* `azuread_authentication_strength_policy` - add support for `fido2_combination_configuration` and `x509_certificate_combination_configuration` blocks ([#1881](https://github.com/hashicorp/terraform-provider-azuread/issues/1881))
+
 ## 3.9.0 (June 18, 2026)
 
 ENHANCEMENTS:

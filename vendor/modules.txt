@@ -110,6 +110,7 @@ github.com/hashicorp/go-azure-sdk/microsoft-graph/invitations/stable/invitation
 github.com/hashicorp/go-azure-sdk/microsoft-graph/me/stable/me
 github.com/hashicorp/go-azure-sdk/microsoft-graph/oauth2permissiongrants/stable/oauth2permissiongrant
 github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicy
+github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicycombinationconfiguration
 github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/claimsmappingpolicy
 github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicy
 github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicyassignment

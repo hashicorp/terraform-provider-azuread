@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicycombinationconfiguration"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -95,6 +96,83 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 					},
 				},
 			},
+
+			"fido2_combination_configuration": {
+				Description: "Restrictions applied to the `fido2` authentication method combination",
+				Type:        pluginsdk.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"allowed_aaguids": {
+							Description: "A list of AAGUIDs allowed to be used as part of the `fido2` combination",
+							Type:        pluginsdk.TypeSet,
+							Required:    true,
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+							},
+						},
+
+						"id": {
+							Description: "The system-generated ID of the combination configuration",
+							Type:        pluginsdk.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
+
+			"x509_certificate_combination_configuration": {
+				Description: "Restrictions applied to the `x509Certificate` authentication method combinations",
+				Type:        pluginsdk.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"applies_to_combinations": {
+							Description: "The x509 certificate authentication method combinations this configuration applies to",
+							Type:        pluginsdk.TypeSet,
+							Required:    true,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									string(stable.AuthenticationMethodModes_X509CertificateSingleFactor),
+									string(stable.AuthenticationMethodModes_X509CertificateMultiFactor),
+								}, false),
+							},
+						},
+
+						"allowed_issuer_skis": {
+							Description:  "A list of allowed subject key identifier values",
+							Type:         pluginsdk.TypeSet,
+							Optional:     true,
+							AtLeastOneOf: []string{"x509_certificate_combination_configuration.0.allowed_issuer_skis", "x509_certificate_combination_configuration.0.allowed_policy_oids"},
+							Elem: &pluginsdk.Schema{
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+						},
+
+						"allowed_policy_oids": {
+							Description:  "A list of allowed certificate policy OIDs",
+							Type:         pluginsdk.TypeSet,
+							Optional:     true,
+							AtLeastOneOf: []string{"x509_certificate_combination_configuration.0.allowed_issuer_skis", "x509_certificate_combination_configuration.0.allowed_policy_oids"},
+							Elem: &pluginsdk.Schema{
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+						},
+
+						"id": {
+							Description: "The system-generated ID of the combination configuration",
+							Type:        pluginsdk.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -144,6 +222,10 @@ func authenticationStrengthPolicyCreate(ctx context.Context, d *pluginsdk.Resour
 
 	d.SetId(id.ID())
 
+	if diags := authenticationStrengthPolicyCombinationConfigurationsSync(ctx, meta, id, d); diags.HasError() {
+		return diags
+	}
+
 	return authenticationStrengthPolicyRead(ctx, d, meta)
 }
 
@@ -179,6 +261,10 @@ func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.Resour
 		}
 	}
 
+	if diags := authenticationStrengthPolicyCombinationConfigurationsSync(ctx, meta, *id, d); diags.HasError() {
+		return diags
+	}
+
 	return authenticationStrengthPolicyRead(ctx, d, meta)
 }
 
@@ -212,6 +298,10 @@ func authenticationStrengthPolicyRead(ctx context.Context, d *pluginsdk.Resource
 	}
 	tf.Set(d, "allowed_combinations", tf.FlattenStringSlice(allowedCombinations))
 
+	fido2, x509 := flattenCombinationConfigurations(authenticationStrengthPolicy.CombinationConfigurations)
+	tf.Set(d, "fido2_combination_configuration", fido2)
+	tf.Set(d, "x509_certificate_combination_configuration", x509)
+
 	return nil
 }
 
@@ -240,4 +330,116 @@ func authenticationStrengthPolicyDelete(ctx context.Context, d *pluginsdk.Resour
 	}
 
 	return nil
+}
+
+func authenticationStrengthPolicyCombinationConfigurationsSync(ctx context.Context, meta interface{}, id stable.PolicyAuthenticationStrengthPolicyId, d *pluginsdk.ResourceData) diag.Diagnostics {
+	client := meta.(*clients.Client).Policies.AuthenticationStrengthPolicyCombinationConfigurationClient
+
+	if d.HasChange("fido2_combination_configuration") {
+		if err := syncCombinationConfiguration(ctx, client, id, d, "fido2_combination_configuration", expandFido2CombinationConfiguration); err != nil {
+			return tf.ErrorDiagF(err, "Could not sync fido2 combination configuration for %s", id)
+		}
+	}
+
+	if d.HasChange("x509_certificate_combination_configuration") {
+		if err := syncCombinationConfiguration(ctx, client, id, d, "x509_certificate_combination_configuration", expandX509CertificateCombinationConfiguration); err != nil {
+			return tf.ErrorDiagF(err, "Could not sync x509 certificate combination configuration for %s", id)
+		}
+	}
+
+	return nil
+}
+
+func syncCombinationConfiguration(ctx context.Context, client *authenticationstrengthpolicycombinationconfiguration.AuthenticationStrengthPolicyCombinationConfigurationClient, id stable.PolicyAuthenticationStrengthPolicyId, d *pluginsdk.ResourceData, key string, expand func([]interface{}) stable.AuthenticationCombinationConfiguration) error {
+	oldRaw, newRaw := d.GetChange(key)
+	oldList := oldRaw.([]interface{})
+	newList := newRaw.([]interface{})
+
+	var existingId string
+	if len(oldList) > 0 && oldList[0] != nil {
+		existingId = oldList[0].(map[string]interface{})["id"].(string)
+	}
+
+	switch {
+	case len(newList) > 0 && existingId == "":
+		if _, err := client.CreateAuthenticationStrengthPolicyCombinationConfiguration(ctx, id, expand(newList), authenticationstrengthpolicycombinationconfiguration.DefaultCreateAuthenticationStrengthPolicyCombinationConfigurationOperationOptions()); err != nil {
+			return err
+		}
+
+	case len(newList) > 0 && existingId != "":
+		configId := stable.NewPolicyAuthenticationStrengthPolicyIdCombinationConfigurationID(id.AuthenticationStrengthPolicyId, existingId)
+		if _, err := client.UpdateAuthenticationStrengthPolicyCombinationConfiguration(ctx, configId, expand(newList), authenticationstrengthpolicycombinationconfiguration.DefaultUpdateAuthenticationStrengthPolicyCombinationConfigurationOperationOptions()); err != nil {
+			return err
+		}
+
+	case len(newList) == 0 && existingId != "":
+		configId := stable.NewPolicyAuthenticationStrengthPolicyIdCombinationConfigurationID(id.AuthenticationStrengthPolicyId, existingId)
+		resp, err := client.DeleteAuthenticationStrengthPolicyCombinationConfiguration(ctx, configId, authenticationstrengthpolicycombinationconfiguration.DefaultDeleteAuthenticationStrengthPolicyCombinationConfigurationOperationOptions())
+		if err != nil && !response.WasNotFound(resp.HttpResponse) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func expandFido2CombinationConfiguration(input []interface{}) stable.AuthenticationCombinationConfiguration {
+	raw := input[0].(map[string]interface{})
+	return stable.Fido2CombinationConfiguration{
+		AppliesToCombinations: &[]stable.AuthenticationMethodModes{stable.AuthenticationMethodModes_Fido2},
+		AllowedAAGUIDs:        tf.ExpandStringSlicePtr(raw["allowed_aaguids"].(*pluginsdk.Set).List()),
+	}
+}
+
+func expandX509CertificateCombinationConfiguration(input []interface{}) stable.AuthenticationCombinationConfiguration {
+	raw := input[0].(map[string]interface{})
+
+	appliesToCombinations := make([]stable.AuthenticationMethodModes, 0)
+	for _, v := range raw["applies_to_combinations"].(*pluginsdk.Set).List() {
+		appliesToCombinations = append(appliesToCombinations, stable.AuthenticationMethodModes(v.(string)))
+	}
+
+	config := stable.X509CertificateCombinationConfiguration{
+		AppliesToCombinations: pointer.To(appliesToCombinations),
+	}
+
+	if skis := raw["allowed_issuer_skis"].(*pluginsdk.Set).List(); len(skis) > 0 {
+		config.AllowedIssuerSkis = tf.ExpandStringSlicePtr(skis)
+	}
+	if oids := raw["allowed_policy_oids"].(*pluginsdk.Set).List(); len(oids) > 0 {
+		config.AllowedPolicyOIDs = tf.ExpandStringSlicePtr(oids)
+	}
+
+	return config
+}
+
+func flattenCombinationConfigurations(input *[]stable.AuthenticationCombinationConfiguration) (fido2 []interface{}, x509 []interface{}) {
+	fido2 = make([]interface{}, 0)
+	x509 = make([]interface{}, 0)
+	if input == nil {
+		return
+	}
+
+	for _, config := range *input {
+		switch c := config.(type) {
+		case stable.Fido2CombinationConfiguration:
+			fido2 = append(fido2, map[string]interface{}{
+				"allowed_aaguids": tf.FlattenStringSlicePtr(c.AllowedAAGUIDs),
+				"id":              pointer.From(c.Id),
+			})
+		case stable.X509CertificateCombinationConfiguration:
+			appliesToCombinations := make([]interface{}, 0)
+			for _, v := range pointer.From(c.AppliesToCombinations) {
+				appliesToCombinations = append(appliesToCombinations, string(v))
+			}
+			x509 = append(x509, map[string]interface{}{
+				"applies_to_combinations": appliesToCombinations,
+				"allowed_issuer_skis":     tf.FlattenStringSlicePtr(c.AllowedIssuerSkis),
+				"allowed_policy_oids":     tf.FlattenStringSlicePtr(c.AllowedPolicyOIDs),
+				"id":                      pointer.From(c.Id),
+			})
+		}
+	}
+
+	return
 }
