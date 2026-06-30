@@ -1013,6 +1013,7 @@ resource "azuread_application" "test" {
 
   device_only_auth_enabled       = true
   fallback_public_client_enabled = true
+  native_authentication_apis_enabled = "none"
   oauth2_post_response_required  = true
 
   description           = "Acceptance testing application"
