@@ -51,6 +51,14 @@ data "azuread_service_principals" "example" {
 }
 ```
 
+*Look up by using a OData filter*
+
+```terraform
+data "azuread_service_principals" "example" {
+  filter = "startswith(displayName, 'myPrincipal')"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -60,6 +68,7 @@ The following arguments are supported:
 * `ignore_missing` - (Optional) Ignore missing service principals and return all service principals that are found. The data source will still fail if no service principals are found. Defaults to false.
 * `object_ids` - (Optional) The object IDs of the service principals.
 * `return_all` - (Optional) When `true`, the data source will return all service principals. Cannot be used with `ignore_missing`. Defaults to false.
+* `filter` - (Optional) Use a OData filter to search for service principals. Cannot be used with `ignore_missing`.
 
 ~> Either `return_all`, or one of `client_ids`, `display_names` or `object_ids` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
 
