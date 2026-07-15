@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -254,7 +255,9 @@ func findGroupLicense(g *beta.Group, skuId string) *beta.AssignedLicense {
 	}
 
 	for _, license := range *g.AssignedLicenses {
-		if license.SkuId.GetOrZero() == skuId {
+		// SKU IDs are UUIDs and therefore case-insensitive; Microsoft Graph returns them lowercased but a
+		// user may supply an uppercase GUID, so compare case-insensitively to avoid spurious diffs.
+		if strings.EqualFold(license.SkuId.GetOrZero(), skuId) {
 			assignedLicense := license
 			return &assignedLicense
 		}

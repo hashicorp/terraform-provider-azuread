@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -110,7 +111,7 @@ func (r GroupLicenseResource) Exists(ctx context.Context, clients *clients.Clien
 	}
 
 	for _, license := range *g.AssignedLicenses {
-		if license.SkuId.GetOrZero() == id.SkuId {
+		if strings.EqualFold(license.SkuId.GetOrZero(), id.SkuId) {
 			return pointer.To(true), nil
 		}
 	}
