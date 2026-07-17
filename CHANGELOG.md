@@ -2,7 +2,7 @@
 
 FEATURES:
 
-* **New Resource:** `azuread_group_license` [GH-745]
+* **New Resource:** `azuread_group_license` [GH-1890]
 
 ## 3.9.0 (June 18, 2026)
 
