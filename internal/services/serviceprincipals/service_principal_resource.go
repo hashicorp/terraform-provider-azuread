@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	serviceprincipalBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/beta/serviceprincipal"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/owner"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
@@ -103,13 +104,6 @@ func servicePrincipalResource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-
-			"disabled": {
-				Description: "Whether the service principal is disabled",
-				Type:        pluginsdk.TypeBool,
-				Optional:    true,
-				Default:     false,
 			},
 
 			"feature_tags": {
@@ -371,9 +365,8 @@ func servicePrincipalDiffSuppress(k, old, new string, d *pluginsdk.ResourceData)
 }
 
 func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	servicePrincipalClients := meta.(*clients.Client).ServicePrincipals
-	client := servicePrincipalClients.ServicePrincipalClient
-	ownerClient := servicePrincipalClients.ServicePrincipalOwnerClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+	ownerClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalOwnerClient
 
 	callerId := meta.(*clients.Client).ObjectID
 	clientId := d.Get("client_id").(string)
@@ -516,12 +509,6 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 		return tf.ErrorDiagF(err, "Failed to patch service principal after creating")
 	}
 
-	if d.Get("disabled").(bool) {
-		if err := servicePrincipalClients.UpdateServicePrincipalDisabled(ctx, beta.NewServicePrincipalID(id.ServicePrincipalId), true); err != nil {
-			return tf.ErrorDiagF(err, "Failed to set `disabled` for %s", id)
-		}
-	}
-
 	// Add any remaining owners after the service principal is created
 	for _, ref := range ownersExtra {
 		if _, err = ownerClient.AddOwnerRef(ctx, id, ref, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
@@ -541,9 +528,8 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 }
 
 func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	servicePrincipalClients := meta.(*clients.Client).ServicePrincipals
-	client := servicePrincipalClients.ServicePrincipalClient
-	ownerClient := servicePrincipalClients.ServicePrincipalOwnerClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+	ownerClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalOwnerClient
 
 	id, err := stable.ParseServicePrincipalID(d.Id())
 	if err != nil {
@@ -574,12 +560,6 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 
 	if _, err := client.UpdateServicePrincipal(ctx, *id, properties, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
-	}
-
-	if d.HasChange("disabled") {
-		if err := servicePrincipalClients.UpdateServicePrincipalDisabled(ctx, beta.NewServicePrincipalID(id.ServicePrincipalId), d.Get("disabled").(bool)); err != nil {
-			return tf.ErrorDiagF(err, "Failed to set `disabled` for %s", id)
-		}
 	}
 
 	if d.HasChange("owners") {
@@ -619,9 +599,9 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 }
 
 func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	servicePrincipalClients := meta.(*clients.Client).ServicePrincipals
-	client := servicePrincipalClients.ServicePrincipalClient
-	ownerClient := servicePrincipalClients.ServicePrincipalOwnerClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+	clientBeta := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClientBeta
+	ownerClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalOwnerClient
 
 	id, err := stable.ParseServicePrincipalID(d.Id())
 	if err != nil {
@@ -644,13 +624,17 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 	}
 
-	// Retrieve properties that are not returned by the v1.0 API.
-	additionalProperties, err := servicePrincipalClients.GetServicePrincipalAdditionalProperties(ctx, beta.NewServicePrincipalID(id.ServicePrincipalId))
+	// Retrieve from beta API to get samlMetadataUrl field
+	options := serviceprincipalBeta.GetServicePrincipalOperationOptions{
+		Select: pointer.To([]string{"samlMetadataUrl"}),
+	}
+	respBeta, err := clientBeta.GetServicePrincipal(ctx, beta.NewServicePrincipalID(id.ServicePrincipalId), options)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving %s (beta API)", id)
 	}
 
-	if additionalProperties == nil {
+	servicePrincipalBeta := respBeta.Model
+	if servicePrincipalBeta == nil {
 		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s (beta API)", id)
 	}
 
@@ -672,7 +656,6 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId.GetOrZero())
 	tf.Set(d, "client_id", servicePrincipal.AppId.GetOrZero())
 	tf.Set(d, "description", servicePrincipal.Description.GetOrZero())
-	tf.Set(d, "disabled", pointer.From(additionalProperties.IsDisabled))
 	tf.Set(d, "display_name", servicePrincipal.DisplayName.GetOrZero())
 	tf.Set(d, "feature_tags", applications.FlattenFeatures(servicePrincipal.Tags, false))
 	tf.Set(d, "features", applications.FlattenFeatures(servicePrincipal.Tags, true))
@@ -686,7 +669,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 	tf.Set(d, "object_id", pointer.From(servicePrincipal.Id))
 	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode.GetOrZero())
 	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
-	tf.Set(d, "saml_metadata_url", pointer.From(additionalProperties.SamlMetadataUrl))
+	tf.Set(d, "saml_metadata_url", servicePrincipalBeta.SamlMetadataUrl.GetOrZero())
 	tf.Set(d, "saml_single_sign_on", flattenSamlSingleSignOn(servicePrincipal.SamlSingleSignOnSettings))
 	tf.Set(d, "service_principal_names", servicePrincipalNames)
 	tf.Set(d, "sign_in_audience", servicePrincipal.SignInAudience.GetOrZero())

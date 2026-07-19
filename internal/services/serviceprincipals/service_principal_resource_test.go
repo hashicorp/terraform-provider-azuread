@@ -115,38 +115,6 @@ func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipal_disabled(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
-	r := ServicePrincipalResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disabled(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("disabled").HasValue("true"),
-			),
-		},
-		data.ImportStep("use_existing"),
-		{
-			Config: r.basic(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("disabled").HasValue("false"),
-			),
-		},
-		data.ImportStep("use_existing"),
-		{
-			Config: r.disabled(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("disabled").HasValue("true"),
-			),
-		},
-		data.ImportStep("use_existing"),
-	})
-}
-
 func TestAccServicePrincipal_featureTags(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
@@ -384,21 +352,6 @@ resource "azuread_application" "test" {
 
 resource "azuread_service_principal" "test" {
   client_id = azuread_application.test.client_id
-}
-`, data.RandomInteger)
-}
-
-func (ServicePrincipalResource) disabled(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-provider "azuread" {}
-
-resource "azuread_application" "test" {
-  display_name = "acctestServicePrincipal-%[1]d"
-}
-
-resource "azuread_service_principal" "test" {
-  client_id = azuread_application.test.client_id
-  disabled  = true
 }
 `, data.RandomInteger)
 }

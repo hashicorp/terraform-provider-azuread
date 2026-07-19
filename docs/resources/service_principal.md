@@ -95,7 +95,6 @@ The following arguments are supported:
 * `app_role_assignment_required` - (Optional) Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application. Defaults to `false`.
 * `client_id` - (Required) The client ID of the application for which to create a service principal.
 * `description` - (Optional) A description of the service principal provided for internal end-users.
-* `disabled` - (Optional) Whether the service principal is disabled. Defaults to `false`.
 * `feature_tags` - (Optional) A `feature_tags` block as described below. Cannot be used together with the `tags` property.
 
 -> **Features and Tags** Features are configured for a service principal using tags, and are provided as a shortcut to set the corresponding magic tag value for each feature. You cannot configure `feature_tags` and `tags` for a service principal at the same time, so if you need to assign additional custom tags it's recommended to use the `tags` property instead. Any tags configured for the linked application will propagate to this service principal.
