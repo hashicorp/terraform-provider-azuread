@@ -30,11 +30,13 @@ func invitationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
 		CreateContext: invitationResourceCreate,
 		ReadContext:   invitationResourceRead,
+		UpdateContext: invitationResourceUpdate,
 		DeleteContext: invitationResourceDelete,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
 			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
 			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
 			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -61,6 +63,42 @@ func invitationResource() *pluginsdk.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
+			},
+
+			"company_name": {
+				Description: "The company name which the user is associated. This property can be useful for describing the company that an external user comes from",
+				Type:        pluginsdk.TypeString,
+				Optional:    true,
+			},
+
+			"department": {
+				Description: "The name for the department in which the user works",
+				Type:        pluginsdk.TypeString,
+				Optional:    true,
+			},
+
+			"given_name": {
+				Description: "The given name (first name) of the user being invited",
+				Type:        pluginsdk.TypeString,
+				Optional:    true,
+			},
+
+			"job_title": {
+				Description: "The user's job title",
+				Type:        pluginsdk.TypeString,
+				Optional:    true,
+			},
+
+			"surname": {
+				Description: "The user's surname (family name or last name)",
+				Type:        pluginsdk.TypeString,
+				Optional:    true,
+			},
+
+			"usage_location": {
+				Description: "The usage location of the user being invited. Required for users that will be assigned licenses due to legal requirement to check for availability of services in countries. The usage location is a two letter country code (ISO standard 3166). Examples include: `NO`, `JP`, and `GB`. Cannot be reset to null once set",
+				Type:        pluginsdk.TypeString,
+				Optional:    true,
 			},
 
 			"message": {
@@ -194,9 +232,7 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 		return tf.ErrorDiagF(err, "Failed to patch guest user (1) after creating invitation")
 	}
 
-	userResp, err = userClient.UpdateUser(ctx, userId, stable.User{
-		CompanyName: nullable.NoZero(""),
-	}, user.DefaultUpdateUserOperationOptions())
+	userResp, err = userClient.UpdateUser(ctx, userId, expandInvitationUser(d), user.DefaultUpdateUserOperationOptions())
 	if err != nil {
 		if response.WasNotFound(userResp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
@@ -222,7 +258,19 @@ func invitationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta
 	client := meta.(*clients.Client).Invitations.UserClient
 	userId := stable.NewUserID(d.Get("user_id").(string))
 
-	resp, err := client.GetUser(ctx, userId, user.DefaultGetUserOperationOptions())
+	options := user.GetUserOperationOptions{
+		Select: &[]string{
+			"companyName",
+			"department",
+			"givenName",
+			"jobTitle",
+			"mail",
+			"surname",
+			"usageLocation",
+		},
+	}
+
+	resp, err := client.GetUser(ctx, userId, options)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] Invited %s was not found - removing from state!", userId)
@@ -238,8 +286,25 @@ func invitationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta
 
 	tf.Set(d, "user_id", userId.UserId)
 	tf.Set(d, "user_email_address", resp.Model.Mail.GetOrZero())
+	tf.Set(d, "company_name", resp.Model.CompanyName.GetOrZero())
+	tf.Set(d, "department", resp.Model.Department.GetOrZero())
+	tf.Set(d, "given_name", resp.Model.GivenName.GetOrZero())
+	tf.Set(d, "job_title", resp.Model.JobTitle.GetOrZero())
+	tf.Set(d, "surname", resp.Model.Surname.GetOrZero())
+	tf.Set(d, "usage_location", resp.Model.UsageLocation.GetOrZero())
 
 	return nil
+}
+
+func invitationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
+	userClient := meta.(*clients.Client).Invitations.UserClient
+	userId := stable.NewUserID(d.Get("user_id").(string))
+
+	if _, err := userClient.UpdateUser(ctx, userId, expandInvitationUser(d), user.DefaultUpdateUserOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Updating invited %s", userId)
+	}
+
+	return invitationResourceRead(ctx, d, meta)
 }
 
 func invitationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
