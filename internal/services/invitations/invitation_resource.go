@@ -260,6 +260,7 @@ func invitationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta
 
 	options := user.GetUserOperationOptions{
 		Select: &[]string{
+			"id",
 			"companyName",
 			"department",
 			"givenName",

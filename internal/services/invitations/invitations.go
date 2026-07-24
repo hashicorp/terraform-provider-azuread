@@ -10,11 +10,11 @@ import (
 )
 
 // expandInvitationUser builds the user properties applied to the guest user after the
-// invitation is created. CompanyName is always set (to the configured value or empty) to
-// clear the temporary value used during creation to detect replication of the new user.
+// invitation is created. When company_name is empty, CompanyName is sent as null to clear
+// the temporary value used during replication detection.
 func expandInvitationUser(d *pluginsdk.ResourceData) stable.User {
 	return stable.User{
-		CompanyName:   nullable.Value(d.Get("company_name").(string)),
+		CompanyName:   nullable.NoZero(d.Get("company_name").(string)),
 		Department:    nullable.NoZero(d.Get("department").(string)),
 		GivenName:     nullable.NoZero(d.Get("given_name").(string)),
 		JobTitle:      nullable.NoZero(d.Get("job_title").(string)),
