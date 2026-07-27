@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -108,6 +109,15 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 // app role and principal is already present on the resource service principal.
 const appRoleAssignmentExistsError = "Permission being assigned already exists on the object"
 
+// defaultAppRoleId assigns a principal to the resource app without any specific app role, and is
+// never present in the resource service principal's appRoles collection.
+const defaultAppRoleId = "00000000-0000-0000-0000-000000000000"
+
+// appRoleConsistencyTimeout bounds how long to wait for a newly created app role to replicate.
+// It is deliberately short: the wait is an optimisation, and an app role that never appears is
+// better reported by the API than by a timeout here.
+const appRoleConsistencyTimeout = 1 * time.Minute
+
 func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
 	servicePrincipalClient := meta.(*clients.Client).AppRoleAssignments.ServicePrincipalClient
@@ -123,6 +133,36 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 			return tf.ErrorDiagPathF(err, "principal_object_id", "Service principal not found for resource (Object ID: %q)", resourceId)
 		}
 		return tf.ErrorDiagF(err, "Could not retrieve service principal for resource (Object ID: %q)", resourceId)
+	}
+
+	// An app role created moments ago is not yet visible on every Graph replica. Letting it
+	// settle first keeps the create request below off its retry path, which is where duplicate
+	// assignments come from. Best effort: if the role never appears the request is sent anyway,
+	// so an app_role_id that is simply wrong is still reported by the API rather than as a
+	// timeout here.
+	if appRoleId != defaultAppRoleId {
+		if _, err := consistency.WaitForUpdateWithTimeout(ctx, appRoleConsistencyTimeout, func(ctx context.Context) (*bool, error) {
+			resp, err := servicePrincipalClient.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+			if err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
+					return pointer.To(false), nil
+				}
+				return nil, err
+			}
+			if resp.Model == nil || resp.Model.AppRoles == nil {
+				return pointer.To(false), nil
+			}
+
+			for _, appRole := range *resp.Model.AppRoles {
+				if strings.EqualFold(pointer.From(appRole.Id), appRoleId) {
+					return pointer.To(true), nil
+				}
+			}
+
+			return pointer.To(false), nil
+		}); err != nil {
+			log.Printf("[DEBUG] App role %q not yet visible on service principal %q, continuing anyway: %v", appRoleId, resourceId, err)
+		}
 	}
 
 	properties := stable.AppRoleAssignment{
