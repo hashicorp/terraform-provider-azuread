@@ -325,6 +325,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							},
 						},
 
+						// The Microsoft Entra admin center renamed this condition from "Location" to "Network", however this is
+						// a portal label change only and the underlying Microsoft Graph API is unchanged (still `locations`).
+						// See https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network
+						// TODO: consider renaming this block to `network` in v4.0 to align with the portal terminology.
 						"locations": {
 							Type:     pluginsdk.TypeList,
 							Optional: true,

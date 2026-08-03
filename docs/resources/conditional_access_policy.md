@@ -165,7 +165,7 @@ The following arguments are supported:
 * `client_applications` - (Optional) An `client_applications` block as documented below, which specifies service principals included in and excluded from the policy.
 * `devices` - (Optional) A `devices` block as documented below, which describes devices to be included in and excluded from the policy. A `devices` block can be added to an existing policy, but removing the `devices` block forces a new resource to be created.
 * `insider_risk_levels` - (Optional) The insider risk level in the policy. Possible values are: `minor`, `moderate`, `elevated`, `unknownFutureValue`.
-* `locations` - (Optional) A `locations` block as documented below, which specifies locations included in and excluded from the policy.
+* `locations` - (Optional) A `locations` block as documented below, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network) for more information.
 * `platforms` - (Optional) A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
 * `service_principal_risk_levels` - (Optional) A list of service principal sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `none`, `unknownFutureValue`.
 * `sign_in_risk_levels` - (Optional) A list of user sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
@@ -242,6 +242,8 @@ The following arguments are supported:
 ---
 
 `locations` block supports the following:
+
+~> **Note:** In the Microsoft Entra admin center, the **Location** condition was renamed to **Network** and now also surfaces at the assignment level. This is a portal label change only - the Microsoft Graph API and this provider continue to use the `locations` naming, and existing configurations continue to work unchanged. A "Global Secure Access" compliant network location (shown as **All Compliant Network locations** in the portal) is referenced like any other location, by supplying its location ID in `included_locations` or `excluded_locations`. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network) for more information.
 
 * `excluded_locations` - (Optional) A list of location IDs excluded from scope of policy. Can also be set to `AllTrusted`.
 * `included_locations` - (Required) A list of location IDs in scope of policy unless explicitly excluded. Can also be set to `All`, or `AllTrusted`.
