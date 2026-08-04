@@ -16,12 +16,12 @@ tools:
 	go install github.com/bflad/tfproviderdocs@latest
 	go install github.com/katbyte/terrafmt@latest
 	go install mvdan.cc/gofumpt@latest
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$$(go env GOPATH || $$GOPATH)"/bin v1.64.8
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH || $$GOPATH)/bin v2.12.2
 
-build: fmtcheck
+build:
 	go install
 
-debug: fmtcheck
+debug:
 	go build -gcflags="all=-N -l" -trimpath -o terraform-provider-azuread
 	dlv exec --listen=:51000 --headless=true --api-version=2 --accept-multiclient --continue terraform-provider-azuread -- -debug
 
@@ -84,16 +84,16 @@ gencheck:
 	@git diff --compact-summary --exit-code -- ./ || \
     		(echo; echo "Unexpected difference in generated code. Run 'make generate' to update the generated code and commit."; exit 1)
 
-test: fmtcheck
+test:
 	@TEST=$(TEST) ./scripts/run-test.sh
 
-testacc: fmtcheck
+testacc:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 180m -ldflags="-X=github.com/hashicorp/terraform-provider-azuread/version.ProviderVersion=acc"
 
-acctests: fmtcheck
+acctests:
 	TF_ACC=1 go test -v ./internal/services/$(SERVICE)/ $(TESTARGS) -timeout $(TESTTIMEOUT) -ldflags="-X=github.com/hashicorp/terraform-provider-azuread/version.ProviderVersion=acc"
 
-debugacc: fmtcheck
+debugacc:
 	TF_ACC=1 dlv test $(TEST) --headless --listen=:2345 --api-version=2 -- -test.v $(TESTARGS)
 
 test-compile:
