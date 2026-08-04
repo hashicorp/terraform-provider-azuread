@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedule"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityscheduleinstance"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedulerequest"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
@@ -143,37 +143,37 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 
 func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleRequestClient
-	scheduleClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleClient
+	instanceClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleInstanceClient
 	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(d.Id())
 
 	resp, err := client.GetDirectoryRoleEligibilityScheduleRequest(ctx, id, directoryroleeligibilityschedulerequest.DefaultGetDirectoryRoleEligibilityScheduleRequestOperationOptions())
 	if err != nil {
-		// Check if the Schedule still exists, any other error we must return
 		if !response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Retrieving %s", id)
 		}
 
-		// After (typically) 45 days the request resources are purged by the service, however, the underlying resource (the schedule) has the same GUID, so we need to check if it's still there or Terraform will try to recreate this resource and fail as it already exists.
-		// TODO - This resource needs a redesign/replacement in the longer term to avoid this, however, this will likely be a breaking change requiring a major version to implement.
-		scheduleID := stable.NewRoleManagementDirectoryRoleEligibilityScheduleID(d.Id())
-		scheduleResp, err2 := scheduleClient.GetDirectoryRoleEligibilitySchedule(ctx, scheduleID, directoryroleeligibilityschedule.DefaultGetDirectoryRoleEligibilityScheduleOperationOptions())
-		if err2 != nil {
-			if response.WasNotFound(scheduleResp.HttpResponse) {
-				log.Printf("[DEBUG] %s was not found - removing from state", id)
-				d.SetId("")
-				return nil
-			}
+		// The service typically purges request resources after 45 days while the eligible assignment remains.
+		// Request IDs are not a reliable identity for the resulting schedule, so locate the direct assignment by
+		// the principal, role definition and scope stored in Terraform state.
+		principalId := d.Get("principal_id").(string)
+		roleDefinitionId := d.Get("role_definition_id").(string)
+		directoryScopeId := d.Get("directory_scope_id").(string)
+
+		roleEligibilityScheduleInstance, err := findDirectRoleEligibilityScheduleInstance(ctx, instanceClient, principalId, roleDefinitionId, directoryScopeId)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Retrieving role eligibility schedule instances for principal %q", principalId)
 		}
-		roleEligibilitySchedule := scheduleResp.Model
-		if roleEligibilitySchedule == nil {
-			return tf.ErrorDiagF(errors.New("model was nil"), "API Error")
+		if roleEligibilityScheduleInstance == nil {
+			log.Printf("[DEBUG] No direct role eligibility schedule instance was found for %s - removing from state", id)
+			d.SetId("")
+			return nil
 		}
 
-		tf.Set(d, "role_definition_id", roleEligibilitySchedule.RoleDefinitionId.GetOrZero())
-		tf.Set(d, "principal_id", roleEligibilitySchedule.PrincipalId.GetOrZero())
-		// Schedules do not expose the `justification` field, so we best effort it here and try and get it from config as it's a required property
+		tf.Set(d, "role_definition_id", roleEligibilityScheduleInstance.RoleDefinitionId.GetOrZero())
+		tf.Set(d, "principal_id", roleEligibilityScheduleInstance.PrincipalId.GetOrZero())
+		// Schedule instances do not expose justification, so retain the value from configuration/state.
 		tf.Set(d, "justification", d.Get("justification").(string))
-		tf.Set(d, "directory_scope_id", roleEligibilitySchedule.DirectoryScopeId.GetOrZero())
+		tf.Set(d, "directory_scope_id", roleEligibilityScheduleInstance.DirectoryScopeId.GetOrZero())
 
 		return nil
 	}
@@ -193,28 +193,43 @@ func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d 
 
 func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleRequestClient
-	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(d.Id())
-
-	resp, err := client.GetDirectoryRoleEligibilityScheduleRequest(ctx, id, directoryroleeligibilityschedulerequest.DefaultGetDirectoryRoleEligibilityScheduleRequestOperationOptions())
-	if err != nil {
-		return tf.ErrorDiagF(err, "Retrieving %s", id)
-	}
-
-	roleEligibilityScheduleRequest := resp.Model
-	if roleEligibilityScheduleRequest == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), "API Error")
-	}
 
 	properties := stable.UnifiedRoleEligibilityScheduleRequest{
 		Action:           pointer.To(stable.UnifiedRoleScheduleRequestActions_AdminRemove),
-		RoleDefinitionId: roleEligibilityScheduleRequest.RoleDefinitionId,
-		PrincipalId:      roleEligibilityScheduleRequest.PrincipalId,
-		Justification:    roleEligibilityScheduleRequest.Justification,
-		DirectoryScopeId: roleEligibilityScheduleRequest.DirectoryScopeId,
+		RoleDefinitionId: nullable.Value(d.Get("role_definition_id").(string)),
+		PrincipalId:      nullable.Value(d.Get("principal_id").(string)),
+		Justification:    nullable.Value(d.Get("justification").(string)),
+		DirectoryScopeId: nullable.Value(d.Get("directory_scope_id").(string)),
 	}
 
-	if _, err = client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, properties, directoryroleeligibilityschedulerequest.DefaultCreateDirectoryRoleEligibilityScheduleRequestOperationOptions()); err != nil {
+	if _, err := client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, properties, directoryroleeligibilityschedulerequest.DefaultCreateDirectoryRoleEligibilityScheduleRequestOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing role eligibility schedule request %q: %+v", d.Id(), err)
+	}
+
+	return nil
+}
+
+func findDirectRoleEligibilityScheduleInstance(ctx context.Context, client *directoryroleeligibilityscheduleinstance.DirectoryRoleEligibilityScheduleInstanceClient, principalId, roleDefinitionId, directoryScopeId string) (*stable.UnifiedRoleEligibilityScheduleInstance, error) {
+	options := directoryroleeligibilityscheduleinstance.DefaultListDirectoryRoleEligibilityScheduleInstancesOperationOptions()
+	options.Filter = pointer.To(fmt.Sprintf("principalId eq '%s'", odata.EscapeSingleQuote(principalId)))
+
+	result, err := client.ListDirectoryRoleEligibilityScheduleInstancesComplete(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return matchDirectRoleEligibilityScheduleInstance(result.Items, principalId, roleDefinitionId, directoryScopeId), nil
+}
+
+func matchDirectRoleEligibilityScheduleInstance(instances []stable.UnifiedRoleEligibilityScheduleInstance, principalId, roleDefinitionId, directoryScopeId string) *stable.UnifiedRoleEligibilityScheduleInstance {
+	for i := range instances {
+		instance := &instances[i]
+		if instance.MemberType.GetOrZero() == "Direct" &&
+			instance.PrincipalId.GetOrZero() == principalId &&
+			instance.RoleDefinitionId.GetOrZero() == roleDefinitionId &&
+			instance.DirectoryScopeId.GetOrZero() == directoryScopeId {
+			return instance
+		}
 	}
 
 	return nil
