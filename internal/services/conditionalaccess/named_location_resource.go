@@ -161,7 +161,6 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		}
 
 		d.SetId(id.ID())
-
 	} else if v, ok = d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
 		properties.DisplayName = pointer.To(d.Get("display_name").(string))
@@ -189,7 +188,6 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*15, countryNamedLocationWait(client, &id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for creation of %s", id)
 		}
-
 	} else {
 		return tf.ErrorDiagF(errors.New("one of `ip` or `country` must be specified"), "Unable to determine named location type")
 	}
@@ -219,7 +217,6 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 		if err := consistency.WaitForUpdate(ctx, ipNamedLocationWait(client, id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for update of %s", id)
 		}
-
 	} else if v, ok := d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
 

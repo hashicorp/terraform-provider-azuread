@@ -30,8 +30,10 @@ type DirectoryRoleModel struct {
 	TemplateId  string `tfschema:"template_id"`
 }
 
-var _ sdk.Resource = DirectoryRoleResource{}
-var _ sdk.ResourceWithStateMigration = DirectoryRoleResource{}
+var (
+	_ sdk.Resource                   = DirectoryRoleResource{}
+	_ sdk.ResourceWithStateMigration = DirectoryRoleResource{}
+)
 
 type DirectoryRoleResource struct{}
 

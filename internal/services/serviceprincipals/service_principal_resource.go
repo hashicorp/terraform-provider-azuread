@@ -492,7 +492,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	}
 
 	if servicePrincipal.Id == nil || *servicePrincipal.Id == "" {
-		return tf.ErrorDiagF(errors.New("Object ID returned for service principal is nil"), "Bad API response")
+		return tf.ErrorDiagF(errors.New("object ID returned for service principal is nil"), "Bad API response")
 	}
 
 	id := stable.NewServicePrincipalID(*servicePrincipal.Id)

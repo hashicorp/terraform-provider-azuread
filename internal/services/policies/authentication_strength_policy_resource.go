@@ -200,7 +200,7 @@ func authenticationStrengthPolicyRead(ctx context.Context, d *pluginsdk.Resource
 	}
 	authenticationStrengthPolicy := resp.Model
 	if authenticationStrengthPolicy == nil {
-		return tf.ErrorDiagF(errors.New("Bad API response"), "Result is nil")
+		return tf.ErrorDiagF(errors.New("bad API response"), "Result is nil")
 	}
 
 	tf.Set(d, "display_name", pointer.From(authenticationStrengthPolicy.DisplayName))

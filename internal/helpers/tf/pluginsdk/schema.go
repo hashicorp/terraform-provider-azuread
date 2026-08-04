@@ -28,8 +28,10 @@ const (
 	SchemaConfigModeBlock = schema.SchemaConfigModeBlock
 )
 
-type SchemaDiffSuppressFunc = schema.SchemaDiffSuppressFunc
-type SchemaDefaultFunc = schema.SchemaDefaultFunc
+type (
+	SchemaDiffSuppressFunc = schema.SchemaDiffSuppressFunc
+	SchemaDefaultFunc      = schema.SchemaDefaultFunc
+)
 
 // EnvDefaultFunc is a helper function that returns the value of the
 // given environment variable, if one exists, or the default value

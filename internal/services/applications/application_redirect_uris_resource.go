@@ -266,6 +266,7 @@ func (r ApplicationRedirectUrisResource) setRedirectUrisByType(application *stab
 		}
 	}
 }
+
 func (r ApplicationRedirectUrisResource) deleteRedirectUrisByType(application *stable.Application, uriType string) {
 	switch uriType {
 	case RedirectUriTypePublicClient:

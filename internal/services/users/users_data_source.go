@@ -224,7 +224,6 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		foundUsers = append(foundUsers, *resp.Model...)
-
 	} else if upns, ok := d.Get("user_principal_names").([]interface{}); ok && len(upns) > 0 {
 		expectedCount = len(upns)
 		for _, v := range upns {
@@ -251,7 +250,6 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 			foundUsers = append(foundUsers, (*resp.Model)[0])
 		}
-
 	} else {
 		if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
 			expectedCount = len(objectIds)
@@ -272,7 +270,6 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 				foundUsers = append(foundUsers, *resp.Model)
 			}
-
 		} else if mailNicknames, ok := d.Get("mail_nicknames").([]interface{}); ok && len(mailNicknames) > 0 {
 			expectedCount = len(mailNicknames)
 			for _, v := range mailNicknames {
@@ -296,7 +293,6 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 				foundUsers = append(foundUsers, *resp.Model...)
 			}
-
 		} else if mails, ok := d.Get("mails").([]interface{}); ok && len(mails) > 0 {
 			expectedCount = len(mails)
 			for _, v := range mails {
@@ -324,7 +320,6 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 				foundUsers = append(foundUsers, (*resp.Model)[0])
 			}
-
 		} else if employeeIds, ok := d.Get("employee_ids").([]interface{}); ok && len(employeeIds) > 0 {
 			expectedCount = len(employeeIds)
 			for _, v := range employeeIds {

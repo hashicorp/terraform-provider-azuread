@@ -93,7 +93,6 @@ func accessPackageDataRead(ctx context.Context, d *pluginsdk.ResourceData, meta 
 			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 		}
 		accessPackage = resp.Model
-
 	} else if displayName != "" && catalogId != "" {
 		// We can only filter on displayName
 		options := entitlementmanagementaccesspackage.ListEntitlementManagementAccessPackagesOperationOptions{

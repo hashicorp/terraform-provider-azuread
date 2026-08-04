@@ -5,7 +5,7 @@ package provider
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"os"
 	"testing"
 
@@ -24,7 +24,7 @@ func TestProvider(t *testing.T) {
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ = AzureADProvider()
+	_ = AzureADProvider()
 }
 
 func TestAccProvider_cliAuth(t *testing.T) {
@@ -562,27 +562,27 @@ func testCheckProvider(provider *schema.Provider) (errs []error) {
 	client := provider.Meta().(*clients.Client)
 
 	if endpoint, ok := client.Environment.MicrosoftGraph.Endpoint(); !ok || *endpoint == "" {
-		errs = append(errs, fmt.Errorf("MsGraphEndpoint was empty in client.Environment"))
+		errs = append(errs, errors.New("the MsGraphEndpoint was empty in client.Environment"))
 	}
 
 	if client.ClientID == "" {
-		errs = append(errs, fmt.Errorf("client.ClientID was empty"))
+		errs = append(errs, errors.New("client.ClientID was empty"))
 	}
 
 	if client.TenantID == "" {
-		errs = append(errs, fmt.Errorf("client.TenantID was empty"))
+		errs = append(errs, errors.New("client.TenantID was empty"))
 	}
 
 	if client.ObjectID == "" {
-		errs = append(errs, fmt.Errorf("client.ObjectID was empty"))
+		errs = append(errs, errors.New("client.ObjectID was empty"))
 	}
 
 	if client.Claims.TenantId == "" {
-		errs = append(errs, fmt.Errorf("TenantId was not populated in client.Claims"))
+		errs = append(errs, errors.New("TenantId was not populated in client.Claims"))
 	}
 
 	if client.Claims.ObjectId == "" {
-		errs = append(errs, fmt.Errorf("ObjectId was not populated in client.Claims"))
+		errs = append(errs, errors.New("objectId was not populated in client.Claims"))
 	}
 
 	return //nolint:nakedret

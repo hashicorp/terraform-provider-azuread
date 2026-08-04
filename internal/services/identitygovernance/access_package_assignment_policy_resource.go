@@ -85,7 +85,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"duration_in_days"},
 				ValidateFunc:  validation.IsRFC3339Time,
-				//DiffSuppressFunc: assignmentPolicyDiffSuppress,
+				// DiffSuppressFunc: assignmentPolicyDiffSuppress,
 			},
 
 			"extension_enabled": {

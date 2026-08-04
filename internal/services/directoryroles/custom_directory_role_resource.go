@@ -6,7 +6,6 @@ package directoryroles
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -227,7 +226,7 @@ func customDirectoryRoleResourceDelete(ctx context.Context, d *pluginsdk.Resourc
 	resp, err := client.GetDirectoryRoleDefinition(ctx, *id, directoryroledefinition.DefaultGetDirectoryRoleDefinitionOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagPathF(fmt.Errorf("Custom Directory Role was not found"), "id", "Retrieving %s", id)
+			return tf.ErrorDiagPathF(errors.New("the Custom Directory Role was not found"), "id", "Retrieving %s", id)
 		}
 		return tf.ErrorDiagPathF(err, "id", "Retrieving %s", id)
 	}

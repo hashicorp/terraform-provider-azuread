@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/provider"
 )
 
-var AzureADProvider *schema.Provider
-var once sync.Once
+var (
+	AzureADProvider *schema.Provider
+	once            sync.Once
+)
 
 func init() {
 	if os.Getenv("TF_ACC") == "" {
