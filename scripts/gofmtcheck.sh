@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 # Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
-
 # Check gofmt
 echo "==> Checking that code complies with gofmt requirements..."
-gofmt_files=$(gofmt -l `find . -name '*.go' | grep -v vendor`)
+gofmt_files=$(gofmt -l $(find . -type d -name vendor -prune -o -name '*.go' -print))
 if [ -n "${gofmt_files}" ]; then
     echo 'gofmt needs running on the following files:'
     echo "${gofmt_files}"

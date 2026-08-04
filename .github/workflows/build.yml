@@ -15,7 +15,14 @@ name: build
 #
 #   https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushbranchestagsbranches-ignoretags-ignore
 #
-on: [workflow_dispatch, push]
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main # limiting to main branch
+      - release/**
+    paths:
+      - 'version/VERSION' # and the version file, anything else is redundant for preparing releases
 
 env:
   PKG_NAME: "terraform-provider-azuread"

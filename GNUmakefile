@@ -28,12 +28,12 @@ debug:
 fumpt:
 	@echo "==> Fixing source code with gofmt..."
 	# This logic should match the search logic in scripts/gofmtcheck.sh
-	find . -name '*.go' | grep -v vendor | xargs gofumpt -s -w
+	find . -type d -name vendor -prune -o -name '*.go' -print | xargs gofumpt -s -w
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	# This logic should match the search logic in scripts/gofmtcheck.sh
-	find . -name '*.go' | grep -v vendor | xargs gofmt -s -w
+	find . -type d -name vendor -prune -o -name '*.go' -print | xargs gofmt -s -w
 
 # Currently required by tf-deploy compile
 fmtcheck:
