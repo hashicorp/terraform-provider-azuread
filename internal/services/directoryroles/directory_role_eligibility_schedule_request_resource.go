@@ -159,7 +159,7 @@ func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d 
 		roleDefinitionId := d.Get("role_definition_id").(string)
 		directoryScopeId := d.Get("directory_scope_id").(string)
 
-		roleEligibilityScheduleInstance, err := findDirectRoleEligibilityScheduleInstance(ctx, instanceClient, principalId, roleDefinitionId, directoryScopeId)
+		roleEligibilityScheduleInstance, err := findDirectRoleEligibilityScheduleInstance(ctx, instanceClient, d.Id(), principalId, roleDefinitionId, directoryScopeId)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Retrieving role eligibility schedule instances for principal %q", principalId)
 		}
@@ -209,23 +209,42 @@ func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, 
 	return nil
 }
 
-func findDirectRoleEligibilityScheduleInstance(ctx context.Context, client *directoryroleeligibilityscheduleinstance.DirectoryRoleEligibilityScheduleInstanceClient, principalId, roleDefinitionId, directoryScopeId string) (*stable.UnifiedRoleEligibilityScheduleInstance, error) {
+func findDirectRoleEligibilityScheduleInstance(ctx context.Context, client *directoryroleeligibilityscheduleinstance.DirectoryRoleEligibilityScheduleInstanceClient, resourceId, principalId, roleDefinitionId, directoryScopeId string) (*stable.UnifiedRoleEligibilityScheduleInstance, error) {
 	options := directoryroleeligibilityscheduleinstance.DefaultListDirectoryRoleEligibilityScheduleInstancesOperationOptions()
-	options.Filter = pointer.To(fmt.Sprintf("principalId eq '%s'", odata.EscapeSingleQuote(principalId)))
+	options.Filter = pointer.To(roleEligibilityScheduleInstanceFilter(resourceId, principalId))
 
 	result, err := client.ListDirectoryRoleEligibilityScheduleInstancesComplete(ctx, options)
 	if err != nil {
 		return nil, err
 	}
 
-	return matchDirectRoleEligibilityScheduleInstance(result.Items, principalId, roleDefinitionId, directoryScopeId), nil
+	return matchDirectRoleEligibilityScheduleInstance(result.Items, resourceId, principalId, roleDefinitionId, directoryScopeId), nil
 }
 
-func matchDirectRoleEligibilityScheduleInstance(instances []stable.UnifiedRoleEligibilityScheduleInstance, principalId, roleDefinitionId, directoryScopeId string) *stable.UnifiedRoleEligibilityScheduleInstance {
+func roleEligibilityScheduleInstanceFilter(resourceId, principalId string) string {
+	if principalId == "" {
+		return fmt.Sprintf("roleEligibilityScheduleId eq '%s'", odata.EscapeSingleQuote(resourceId))
+	}
+
+	return fmt.Sprintf("principalId eq '%s'", odata.EscapeSingleQuote(principalId))
+}
+
+func matchDirectRoleEligibilityScheduleInstance(instances []stable.UnifiedRoleEligibilityScheduleInstance, resourceId, principalId, roleDefinitionId, directoryScopeId string) *stable.UnifiedRoleEligibilityScheduleInstance {
 	for i := range instances {
 		instance := &instances[i]
-		if instance.MemberType.GetOrZero() == "Direct" &&
-			instance.PrincipalId.GetOrZero() == principalId &&
+		if instance.MemberType.GetOrZero() != "Direct" {
+			continue
+		}
+
+		// During import only the resource ID is available in state.
+		if principalId == "" && roleDefinitionId == "" && directoryScopeId == "" {
+			if instance.RoleEligibilityScheduleId.GetOrZero() == resourceId {
+				return instance
+			}
+			continue
+		}
+
+		if instance.PrincipalId.GetOrZero() == principalId &&
 			instance.RoleDefinitionId.GetOrZero() == roleDefinitionId &&
 			instance.DirectoryScopeId.GetOrZero() == directoryScopeId {
 			return instance

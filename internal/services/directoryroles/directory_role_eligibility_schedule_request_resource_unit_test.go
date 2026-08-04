@@ -52,7 +52,7 @@ func TestMatchDirectRoleEligibilityScheduleInstance(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result := matchDirectRoleEligibilityScheduleInstance(test.instances, principalId, roleDefinitionId, directoryScopeId)
+			result := matchDirectRoleEligibilityScheduleInstance(test.instances, "", principalId, roleDefinitionId, directoryScopeId)
 			if test.wantId == "" {
 				if result != nil {
 					t.Fatalf("expected no match, got %q", *result.Id)
@@ -65,6 +65,57 @@ func TestMatchDirectRoleEligibilityScheduleInstance(t *testing.T) {
 			}
 			if result.Id == nil || *result.Id != test.wantId {
 				t.Fatalf("expected ID %q, got %#v", test.wantId, result.Id)
+			}
+		})
+	}
+}
+
+func TestMatchDirectRoleEligibilityScheduleInstance_import(t *testing.T) {
+	instance := eligibilityScheduleInstance(
+		"instance-id",
+		"Direct",
+		"b36e2f19-0a19-4302-8236-0acd7838dcdb",
+		"fe930be7-5e62-47db-91af-98c3a49a38b1",
+		"/",
+	)
+	instance.RoleEligibilityScheduleId = nullable.Value("schedule-id")
+
+	result := matchDirectRoleEligibilityScheduleInstance(
+		[]stable.UnifiedRoleEligibilityScheduleInstance{instance},
+		"schedule-id",
+		"",
+		"",
+		"",
+	)
+	if result == nil || result.Id == nil || *result.Id != "instance-id" {
+		t.Fatalf("expected imported schedule instance to match, got %#v", result)
+	}
+}
+
+func TestRoleEligibilityScheduleInstanceFilter(t *testing.T) {
+	tests := []struct {
+		name        string
+		resourceId  string
+		principalId string
+		want        string
+	}{
+		{
+			name:        "managed resource",
+			resourceId:  "schedule-id",
+			principalId: "principal-id",
+			want:        "principalId eq 'principal-id'",
+		},
+		{
+			name:       "imported resource",
+			resourceId: "schedule-id",
+			want:       "roleEligibilityScheduleId eq 'schedule-id'",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := roleEligibilityScheduleInstanceFilter(test.resourceId, test.principalId); got != test.want {
+				t.Fatalf("expected filter %q, got %q", test.want, got)
 			}
 		})
 	}
