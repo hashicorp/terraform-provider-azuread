@@ -1,0 +1,405 @@
+---
+name: PR Validation
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+on:
+  pull_request:
+    types: ['opened', 'synchronize', 'reopened']
+
+concurrency:
+  group: 'pr-validation-${{ github.event.pull_request.number || github.run_id }}'
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================
+  # PATH FILTERING LOGIC
+  # ==========================================
+  paths-filter:
+    runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.filter.outputs.docs }}
+      go: ${{ steps.filter.outputs.go }}
+      vendor: ${{ steps.filter.outputs.vendor }}
+      examples: ${{ steps.filter.outputs.examples }}
+      teamcity: ${{ steps.filter.outputs.teamcity }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+            vendor:
+              - 'vendor/**'
+              - 'go.mod'
+              - 'go.sum'
+            examples:
+              - 'examples/**'
+            teamcity:
+              - '!.teamcity/components/generated/**'
+              - '!.teamcity/target/**'
+              - '.teamcity/**'
+
+  # ==========================================
+  # Phase 1: Fail-Fast
+  # ==========================================
+
+  depscheck:
+    needs: paths-filter
+    if: needs.paths-filter.outputs.vendor == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: bash scripts/gogetcookie.sh
+      - run: make tools
+      - run: make depscheck
+
+  depscheck-save-artifacts:
+    needs: depscheck
+    if: always() && needs.depscheck.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  depscheck-on-fail:
+    needs: depscheck
+    if: always() && needs.depscheck.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
+
+  # ------------------------------------------
+
+  fmtcheck:
+    needs: paths-filter
+    if: needs.paths-filter.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: make fmtcheck
+
+  fmtcheck-save-artifacts:
+    needs: fmtcheck
+    if: always() && needs.fmtcheck.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  fmtcheck-on-fail:
+    needs: fmtcheck
+    if: always() && needs.fmtcheck.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
+
+  # ------------------------------------------
+
+  docs-lint:
+    needs: paths-filter
+    if: needs.paths-filter.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: bash scripts/gogetcookie.sh
+      - run: make tools
+      - run: make docs-lint
+
+  docs-lint-save-artifacts:
+    needs: docs-lint
+    if: always() && needs.docs-lint.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  docs-lint-on-fail:
+    needs: docs-lint
+    if: always() && needs.docs-lint.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
+
+  # ==========================================
+  # Phase 2 & 3: Heavy Checks
+  # ==========================================
+
+  golint:
+    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    if: |
+      always() && 
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
+      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: bash scripts/gogetcookie.sh
+      - run: make tools
+      - run: make lint
+
+  golint-save-artifacts:
+    needs: golint
+    if: always() && needs.golint.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  golint-on-fail:
+    needs: golint
+    if: always() && needs.golint.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
+
+  # ------------------------------------------
+
+  tflint:
+    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    if: |
+      always() && 
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
+      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: bash scripts/gogetcookie.sh
+      - run: make tools
+      - run: make tflint
+
+  tflint-save-artifacts:
+    needs: tflint
+    if: always() && needs.tflint.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  tflint-on-fail:
+    needs: tflint
+    if: always() && needs.tflint.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
+
+  # ------------------------------------------
+
+  gencheck:
+    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    if: |
+      always() && 
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
+      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: bash scripts/gogetcookie.sh
+      - run: make tools
+      - run: make gencheck
+
+  gencheck-save-artifacts:
+    needs: gencheck
+    if: always() && needs.gencheck.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  gencheck-on-fail:
+    needs: gencheck
+    if: always() && needs.gencheck.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
+
+  # ------------------------------------------
+
+  unit-tests:
+    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    if: |
+      always() && 
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
+      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+    runs-on: custom-linux-large
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: bash scripts/gogetcookie.sh
+      - run: make test
+        env:
+          GITHUB_ACTIONS_STAGE: "UNIT_TESTS"
+
+  unit-tests-save-artifacts:
+    needs: unit-tests
+    if: always() && needs.unit-tests.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  unit-tests-on-fail:
+    needs: unit-tests
+    if: always() && needs.unit-tests.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
+
+  # ------------------------------------------
+
+  validate-examples:
+    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    if: |
+      always() && 
+      needs.paths-filter.outputs.examples == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
+      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: bash scripts/gogetcookie.sh
+      - run: make tools
+      - run: make validate-examples
+
+  validate-examples-save-artifacts:
+    needs: validate-examples
+    if: always() && needs.validate-examples.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  validate-examples-on-fail:
+    needs: validate-examples
+    if: always() && needs.validate-examples.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
+
+  # ------------------------------------------
+
+  teamcity-test:
+    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    if: |
+      always() && 
+      needs.paths-filter.outputs.teamcity == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
+      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: zulu
+          java-version: 17
+          java-package: jdk
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - run: make teamcity-test
+
+  teamcity-test-save-artifacts:
+    needs: teamcity-test
+    if: always() && needs.teamcity-test.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  teamcity-test-on-fail:
+    needs: teamcity-test
+    if: always() && needs.teamcity-test.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
+
+  # ------------------------------------------
+
+  secrets-check:
+    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    if: |
+      always() && 
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
+      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+    runs-on: ubuntu-latest
+    outputs:
+      available: "${{ steps.check-secrets.outputs.available }}"
+    steps:
+      - id: check-secrets
+        run: |
+          if [[ "${ACTIONS_ID_TOKEN_REQUEST_URL}" == "" ]]; then
+            echo "available=false" | tee ${GITHUB_OUTPUT}
+          else
+            echo "available=true" | tee ${GITHUB_OUTPUT}
+          fi
+
+  provider-tests:
+    runs-on: custom-linux-large
+    needs: [secrets-check]
+    if: needs.secrets-check.outputs.available == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: ./.go-version
+
+      - name: Azure CLI login (using OIDC)
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
+
+      - name: Set OIDC Token
+        run: |
+          echo "ARM_OIDC_TOKEN=$(curl -H "Accept: application/json; api-version=2.0" -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" -H "Content-Type: application/json" -G --data-urlencode "audience=api://AzureADTokenExchange" "${ACTIONS_ID_TOKEN_REQUEST_URL}" | jq -r '.value')" >>${GITHUB_ENV}
+
+      - name: Set OIDC Token File Path
+        run: echo "${ARM_OIDC_TOKEN}" >"${RUNNER_TEMP}/oidc-token.jwt" && echo "ARM_OIDC_TOKEN_FILE_PATH=${RUNNER_TEMP}/oidc-token.jwt" >>${GITHUB_ENV}
+
+      - name: Set Client ID Path
+        run: echo "${{ secrets.ARM_CLIENT_ID }}" >"${RUNNER_TEMP}/client-id" && echo "ARM_CLIENT_ID_PATH=${RUNNER_TEMP}/client-id" >>${GITHUB_ENV}
+
+      - name: Set Client Secret Path
+        run: echo "${{ secrets.ARM_CLIENT_SECRET }}" >"${RUNNER_TEMP}/client-secret" && echo "ARM_CLIENT_SECRET_PATH=${RUNNER_TEMP}/client-secret" >>${GITHUB_ENV}
+
+      - name: Set Client Certificate Path
+        run: echo "${{ secrets.ARM_CLIENT_CERTIFICATE }}" | base64 -d >"${RUNNER_TEMP}/client-certificate.pfx" && echo "ARM_CLIENT_CERTIFICATE_PATH=${RUNNER_TEMP}/client-certificate.pfx" >>${GITHUB_ENV}
+
+      - name: Run provider tests
+        run: make testacc TEST=./internal/provider TESTARGS="-run '^TestAcc'"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_CERTIFICATE: ${{ secrets.ARM_CLIENT_CERTIFICATE }}
+          ARM_CLIENT_CERTIFICATE_PASSWORD: ${{ secrets.ARM_CLIENT_CERTIFICATE_PASSWORD }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Clean Up OIDC Token File Path
+        run: rm -f "${RUNNER_TEMP}/oidc-token.jwt"
+        if: always()
+
+      - name: Clean Up Client ID Path
+        run: rm -f "${RUNNER_TEMP}/client-id"
+        if: always()
+
+      - name: Clean Up Client Secret Path
+        run: rm -f "${RUNNER_TEMP}/client-secret"
+        if: always()
+
+  provider-tests-save-artifacts:
+    needs: provider-tests
+    if: always() && needs.provider-tests.result == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
+
+  provider-tests-on-fail:
+    needs: provider-tests
+    if: always() && needs.provider-tests.result == 'failure'
+    uses: ./.github/workflows/comment-failure.yaml
