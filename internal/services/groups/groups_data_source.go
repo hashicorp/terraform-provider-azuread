@@ -105,9 +105,9 @@ func groupsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta i
 
 	var groups []beta.Group
 	var expectedCount int
-	var ignoreMissing = d.Get("ignore_missing").(bool)
-	var returnAll = d.Get("return_all").(bool)
-	var displayNamePrefix = d.Get("display_name_prefix").(string)
+	ignoreMissing := d.Get("ignore_missing").(bool)
+	returnAll := d.Get("return_all").(bool)
+	displayNamePrefix := d.Get("display_name_prefix").(string)
 
 	var displayNames []interface{}
 	if v, ok := d.GetOk("display_names"); ok {

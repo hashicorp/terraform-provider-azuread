@@ -65,7 +65,6 @@ func getPolicyId(ctx context.Context, metadata sdk.ResourceMetaData, scopeId, ro
 		}
 		return &exists, nil
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("waiting for policy assignment to become available: %v", err)
 	}

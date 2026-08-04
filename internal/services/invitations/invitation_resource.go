@@ -155,20 +155,20 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 	}
 
 	if invite.Id == nil || *invite.Id == "" {
-		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for invitation is nil/empty")
+		return tf.ErrorDiagF(errors.New("bad API response"), "Object ID returned for invitation is nil/empty")
 	}
 
 	d.SetId(*invite.Id)
 
 	if invite.InvitedUser == nil || invite.InvitedUser.Id == nil || *invite.InvitedUser.Id == "" {
-		return tf.ErrorDiagF(errors.New("Bad API response"), "Invited user object ID returned for invitation is nil/empty")
+		return tf.ErrorDiagF(errors.New("bad API response"), "Invited user object ID returned for invitation is nil/empty")
 	}
 
 	userId := stable.NewUserID(*invite.InvitedUser.Id)
 	d.Set("user_id", userId.UserId)
 
 	if invite.InviteRedeemUrl.GetOrZero() == "" {
-		return tf.ErrorDiagF(errors.New("Bad API response"), "Redeem URL returned for invitation is nil/empty")
+		return tf.ErrorDiagF(errors.New("bad API response"), "Redeem URL returned for invitation is nil/empty")
 	}
 	d.Set("redeem_url", invite.InviteRedeemUrl.GetOrZero())
 

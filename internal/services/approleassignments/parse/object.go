@@ -4,6 +4,7 @@
 package parse
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -31,7 +32,7 @@ func (id ObjectSubResourceId) String() string {
 func ObjectSubResourceID(idString, expectedType string) (*ObjectSubResourceId, error) {
 	parts := strings.Split(idString, "/")
 	if len(parts) != 3 {
-		return nil, fmt.Errorf("Object Resource ID should be in the format {objectId}/{type}/{subId} - but got %q", idString)
+		return nil, fmt.Errorf("object Resource ID should be in the format {objectId}/{type}/{subId} - but got %q", idString)
 	}
 
 	id := ObjectSubResourceId{
@@ -41,15 +42,15 @@ func ObjectSubResourceID(idString, expectedType string) (*ObjectSubResourceId, e
 	}
 
 	if _, err := uuid.ParseUUID(id.objectId); err != nil {
-		return nil, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", id.objectId, err)
+		return nil, fmt.Errorf("object ID isn't a valid UUID (%q): %+v", id.objectId, err)
 	}
 
 	if id.Type == "" {
-		return nil, fmt.Errorf("Type in {objectID}/{type}/{subID} should not be empty")
+		return nil, errors.New("type in {objectID}/{type}/{subID} should not be empty")
 	}
 
 	if id.Type != expectedType {
-		return nil, fmt.Errorf("Type in {objectID}/{type}/{subID} was expected to be %s, got %s", expectedType, id.Type)
+		return nil, fmt.Errorf("type in {objectID}/{type}/{subID} was expected to be %s, got %s", expectedType, id.Type)
 	}
 
 	return &id, nil

@@ -25,6 +25,7 @@ func TestAccGroupDataSource_byDisplayName(t *testing.T) {
 		},
 	})
 }
+
 func TestAccGroupDataSource_byDisplayNameWithSecurity(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 

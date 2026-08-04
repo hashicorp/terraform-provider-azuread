@@ -315,7 +315,6 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		foundGroup = (*groups)[0]
-
 	} else if mailNickname != "" {
 		filter := fmt.Sprintf("mailNickname eq '%s'", mailNickname)
 		if mailEnabled != nil {
@@ -346,7 +345,6 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		foundGroup = (*groups)[0]
-
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		resp, err := client.GetGroup(ctx, beta.NewGroupID(objectId), groupBeta.DefaultGetGroupOperationOptions())
 		if err != nil {

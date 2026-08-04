@@ -4,6 +4,7 @@
 package parse
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -27,7 +28,7 @@ func (id SynchronizationSecretId) String() string {
 func SynchronizationSecretID(idString string) (*SynchronizationSecretId, error) {
 	parts := strings.Split(idString, "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("Object Resource ID should be in the format {servicePrincipalId}/{type} - but got %q", idString)
+		return nil, fmt.Errorf("object Resource ID should be in the format {servicePrincipalId}/{type} - but got %q", idString)
 	}
 
 	id := SynchronizationSecretId{
@@ -35,11 +36,11 @@ func SynchronizationSecretID(idString string) (*SynchronizationSecretId, error) 
 	}
 
 	if _, err := uuid.ParseUUID(id.ServicePrincipalId); err != nil {
-		return nil, fmt.Errorf("ServicePrincipalId isn't a valid UUID (%q): %+v", id.ServicePrincipalId, err)
+		return nil, fmt.Errorf("servicePrincipalId isn't a valid UUID (%q): %+v", id.ServicePrincipalId, err)
 	}
 
 	if parts[1] == "" {
-		return nil, fmt.Errorf("Type in {servicePrincipalId}/{type} should not be empty")
+		return nil, errors.New("type in {servicePrincipalId}/{type} should not be empty")
 	}
 
 	return &id, nil

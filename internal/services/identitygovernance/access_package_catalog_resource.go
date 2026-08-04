@@ -158,10 +158,7 @@ func accessPackageCatalogResourceRead(ctx context.Context, d *pluginsdk.Resource
 		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 	}
 
-	published := false
-	if strings.EqualFold(catalog.CatalogStatus.GetOrZero(), CatalogStatusPublished) {
-		published = true
-	}
+	published := strings.EqualFold(catalog.CatalogStatus.GetOrZero(), CatalogStatusPublished)
 
 	tf.Set(d, "display_name", catalog.DisplayName.GetOrZero())
 	tf.Set(d, "description", catalog.Description.GetOrZero())

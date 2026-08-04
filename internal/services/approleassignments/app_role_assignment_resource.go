@@ -145,11 +145,11 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 	}
 
 	if appRoleAssignment.Id == nil || *appRoleAssignment.Id == "" {
-		return tf.ErrorDiagF(errors.New("ID returned for app role assignment is nil"), "Bad API response")
+		return tf.ErrorDiagF(errors.New("the ID returned for app role assignment is nil"), "Bad API response")
 	}
 
 	if appRoleAssignment.ResourceId.IsNull() || appRoleAssignment.ResourceId.GetOrZero() == "" {
-		return tf.ErrorDiagF(errors.New("Resource ID returned for app role assignment is nil"), "Bad API response")
+		return tf.ErrorDiagF(errors.New("resource ID returned for app role assignment is nil"), "Bad API response")
 	}
 
 	id := stable.NewServicePrincipalIdAppRoleAssignedToID(appRoleAssignment.ResourceId.GetOrZero(), pointer.From(appRoleAssignment.Id))

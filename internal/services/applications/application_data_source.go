@@ -526,7 +526,6 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		}
 
 		app = resp.Model
-
 	} else {
 		var filter, fieldName, fieldValue string
 		if clientId, ok := d.GetOk("client_id"); ok && clientId.(string) != "" {

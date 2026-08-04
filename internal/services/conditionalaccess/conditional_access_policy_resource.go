@@ -648,7 +648,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 	}
 
 	if policy.Id == nil || *policy.Id == "" {
-		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for conditional access policy is nil/empty")
+		return tf.ErrorDiagF(errors.New("bad API response"), "Object ID returned for conditional access policy is nil/empty")
 	}
 
 	id := stable.NewIdentityConditionalAccessPolicyID(pointer.From(policy.Id))

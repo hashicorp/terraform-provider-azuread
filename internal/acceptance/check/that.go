@@ -134,11 +134,11 @@ func (t thatWithKeyType) ValidatesWith(validationFunc KeyValidationFunc) plugins
 		ms := state.RootModule()
 		rs, ok := ms.Resources[t.resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s in %s", t.resourceName, ms.Path)
+			return fmt.Errorf("not found: %s in %s", t.resourceName, ms.Path)
 		}
 		is := rs.Primary
 		if is == nil {
-			return fmt.Errorf("No primary instance: %s in %s", t.resourceName, ms.Path)
+			return fmt.Errorf("no primary instance: %s in %s", t.resourceName, ms.Path)
 		}
 
 		var values []interface{}

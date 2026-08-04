@@ -1081,7 +1081,6 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 						for _, servicePrincipal := range *servicePrincipalsResp.Model {
 							// Validate the appId and applicationTemplateId match the application
 							if servicePrincipalId := servicePrincipal.Id; servicePrincipalId != nil && servicePrincipal.AppId.GetOrZero() == app.AppId.GetOrZero() && servicePrincipal.ApplicationTemplateId.GetOrZero() == appTemplateId {
-
 								// Now we have found the application and service principal construct an ApplicationServicePrincipal
 								// struct as we _should_ be getting from the Instantiate API.
 								return stable.ApplicationServicePrincipal{
@@ -1095,7 +1094,6 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 				return nil, "Waiting", nil
 			},
 		}).WaitForStateContext(ctx)
-
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not instantiate application from template")
 		}
@@ -1109,11 +1107,11 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		}
 
 		if applicationServicePrincipal.Application == nil {
-			return tf.ErrorDiagF(errors.New("Bad API response"), "Nil application object returned for instantiated application")
+			return tf.ErrorDiagF(errors.New("bad API response"), "Nil application object returned for instantiated application")
 		}
 
 		if applicationServicePrincipal.Application.Id == nil || *applicationServicePrincipal.Application.Id == "" {
-			return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for instantiated application is nil/empty")
+			return tf.ErrorDiagF(errors.New("bad API response"), "Object ID returned for instantiated application is nil/empty")
 		}
 
 		id := stable.NewApplicationID(*applicationServicePrincipal.Application.Id)
@@ -1220,7 +1218,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	app := resp.Model
 	if app.Id == nil || *app.Id == "" {
-		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for application is nil/empty")
+		return tf.ErrorDiagF(errors.New("bad API response"), "Object ID returned for application is nil/empty")
 	}
 
 	id := stable.NewApplicationID(*app.Id)

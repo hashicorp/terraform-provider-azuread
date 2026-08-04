@@ -43,11 +43,11 @@ type TestData struct {
 }
 
 func (td TestData) UUID() string {
-	uuid, err := uuid.GenerateUUID()
+	u, err := uuid.GenerateUUID()
 	if err != nil {
 		panic(err)
 	}
-	return uuid
+	return u
 }
 
 // BuildTestData generates some test data for the given resource
@@ -70,39 +70,39 @@ func BuildTestData(t *testing.T, resourceType string, resourceLabel string) Test
 }
 
 // RandomIntOfLength is a random 8 to 18 digit integer which is unique to this test case
-func (td TestData) RandomIntOfLength(len int) int {
+func (td TestData) RandomIntOfLength(l int) int {
 	// len should not be
-	//  - greater then 18, longest a int can represent
-	//  - less then 8, as that gives us YYMMDDRR
-	if 8 > len || len > 18 {
+	//  - greater than 18, longest a int can represent
+	//  - less than 8, as that gives us YYMMDDRR
+	if 8 > l || l > 18 {
 		panic("Invalid Test: RandomIntOfLength: len is not between 8 or 18 inclusive")
 	}
 
 	// 18 - just return the int
-	if len >= 18 {
+	if l >= 18 {
 		return td.RandomInteger
 	}
 
 	// 16-17 just strip off the last 1-2 digits
-	if len >= 16 {
-		return td.RandomInteger / int(math.Pow10(18-len))
+	if l >= 16 {
+		return td.RandomInteger / int(math.Pow10(18-l))
 	}
 
 	// 8-15 keep len - 2 digits and add 2 characters of randomness on
 	s := strconv.Itoa(td.RandomInteger)
 	r := s[16:18]
-	v := s[0 : len-2]
+	v := s[0 : l-2]
 	i, _ := strconv.Atoi(v + r)
 
 	return i
 }
 
 // RandomStringOfLength is a random 1 to 1024 character string which is unique to this test case
-func (td TestData) RandomStringOfLength(len int) string {
+func (td TestData) RandomStringOfLength(l int) string {
 	// len should not be less then 1 or greater than 1024
-	if 1 > len || len > 1024 {
+	if 1 > l || l > 1024 {
 		panic("Invalid Test: RandomStringOfLength: length argument must be between 1 and 1024 characters")
 	}
 
-	return acctest.RandString(len)
+	return acctest.RandString(l)
 }

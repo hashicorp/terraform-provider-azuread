@@ -9,7 +9,7 @@ import (
 )
 
 func Set(d *schema.ResourceData, attr string, value interface{}) diag.Diagnostics {
-	//lintignore:R001
+	// lintignore:R001
 	if err := d.Set(attr, value); err != nil {
 		return ErrorDiagPathF(err, attr, "Could not set attribute")
 	}

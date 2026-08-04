@@ -620,7 +620,6 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 					return tf.ErrorDiagF(errors.New("returned model was not a group"), "Creating group in %s", administrativeUnitId)
 				}
 				groupObjectId = pointer.From(newGroup.Id)
-
 			} else {
 				ref := beta.ReferenceCreate{
 					ODataId: pointer.To(fmt.Sprintf("%s%s", client.Client.BaseUri, beta.NewDirectoryObjectID(groupObjectId).ID())),
@@ -630,7 +629,6 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 				}
 			}
 		}
-
 	} else {
 		options := groupBeta.CreateGroupOperationOptions{
 			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {

@@ -6,7 +6,6 @@ package serviceprincipals
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -261,7 +260,7 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 	resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "service_principal_id", "Retrieving %s", servicePrincipalId)
+			return tf.ErrorDiagPathF(errors.New("the Service Principal was not found"), "service_principal_id", "Retrieving %s", servicePrincipalId)
 		}
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving %s", servicePrincipalId)
 	}

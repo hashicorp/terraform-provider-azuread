@@ -352,7 +352,6 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		}
 
 		foundObjectId = (*resp.Model)[0].Id
-
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		resp, err := client.GetUser(ctx, stable.NewUserID(objectId), user.DefaultGetUserOperationOptions())
 		if err != nil {
@@ -367,7 +366,6 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		}
 
 		foundObjectId = resp.Model.Id
-
 	} else if mail, ok := d.Get("mail").(string); ok && mail != "" {
 		options := user.ListUsersOperationOptions{
 			Filter: pointer.To(fmt.Sprintf("mail eq '%s'", odata.EscapeSingleQuote(mail))),
@@ -390,7 +388,6 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		}
 
 		foundObjectId = (*resp.Model)[0].Id
-
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		options := user.ListUsersOperationOptions{
 			Filter: pointer.To(fmt.Sprintf("mailNickname eq '%s'", odata.EscapeSingleQuote(mailNickname))),
@@ -413,7 +410,6 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		}
 
 		foundObjectId = (*resp.Model)[0].Id
-
 	} else if employeeId, ok := d.Get("employee_id").(string); ok && employeeId != "" {
 		options := user.ListUsersOperationOptions{
 			Filter: pointer.To(fmt.Sprintf("employeeId eq '%s'", odata.EscapeSingleQuote(employeeId))),
@@ -436,7 +432,6 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		}
 
 		foundObjectId = (*resp.Model)[0].Id
-
 	} else {
 		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name`, `mail_nickname` or `employee_id` must be supplied")
 	}

@@ -85,7 +85,6 @@ func accessPackageCatalogDataRead(ctx context.Context, d *pluginsdk.ResourceData
 			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 		}
 		catalog = resp.Model
-
 	} else if displayName != "" {
 		options := entitlementmanagementaccesspackagecatalog.ListEntitlementManagementAccessPackageCatalogsOperationOptions{
 			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))),
@@ -118,10 +117,7 @@ func accessPackageCatalogDataRead(ctx context.Context, d *pluginsdk.ResourceData
 		return tf.ErrorDiagF(fmt.Errorf("model has nil ID"), "Access package catalog not found")
 	}
 
-	published := false
-	if strings.EqualFold(catalog.CatalogStatus.GetOrZero(), CatalogStatusPublished) {
-		published = true
-	}
+	published := strings.EqualFold(catalog.CatalogStatus.GetOrZero(), CatalogStatusPublished)
 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(*catalog.Id)
 	d.SetId(id.AccessPackageCatalogId)

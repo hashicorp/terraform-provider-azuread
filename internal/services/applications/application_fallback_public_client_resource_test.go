@@ -37,6 +37,7 @@ func TestAccApplicationFallbackPublicClient_basic(t *testing.T) {
 		data.ImportStep(),
 	})
 }
+
 func TestAccApplicationFallbackPublicClient_disabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_fallback_public_client", "test")
 	r := ApplicationFallbackPublicClientResource{}
