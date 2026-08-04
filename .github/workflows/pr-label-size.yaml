@@ -1,5 +1,8 @@
 ---
-name: "Pull Request Triage"
+name: PR Label Size
+
+# Labels PRs by diff size (size/XS through size/XL) and by touched paths
+# (.github/labeler-pull-request-triage.yaml).
 
 permissions:
   pull-requests: write

@@ -1,5 +1,10 @@
 ---
-name: PR Validation
+name: Combined PR Checks
+
+# All PR checks are combined into this single workflow as jobs, sharing one
+# paths-filter so each only runs when relevant files change. A check lives here
+# unless it *can't*: needing a special runner, OIDC auth, or its own trigger
+# moves it to a standalone pr-check-* workflow instead.
 
 permissions:
   contents: read
@@ -12,7 +17,7 @@ on:
     types: ['opened', 'synchronize', 'reopened']
 
 concurrency:
-  group: 'pr-validation-${{ github.event.pull_request.number || github.run_id }}'
+  group: 'pr-checks-combined-${{ github.event.pull_request.number || github.run_id }}'
   cancel-in-progress: true
 
 jobs:
@@ -63,23 +68,22 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: .go-version
-      - run: bash scripts/gogetcookie.sh
       - run: make tools
       - run: make depscheck
 
   depscheck-save-artifacts:
     needs: depscheck
     if: always() && needs.depscheck.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
   depscheck-on-fail:
     needs: depscheck
     if: always() && needs.depscheck.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+    uses: ./.github/workflows/pr-comment-failure.yaml
 
   # ------------------------------------------
 
-  fmtcheck:
+  quick-checks:
     needs: paths-filter
     if: needs.paths-filter.outputs.go == 'true'
     runs-on: ubuntu-latest
@@ -88,17 +92,20 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: .go-version
-      - run: make fmtcheck
+      - name: Install tooling
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.12.2
+      - run: make quick-checks
 
-  fmtcheck-save-artifacts:
-    needs: fmtcheck
-    if: always() && needs.fmtcheck.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+  quick-checks-save-artifacts:
+    needs: quick-checks
+    if: always() && needs.quick-checks.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
-  fmtcheck-on-fail:
-    needs: fmtcheck
-    if: always() && needs.fmtcheck.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+  quick-checks-on-fail:
+    needs: quick-checks
+    if: always() && needs.quick-checks.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
 
   # ------------------------------------------
 
@@ -111,31 +118,30 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: .go-version
-      - run: bash scripts/gogetcookie.sh
       - run: make tools
       - run: make docs-lint
 
   docs-lint-save-artifacts:
     needs: docs-lint
     if: always() && needs.docs-lint.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
   docs-lint-on-fail:
     needs: docs-lint
     if: always() && needs.docs-lint.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+    uses: ./.github/workflows/pr-comment-failure.yaml
 
   # ==========================================
   # Phase 2 & 3: Heavy Checks
   # ==========================================
 
   golint:
-    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint]
     if: |
       always() && 
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
-      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') && 
       (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -143,29 +149,28 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: .go-version
-      - run: bash scripts/gogetcookie.sh
       - run: make tools
       - run: make lint
 
   golint-save-artifacts:
     needs: golint
     if: always() && needs.golint.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
   golint-on-fail:
     needs: golint
     if: always() && needs.golint.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+    uses: ./.github/workflows/pr-comment-failure.yaml
 
   # ------------------------------------------
 
-  tflint:
-    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+  tfproviderlint:
+    needs: [paths-filter, depscheck, quick-checks, docs-lint]
     if: |
       always() && 
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
-      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') && 
       (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -173,29 +178,28 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: .go-version
-      - run: bash scripts/gogetcookie.sh
       - run: make tools
-      - run: make tflint
+      - run: make tfproviderlint
 
-  tflint-save-artifacts:
-    needs: tflint
-    if: always() && needs.tflint.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+  tfproviderlint-save-artifacts:
+    needs: tfproviderlint
+    if: always() && needs.tfproviderlint.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
-  tflint-on-fail:
-    needs: tflint
-    if: always() && needs.tflint.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+  tfproviderlint-on-fail:
+    needs: tfproviderlint
+    if: always() && needs.tfproviderlint.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
 
   # ------------------------------------------
 
   gencheck:
-    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint]
     if: |
       always() && 
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
-      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') && 
       (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -203,29 +207,28 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: .go-version
-      - run: bash scripts/gogetcookie.sh
       - run: make tools
       - run: make gencheck
 
   gencheck-save-artifacts:
     needs: gencheck
     if: always() && needs.gencheck.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
   gencheck-on-fail:
     needs: gencheck
     if: always() && needs.gencheck.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+    uses: ./.github/workflows/pr-comment-failure.yaml
 
   # ------------------------------------------
 
   unit-tests:
-    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint]
     if: |
       always() && 
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
-      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') && 
       (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
     runs-on: custom-linux-large
     steps:
@@ -233,7 +236,6 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: .go-version
-      - run: bash scripts/gogetcookie.sh
       - run: make test
         env:
           GITHUB_ACTIONS_STAGE: "UNIT_TESTS"
@@ -241,22 +243,22 @@ jobs:
   unit-tests-save-artifacts:
     needs: unit-tests
     if: always() && needs.unit-tests.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
   unit-tests-on-fail:
     needs: unit-tests
     if: always() && needs.unit-tests.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+    uses: ./.github/workflows/pr-comment-failure.yaml
 
   # ------------------------------------------
 
   validate-examples:
-    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint]
     if: |
       always() && 
       needs.paths-filter.outputs.examples == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
-      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') && 
       (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -264,29 +266,28 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: .go-version
-      - run: bash scripts/gogetcookie.sh
       - run: make tools
       - run: make validate-examples
 
   validate-examples-save-artifacts:
     needs: validate-examples
     if: always() && needs.validate-examples.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
   validate-examples-on-fail:
     needs: validate-examples
     if: always() && needs.validate-examples.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+    uses: ./.github/workflows/pr-comment-failure.yaml
 
   # ------------------------------------------
 
   teamcity-test:
-    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint]
     if: |
       always() && 
       needs.paths-filter.outputs.teamcity == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
-      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') && 
       (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -307,22 +308,22 @@ jobs:
   teamcity-test-save-artifacts:
     needs: teamcity-test
     if: always() && needs.teamcity-test.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
   teamcity-test-on-fail:
     needs: teamcity-test
     if: always() && needs.teamcity-test.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+    uses: ./.github/workflows/pr-comment-failure.yaml
 
   # ------------------------------------------
 
   secrets-check:
-    needs: [paths-filter, depscheck, fmtcheck, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint]
     if: |
       always() && 
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && 
-      (needs.fmtcheck.result == 'success' || needs.fmtcheck.result == 'skipped') && 
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') && 
       (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
@@ -397,9 +398,9 @@ jobs:
   provider-tests-save-artifacts:
     needs: provider-tests
     if: always() && needs.provider-tests.result == 'failure'
-    uses: ./.github/workflows/save-artifacts.yaml
+    uses: ./.github/workflows/pr-save-artifacts.yaml
 
   provider-tests-on-fail:
     needs: provider-tests
     if: always() && needs.provider-tests.result == 'failure'
-    uses: ./.github/workflows/comment-failure.yaml
+    uses: ./.github/workflows/pr-comment-failure.yaml
