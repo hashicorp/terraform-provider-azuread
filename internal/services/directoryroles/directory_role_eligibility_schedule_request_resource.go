@@ -76,9 +76,18 @@ func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
+				DiffSuppressFunc: func(_, old, _ string, d *pluginsdk.ResourceData) bool {
+					// Schedule instances do not expose the original request justification. After importing a
+					// schedule whose request has been purged, suppress only this unknowable difference.
+					return suppressMissingImportedJustification(d.Id(), old)
+				},
 			},
 		},
 	}
+}
+
+func suppressMissingImportedJustification(resourceId, oldJustification string) bool {
+	return resourceId != "" && oldJustification == ""
 }
 
 func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
@@ -193,17 +202,33 @@ func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d 
 
 func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleRequestClient
+	instanceClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleInstanceClient
+	resourceId := d.Id()
+	roleDefinitionId := d.Get("role_definition_id").(string)
+	principalId := d.Get("principal_id").(string)
+	justification := d.Get("justification").(string)
+	directoryScopeId := d.Get("directory_scope_id").(string)
 
 	properties := stable.UnifiedRoleEligibilityScheduleRequest{
 		Action:           pointer.To(stable.UnifiedRoleScheduleRequestActions_AdminRemove),
-		RoleDefinitionId: nullable.Value(d.Get("role_definition_id").(string)),
-		PrincipalId:      nullable.Value(d.Get("principal_id").(string)),
-		Justification:    nullable.Value(d.Get("justification").(string)),
-		DirectoryScopeId: nullable.Value(d.Get("directory_scope_id").(string)),
+		RoleDefinitionId: nullable.Value(roleDefinitionId),
+		PrincipalId:      nullable.Value(principalId),
+		Justification:    nullable.Value(justification),
+		DirectoryScopeId: nullable.Value(directoryScopeId),
 	}
 
 	if _, err := client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, properties, directoryroleeligibilityschedulerequest.DefaultCreateDirectoryRoleEligibilityScheduleRequestOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Removing role eligibility schedule request %q: %+v", d.Id(), err)
+		return tf.ErrorDiagF(err, "Removing role eligibility schedule request %q: %+v", resourceId, err)
+	}
+
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		instance, err := findDirectRoleEligibilityScheduleInstance(ctx, instanceClient, resourceId, principalId, roleDefinitionId, directoryScopeId)
+		if err != nil {
+			return nil, err
+		}
+		return pointer.To(instance != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for role eligibility schedule request %q to be removed", resourceId)
 	}
 
 	return nil

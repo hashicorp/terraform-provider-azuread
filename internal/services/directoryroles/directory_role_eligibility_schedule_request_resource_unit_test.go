@@ -121,6 +121,41 @@ func TestRoleEligibilityScheduleInstanceFilter(t *testing.T) {
 	}
 }
 
+func TestSuppressMissingImportedJustification(t *testing.T) {
+	tests := []struct {
+		name             string
+		resourceId       string
+		oldJustification string
+		want             bool
+	}{
+		{
+			name:             "create retains configured justification",
+			oldJustification: "",
+			want:             false,
+		},
+		{
+			name:             "import suppresses unavailable justification",
+			resourceId:       "schedule-id",
+			oldJustification: "",
+			want:             true,
+		},
+		{
+			name:             "managed justification change forces replacement",
+			resourceId:       "request-id",
+			oldJustification: "Managed by Terraform",
+			want:             false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := suppressMissingImportedJustification(test.resourceId, test.oldJustification); got != test.want {
+				t.Fatalf("expected %t, got %t", test.want, got)
+			}
+		})
+	}
+}
+
 func eligibilityScheduleInstance(id, memberType, principalId, roleDefinitionId, directoryScopeId string) stable.UnifiedRoleEligibilityScheduleInstance {
 	return stable.UnifiedRoleEligibilityScheduleInstance{
 		Id:               &id,
