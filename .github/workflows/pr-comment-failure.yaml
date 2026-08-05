@@ -1,4 +1,11 @@
-name: Comment Failure
+name: PR Comment Failure
+
+# Reusable (workflow_call): comments on the PR when a CI job fails, linking to
+# the failed run.
+
+permissions:
+  pull-requests: write
+  issues: write
 
 on:
   # This file is reused, and called from other workflows

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-DIR="$(cd "$(dirname "$0")"/.. && pwd)"
+DIR="$(cd "$(dirname "$0")"/../.. && pwd)"
 
 echo "==> Checking documentation terraform blocks are formatted..."
 
