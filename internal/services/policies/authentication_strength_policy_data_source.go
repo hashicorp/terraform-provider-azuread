@@ -74,16 +74,13 @@ func (r AuthenticationStrengthPolicyDataSource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			resp, err := client.ListAuthenticationStrengthPolicies(ctx, authenticationstrengthpolicy.DefaultListAuthenticationStrengthPoliciesOperationOptions())
+			resp, err := client.ListAuthenticationStrengthPoliciesComplete(ctx, authenticationstrengthpolicy.DefaultListAuthenticationStrengthPoliciesOperationOptions())
 			if err != nil {
 				return fmt.Errorf("listing authentication strength policies: %+v", err)
 			}
-			if resp.Model == nil {
-				return fmt.Errorf("listing authentication strength policies: API error, result was nil")
-			}
 
 			var matches []stable.AuthenticationStrengthPolicy
-			for _, policy := range *resp.Model {
+			for _, policy := range resp.Items {
 				if pointer.From(policy.DisplayName) == model.DisplayName {
 					matches = append(matches, policy)
 				}
