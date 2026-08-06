@@ -20,7 +20,7 @@ func NewUserLicenseID(userId, skuId string) UserLicenseId {
 }
 
 func (id UserLicenseId) ID() string {
-	return id.ObjectSubResourceId.String()
+	return id.String()
 }
 
 func UserLicenseID(idString string) (*UserLicenseId, error) {
