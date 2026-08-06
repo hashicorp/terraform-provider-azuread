@@ -40,6 +40,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `allowed_combinations` - A set of allowed authentication methods combinations for this authentication strength policy.
+* `allowed_combinations` - A list of allowed authentication methods combinations for this authentication strength policy.
 * `description` - The description of this authentication strength policy.
 * `id` - The ID of this authentication strength policy.

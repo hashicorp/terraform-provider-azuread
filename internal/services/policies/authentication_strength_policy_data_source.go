@@ -47,7 +47,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 
 		"allowed_combinations": {
 			Description: "The allowed MFA methods for this policy",
-			Type:        pluginsdk.TypeSet,
+			Type:        pluginsdk.TypeList,
 			Computed:    true,
 			Elem: &pluginsdk.Schema{
 				Type: pluginsdk.TypeString,
