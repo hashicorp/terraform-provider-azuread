@@ -1,0 +1,167 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
+package directoryroles
+
+import (
+	"testing"
+
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+)
+
+func TestMatchDirectRoleEligibilityScheduleInstance(t *testing.T) {
+	principalId := "b36e2f19-0a19-4302-8236-0acd7838dcdb"
+	roleDefinitionId := "fe930be7-5e62-47db-91af-98c3a49a38b1"
+	directoryScopeId := "/"
+
+	tests := []struct {
+		name      string
+		instances []stable.UnifiedRoleEligibilityScheduleInstance
+		wantId    string
+	}{
+		{
+			name: "direct assignment matches",
+			instances: []stable.UnifiedRoleEligibilityScheduleInstance{
+				eligibilityScheduleInstance("instance-id", "Direct", principalId, roleDefinitionId, directoryScopeId),
+			},
+			wantId: "instance-id",
+		},
+		{
+			name: "group assignment does not match",
+			instances: []stable.UnifiedRoleEligibilityScheduleInstance{
+				eligibilityScheduleInstance("instance-id", "Group", principalId, roleDefinitionId, directoryScopeId),
+			},
+		},
+		{
+			name: "different role does not match",
+			instances: []stable.UnifiedRoleEligibilityScheduleInstance{
+				eligibilityScheduleInstance("instance-id", "Direct", principalId, "62e90394-69f5-4237-9190-012177145e10", directoryScopeId),
+			},
+		},
+		{
+			name: "matching assignment is selected from multiple instances",
+			instances: []stable.UnifiedRoleEligibilityScheduleInstance{
+				eligibilityScheduleInstance("group-instance-id", "Group", principalId, roleDefinitionId, directoryScopeId),
+				eligibilityScheduleInstance("other-scope-instance-id", "Direct", principalId, roleDefinitionId, "/administrativeUnits/00000000-0000-0000-0000-000000000000"),
+				eligibilityScheduleInstance("direct-instance-id", "Direct", principalId, roleDefinitionId, directoryScopeId),
+			},
+			wantId: "direct-instance-id",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := matchDirectRoleEligibilityScheduleInstance(test.instances, "", principalId, roleDefinitionId, directoryScopeId)
+			if test.wantId == "" {
+				if result != nil {
+					t.Fatalf("expected no match, got %q", *result.Id)
+				}
+				return
+			}
+
+			if result == nil {
+				t.Fatal("expected a match, got nil")
+			}
+			if result.Id == nil || *result.Id != test.wantId {
+				t.Fatalf("expected ID %q, got %#v", test.wantId, result.Id)
+			}
+		})
+	}
+}
+
+func TestMatchDirectRoleEligibilityScheduleInstance_import(t *testing.T) {
+	instance := eligibilityScheduleInstance(
+		"instance-id",
+		"Direct",
+		"b36e2f19-0a19-4302-8236-0acd7838dcdb",
+		"fe930be7-5e62-47db-91af-98c3a49a38b1",
+		"/",
+	)
+	instance.RoleEligibilityScheduleId = nullable.Value("schedule-id")
+
+	result := matchDirectRoleEligibilityScheduleInstance(
+		[]stable.UnifiedRoleEligibilityScheduleInstance{instance},
+		"schedule-id",
+		"",
+		"",
+		"",
+	)
+	if result == nil || result.Id == nil || *result.Id != "instance-id" {
+		t.Fatalf("expected imported schedule instance to match, got %#v", result)
+	}
+}
+
+func TestRoleEligibilityScheduleInstanceFilter(t *testing.T) {
+	tests := []struct {
+		name        string
+		resourceId  string
+		principalId string
+		want        string
+	}{
+		{
+			name:        "managed resource",
+			resourceId:  "schedule-id",
+			principalId: "principal-id",
+			want:        "principalId eq 'principal-id'",
+		},
+		{
+			name:       "imported resource",
+			resourceId: "schedule-id",
+			want:       "roleEligibilityScheduleId eq 'schedule-id'",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := roleEligibilityScheduleInstanceFilter(test.resourceId, test.principalId); got != test.want {
+				t.Fatalf("expected filter %q, got %q", test.want, got)
+			}
+		})
+	}
+}
+
+func TestSuppressMissingImportedJustification(t *testing.T) {
+	tests := []struct {
+		name             string
+		resourceId       string
+		oldJustification string
+		want             bool
+	}{
+		{
+			name:             "create retains configured justification",
+			oldJustification: "",
+			want:             false,
+		},
+		{
+			name:             "import suppresses unavailable justification",
+			resourceId:       "schedule-id",
+			oldJustification: "",
+			want:             true,
+		},
+		{
+			name:             "managed justification change forces replacement",
+			resourceId:       "request-id",
+			oldJustification: "Managed by Terraform",
+			want:             false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := suppressMissingImportedJustification(test.resourceId, test.oldJustification); got != test.want {
+				t.Fatalf("expected %t, got %t", test.want, got)
+			}
+		})
+	}
+}
+
+func eligibilityScheduleInstance(id, memberType, principalId, roleDefinitionId, directoryScopeId string) stable.UnifiedRoleEligibilityScheduleInstance {
+	return stable.UnifiedRoleEligibilityScheduleInstance{
+		Id:               &id,
+		MemberType:       nullable.Value(memberType),
+		PrincipalId:      nullable.Value(principalId),
+		RoleDefinitionId: nullable.Value(roleDefinitionId),
+		DirectoryScopeId: nullable.Value(directoryScopeId),
+	}
+}
