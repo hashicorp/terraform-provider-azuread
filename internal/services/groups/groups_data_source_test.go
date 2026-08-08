@@ -31,6 +31,7 @@ func TestAccGroupsDataSource_byDisplayNames(t *testing.T) {
 			Config: r.byDisplayNames(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
+				check.That(data.ResourceName).Key("groups.#").HasValue("2"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			),
 		},
@@ -49,6 +50,7 @@ func TestAccGroupsDataSource_byDisplayNamesIgnoreMissing(t *testing.T) {
 			Config: r.byDisplayNamesIgnoreMissing(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
+				check.That(data.ResourceName).Key("groups.#").HasValue("2"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			),
 		},
@@ -68,6 +70,7 @@ func TestAccGroupsDataSource_byDisplayNamePrefix(t *testing.T) {
 			Config: r.byDisplayNamePrefix(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").MatchesRegex(moreThanZero),
+				check.That(data.ResourceName).Key("groups.#").MatchesRegex(moreThanZero),
 				check.That(data.ResourceName).Key("object_ids.#").MatchesRegex(moreThanZero),
 			),
 		},
@@ -86,6 +89,7 @@ func TestAccGroupsDataSource_byObjectIds(t *testing.T) {
 			Config: r.byObjectIds(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
+				check.That(data.ResourceName).Key("groups.#").HasValue("2"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			),
 		},
@@ -100,6 +104,7 @@ func TestAccGroupsDataSource_noNames(t *testing.T) {
 			Config: GroupsDataSource{}.noNames(),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("0"),
+				check.That(data.ResourceName).Key("groups.#").HasValue("0"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("0"),
 			),
 		},
@@ -118,6 +123,7 @@ func TestAccGroupsDataSource_returnAll(t *testing.T) {
 			Config: r.returnAll(),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
+				check.That(data.ResourceName).Key("groups.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 			),
 		},
@@ -136,6 +142,7 @@ func TestAccGroupsDataSource_returnAllMailEnabled(t *testing.T) {
 			Config: r.returnAllMailEnabled(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
+				check.That(data.ResourceName).Key("groups.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids").ValidatesWith(testCheckHasOnlyMailEnabledGroups()),
 			),
@@ -155,6 +162,7 @@ func TestAccGroupsDataSource_returnAllSecurityEnabled(t *testing.T) {
 			Config: r.returnAllSecurityEnabled(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
+				check.That(data.ResourceName).Key("groups.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids").ValidatesWith(testCheckHasOnlySecurityEnabledGroups()),
 			),
@@ -174,6 +182,7 @@ func TestAccGroupsDataSource_returnAllMailNotSecurityEnabled(t *testing.T) {
 			Config: r.returnAllMailNotSecurityEnabled(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
+				check.That(data.ResourceName).Key("groups.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids").ValidatesWith(testCheckHasOnlyMailEnabledGroupsNotSecurityEnabledGroups()),
 			),
@@ -193,6 +202,7 @@ func TestAccGroupsDataSource_returnAllSecurityNotMailEnabled(t *testing.T) {
 			Config: r.returnAllSecurityNotMailEnabled(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
+				check.That(data.ResourceName).Key("groups.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids").ValidatesWith(testCheckHasOnlySecurityEnabledGroupsNotMailEnabledGroups()),
 			),
