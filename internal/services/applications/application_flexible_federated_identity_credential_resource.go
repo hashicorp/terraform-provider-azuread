@@ -147,8 +147,8 @@ func (f flexibleFederatedIdentityCredentialResource) Create() sdk.ResourceFunc {
 			}
 
 			federatedIdentityCredentialResp, err := flexibleFederatedIdentityCredentialClient.CreateFederatedIdentityCredential(ctx, *applicationId, credential, federatedidentitycredential.DefaultCreateFederatedIdentityCredentialOperationOptions())
-			if err != nil {
-				return fmt.Errorf("adding flexible federated identity credential for %s", applicationId)
+            if err != nil {
+				return fmt.Errorf("adding flexible federated identity credential for %s: %+v", applicationId, err)
 			}
 
 			newCredential := federatedIdentityCredentialResp.Model
