@@ -133,16 +133,7 @@ func userFlowAttributeResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 	d.SetId(id.ID())
 
 	// Now ensure we can retrieve the attribute consistently
-	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.GetUserFlowAttribute(ctx, id, userflowattribute.DefaultGetUserFlowAttributeOperationOptions())
-		if err != nil {
-			if response.WasNotFound(resp.HttpResponse) {
-				return pointer.To(false), nil
-			}
-			return pointer.To(false), err
-		}
-		return pointer.To(resp.Model != nil), nil
-	}); err != nil {
+	if _, err := client.GetUserFlowAttribute(ctx, id, userflowattribute.DefaultGetUserFlowAttributeOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
 	}
 

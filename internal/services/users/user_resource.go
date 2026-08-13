@@ -535,16 +535,7 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	// Now ensure we can retrieve the user consistently
-	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.GetUser(ctx, id, user.DefaultGetUserOperationOptions())
-		if err != nil {
-			if response.WasNotFound(resp.HttpResponse) {
-				return pointer.To(false), nil
-			}
-			return pointer.To(false), err
-		}
-		return pointer.To(resp.Model != nil), nil
-	}); err != nil {
+	if _, err := client.GetUser(ctx, id, user.DefaultGetUserOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
 	}
 

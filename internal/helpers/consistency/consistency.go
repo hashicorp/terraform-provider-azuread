@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
@@ -19,6 +20,10 @@ func WaitForDeletion(ctx context.Context, f ChangeFunc) error {
 	if !ok {
 		return errors.New("context has no deadline")
 	}
+
+	// Disable SDK-level 404 retries for deletion checks
+	// Since we are explicitly waiting for a 404, we don't want the SDK to endlessly retry it.
+	ctx = client.WithDisable404Retry(ctx)
 
 	timeout := time.Until(deadline)
 	_, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
@@ -61,7 +66,7 @@ func WaitForUpdateWithTimeout(ctx context.Context, timeout time.Duration, f Chan
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
 		MinTimeout:                5 * time.Second,
-		ContinuousTargetOccurence: 5,
+		ContinuousTargetOccurence: 1,
 		Refresh: func() (interface{}, string, error) {
 			updated, err := f(ctx)
 			if err != nil {
@@ -100,7 +105,7 @@ func WaitForUpdateWithTimeoutDelayStart(ctx context.Context, timeout, delay time
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
 		MinTimeout:                5 * time.Second,
-		ContinuousTargetOccurence: 5,
+		ContinuousTargetOccurence: 1,
 		Refresh: func() (interface{}, string, error) {
 			updated, err := f(ctx)
 			if err != nil {
