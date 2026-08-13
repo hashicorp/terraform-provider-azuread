@@ -8,13 +8,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applicationtemplates/stable/applicationtemplate"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -129,19 +127,9 @@ func (r ApplicationFromTemplateResource) Create() sdk.ResourceFunc {
 			id := parse.NewFromTemplateID(model.TemplateId, *resp.Model.Application.Id, *resp.Model.ServicePrincipal.Id)
 			metadata.SetID(id)
 
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-				client := metadata.Client.Applications.ApplicationClient
-
-				resp, err := client.GetApplication(ctx, stable.NewApplicationID(id.ApplicationId), application.DefaultGetApplicationOperationOptions())
-				if err != nil {
-					if response.WasNotFound(resp.HttpResponse) {
-						return pointer.To(false), nil
-					}
-					return nil, err
-				}
-				return pointer.To(resp.Model != nil), nil
-			}); err != nil {
-				return fmt.Errorf("creating %s: timed out waiting for replication of new application", templateId)
+			appClient := metadata.Client.Applications.ApplicationClient
+			if _, err := appClient.GetApplication(ctx, stable.NewApplicationID(id.ApplicationId), application.DefaultGetApplicationOperationOptions()); err != nil {
+				return fmt.Errorf("creating %s: timed out waiting for replication of new application: %v", templateId, err)
 			}
 
 			return nil

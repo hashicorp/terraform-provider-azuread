@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/locks"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/migrations"
 )
 
@@ -109,6 +110,10 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 	appRoleId := d.Get("app_role_id").(string)
 	principalId := d.Get("principal_object_id").(string)
 	resourceId := d.Get("resource_object_id").(string)
+
+	// ensure we only try to update with one at a time, race conditions can result in unexpected overwrite
+	locks.ByID(resourceId)
+	defer locks.UnlockByID(resourceId)
 
 	if resp, err := servicePrincipalClient.GetServicePrincipal(ctx, stable.NewServicePrincipalID(resourceId), serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
 		if response.WasNotFound(resp.HttpResponse) {

@@ -1053,17 +1053,8 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 						applicationId := stable.NewApplicationID(*id)
 
 						// Now ensure we can retrieve the application consistently
-						if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-							resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
-							if err != nil {
-								if response.WasNotFound(resp.HttpResponse) {
-									return pointer.To(false), nil
-								}
-								return pointer.To(false), err
-							}
-							return pointer.To(resp.Model != nil), nil
-						}); err != nil {
-							return nil, "Error", fmt.Errorf("polling for %s", applicationId)
+						if _, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions()); err != nil {
+							return nil, "Error", fmt.Errorf("polling for %s: %v", applicationId, err)
 						}
 
 						// We should ensure the service principal was also created, so list service principals for the created application
