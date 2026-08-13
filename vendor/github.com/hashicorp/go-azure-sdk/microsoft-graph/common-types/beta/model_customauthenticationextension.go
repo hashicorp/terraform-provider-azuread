@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type CustomAuthenticationExtension interface {
@@ -83,9 +83,9 @@ func (s BaseCustomAuthenticationExtensionImpl) Entity() BaseEntityImpl {
 
 var _ CustomAuthenticationExtension = RawCustomAuthenticationExtensionImpl{}
 
-// RawCustomAuthenticationExtensionImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawCustomAuthenticationExtensionImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawCustomAuthenticationExtensionImpl struct {
 	customAuthenticationExtension BaseCustomAuthenticationExtensionImpl
 	Type                          string
@@ -94,6 +94,10 @@ type RawCustomAuthenticationExtensionImpl struct {
 
 func (s RawCustomAuthenticationExtensionImpl) CustomAuthenticationExtension() BaseCustomAuthenticationExtensionImpl {
 	return s.customAuthenticationExtension
+}
+
+func (s RawCustomAuthenticationExtensionImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 func (s RawCustomAuthenticationExtensionImpl) CustomCalloutExtension() BaseCustomCalloutExtensionImpl {

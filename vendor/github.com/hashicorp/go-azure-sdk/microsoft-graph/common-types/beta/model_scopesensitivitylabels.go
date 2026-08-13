@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type ScopeSensitivityLabels interface {
@@ -37,9 +37,9 @@ func (s BaseScopeSensitivityLabelsImpl) ScopeSensitivityLabels() BaseScopeSensit
 
 var _ ScopeSensitivityLabels = RawScopeSensitivityLabelsImpl{}
 
-// RawScopeSensitivityLabelsImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawScopeSensitivityLabelsImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawScopeSensitivityLabelsImpl struct {
 	scopeSensitivityLabels BaseScopeSensitivityLabelsImpl
 	Type                   string
@@ -48,6 +48,10 @@ type RawScopeSensitivityLabelsImpl struct {
 
 func (s RawScopeSensitivityLabelsImpl) ScopeSensitivityLabels() BaseScopeSensitivityLabelsImpl {
 	return s.scopeSensitivityLabels
+}
+
+func (s RawScopeSensitivityLabelsImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 func UnmarshalScopeSensitivityLabelsImplementation(input []byte) (ScopeSensitivityLabels, error) {

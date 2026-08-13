@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type GetUserOperationResponse struct {
@@ -26,7 +26,9 @@ type GetUserOperationOptions struct {
 }
 
 func DefaultGetUserOperationOptions() GetUserOperationOptions {
-	return GetUserOperationOptions{}
+	return GetUserOperationOptions{
+		RetryFunc: client.RetryOn404ConsistencyFailureFunc,
+	}
 }
 
 func (o GetUserOperationOptions) ToHeaders() *client.Headers {

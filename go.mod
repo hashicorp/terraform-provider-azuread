@@ -4,7 +4,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-azure-helpers v0.81.1
 	github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20260212.1143955
-	github.com/hashicorp/go-azure-sdk/sdk v0.20260212.1143955
+	github.com/hashicorp/go-azure-sdk/sdk v0.20260804.1150411
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-uuid v1.0.3
@@ -60,7 +60,11 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/grpc v1.83.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
-	software.sslmate.com/src/go-pkcs12 v0.5.0 // indirect
+	software.sslmate.com/src/go-pkcs12 v0.7.3 // indirect
 )
 
 go 1.26.5
+
+replace github.com/hashicorp/go-azure-sdk/microsoft-graph => ../go-azure-sdk/microsoft-graph
+
+replace github.com/hashicorp/go-azure-sdk/sdk => ../go-azure-sdk/sdk

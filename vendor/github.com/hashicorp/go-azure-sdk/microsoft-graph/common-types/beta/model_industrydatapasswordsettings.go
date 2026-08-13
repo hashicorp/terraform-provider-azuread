@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type IndustryDataPasswordSettings interface {
@@ -32,9 +32,9 @@ func (s BaseIndustryDataPasswordSettingsImpl) IndustryDataPasswordSettings() Bas
 
 var _ IndustryDataPasswordSettings = RawIndustryDataPasswordSettingsImpl{}
 
-// RawIndustryDataPasswordSettingsImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawIndustryDataPasswordSettingsImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawIndustryDataPasswordSettingsImpl struct {
 	industryDataPasswordSettings BaseIndustryDataPasswordSettingsImpl
 	Type                         string
@@ -43,6 +43,10 @@ type RawIndustryDataPasswordSettingsImpl struct {
 
 func (s RawIndustryDataPasswordSettingsImpl) IndustryDataPasswordSettings() BaseIndustryDataPasswordSettingsImpl {
 	return s.industryDataPasswordSettings
+}
+
+func (s RawIndustryDataPasswordSettingsImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 func UnmarshalIndustryDataPasswordSettingsImplementation(input []byte) (IndustryDataPasswordSettings, error) {
