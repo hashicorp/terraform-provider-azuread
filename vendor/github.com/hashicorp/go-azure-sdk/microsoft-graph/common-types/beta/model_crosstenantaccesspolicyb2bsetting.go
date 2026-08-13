@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type CrossTenantAccessPolicyB2BSetting interface {
@@ -38,9 +38,9 @@ func (s BaseCrossTenantAccessPolicyB2BSettingImpl) CrossTenantAccessPolicyB2BSet
 
 var _ CrossTenantAccessPolicyB2BSetting = RawCrossTenantAccessPolicyB2BSettingImpl{}
 
-// RawCrossTenantAccessPolicyB2BSettingImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawCrossTenantAccessPolicyB2BSettingImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawCrossTenantAccessPolicyB2BSettingImpl struct {
 	crossTenantAccessPolicyB2BSetting BaseCrossTenantAccessPolicyB2BSettingImpl
 	Type                              string
@@ -49,6 +49,10 @@ type RawCrossTenantAccessPolicyB2BSettingImpl struct {
 
 func (s RawCrossTenantAccessPolicyB2BSettingImpl) CrossTenantAccessPolicyB2BSetting() BaseCrossTenantAccessPolicyB2BSettingImpl {
 	return s.crossTenantAccessPolicyB2BSetting
+}
+
+func (s RawCrossTenantAccessPolicyB2BSettingImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 func UnmarshalCrossTenantAccessPolicyB2BSettingImplementation(input []byte) (CrossTenantAccessPolicyB2BSetting, error) {

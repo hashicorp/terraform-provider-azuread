@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type MobileContainedApp interface {
@@ -47,9 +47,9 @@ func (s BaseMobileContainedAppImpl) Entity() BaseEntityImpl {
 
 var _ MobileContainedApp = RawMobileContainedAppImpl{}
 
-// RawMobileContainedAppImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawMobileContainedAppImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawMobileContainedAppImpl struct {
 	mobileContainedApp BaseMobileContainedAppImpl
 	Type               string
@@ -58,6 +58,10 @@ type RawMobileContainedAppImpl struct {
 
 func (s RawMobileContainedAppImpl) MobileContainedApp() BaseMobileContainedAppImpl {
 	return s.mobileContainedApp
+}
+
+func (s RawMobileContainedAppImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 func (s RawMobileContainedAppImpl) Entity() BaseEntityImpl {

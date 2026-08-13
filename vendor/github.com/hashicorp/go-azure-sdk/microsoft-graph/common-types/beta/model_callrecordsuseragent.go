@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type CallRecordsUserAgent interface {
@@ -40,9 +40,9 @@ func (s BaseCallRecordsUserAgentImpl) CallRecordsUserAgent() BaseCallRecordsUser
 
 var _ CallRecordsUserAgent = RawCallRecordsUserAgentImpl{}
 
-// RawCallRecordsUserAgentImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawCallRecordsUserAgentImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawCallRecordsUserAgentImpl struct {
 	callRecordsUserAgent BaseCallRecordsUserAgentImpl
 	Type                 string
@@ -51,6 +51,10 @@ type RawCallRecordsUserAgentImpl struct {
 
 func (s RawCallRecordsUserAgentImpl) CallRecordsUserAgent() BaseCallRecordsUserAgentImpl {
 	return s.callRecordsUserAgent
+}
+
+func (s RawCallRecordsUserAgentImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 func UnmarshalCallRecordsUserAgentImplementation(input []byte) (CallRecordsUserAgent, error) {

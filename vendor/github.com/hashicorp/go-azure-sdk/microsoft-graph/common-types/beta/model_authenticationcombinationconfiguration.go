@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type AuthenticationCombinationConfiguration interface {
@@ -51,9 +51,9 @@ func (s BaseAuthenticationCombinationConfigurationImpl) Entity() BaseEntityImpl 
 
 var _ AuthenticationCombinationConfiguration = RawAuthenticationCombinationConfigurationImpl{}
 
-// RawAuthenticationCombinationConfigurationImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawAuthenticationCombinationConfigurationImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawAuthenticationCombinationConfigurationImpl struct {
 	authenticationCombinationConfiguration BaseAuthenticationCombinationConfigurationImpl
 	Type                                   string
@@ -62,6 +62,10 @@ type RawAuthenticationCombinationConfigurationImpl struct {
 
 func (s RawAuthenticationCombinationConfigurationImpl) AuthenticationCombinationConfiguration() BaseAuthenticationCombinationConfigurationImpl {
 	return s.authenticationCombinationConfiguration
+}
+
+func (s RawAuthenticationCombinationConfigurationImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 func (s RawAuthenticationCombinationConfigurationImpl) Entity() BaseEntityImpl {

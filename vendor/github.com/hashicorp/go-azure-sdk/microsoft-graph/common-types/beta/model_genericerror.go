@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type GenericError interface {
@@ -40,9 +40,9 @@ func (s BaseGenericErrorImpl) GenericError() BaseGenericErrorImpl {
 
 var _ GenericError = RawGenericErrorImpl{}
 
-// RawGenericErrorImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawGenericErrorImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawGenericErrorImpl struct {
 	genericError BaseGenericErrorImpl
 	Type         string
@@ -51,6 +51,10 @@ type RawGenericErrorImpl struct {
 
 func (s RawGenericErrorImpl) GenericError() BaseGenericErrorImpl {
 	return s.genericError
+}
+
+func (s RawGenericErrorImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 func UnmarshalGenericErrorImplementation(input []byte) (GenericError, error) {

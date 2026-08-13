@@ -65,8 +65,8 @@ github.com/hashicorp/go-azure-helpers/lang/pointer
 github.com/hashicorp/go-azure-helpers/lang/response
 github.com/hashicorp/go-azure-helpers/resourcemanager/features
 github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids
-# github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20260212.1143955
-## explicit; go 1.25.5
+# github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20260212.1143955 => ../go-azure-sdk/microsoft-graph
+## explicit; go 1.26.5
 github.com/hashicorp/go-azure-sdk/microsoft-graph/administrativeunits/beta/administrativeunit
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/federatedidentitycredential
@@ -129,8 +129,8 @@ github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synch
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/beta/user
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/manager
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user
-# github.com/hashicorp/go-azure-sdk/sdk v0.20260212.1143955
-## explicit; go 1.25.5
+# github.com/hashicorp/go-azure-sdk/sdk v0.20260804.1150411 => ../go-azure-sdk/sdk
+## explicit; go 1.26.5
 github.com/hashicorp/go-azure-sdk/sdk/auth
 github.com/hashicorp/go-azure-sdk/sdk/claims
 github.com/hashicorp/go-azure-sdk/sdk/client
@@ -549,7 +549,9 @@ google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
-# software.sslmate.com/src/go-pkcs12 v0.5.0
+# software.sslmate.com/src/go-pkcs12 v0.7.3
 ## explicit; go 1.19
 software.sslmate.com/src/go-pkcs12
 software.sslmate.com/src/go-pkcs12/internal/rc2
+# github.com/hashicorp/go-azure-sdk/microsoft-graph => ../go-azure-sdk/microsoft-graph
+# github.com/hashicorp/go-azure-sdk/sdk => ../go-azure-sdk/sdk

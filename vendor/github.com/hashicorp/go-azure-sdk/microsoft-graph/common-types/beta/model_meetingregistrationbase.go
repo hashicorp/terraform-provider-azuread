@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type MeetingRegistrationBase interface {
@@ -52,9 +52,9 @@ func (s BaseMeetingRegistrationBaseImpl) Entity() BaseEntityImpl {
 
 var _ MeetingRegistrationBase = RawMeetingRegistrationBaseImpl{}
 
-// RawMeetingRegistrationBaseImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawMeetingRegistrationBaseImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawMeetingRegistrationBaseImpl struct {
 	meetingRegistrationBase BaseMeetingRegistrationBaseImpl
 	Type                    string
@@ -63,6 +63,10 @@ type RawMeetingRegistrationBaseImpl struct {
 
 func (s RawMeetingRegistrationBaseImpl) MeetingRegistrationBase() BaseMeetingRegistrationBaseImpl {
 	return s.meetingRegistrationBase
+}
+
+func (s RawMeetingRegistrationBaseImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 func (s RawMeetingRegistrationBaseImpl) Entity() BaseEntityImpl {

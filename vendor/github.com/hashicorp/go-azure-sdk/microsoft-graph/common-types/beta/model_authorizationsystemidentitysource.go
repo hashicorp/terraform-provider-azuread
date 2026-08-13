@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 )
 
-// Copyright IBM Corp. 2021, 2025 All rights reserved.
+// Copyright IBM Corp. 2023, 2026 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type AuthorizationSystemIdentitySource interface {
@@ -37,9 +37,9 @@ func (s BaseAuthorizationSystemIdentitySourceImpl) AuthorizationSystemIdentitySo
 
 var _ AuthorizationSystemIdentitySource = RawAuthorizationSystemIdentitySourceImpl{}
 
-// RawAuthorizationSystemIdentitySourceImpl is returned when the Discriminated Value doesn't match any of the defined types
-// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
-// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+// RawAuthorizationSystemIdentitySourceImpl is returned when the Discriminated Value doesn't match any of the defined types.
+// It can also be used as a Request Payload to provide a raw JSON payload, which is useful
+// for preserving arbitrary/extensible JSON properties across a round-trip.
 type RawAuthorizationSystemIdentitySourceImpl struct {
 	authorizationSystemIdentitySource BaseAuthorizationSystemIdentitySourceImpl
 	Type                              string
@@ -48,6 +48,10 @@ type RawAuthorizationSystemIdentitySourceImpl struct {
 
 func (s RawAuthorizationSystemIdentitySourceImpl) AuthorizationSystemIdentitySource() BaseAuthorizationSystemIdentitySourceImpl {
 	return s.authorizationSystemIdentitySource
+}
+
+func (s RawAuthorizationSystemIdentitySourceImpl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Values)
 }
 
 var _ json.Marshaler = BaseAuthorizationSystemIdentitySourceImpl{}

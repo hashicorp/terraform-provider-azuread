@@ -42,6 +42,7 @@ func NewClient(api environments.Api, serviceName string, apiVersion ApiVersion) 
 	}
 	baseUri := fmt.Sprintf("%s/%s", *endpoint, apiVersion)
 	baseClient := client.NewClient(baseUri, fmt.Sprintf("MicrosoftGraph-%s", serviceName), string(apiVersion))
+	baseClient.EnableRetryJitter = true
 	return &Client{
 		Client:        baseClient,
 		EnableRetries: true,
@@ -96,7 +97,11 @@ func (c *Client) NewRequest(ctx context.Context, input client.RequestOptions) (*
 	}
 
 	req.URL.RawQuery = query.Encode()
-	// req.RetryFunc = client.RequestRetryAny(defaultRetryFunctions...)
+
+	// NOTE: We intentionally do not set a default RetryFunc here. Retrying 404s for consistency
+	// is handled by the Pandora-generated Default*OperationOptions() for primary-resource GETs on
+	// directory objects. Setting a blanket fallback here would cause navigation property GETs
+	// (e.g. /users/{id}/manager) to endlessly retry legitimate 404s.
 	req.ValidStatusCodes = input.ExpectedStatusCodes
 
 	return req, nil

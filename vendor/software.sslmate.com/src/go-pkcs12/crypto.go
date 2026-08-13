@@ -16,6 +16,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"errors"
+	"fmt"
 	"hash"
 	"io"
 
@@ -230,7 +231,8 @@ func pbes2CipherFor(algorithm pkix.AlgorithmIdentifier, password []byte) (cipher
 		prf = sha512.New
 	case kdfParams.Prf.Algorithm.Equal(oidHmacWithSHA1):
 		prf = sha1.New
-	case kdfParams.Prf.Algorithm.Equal(asn1.ObjectIdentifier([]int{})):
+	case kdfParams.Prf.Algorithm == nil:
+		// Algorithm not specified; defaults to SHA1 according to ASN1 definition
 		prf = sha1.New
 	default:
 		return nil, nil, NotImplementedError("pbes2 prf " + kdfParams.Prf.Algorithm.String() + " is not supported")
@@ -254,6 +256,9 @@ func pbes2CipherFor(algorithm pkix.AlgorithmIdentifier, password []byte) (cipher
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, nil, err
+	}
+	if len(iv) != block.BlockSize() {
+		return nil, nil, fmt.Errorf("pkcs12: invalid IV length in PBES2 encryption scheme (IV length %d does not match block size %d)", len(iv), block.BlockSize())
 	}
 	return block, iv, nil
 }
