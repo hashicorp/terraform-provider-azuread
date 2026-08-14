@@ -11,11 +11,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -124,6 +126,28 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.Re
 
 	d.SetId(id.String())
 
+	// Wait for the change to replicate to the read replica to prevent RMW stale reads in concurrent operations
+	if err := consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return nil, err
+		}
+		app := resp.Model
+		if app != nil && app.Api != nil && app.Api.PreAuthorizedApplications != nil {
+			for _, a := range *app.Api.PreAuthorizedApplications {
+				if strings.EqualFold(a.AppId.GetOrZero(), id.AppId) {
+					return pointer.To(true), nil
+				}
+			}
+		}
+		return pointer.To(false), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for pre-authorized application %q to be added to %s", id.AppId, applicationId)
+	}
+
 	return applicationPreAuthorizedResourceRead(ctx, d, meta)
 }
 
@@ -175,6 +199,39 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.Re
 
 	if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating pre-authorized application %q for %s", id.AppId, applicationId)
+	}
+
+	expectedPerms := tf.ExpandStringSlicePtr(d.Get("permission_ids").(*pluginsdk.Set).List())
+
+	// Wait for the change to replicate to the read replica to prevent RMW stale reads in concurrent operations
+	if err := consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return nil, err
+		}
+		app := resp.Model
+		if app != nil && app.Api != nil && app.Api.PreAuthorizedApplications != nil {
+			for _, a := range *app.Api.PreAuthorizedApplications {
+				if strings.EqualFold(a.AppId.GetOrZero(), id.AppId) {
+					var aLen, eLen int
+					if a.DelegatedPermissionIds != nil {
+						aLen = len(*a.DelegatedPermissionIds)
+					}
+					if expectedPerms != nil {
+						eLen = len(*expectedPerms)
+					}
+					if aLen == eLen {
+						return pointer.To(true), nil
+					}
+				}
+			}
+		}
+		return pointer.To(false), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for pre-authorized application %q to be updated on %s", id.AppId, applicationId)
 	}
 
 	return applicationPreAuthorizedResourceRead(ctx, d, meta)
@@ -271,6 +328,28 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.Re
 
 	if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing pre-authorized application %q from %s", id.AppId, applicationId)
+	}
+
+	// Wait for the change to replicate to the read replica to prevent RMW stale reads in concurrent operations
+	if err := consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(true), nil
+			}
+			return nil, err
+		}
+		app := resp.Model
+		if app != nil && app.Api != nil && app.Api.PreAuthorizedApplications != nil {
+			for _, a := range *app.Api.PreAuthorizedApplications {
+				if strings.EqualFold(a.AppId.GetOrZero(), id.AppId) {
+					return pointer.To(false), nil
+				}
+			}
+		}
+		return pointer.To(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for pre-authorized application %q to be removed from %s", id.AppId, applicationId)
 	}
 
 	return nil
