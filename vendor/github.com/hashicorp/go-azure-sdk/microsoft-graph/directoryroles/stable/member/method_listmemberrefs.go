@@ -38,10 +38,7 @@ type ListMemberRefsOperationOptions struct {
 }
 
 func DefaultListMemberRefsOperationOptions() ListMemberRefsOperationOptions {
-	return ListMemberRefsOperationOptions{
-		ConsistencyLevel: func() *odata.ConsistencyLevel { v := odata.ConsistencyLevelEventual; return &v }(),
-		Count:            func() *bool { v := true; return &v }(),
-	}
+	return ListMemberRefsOperationOptions{}
 }
 
 func (o ListMemberRefsOperationOptions) ToHeaders() *client.Headers {

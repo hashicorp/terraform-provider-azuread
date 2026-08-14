@@ -38,9 +38,7 @@ type ListAdministrativeUnitsOperationOptions struct {
 }
 
 func DefaultListAdministrativeUnitsOperationOptions() ListAdministrativeUnitsOperationOptions {
-	return ListAdministrativeUnitsOperationOptions{
-		Count: func() *bool { v := true; return &v }(),
-	}
+	return ListAdministrativeUnitsOperationOptions{}
 }
 
 func (o ListAdministrativeUnitsOperationOptions) ToHeaders() *client.Headers {

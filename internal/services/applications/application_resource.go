@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
+	sdkclient "github.com/hashicorp/go-azure-sdk/sdk/client"
 	applicationBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/logo"
@@ -1543,7 +1544,9 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 
 	if d.HasChange("owners") {
-		resp, err := ownerClient.ListOwners(ctx, *id, owner.DefaultListOwnersOperationOptions())
+		ownersOptions := owner.DefaultListOwnersOperationOptions()
+		ownersOptions.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
+		resp, err := ownerClient.ListOwners(ctx, *id, ownersOptions)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve owners for application with object ID: %q", id.ApplicationId)
 		}
@@ -1703,7 +1706,9 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	tf.Set(d, "prevent_duplicate_names", preventDuplicates)
 
 	owners := make([]interface{}, 0)
-	if resp, err := ownerClient.ListOwners(ctx, *id, owner.DefaultListOwnersOperationOptions()); err != nil {
+	ownersOptions := owner.DefaultListOwnersOperationOptions()
+	ownersOptions.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
+	if resp, err := ownerClient.ListOwners(ctx, *id, ownersOptions); err != nil {
 		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for %s", id)
 	} else if resp.Model != nil {
 		for _, obj := range *resp.Model {

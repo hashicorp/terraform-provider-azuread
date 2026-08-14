@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
+	sdkclient "github.com/hashicorp/go-azure-sdk/sdk/client"
 	administrativeunitBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/administrativeunits/beta/administrativeunit"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
@@ -299,7 +300,9 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 	}
 
 	if d.HasChange("members") {
-		membersResp, err := memberClient.ListAdministrativeUnitMembers(ctx, *id, administrativeunitmember.DefaultListAdministrativeUnitMembersOperationOptions())
+		membersOptions := administrativeunitmember.DefaultListAdministrativeUnitMembersOperationOptions()
+		membersOptions.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
+		membersResp, err := memberClient.ListAdministrativeUnitMembers(ctx, *id, membersOptions)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve members for %s", id)
 		}
@@ -361,7 +364,9 @@ func administrativeUnitResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 	hiddenMembershipEnabled := strings.EqualFold(administrativeUnit.Visibility.GetOrZero(), administrativeUnitVisibilityHiddenMembership)
 	tf.Set(d, "hidden_membership_enabled", hiddenMembershipEnabled)
 
-	membersResp, err := memberClient.ListAdministrativeUnitMembers(ctx, *id, administrativeunitmember.DefaultListAdministrativeUnitMembersOperationOptions())
+	membersOptions := administrativeunitmember.DefaultListAdministrativeUnitMembersOperationOptions()
+	membersOptions.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
+	membersResp, err := memberClient.ListAdministrativeUnitMembers(ctx, *id, membersOptions)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not retrieve members for %s", id)
 	}
