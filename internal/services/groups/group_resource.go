@@ -29,7 +29,7 @@ import (
 	ownerBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/go-uuid"
+
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
@@ -725,30 +725,10 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	id := beta.NewGroupID(groupObjectId)
 	d.SetId(id.ID())
 
-	// Attempt to patch the newly created group and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
-	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
-	uid, err := uuid.GenerateUUID()
-	if err != nil {
-		return tf.ErrorDiagF(err, "Failed to generate a UUID")
-	}
-	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
-	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
-		updateOptions := groupBeta.UpdateGroupOperationOptions{
-			RetryFunc: sdkclient.RetryOn404ConsistencyFailureFunc,
-		}
-		resp, err := client.UpdateGroup(ctx, id, beta.Group{
-			DisplayName: nullable.Value(displayNameToSet),
-		}, updateOptions)
-		if err != nil {
-			if response.WasNotFound(resp.HttpResponse) {
-				return tf.ErrorDiagF(err, "Timed out whilst waiting for new %s to be replicated in Azure AD", id)
-			}
-			return tf.ErrorDiagF(err, "Failed to patch %s after creating", id)
-		}
-	}
 
+	var err error
 	// Wait for DisplayName to be updated
-	if err := consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
