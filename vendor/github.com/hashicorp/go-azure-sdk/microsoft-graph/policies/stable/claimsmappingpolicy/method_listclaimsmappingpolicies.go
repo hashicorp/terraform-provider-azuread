@@ -38,9 +38,7 @@ type ListClaimsMappingPoliciesOperationOptions struct {
 }
 
 func DefaultListClaimsMappingPoliciesOperationOptions() ListClaimsMappingPoliciesOperationOptions {
-	return ListClaimsMappingPoliciesOperationOptions{
-		Count: func() *bool { v := true; return &v }(),
-	}
+	return ListClaimsMappingPoliciesOperationOptions{}
 }
 
 func (o ListClaimsMappingPoliciesOperationOptions) ToHeaders() *client.Headers {

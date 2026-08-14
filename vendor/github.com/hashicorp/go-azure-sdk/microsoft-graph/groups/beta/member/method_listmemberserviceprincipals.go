@@ -39,10 +39,7 @@ type ListMemberServicePrincipalsOperationOptions struct {
 }
 
 func DefaultListMemberServicePrincipalsOperationOptions() ListMemberServicePrincipalsOperationOptions {
-	return ListMemberServicePrincipalsOperationOptions{
-		ConsistencyLevel: func() *odata.ConsistencyLevel { v := odata.ConsistencyLevelEventual; return &v }(),
-		Count:            func() *bool { v := true; return &v }(),
-	}
+	return ListMemberServicePrincipalsOperationOptions{}
 }
 
 func (o ListMemberServicePrincipalsOperationOptions) ToHeaders() *client.Headers {

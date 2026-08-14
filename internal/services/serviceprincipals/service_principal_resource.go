@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
+	sdkclient "github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	serviceprincipalBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/beta/serviceprincipal"
@@ -562,7 +563,9 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 	}
 
 	if d.HasChange("owners") {
-		resp, err := ownerClient.ListOwners(ctx, *id, owner.DefaultListOwnersOperationOptions())
+		ownersOptions := owner.DefaultListOwnersOperationOptions()
+		ownersOptions.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
+		resp, err := ownerClient.ListOwners(ctx, *id, ownersOptions)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve owners for service principal with object ID: %q", d.Id())
 		}
@@ -676,7 +679,9 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 	tf.Set(d, "type", servicePrincipal.ServicePrincipalType.GetOrZero())
 
 	owners := make([]interface{}, 0)
-	if resp, err := ownerClient.ListOwners(ctx, *id, owner.DefaultListOwnersOperationOptions()); err != nil {
+	ownersOptions := owner.DefaultListOwnersOperationOptions()
+	ownersOptions.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
+	if resp, err := ownerClient.ListOwners(ctx, *id, ownersOptions); err != nil {
 		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for %s", id)
 	} else if resp.Model != nil {
 		for _, obj := range *resp.Model {

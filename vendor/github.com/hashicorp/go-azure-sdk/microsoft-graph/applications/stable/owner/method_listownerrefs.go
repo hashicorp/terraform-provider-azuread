@@ -38,10 +38,7 @@ type ListOwnerRefsOperationOptions struct {
 }
 
 func DefaultListOwnerRefsOperationOptions() ListOwnerRefsOperationOptions {
-	return ListOwnerRefsOperationOptions{
-		ConsistencyLevel: func() *odata.ConsistencyLevel { v := odata.ConsistencyLevelEventual; return &v }(),
-		Count:            func() *bool { v := true; return &v }(),
-	}
+	return ListOwnerRefsOperationOptions{}
 }
 
 func (o ListOwnerRefsOperationOptions) ToHeaders() *client.Headers {
