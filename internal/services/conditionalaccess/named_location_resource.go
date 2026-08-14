@@ -156,7 +156,7 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 
 		id := stable.NewIdentityConditionalAccessNamedLocationID(*namedLocation.Id)
 
-		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*15, ipNamedLocationWait(client, &id, v)); err != nil {
+		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*15, meta, ipNamedLocationWait(client, &id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for creation of %s", id)
 		}
 
@@ -185,7 +185,7 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 
 		id := stable.NewIdentityConditionalAccessNamedLocationID(*namedLocation.Id)
 		d.SetId(id.ID())
-		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*15, countryNamedLocationWait(client, &id, v)); err != nil {
+		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*15, meta, countryNamedLocationWait(client, &id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for creation of %s", id)
 		}
 	} else {
@@ -214,7 +214,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 			return tf.ErrorDiagF(err, "Updating %s", id)
 		}
 
-		if err := consistency.WaitForUpdate(ctx, ipNamedLocationWait(client, id, v)); err != nil {
+		if err := consistency.WaitForUpdate(ctx, meta, ipNamedLocationWait(client, id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for update of %s", id)
 		}
 	} else if v, ok := d.GetOk("country"); ok {
@@ -228,7 +228,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 			return tf.ErrorDiagF(err, "Updating %s", id)
 		}
 
-		if err := consistency.WaitForUpdate(ctx, countryNamedLocationWait(client, id, v)); err != nil {
+		if err := consistency.WaitForUpdate(ctx, meta, countryNamedLocationWait(client, id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for update of %s", id)
 		}
 	}
@@ -301,7 +301,7 @@ func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData,
 			return tf.ErrorDiagF(err, "updating %s prior to deletion", id)
 		}
 
-		if err = consistency.WaitForUpdate(ctx, ipNamedLocationTrustedDeleteWait(client, id)); err != nil {
+		if err = consistency.WaitForUpdate(ctx, meta, ipNamedLocationTrustedDeleteWait(client, id)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for removal of trusted status on %s", id)
 		}
 	}

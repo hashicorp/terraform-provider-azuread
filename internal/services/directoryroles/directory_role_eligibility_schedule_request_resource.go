@@ -125,7 +125,7 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(*roleEligibilityScheduleRequest.Id)
 	d.SetId(id.UnifiedRoleEligibilityScheduleRequestId)
 
-	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		resp, err := client.GetDirectoryRoleEligibilityScheduleRequest(ctx, id, directoryroleeligibilityschedulerequest.DefaultGetDirectoryRoleEligibilityScheduleRequestOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {

@@ -39,7 +39,10 @@ type ListOwnerAppRoleAssignmentsOperationOptions struct {
 }
 
 func DefaultListOwnerAppRoleAssignmentsOperationOptions() ListOwnerAppRoleAssignmentsOperationOptions {
-	return ListOwnerAppRoleAssignmentsOperationOptions{}
+	return ListOwnerAppRoleAssignmentsOperationOptions{
+		ConsistencyLevel: func() *odata.ConsistencyLevel { v := odata.ConsistencyLevelEventual; return &v }(),
+		Count:            func() *bool { v := true; return &v }(),
+	}
 }
 
 func (o ListOwnerAppRoleAssignmentsOperationOptions) ToHeaders() *client.Headers {

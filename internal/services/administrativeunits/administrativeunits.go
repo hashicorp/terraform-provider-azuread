@@ -15,9 +15,8 @@ import (
 )
 
 func administrativeUnitFindByName(ctx context.Context, client *administrativeunit.AdministrativeUnitClient, displayName string) (*[]stable.AdministrativeUnit, error) {
-	options := administrativeunit.ListAdministrativeUnitsOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
-	}
+	options := administrativeunit.DefaultListAdministrativeUnitsOperationOptions()
+	options.Filter = pointer.To(fmt.Sprintf("displayName eq '%s'", displayName))
 	resp, err := client.ListAdministrativeUnits(ctx, options)
 	if err != nil {
 		return nil, fmt.Errorf("unable to list Administrative Units with filter %q: %+v", *options.Filter, err)
@@ -36,9 +35,8 @@ func administrativeUnitFindByName(ctx context.Context, client *administrativeuni
 }
 
 func administrativeUnitGetMember(ctx context.Context, client *administrativeunitmember.AdministrativeUnitMemberClient, id stable.DirectoryAdministrativeUnitIdMemberId) (*stable.DirectoryObject, error) {
-	options := administrativeunitmember.ListAdministrativeUnitMembersOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
-	}
+	options := administrativeunitmember.DefaultListAdministrativeUnitMembersOperationOptions()
+	options.Filter = pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId))
 
 	resp, err := client.ListAdministrativeUnitMembers(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), options)
 	if err != nil {

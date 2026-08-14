@@ -129,7 +129,7 @@ func authenticationStrengthPolicyCreate(ctx context.Context, d *pluginsdk.Resour
 	id := stable.NewPolicyAuthenticationStrengthPolicyID(*authenticationStrengthPolicy.Id)
 
 	// Wait for the policy to appear consistently
-	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		resp, err := client.GetAuthenticationStrengthPolicy(ctx, id, authenticationstrengthpolicy.DefaultGetAuthenticationStrengthPolicyOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {

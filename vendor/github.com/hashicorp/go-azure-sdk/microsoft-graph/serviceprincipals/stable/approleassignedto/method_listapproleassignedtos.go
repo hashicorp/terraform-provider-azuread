@@ -38,7 +38,9 @@ type ListAppRoleAssignedTosOperationOptions struct {
 }
 
 func DefaultListAppRoleAssignedTosOperationOptions() ListAppRoleAssignedTosOperationOptions {
-	return ListAppRoleAssignedTosOperationOptions{}
+	return ListAppRoleAssignedTosOperationOptions{
+		Count: func() *bool { v := true; return &v }(),
+	}
 }
 
 func (o ListAppRoleAssignedTosOperationOptions) ToHeaders() *client.Headers {

@@ -109,7 +109,7 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.Re
 	}
 
 	// Wait for membership to reflect
-	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		if member, err := administrativeUnitGetMember(ctx, memberClient, id); err != nil {
 			return nil, fmt.Errorf("retrieving member")
 		} else if member == nil {

@@ -377,7 +377,11 @@ func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *plugins
 		return tf.ErrorDiagF(err, "Building resource data from supplied parameters")
 	}
 
-	resp, err := client.CreateEntitlementManagementAccessPackageAssignmentPolicy(ctx, *properties, entitlementmanagementaccesspackageassignmentpolicy.DefaultCreateEntitlementManagementAccessPackageAssignmentPolicyOperationOptions())
+	dirClient := meta.(*clients.Client).DirectoryObjects.DirectoryObjectClient
+	options := entitlementmanagementaccesspackageassignmentpolicy.DefaultCreateEntitlementManagementAccessPackageAssignmentPolicyOperationOptions()
+	options.RetryFunc = consistency.RetryOnSubjectNotFoundConsistencyFailureFunc(ctx, dirClient)
+
+	resp, err := client.CreateEntitlementManagementAccessPackageAssignmentPolicy(ctx, *properties, options)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating access package assignment policy %q", d.Get("display_name").(string))
 	}
@@ -405,7 +409,11 @@ func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *plugins
 	tf.LockByName(accessPackageAssignmentPolicyResourceName, id.AccessPackageAssignmentPolicyId)
 	defer tf.UnlockByName(accessPackageAssignmentPolicyResourceName, id.AccessPackageAssignmentPolicyId)
 
-	if _, err = client.SetEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, *properties, entitlementmanagementaccesspackageassignmentpolicy.DefaultSetEntitlementManagementAccessPackageAssignmentPolicyOperationOptions()); err != nil {
+	dirClient := meta.(*clients.Client).DirectoryObjects.DirectoryObjectClient
+	options := entitlementmanagementaccesspackageassignmentpolicy.DefaultSetEntitlementManagementAccessPackageAssignmentPolicyOperationOptions()
+	options.RetryFunc = consistency.RetryOnSubjectNotFoundConsistencyFailureFunc(ctx, dirClient)
+
+	if _, err = client.SetEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, *properties, options); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 

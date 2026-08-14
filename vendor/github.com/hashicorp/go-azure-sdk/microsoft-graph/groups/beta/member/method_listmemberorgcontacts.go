@@ -39,7 +39,10 @@ type ListMemberOrgContactsOperationOptions struct {
 }
 
 func DefaultListMemberOrgContactsOperationOptions() ListMemberOrgContactsOperationOptions {
-	return ListMemberOrgContactsOperationOptions{}
+	return ListMemberOrgContactsOperationOptions{
+		ConsistencyLevel: func() *odata.ConsistencyLevel { v := odata.ConsistencyLevelEventual; return &v }(),
+		Count:            func() *bool { v := true; return &v }(),
+	}
 }
 
 func (o ListMemberOrgContactsOperationOptions) ToHeaders() *client.Headers {

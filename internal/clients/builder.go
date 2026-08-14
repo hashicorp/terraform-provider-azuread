@@ -14,17 +14,19 @@ import (
 
 type ClientBuilder struct {
 	AuthConfig       *auth.Credentials
-	PartnerID        string
-	TerraformVersion string
+	PartnerID                  string
+	TerraformVersion           string
+	ContinuousTargetOccurrence int
 }
 
 // Build is a helper method which returns a fully instantiated *Client based on the auth Config's current settings.
 func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 	// client declarations:
 	client := Client{
-		TenantID:         b.AuthConfig.TenantID,
-		ClientID:         b.AuthConfig.ClientID,
-		TerraformVersion: b.TerraformVersion,
+		TenantID:                   b.AuthConfig.TenantID,
+		ClientID:                   b.AuthConfig.ClientID,
+		TerraformVersion:           b.TerraformVersion,
+		ContinuousTargetOccurrence: b.ContinuousTargetOccurrence,
 	}
 
 	if b.AuthConfig == nil {
@@ -58,8 +60,9 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 		Environment: client.Environment,
 		TenantID:    client.TenantID,
 
-		PartnerID:        b.PartnerID,
-		TerraformVersion: client.TerraformVersion,
+		PartnerID:                  b.PartnerID,
+		TerraformVersion:           b.TerraformVersion,
+		ContinuousTargetOccurrence: b.ContinuousTargetOccurrence,
 	}
 
 	if err := client.build(ctx, o); err != nil {

@@ -112,7 +112,7 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	}
 
 	// Wait for role membership to reflect
-	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		if member, err := directoryRoleGetMember(ctx, client, id); err != nil {
 			return nil, fmt.Errorf("retrieving member")
 		} else if member == nil {

@@ -135,7 +135,7 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
 
 	// Poll for AccessPackageResourceRoleScope
-	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		roleScope, err := GetAccessPackageResourcesRoleScope(ctx, accessPackageClient, id)
 		if err != nil {
 			return nil, err

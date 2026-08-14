@@ -26,8 +26,9 @@ type ClientOptions struct {
 	Environment environments.Environment
 	TenantID    string
 
-	PartnerID        string
-	TerraformVersion string
+	PartnerID                  string
+	TerraformVersion           string
+	ContinuousTargetOccurrence int
 
 	Authorizer auth.Authorizer
 }

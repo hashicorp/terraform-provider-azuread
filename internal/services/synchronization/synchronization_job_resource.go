@@ -152,7 +152,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 	id := stable.NewServicePrincipalIdSynchronizationJobID(servicePrincipalId.ServicePrincipalId, *resp.Model.Id)
 
 	// Wait for the job to appear, this can take several moments
-	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {

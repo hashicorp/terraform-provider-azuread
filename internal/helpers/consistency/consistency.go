@@ -50,23 +50,34 @@ func WaitForDeletion(ctx context.Context, f ChangeFunc) error {
 	return err
 }
 
-func WaitForUpdate(ctx context.Context, f ChangeFunc) error {
+type continuousTargetOccurrenceProvider interface {
+	GetContinuousTargetOccurrence() int
+}
+
+func getCTO(meta interface{}) int {
+	if p, ok := meta.(continuousTargetOccurrenceProvider); ok {
+		return p.GetContinuousTargetOccurrence()
+	}
+	return 2
+}
+
+func WaitForUpdate(ctx context.Context, meta interface{}, f ChangeFunc) error {
 	deadline, ok := ctx.Deadline()
 	if !ok {
 		return errors.New("context has no deadline")
 	}
 
-	_, err := WaitForUpdateWithTimeout(ctx, time.Until(deadline), f)
+	_, err := WaitForUpdateWithTimeout(ctx, time.Until(deadline), meta, f)
 	return err
 }
 
-func WaitForUpdateWithTimeout(ctx context.Context, timeout time.Duration, f ChangeFunc) (bool, error) {
+func WaitForUpdateWithTimeout(ctx context.Context, timeout time.Duration, meta interface{}, f ChangeFunc) (bool, error) {
 	res, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
 		MinTimeout:                5 * time.Second,
-		ContinuousTargetOccurence: 1,
+		ContinuousTargetOccurence: getCTO(meta),
 		Refresh: func() (interface{}, string, error) {
 			updated, err := f(ctx)
 			if err != nil {
@@ -88,24 +99,24 @@ func WaitForUpdateWithTimeout(ctx context.Context, timeout time.Duration, f Chan
 	return res.(bool), err
 }
 
-func WaitForUpdateDelayStart(ctx context.Context, delay time.Duration, f ChangeFunc) error {
+func WaitForUpdateDelayStart(ctx context.Context, delay time.Duration, meta interface{}, f ChangeFunc) error {
 	deadline, ok := ctx.Deadline()
 	if !ok {
 		return errors.New("context has no deadline")
 	}
 
-	_, err := WaitForUpdateWithTimeoutDelayStart(ctx, time.Until(deadline), delay, f)
+	_, err := WaitForUpdateWithTimeoutDelayStart(ctx, time.Until(deadline), delay, meta, f)
 	return err
 }
 
-func WaitForUpdateWithTimeoutDelayStart(ctx context.Context, timeout, delay time.Duration, f ChangeFunc) (bool, error) {
+func WaitForUpdateWithTimeoutDelayStart(ctx context.Context, timeout, delay time.Duration, meta interface{}, f ChangeFunc) (bool, error) {
 	res, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Delay:                     delay,
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
 		MinTimeout:                5 * time.Second,
-		ContinuousTargetOccurence: 1,
+		ContinuousTargetOccurence: getCTO(meta),
 		Refresh: func() (interface{}, string, error) {
 			updated, err := f(ctx)
 			if err != nil {

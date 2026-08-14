@@ -39,7 +39,10 @@ type ListTransitiveMemberApplicationsOperationOptions struct {
 }
 
 func DefaultListTransitiveMemberApplicationsOperationOptions() ListTransitiveMemberApplicationsOperationOptions {
-	return ListTransitiveMemberApplicationsOperationOptions{}
+	return ListTransitiveMemberApplicationsOperationOptions{
+		ConsistencyLevel: func() *odata.ConsistencyLevel { v := odata.ConsistencyLevelEventual; return &v }(),
+		Count:            func() *bool { v := true; return &v }(),
+	}
 }
 
 func (o ListTransitiveMemberApplicationsOperationOptions) ToHeaders() *client.Headers {

@@ -107,7 +107,7 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.Resou
 	}
 
 	// Wait for the secret to appear
-	if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err := consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		resp, err := client.ListSynchronizationSecrets(ctx, *id, synchronizationsecret.ListSynchronizationSecretsOperationOptions{RetryFunc: synchronizationRetryFunc()})
 		if err != nil {
 			return pointer.To(false), fmt.Errorf("retrieving synchronization secret")
@@ -150,7 +150,7 @@ func synchronizationSecretResourceUpdate(ctx context.Context, d *pluginsdk.Resou
 	}
 
 	// Wait for the secret to update
-	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		resp, err := client.ListSynchronizationSecrets(ctx, *id, synchronizationsecret.ListSynchronizationSecretsOperationOptions{RetryFunc: synchronizationRetryFunc()})
 		if err != nil {
 			return pointer.To(false), fmt.Errorf("retrieving synchronization secret")

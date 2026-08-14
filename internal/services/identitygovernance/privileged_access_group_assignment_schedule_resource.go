@@ -103,7 +103,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Create() sdk.ResourceFu
 			metadata.SetID(resourceId)
 
 			id := stable.NewIdentityGovernancePrivilegedAccessGroupAssignmentScheduleID(resourceId.ID())
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err = consistency.WaitForUpdate(ctx, metadata.Client, func(ctx context.Context) (*bool, error) {
 				resp, err := scheduleClient.GetPrivilegedAccessGroupAssignmentSchedule(ctx, id, privilegedaccessgroupassignmentschedule.DefaultGetPrivilegedAccessGroupAssignmentScheduleOperationOptions())
 				if err != nil {
 					if response.WasNotFound(resp.HttpResponse) {
@@ -282,7 +282,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFu
 			metadata.SetID(newResourceId)
 
 			id := stable.NewIdentityGovernancePrivilegedAccessGroupAssignmentScheduleID(newResourceId.ID())
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err = consistency.WaitForUpdate(ctx, metadata.Client, func(ctx context.Context) (*bool, error) {
 				resp, err := scheduleClient.GetPrivilegedAccessGroupAssignmentSchedule(ctx, id, privilegedaccessgroupassignmentschedule.DefaultGetPrivilegedAccessGroupAssignmentScheduleOperationOptions())
 				if err != nil {
 					if response.WasNotFound(resp.HttpResponse) {

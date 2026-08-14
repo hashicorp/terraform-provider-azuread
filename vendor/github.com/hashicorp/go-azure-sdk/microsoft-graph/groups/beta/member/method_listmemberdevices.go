@@ -39,7 +39,10 @@ type ListMemberDevicesOperationOptions struct {
 }
 
 func DefaultListMemberDevicesOperationOptions() ListMemberDevicesOperationOptions {
-	return ListMemberDevicesOperationOptions{}
+	return ListMemberDevicesOperationOptions{
+		ConsistencyLevel: func() *odata.ConsistencyLevel { v := odata.ConsistencyLevelEventual; return &v }(),
+		Count:            func() *bool { v := true; return &v }(),
+	}
 }
 
 func (o ListMemberDevicesOperationOptions) ToHeaders() *client.Headers {

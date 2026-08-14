@@ -39,7 +39,10 @@ type ListApplicationsOperationOptions struct {
 }
 
 func DefaultListApplicationsOperationOptions() ListApplicationsOperationOptions {
-	return ListApplicationsOperationOptions{}
+	return ListApplicationsOperationOptions{
+		ConsistencyLevel: func() *odata.ConsistencyLevel { v := odata.ConsistencyLevelEventual; return &v }(),
+		Count:            func() *bool { v := true; return &v }(),
+	}
 }
 
 func (o ListApplicationsOperationOptions) ToHeaders() *client.Headers {
