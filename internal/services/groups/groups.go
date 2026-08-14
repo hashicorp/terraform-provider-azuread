@@ -47,8 +47,7 @@ func groupFindByName(ctx context.Context, client *groupBeta.GroupClient, display
 }
 
 func groupGetAdditional(ctx context.Context, client *groupBeta.GroupClient, id beta.GroupId) (*beta.Group, error) {
-	options := groupBeta.DefaultListGroupsOperationOptions()
-	options.Filter = pointer.To(fmt.Sprintf("id eq '%s'", id.GroupId))
+	options := groupBeta.DefaultGetGroupOperationOptions()
 	options.Select = &[]string{
 		"allowExternalSenders",
 		"autoSubscribeNewMembers",
@@ -56,23 +55,18 @@ func groupGetAdditional(ctx context.Context, client *groupBeta.GroupClient, id b
 		"hideFromOutlookClients",
 	}
 
-	resp, err := client.ListGroups(ctx, options)
+	resp, err := client.GetGroup(ctx, id, options)
 	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			// API returns 404 when these M365-only fields are requested for a group in a non-M365 tenant, so we
-			// don't raise an error in this case and proceed as if they are not set.
+		if response.WasNotFound(resp.HttpResponse) || response.WasForbidden(resp.HttpResponse) {
+			// API returns 404 or 403 when these M365-only fields are requested for a group in a non-M365 tenant, so we
+			// suppress this error here and return a nil object.
 			// See https://github.com/microsoftgraph/msgraph-metadata/issues/333
 			return nil, nil
 		}
-
 		return nil, fmt.Errorf("retrieving additional fields: %+v", err)
 	}
 
-	if resp.Model != nil && len(*resp.Model) > 0 {
-		return &(*resp.Model)[0], nil
-	}
-
-	return nil, nil
+	return resp.Model, nil
 }
 
 func groupGetMember(ctx context.Context, client *memberBeta.MemberClient, id beta.GroupIdMemberId) (*beta.DirectoryObject, error) {
