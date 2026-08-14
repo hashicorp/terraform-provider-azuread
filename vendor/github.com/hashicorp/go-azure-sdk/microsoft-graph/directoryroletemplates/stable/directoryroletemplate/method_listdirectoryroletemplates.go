@@ -38,7 +38,9 @@ type ListDirectoryRoleTemplatesOperationOptions struct {
 }
 
 func DefaultListDirectoryRoleTemplatesOperationOptions() ListDirectoryRoleTemplatesOperationOptions {
-	return ListDirectoryRoleTemplatesOperationOptions{}
+	return ListDirectoryRoleTemplatesOperationOptions{
+		Count: func() *bool { v := true; return &v }(),
+	}
 }
 
 func (o ListDirectoryRoleTemplatesOperationOptions) ToHeaders() *client.Headers {

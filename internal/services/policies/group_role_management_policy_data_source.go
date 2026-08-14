@@ -78,7 +78,7 @@ func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			policyId, err := getPolicyId(ctx, metadata, model.GroupId, model.RoleId)
+			policyId, err := getPolicyId(ctx, metadata.Client, metadata, model.GroupId, model.RoleId)
 			if err != nil {
 				return fmt.Errorf("determining Policy ID: %v", err)
 			}

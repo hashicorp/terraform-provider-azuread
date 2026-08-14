@@ -4,6 +4,8 @@
 package groups
 
 import (
+	sdkclient "github.com/hashicorp/go-azure-sdk/sdk/client"
+
 	"context"
 	"errors"
 	"fmt"
@@ -658,9 +660,14 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	} else {
 		options := groupBeta.CreateGroupOperationOptions{
 			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
-				if response.WasNotFound(resp) {
+				if retry, _ := sdkclient.RetryOn404ConsistencyFailureFunc(resp, o); retry {
 					return true, nil
 				} else if response.WasBadRequest(resp) && o != nil && o.Error != nil {
+					if resp.Request != nil && resp.Request.Context() != nil {
+						if bypass, ok := resp.Request.Context().Value(sdkclient.Disable404RetryContextKey).(bool); ok && bypass {
+							return false, nil
+						}
+					}
 					return o.Error.Match("One or more property values specified are invalid") ||
 						o.Error.Match("does not exist or one of its queried reference-property objects are not present"), nil
 				}
@@ -727,9 +734,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
 	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
 		updateOptions := groupBeta.UpdateGroupOperationOptions{
-			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
-				return response.WasNotFound(resp), nil
-			},
+			RetryFunc: sdkclient.RetryOn404ConsistencyFailureFunc,
 		}
 		resp, err := client.UpdateGroup(ctx, id, beta.Group{
 			DisplayName: nullable.Value(displayNameToSet),
@@ -743,7 +748,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	}
 
 	// Wait for DisplayName to be updated
-	if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err := consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
@@ -762,7 +767,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		// See https://github.com/microsoftgraph/msgraph-metadata/issues/331
 		if description == "" {
 			// Ignoring the error result here because the description might not be updated out of band, in which case we skip over this
-			if updated, _ := consistency.WaitForUpdateWithTimeout(ctx, 2*time.Minute, func(ctx context.Context) (*bool, error) {
+			if updated, _ := consistency.WaitForUpdateWithTimeout(ctx, 2*time.Minute, meta, func(ctx context.Context) (*bool, error) {
 				resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
 				if err != nil {
 					return nil, err
@@ -771,9 +776,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				return pointer.To(group != nil && !group.Description.IsNull() && group.Description.GetOrZero() != ""), nil
 			}); updated {
 				updateOptions := groupBeta.UpdateGroupOperationOptions{
-					RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
-						return response.WasNotFound(resp), nil
-					},
+					RetryFunc: sdkclient.RetryOn404ConsistencyFailureFunc,
 				}
 				resp, err := client.UpdateGroup(ctx, id, beta.Group{
 					Description: nullable.NoZero(""),
@@ -786,7 +789,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				}
 
 				// Wait for Description to be removed
-				if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 					resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
 					if err != nil {
 						return nil, err
@@ -813,7 +816,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 			// Wait for AllowExternalSenders to be updated
-			if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err := consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, id)
 				if err != nil {
 					return nil, err
@@ -833,7 +836,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 			// Wait for AutoSubscribeNewMembers to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, id)
 				if err != nil {
 					return nil, err
@@ -853,7 +856,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 			// Wait for HideFromAddressLists to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, id)
 				if err != nil {
 					return nil, err
@@ -873,7 +876,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 			// Wait for HideFromOutlookClients to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, id)
 				if err != nil {
 					return nil, err
@@ -1016,7 +1019,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 			// Wait for AllowExternalSenders to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, *id)
 				if err != nil {
 					return nil, err
@@ -1036,7 +1039,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 			// Wait for AutoSubscribeNewMembers to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, *id)
 				if err != nil {
 					return nil, err
@@ -1056,7 +1059,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 			// Wait for HideFromAddressLists to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, *id)
 				if err != nil {
 					return nil, err
@@ -1076,7 +1079,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}
 
 			// Wait for HideFromOutlookClients to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, *id)
 				if err != nil {
 					return nil, err
@@ -1226,15 +1229,27 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		}
 
 		options := groupBeta.DefaultGetGroupOperationOptions()
+		ownersOptions := ownerBeta.DefaultListOwnersOperationOptions()
+		membersOptions := memberBeta.DefaultListMembersOperationOptions()
+		memberOfOptions := memberofBeta.DefaultListMemberOfsOperationOptions()
+
 		if enableRetries {
 			// Keep retrying on 404 for up to 12 minutes to defeat extended replication delays
 			startTimeForRetries := time.Now()
-			options.RetryFunc = func(resp *http.Response, o *odata.OData) (bool, error) {
+			retryFunc := func(resp *http.Response, o *odata.OData) (bool, error) {
 				if response.WasNotFound(resp) && time.Since(startTimeForRetries).Minutes() < 12 {
 					return true, nil
 				}
 				return false, nil
 			}
+			options.RetryFunc = retryFunc
+			ownersOptions.RetryFunc = retryFunc
+			membersOptions.RetryFunc = retryFunc
+			memberOfOptions.RetryFunc = retryFunc
+		} else {
+			ownersOptions.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
+			membersOptions.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
+			memberOfOptions.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
 		}
 
 		resp, err := client.GetGroup(ctx, *id, options)
@@ -1313,7 +1328,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		tf.Set(d, "hide_from_outlook_clients", hideFromOutlookClients)
 
 		owners := make([]string, 0)
-		if resp, err := ownerClient.ListOwners(ctx, *id, ownerBeta.DefaultListOwnersOperationOptions()); err != nil {
+		if resp, err := ownerClient.ListOwners(ctx, *id, ownersOptions); err != nil {
 			return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for %s", id)
 		} else if resp.Model != nil {
 			for _, o := range *resp.Model {
@@ -1323,7 +1338,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		tf.Set(d, "owners", owners)
 
 		members := make([]string, 0)
-		if resp, err := memberClient.ListMembers(ctx, *id, memberBeta.DefaultListMembersOperationOptions()); err != nil {
+		if resp, err := memberClient.ListMembers(ctx, *id, membersOptions); err != nil {
 			return tf.ErrorDiagPathF(err, "members", "Could not retrieve members for %s", id)
 		} else if resp.Model != nil {
 			for _, o := range *resp.Model {
@@ -1333,7 +1348,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		tf.Set(d, "members", members)
 
 		administrativeUnitIds := make([]string, 0)
-		if resp, err := memberOfClient.ListMemberOfs(ctx, *id, memberofBeta.DefaultListMemberOfsOperationOptions()); err != nil {
+		if resp, err := memberOfClient.ListMemberOfs(ctx, *id, memberOfOptions); err != nil {
 			return tf.ErrorDiagPathF(err, "members", "Could not retrieve members for %s", id)
 		} else if resp.Model != nil {
 			for _, obj := range *resp.Model {

@@ -250,6 +250,14 @@ func AzureADProvider() *schema.Provider {
 				Description:  "A GUID/UUID that is registered with Microsoft to facilitate partner resource usage attribution",
 			},
 
+			"continuous_target_occurrence": {
+				Type:        pluginsdk.TypeInt,
+				Optional:    true,
+				Default:     2,
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CONTINUOUS_TARGET_OCCURRENCE", 2),
+				Description: "The number of consecutive successful reads required to consider a resource replicated. Defaults to 2.",
+			},
+
 			"disable_terraform_partner_id": {
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
@@ -363,15 +371,16 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			partnerId = terraformPartnerId
 		}
 
-		return buildClient(ctx, p, authConfig, partnerId)
+		return buildClient(ctx, p, authConfig, partnerId, d.Get("continuous_target_occurrence").(int))
 	}
 }
 
-func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Credentials, partnerId string) (*clients.Client, pluginsdk.Diagnostics) {
+func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Credentials, partnerId string, cto int) (*clients.Client, pluginsdk.Diagnostics) {
 	clientBuilder := clients.ClientBuilder{
-		AuthConfig:       authConfig,
-		PartnerID:        partnerId,
-		TerraformVersion: p.TerraformVersion,
+		AuthConfig:                 authConfig,
+		PartnerID:                  partnerId,
+		TerraformVersion:           p.TerraformVersion,
+		ContinuousTargetOccurrence: cto,
 	}
 
 	stopCtx, ok := schema.StopContext(ctx) //nolint:staticcheck

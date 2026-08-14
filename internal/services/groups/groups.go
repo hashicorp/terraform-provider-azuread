@@ -26,9 +26,8 @@ func groupDefaultMailNickname() string {
 }
 
 func groupFindByName(ctx context.Context, client *groupBeta.GroupClient, displayName string) (*[]beta.Group, error) {
-	options := groupBeta.ListGroupsOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
-	}
+	options := groupBeta.DefaultListGroupsOperationOptions()
+	options.Filter = pointer.To(fmt.Sprintf("displayName eq '%s'", displayName))
 
 	resp, err := client.ListGroups(ctx, options)
 	if err != nil {
@@ -48,16 +47,16 @@ func groupFindByName(ctx context.Context, client *groupBeta.GroupClient, display
 }
 
 func groupGetAdditional(ctx context.Context, client *groupBeta.GroupClient, id beta.GroupId) (*beta.Group, error) {
-	options := groupBeta.GetGroupOperationOptions{
-		Select: &[]string{
-			"allowExternalSenders",
-			"autoSubscribeNewMembers",
-			"hideFromAddressLists",
-			"hideFromOutlookClients",
-		},
+	options := groupBeta.DefaultListGroupsOperationOptions()
+	options.Filter = pointer.To(fmt.Sprintf("id eq '%s'", id.GroupId))
+	options.Select = &[]string{
+		"allowExternalSenders",
+		"autoSubscribeNewMembers",
+		"hideFromAddressLists",
+		"hideFromOutlookClients",
 	}
 
-	resp, err := client.GetGroup(ctx, id, options)
+	resp, err := client.ListGroups(ctx, options)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			// API returns 404 when these M365-only fields are requested for a group in a non-M365 tenant, so we
@@ -69,13 +68,16 @@ func groupGetAdditional(ctx context.Context, client *groupBeta.GroupClient, id b
 		return nil, fmt.Errorf("retrieving additional fields: %+v", err)
 	}
 
-	return resp.Model, nil
+	if resp.Model != nil && len(*resp.Model) > 0 {
+		return &(*resp.Model)[0], nil
+	}
+
+	return nil, nil
 }
 
 func groupGetMember(ctx context.Context, client *memberBeta.MemberClient, id beta.GroupIdMemberId) (*beta.DirectoryObject, error) {
-	options := memberBeta.ListMembersOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
-	}
+	options := memberBeta.DefaultListMembersOperationOptions()
+	options.Filter = pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId))
 
 	resp, err := client.ListMembers(ctx, beta.NewGroupID(id.GroupId), options)
 	if err != nil {

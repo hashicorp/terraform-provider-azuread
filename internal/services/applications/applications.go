@@ -293,9 +293,8 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *appli
 }
 
 func applicationFindByName(ctx context.Context, client *application.ApplicationClient, displayName string) (*[]stable.Application, error) {
-	options := application.ListApplicationsOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
-	}
+	options := application.DefaultListApplicationsOperationOptions()
+	options.Filter = pointer.To(fmt.Sprintf("displayName eq '%s'", displayName))
 	resp, err := client.ListApplications(ctx, options)
 	if err != nil {
 		return nil, fmt.Errorf("unable to list Applications with filter %q: %+v", *options.Filter, err)

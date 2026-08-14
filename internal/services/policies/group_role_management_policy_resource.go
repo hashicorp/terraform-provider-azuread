@@ -357,7 +357,7 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 			}
 
 			// Fetch the existing policy, as they already exist
-			policyId, err := getPolicyId(ctx, metadata, model.GroupId, model.RoleId)
+			policyId, err := getPolicyId(ctx, metadata.Client, metadata, model.GroupId, model.RoleId)
 			if err != nil {
 				return fmt.Errorf("parsing policy ID: %v", err)
 			}
@@ -390,7 +390,7 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 			}
 
 			// Update the ID as it changes on modification
-			policyId, err = getPolicyId(ctx, metadata, model.GroupId, model.RoleId)
+			policyId, err = getPolicyId(ctx, metadata.Client, metadata, model.GroupId, model.RoleId)
 			if err != nil {
 				return fmt.Errorf("parsing policy ID: %v", err)
 			}
@@ -657,7 +657,7 @@ func (r GroupRoleManagementPolicyResource) Update() sdk.ResourceFunc {
 			}
 
 			// Update the ID as it changes on modification
-			policyId, err = getPolicyId(ctx, metadata, model.GroupId, model.RoleId)
+			policyId, err = getPolicyId(ctx, metadata.Client, metadata, model.GroupId, model.RoleId)
 			if err != nil {
 				return fmt.Errorf("parsing policy ID: %v", err)
 			}

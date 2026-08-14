@@ -43,7 +43,8 @@ type Client struct {
 	ObjectID    string
 	Claims      *claims.Claims
 
-	TerraformVersion string
+	TerraformVersion         string
+	ContinuousTargetOccurrence int
 
 	StopContext context.Context
 

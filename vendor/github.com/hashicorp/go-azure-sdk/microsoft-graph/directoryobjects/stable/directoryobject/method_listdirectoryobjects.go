@@ -40,7 +40,10 @@ type ListDirectoryObjectsOperationOptions struct {
 }
 
 func DefaultListDirectoryObjectsOperationOptions() ListDirectoryObjectsOperationOptions {
-	return ListDirectoryObjectsOperationOptions{}
+	return ListDirectoryObjectsOperationOptions{
+		ConsistencyLevel: func() *odata.ConsistencyLevel { v := odata.ConsistencyLevelEventual; return &v }(),
+		Count:            func() *bool { v := true; return &v }(),
+	}
 }
 
 func (o ListDirectoryObjectsOperationOptions) ToHeaders() *client.Headers {

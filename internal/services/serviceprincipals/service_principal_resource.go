@@ -371,9 +371,8 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	callerId := meta.(*clients.Client).ObjectID
 	clientId := d.Get("client_id").(string)
 
-	listOptions := serviceprincipal.ListServicePrincipalsOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(clientId))),
-	}
+	listOptions := serviceprincipal.DefaultListServicePrincipalsOperationOptions()
+	listOptions.Filter = pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(clientId)))
 	listResp, err := client.ListServicePrincipals(ctx, listOptions)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not list existing service principals")
