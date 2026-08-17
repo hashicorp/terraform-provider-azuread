@@ -48,7 +48,9 @@ func directoryObjectDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDat
 
 	id := stable.NewDirectoryObjectID(d.Get("object_id").(string))
 
-	resp, err := client.GetDirectoryObject(ctx, id, directoryobject.DefaultGetDirectoryObjectOperationOptions())
+	opts := directoryobject.DefaultGetDirectoryObjectOperationOptions()
+	opts.RetryFunc = nil
+	resp, err := client.GetDirectoryObject(ctx, id, opts)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagPathF(nil, "object_id", "%s was not found", id)

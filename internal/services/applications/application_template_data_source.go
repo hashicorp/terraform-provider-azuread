@@ -101,7 +101,9 @@ func applicationTemplateDataSourceRead(ctx context.Context, d *pluginsdk.Resourc
 	var template *stable.ApplicationTemplate
 
 	if templateId, ok := d.Get("template_id").(string); ok && templateId != "" {
-		resp, err := client.GetApplicationTemplate(ctx, stable.NewApplicationTemplateID(templateId), applicationtemplate.DefaultGetApplicationTemplateOperationOptions())
+		opts := applicationtemplate.DefaultGetApplicationTemplateOperationOptions()
+		opts.RetryFunc = nil
+		resp, err := client.GetApplicationTemplate(ctx, stable.NewApplicationTemplateID(templateId), opts)
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "Application Template with ID %q was not found", templateId)

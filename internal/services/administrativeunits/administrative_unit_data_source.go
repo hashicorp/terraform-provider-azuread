@@ -104,7 +104,9 @@ func administrativeUnitDataSourceRead(ctx context.Context, d *pluginsdk.Resource
 
 		administrativeUnit = (*resp.Model)[0]
 	} else if objectId != "" {
-		resp, err := client.GetAdministrativeUnit(ctx, stable.NewDirectoryAdministrativeUnitID(objectId), administrativeunit.DefaultGetAdministrativeUnitOperationOptions())
+		opts := administrativeunit.DefaultGetAdministrativeUnitOperationOptions()
+		opts.RetryFunc = nil
+		resp, err := client.GetAdministrativeUnit(ctx, stable.NewDirectoryAdministrativeUnitID(objectId), opts)
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "No administrative unit found with object ID: %q", objectId)
