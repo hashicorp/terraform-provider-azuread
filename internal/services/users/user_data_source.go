@@ -382,9 +382,9 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 
 		count := len(*resp.Model)
 		if count > 1 {
-			return tf.ErrorDiagPathF(nil, "mail", "More than one user found with mail: %q", upn)
+			return tf.ErrorDiagPathF(nil, "mail", "More than one user found with mail: %q", mail)
 		} else if count == 0 {
-			return tf.ErrorDiagPathF(err, "mail", "User not found with mail: %q", upn)
+			return tf.ErrorDiagPathF(err, "mail", "User not found with mail: %q", mail)
 		}
 
 		foundObjectId = (*resp.Model)[0].Id
