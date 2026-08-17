@@ -7,8 +7,8 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"log"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -165,7 +165,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *pluginsdk.Re
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	if err = consistency.WaitForUpdate(ctx, meta, func(ctx context.Context) (*bool, error) {
 		options := serviceprincipal.DefaultListServicePrincipalsOperationOptions()
-		options.Filter = pointer.To(fmt.Sprintf("id eq '%s'", *servicePrincipalId))
+		options.Filter = pointer.To(fmt.Sprintf("id eq '%s'", servicePrincipalId.ServicePrincipalId))
 		options.Select = &[]string{"passwordCredentials"}
 
 		resp, err := client.ListServicePrincipals(ctx, options)

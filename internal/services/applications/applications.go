@@ -128,7 +128,9 @@ func applicationDisableAppRoles(ctx context.Context, client *application.Applica
 			Id:       app.Id,
 			AppRoles: &existingRoles,
 		}
-		if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+		opts := application.DefaultUpdateApplicationOperationOptions()
+		opts.RetryFunc = applicationUpdateRetryFunc()
+		if _, err = client.UpdateApplication(ctx, applicationId, properties, opts); err != nil {
 			return fmt.Errorf("disabling App Roles for %s: %v", applicationId, err)
 		}
 
@@ -240,12 +242,13 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *appli
 	if disable {
 		// Disable any changed or removed scopes
 		properties := stable.Application{
-			Api: &stable.ApiApplication{
-				OAuth2PermissionScopes: &existingScopes,
-			},
+			Id:  app.Id,
+			Api: &stable.ApiApplication{OAuth2PermissionScopes: &existingScopes},
 		}
-		if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
-			return fmt.Errorf("disabling OAuth2 Permission Scopes for %s: %+v", applicationId, err)
+		opts := application.DefaultUpdateApplicationOperationOptions()
+		opts.RetryFunc = applicationUpdateRetryFunc()
+		if _, err = client.UpdateApplication(ctx, applicationId, properties, opts); err != nil {
+			return fmt.Errorf("disabling OAuth2 Permission Scopes for %s: %v", applicationId, err)
 		}
 
 		// Wait for application manifest to reflect the disabled scopes
