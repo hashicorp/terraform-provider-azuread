@@ -92,7 +92,7 @@ func accessPackageCatalogRoleAssignmentResourceCreate(ctx context.Context, d *pl
 
 	dirClient := meta.(*clients.Client).DirectoryObjects.DirectoryObjectClient
 	opts := entitlementmanagementroleassignment.DefaultCreateEntitlementManagementRoleAssignmentOperationOptions()
-	opts.RetryFunc = consistency.RetryOnSubjectNotFoundConsistencyFailureFunc(ctx, dirClient)
+	opts.RetryFunc = consistency.RetryOnSubjectNotFoundConsistencyFailureFunc(ctx, dirClient, principalId)
 
 	createMsg := `Assigning catalog role %q to directory principal %q on catalog %q`
 	resp, err := client.CreateEntitlementManagementRoleAssignment(ctx, properties, opts)
