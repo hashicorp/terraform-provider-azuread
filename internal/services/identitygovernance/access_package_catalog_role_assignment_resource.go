@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/beta/entitlementmanagementroleassignment"
+	sdkclient "github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -88,22 +90,39 @@ func accessPackageCatalogRoleAssignmentResourceCreate(ctx context.Context, d *pl
 		OmitDiscriminatedValue: true,
 	}
 
+	dirClient := meta.(*clients.Client).DirectoryObjects.DirectoryObjectClient
+	opts := entitlementmanagementroleassignment.DefaultCreateEntitlementManagementRoleAssignmentOperationOptions()
+	opts.RetryFunc = consistency.RetryOnSubjectNotFoundConsistencyFailureFunc(ctx, dirClient)
+
 	createMsg := `Assigning catalog role %q to directory principal %q on catalog %q`
-	resp, err := client.CreateEntitlementManagementRoleAssignment(ctx, properties, entitlementmanagementroleassignment.DefaultCreateEntitlementManagementRoleAssignmentOperationOptions())
+	resp, err := client.CreateEntitlementManagementRoleAssignment(ctx, properties, opts)
 	if err != nil {
-		return tf.ErrorDiagF(err, createMsg, roleId, principalId, catalogId)
+		return tf.ErrorDiagF(err, createMsg, roleId.UnifiedRoleDefinitionId, principalId, catalogId)
 	}
 
 	assignment := resp.Model
 	if assignment == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), createMsg, roleId, principalId, catalogId)
+		return tf.ErrorDiagF(errors.New("model was nil"), createMsg, roleId.UnifiedRoleDefinitionId, principalId, catalogId)
 	}
 	if assignment.Id == nil {
-		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg, roleId, principalId, catalogId)
+		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg, roleId.UnifiedRoleDefinitionId, principalId, catalogId)
 	}
 
 	id := beta.NewRoleManagementEntitlementManagementRoleAssignmentID(*assignment.Id)
 	d.SetId(id.UnifiedRoleAssignmentId)
+
+	if created, _ := consistency.WaitForUpdateWithTimeout(ctx, 3*time.Minute, meta, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetEntitlementManagementRoleAssignment(ctx, id, entitlementmanagementroleassignment.DefaultGetEntitlementManagementRoleAssignmentOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return nil, err
+		}
+		return pointer.To(true), nil
+	}); !created {
+		return tf.ErrorDiagF(nil, "Timed out waiting for new role assignment %s to be replicated in Azure AD", id)
+	}
 
 	return accessPackageCatalogRoleAssignmentResourceRead(ctx, d, meta)
 }
@@ -113,7 +132,9 @@ func accessPackageCatalogRoleAssignmentResourceRead(ctx context.Context, d *plug
 
 	id := beta.NewRoleManagementEntitlementManagementRoleAssignmentID(d.Id())
 
-	resp, err := client.GetEntitlementManagementRoleAssignment(ctx, id, entitlementmanagementroleassignment.DefaultGetEntitlementManagementRoleAssignmentOperationOptions())
+	opts := entitlementmanagementroleassignment.DefaultGetEntitlementManagementRoleAssignmentOperationOptions()
+	opts.RetryFunc = sdkclient.RetryOn404ConsistencyFailureFunc
+	resp, err := client.GetEntitlementManagementRoleAssignment(ctx, id, opts)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state", id)
