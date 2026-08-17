@@ -76,7 +76,9 @@ func accessPackageCatalogDataRead(ctx context.Context, d *pluginsdk.ResourceData
 	var catalog *beta.AccessPackageCatalog
 	if objectId != "" {
 		id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(objectId)
-		resp, err := client.GetEntitlementManagementAccessPackageCatalog(ctx, id, entitlementmanagementaccesspackagecatalog.DefaultGetEntitlementManagementAccessPackageCatalogOperationOptions())
+		opts := entitlementmanagementaccesspackagecatalog.DefaultGetEntitlementManagementAccessPackageCatalogOperationOptions()
+		opts.RetryFunc = nil
+		resp, err := client.GetEntitlementManagementAccessPackageCatalog(ctx, id, opts)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Retrieving %s", id)
 		}

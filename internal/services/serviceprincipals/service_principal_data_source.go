@@ -292,7 +292,9 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 
 	if v, ok := d.GetOk("object_id"); ok {
 		id := stable.NewServicePrincipalID(v.(string))
-		resp, err := client.GetServicePrincipal(ctx, id, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		opts := serviceprincipal.DefaultGetServicePrincipalOperationOptions()
+		opts.RetryFunc = nil
+		resp, err := client.GetServicePrincipal(ctx, id, opts)
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "%s was not found", id)

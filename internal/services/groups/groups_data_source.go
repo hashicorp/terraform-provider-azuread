@@ -186,7 +186,9 @@ func groupsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta i
 		expectedCount = len(objectIds)
 		for _, v := range objectIds {
 			id := beta.NewGroupID(v.(string))
-			resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
+			opts := groupBeta.DefaultGetGroupOperationOptions()
+			opts.RetryFunc = nil
+			resp, err := client.GetGroup(ctx, id, opts)
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
 					if ignoreMissing {

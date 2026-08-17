@@ -94,7 +94,9 @@ func accessPackageCatalogRoleDataSourceRead(ctx context.Context, d *pluginsdk.Re
 
 		role = &(*resp.Model)[0]
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		resp, err := client.GetEntitlementManagementRoleDefinition(ctx, beta.NewRoleManagementEntitlementManagementRoleDefinitionID(objectId), entitlementmanagementroledefinition.DefaultGetEntitlementManagementRoleDefinitionOperationOptions())
+		opts := entitlementmanagementroledefinition.DefaultGetEntitlementManagementRoleDefinitionOperationOptions()
+		opts.RetryFunc = nil
+		resp, err := client.GetEntitlementManagementRoleDefinition(ctx, beta.NewRoleManagementEntitlementManagementRoleDefinitionID(objectId), opts)
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "No role found with object ID: %q", objectId)

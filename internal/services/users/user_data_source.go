@@ -353,7 +353,9 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 
 		foundObjectId = (*resp.Model)[0].Id
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		resp, err := client.GetUser(ctx, stable.NewUserID(objectId), user.DefaultGetUserOperationOptions())
+		opts := user.DefaultGetUserOperationOptions()
+		opts.RetryFunc = nil
+		resp, err := client.GetUser(ctx, stable.NewUserID(objectId), opts)
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", objectId)
@@ -549,7 +551,9 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	managerId := ""
-	managerResp, err := managerClient.GetManager(ctx, id, manager.DefaultGetManagerOperationOptions())
+	opts := manager.DefaultGetManagerOperationOptions()
+	opts.RetryFunc = nil
+	managerResp, err := managerClient.GetManager(ctx, id, opts)
 	if !response.WasNotFound(managerResp.HttpResponse) {
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve manager for %s", id)

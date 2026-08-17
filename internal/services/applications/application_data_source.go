@@ -516,7 +516,9 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	var app *stable.Application
 
 	if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		resp, err := client.GetApplication(ctx, stable.NewApplicationID(objectId), application.DefaultGetApplicationOperationOptions())
+		opts := application.DefaultGetApplicationOperationOptions()
+		opts.RetryFunc = nil
+		resp, err := client.GetApplication(ctx, stable.NewApplicationID(objectId), opts)
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "Application with object ID %q was not found", objectId)

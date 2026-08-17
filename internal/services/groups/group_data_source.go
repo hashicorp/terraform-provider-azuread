@@ -346,7 +346,9 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 		foundGroup = (*groups)[0]
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		resp, err := client.GetGroup(ctx, beta.NewGroupID(objectId), groupBeta.DefaultGetGroupOperationOptions())
+		opts := groupBeta.DefaultGetGroupOperationOptions()
+		opts.RetryFunc = nil
+		resp, err := client.GetGroup(ctx, beta.NewGroupID(objectId), opts)
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "No group found with object ID: %q", objectId)
