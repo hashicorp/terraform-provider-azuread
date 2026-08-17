@@ -14,7 +14,6 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
-	sdkclient "github.com/hashicorp/go-azure-sdk/sdk/client"
 	applicationBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/logo"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
+	sdkclient "github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-cty/cty"
@@ -1529,16 +1529,20 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	properties.Api = api
 
-	if _, err = client.UpdateApplication(ctx, *id, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+	opts := application.DefaultUpdateApplicationOperationOptions()
+	opts.RetryFunc = applicationUpdateRetryFunc()
+	if _, err = client.UpdateApplication(ctx, *id, properties, opts); err != nil {
 		return tf.ErrorDiagF(err, "Could not update application with object ID: %q", id.ApplicationId)
 	}
 
 	if d.HasChange("oauth2_post_response_required") {
 		// API bug: the v1.0 API does not recognize the `oauth2RequiredPostResponse` field, so set it using the beta API
 		// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
+		optsBeta := applicationBeta.DefaultUpdateApplicationOperationOptions()
+		optsBeta.RetryFunc = applicationUpdateRetryFunc()
 		if _, err := clientBeta.UpdateApplication(ctx, betaId, beta.Application{
 			OAuth2RequirePostResponse: pointer.To(d.Get("oauth2_post_response_required").(bool)),
-		}, applicationBeta.DefaultUpdateApplicationOperationOptions()); err != nil {
+		}, optsBeta); err != nil {
 			return tf.ErrorDiagF(err, "Failed to set `oauth2_post_response_required` for %s", id)
 		}
 	}
