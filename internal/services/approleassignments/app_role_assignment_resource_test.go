@@ -66,6 +66,21 @@ func TestAccAppRoleAssignment_groupForTenantApp(t *testing.T) {
 	})
 }
 
+func TestAccAppRoleAssignment_requiresImport(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_app_role_assignment", "test")
+	r := AppRoleAssignmentResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.groupForTenantApp(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.RequiresImportErrorStep(r.requiresImport(data)),
+	})
+}
+
 func TestAccAppRoleAssignment_groupForTenantAppWithoutRole(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_app_role_assignment", "test")
 	r := AppRoleAssignmentResource{}
@@ -248,6 +263,18 @@ resource "azuread_app_role_assignment" "test" {
   resource_object_id  = azuread_service_principal.internal.object_id
 }
 `, r.tenantAppTemplate(data), data.RandomInteger)
+}
+
+func (r AppRoleAssignmentResource) requiresImport(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_app_role_assignment" "import" {
+  app_role_id         = azuread_app_role_assignment.test.app_role_id
+  principal_object_id = azuread_app_role_assignment.test.principal_object_id
+  resource_object_id  = azuread_app_role_assignment.test.resource_object_id
+}
+`, r.groupForTenantApp(data))
 }
 
 func (r AppRoleAssignmentResource) groupForTenantAppWithoutRole(data acceptance.TestData) string {
