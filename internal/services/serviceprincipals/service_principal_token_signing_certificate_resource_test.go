@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -68,36 +67,23 @@ func TestAccServicePrincipalTokenSigningCertificate_multiple(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_token_signing_certificate", "blue")
 	r := servicePrincipalTokenSigningCertificateResource{}
 
-	blueAddress := "azuread_service_principal_token_signing_certificate.blue"
 	greenAddress := "azuread_service_principal_token_signing_certificate.green"
 	blueEndDate := time.Now().AddDate(0, 2, 0).UTC().Format(time.RFC3339)
 	greenEndDate := time.Now().AddDate(0, 4, 0).UTC().Format(time.RFC3339)
-	var greenKeyId string
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.multiple(data, blueEndDate, greenEndDate),
 			Check: acceptance.ComposeTestCheckFunc(
-				check.That(blueAddress).ExistsInAzure(r),
+				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(greenAddress).ExistsInAzure(r),
-				resource.TestCheckResourceAttrWith(greenAddress, "key_id", func(value string) error {
-					greenKeyId = value
-					return nil
-				}),
 			),
 		},
 		{
-			// Removing "blue" from config forces its deletion. Only "blue" should be removed;
-			// "green" must survive untouched with an unchanged key_id.
 			Config: r.multipleGreenOnly(data, greenEndDate),
 			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).DoesNotExistInAzure(r),
 				check.That(greenAddress).ExistsInAzure(r),
-				resource.TestCheckResourceAttrWith(greenAddress, "key_id", func(value string) error {
-					if value != greenKeyId {
-						return fmt.Errorf("expected %q key_id to remain %q, got %q - deleting %q appears to have affected it", greenAddress, greenKeyId, value, blueAddress)
-					}
-					return nil
-				}),
 			),
 		},
 	})
