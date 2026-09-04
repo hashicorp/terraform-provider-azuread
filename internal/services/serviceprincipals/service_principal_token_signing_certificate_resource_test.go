@@ -63,6 +63,32 @@ func TestAccServicePrincipalTokenSigningCertificate_complete(t *testing.T) {
 	})
 }
 
+func TestAccServicePrincipalTokenSigningCertificate_multiple(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal_token_signing_certificate", "blue")
+	r := servicePrincipalTokenSigningCertificateResource{}
+
+	greenAddress := "azuread_service_principal_token_signing_certificate.green"
+	blueEndDate := time.Now().AddDate(0, 2, 0).UTC().Format(time.RFC3339)
+	greenEndDate := time.Now().AddDate(0, 4, 0).UTC().Format(time.RFC3339)
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.multiple(data, blueEndDate, greenEndDate),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(greenAddress).ExistsInAzure(r),
+			),
+		},
+		{
+			Config: r.multipleGreenOnly(data, greenEndDate),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).DoesNotExistInAzure(r),
+				check.That(greenAddress).ExistsInAzure(r),
+			),
+		},
+	})
+}
+
 func (r servicePrincipalTokenSigningCertificateResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalClient
 
@@ -124,4 +150,34 @@ resource "azuread_service_principal_token_signing_certificate" "test" {
   end_date             = "%[3]s"
 }
 `, r.template(data), data.RandomID, endDate)
+}
+
+func (r servicePrincipalTokenSigningCertificateResource) multiple(data acceptance.TestData, blueEndDate, greenEndDate string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_service_principal_token_signing_certificate" "blue" {
+  service_principal_id = azuread_service_principal.test.id
+  display_name         = "CN=acctestTokenSigningCertBlue-%[2]d"
+  end_date             = "%[3]s"
+}
+
+resource "azuread_service_principal_token_signing_certificate" "green" {
+  service_principal_id = azuread_service_principal.test.id
+  display_name         = "CN=acctestTokenSigningCertGreen-%[2]d"
+  end_date             = "%[4]s"
+}
+`, r.template(data), data.RandomInteger, blueEndDate, greenEndDate)
+}
+
+func (r servicePrincipalTokenSigningCertificateResource) multipleGreenOnly(data acceptance.TestData, greenEndDate string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_service_principal_token_signing_certificate" "green" {
+  service_principal_id = azuread_service_principal.test.id
+  display_name         = "CN=acctestTokenSigningCertGreen-%[2]d"
+  end_date             = "%[3]s"
+}
+`, r.template(data), data.RandomInteger, greenEndDate)
 }
