@@ -23,9 +23,9 @@ import (
 type UserLicenseResource struct{}
 
 func TestAccUserLicense_basic(t *testing.T) {
-	skuId := os.Getenv("AZUREAD_TEST_SKU_ID")
+	skuId := os.Getenv("AAD_TEST_LICENSE_SKU_ID")
 	if skuId == "" {
-		t.Skip("AZUREAD_TEST_SKU_ID not set")
+		t.Skip("AAD_TEST_LICENSE_SKU_ID not set")
 	}
 
 	data := acceptance.BuildTestData(t, "azuread_user_license", "test")
@@ -45,9 +45,9 @@ func TestAccUserLicense_basic(t *testing.T) {
 }
 
 func TestAccUserLicense_requiresImport(t *testing.T) {
-	skuId := os.Getenv("AZUREAD_TEST_SKU_ID")
+	skuId := os.Getenv("AAD_TEST_LICENSE_SKU_ID")
 	if skuId == "" {
-		t.Skip("AZUREAD_TEST_SKU_ID not set")
+		t.Skip("AAD_TEST_LICENSE_SKU_ID not set")
 	}
 
 	data := acceptance.BuildTestData(t, "azuread_user_license", "test")
@@ -65,13 +65,13 @@ func TestAccUserLicense_requiresImport(t *testing.T) {
 }
 
 func TestAccUserLicense_disabledPlans(t *testing.T) {
-	skuId := os.Getenv("AZUREAD_TEST_SKU_ID")
+	skuId := os.Getenv("AAD_TEST_LICENSE_SKU_ID")
 	if skuId == "" {
-		t.Skip("AZUREAD_TEST_SKU_ID not set")
+		t.Skip("AAD_TEST_LICENSE_SKU_ID not set")
 	}
-	disabledPlanId := os.Getenv("AZUREAD_TEST_DISABLED_PLAN_ID")
+	disabledPlanId := os.Getenv("AAD_TEST_LICENSE_DISABLED_PLAN_ID")
 	if disabledPlanId == "" {
-		t.Skip("AZUREAD_TEST_DISABLED_PLAN_ID not set")
+		t.Skip("AAD_TEST_LICENSE_DISABLED_PLAN_ID not set")
 	}
 
 	data := acceptance.BuildTestData(t, "azuread_user_license", "test")
