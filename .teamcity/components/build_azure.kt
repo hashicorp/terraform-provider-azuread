@@ -23,6 +23,6 @@ fun ParametrizedWithType.ConfigureAzureSpecificTestParameters(environment: Strin
     hiddenVariable("env.ARM_TEST_LOCATION", locationsForEnv.primary, "The Primary region which should be used for testing")
     hiddenVariable("env.ARM_TEST_LOCATION_ALT", locationsForEnv.secondary, "The Primary region which should be used for testing")
     hiddenVariable("env.ARM_TEST_LOCATION_ALT2", locationsForEnv.ternary, "The Primary region which should be used for testing")
-    hiddenVariable("env.AZUREAD_TEST_SKU_ID", config.skuId, "The license SKU ID used for azuread_user_license acceptance tests")
-    hiddenVariable("env.AZUREAD_TEST_DISABLED_PLAN_ID", config.disabledPlanId, "A service plan ID within the SKU, used for azuread_user_license disabled_plans acceptance tests")
+    hiddenVariable("env.AAD_TEST_LICENSE_SKU_ID", config.skuId, "The license SKU ID used for azuread_user_license acceptance tests")
+    hiddenVariable("env.AAD_TEST_LICENSE_DISABLED_PLAN_ID", config.disabledPlanId, "A service plan ID within the SKU, used for azuread_user_license disabled_plans acceptance tests")
 }
