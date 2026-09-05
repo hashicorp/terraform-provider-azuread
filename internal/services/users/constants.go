@@ -3,6 +3,8 @@
 
 package users
 
+const userResourceName = "azuread_user"
+
 const (
 	AgeGroupAdult    = "Adult"
 	AgeGroupMinor    = "Minor"
