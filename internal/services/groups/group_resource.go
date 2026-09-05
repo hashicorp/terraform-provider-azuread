@@ -378,7 +378,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDif
 		return fmt.Errorf("`mail_enabled` must be true for unified groups")
 	}
 
-	if mailNickname := diff.Get("mail_nickname").(string); mailEnabled && mailNickname == "" {
+	if mailNickname := diff.Get("mail_nickname").(string); mailEnabled && mailNickname == "" && diff.NewValueKnown("mail_nickname") {
 		return fmt.Errorf("`mail_nickname` is required for mail-enabled groups")
 	}
 
