@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/customsecurityattributes"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryobjects"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/domains"
@@ -41,6 +42,7 @@ func SupportedUntypedServices() []sdk.UntypedServiceRegistration {
 		applications.Registration{},
 		approleassignments.Registration{},
 		conditionalaccess.Registration{},
+		customsecurityattributes.Registration{},
 		directoryobjects.Registration{},
 		directoryroles.Registration{},
 		domains.Registration{},
