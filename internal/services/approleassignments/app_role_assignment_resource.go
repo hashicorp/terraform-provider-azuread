@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -154,6 +155,20 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 
 	id := stable.NewServicePrincipalIdAppRoleAssignedToID(appRoleAssignment.ResourceId.GetOrZero(), pointer.From(appRoleAssignment.Id))
 	d.SetId(id.ID())
+
+	// Wait for app role assignment to reflect
+	if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetAppRoleAssignedTo(ctx, id, approleassignedto.DefaultGetAppRoleAssignedToOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return nil, err
+		}
+		return pointer.To(resp.Model != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for app role assignment %s to take effect", id)
+	}
 
 	return appRoleAssignmentResourceRead(ctx, d, meta)
 }
