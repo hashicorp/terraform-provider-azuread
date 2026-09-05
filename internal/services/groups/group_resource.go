@@ -274,6 +274,14 @@ func groupResource() *pluginsdk.Resource {
 				Default:     false,
 			},
 
+			"group_name_verification_delay_seconds": {
+				Description:  "Delay in seconds between the two PATCH requests during group name verification after creation",
+				Type:         pluginsdk.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntAtLeast(0),
+			},
+
 			"mail": {
 				Description: "The SMTP address for the group",
 				Type:        pluginsdk.TypeString,
@@ -725,6 +733,8 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		return tf.ErrorDiagF(err, "Failed to generate a UUID")
 	}
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
+	delaySeconds := d.Get("group_name_verification_delay_seconds").(int)
+
 	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
 		updateOptions := groupBeta.UpdateGroupOperationOptions{
 			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
@@ -739,6 +749,12 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				return tf.ErrorDiagF(err, "Timed out whilst waiting for new %s to be replicated in Azure AD", id)
 			}
 			return tf.ErrorDiagF(err, "Failed to patch %s after creating", id)
+		}
+
+		// Add delay between the two PATCH operations to allow for Azure AD replication if configured
+		if displayNameToSet == tempDisplayName && delaySeconds > 0 {
+			log.Printf("[DEBUG] Sleeping for %d seconds between PATCH operations for %s to be replicated in Azure AD", delaySeconds, id)
+			time.Sleep(time.Duration(delaySeconds) * time.Second)
 		}
 	}
 
@@ -1349,6 +1365,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 			preventDuplicates = v
 		}
 		tf.Set(d, "prevent_duplicate_names", preventDuplicates)
+		tf.Set(d, "group_name_verification_delay_seconds", d.Get("group_name_verification_delay_seconds").(int))
 
 		return nil
 	}
