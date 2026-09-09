@@ -770,13 +770,13 @@ resource "azuread_group" "test" {
 
   behaviors = [
     "AllowOnlyMembersToPost",
-	"CalendarMemberReadOnly",
-	"ConnectorsDisabled",
+    "CalendarMemberReadOnly",
+    "ConnectorsDisabled",
     "HideGroupInOutlook",
-	"SubscribeMembersToCalendarEventsDisabled",
+    "SubscribeMembersToCalendarEventsDisabled",
     "SubscribeNewGroupMembers",
     "WelcomeEmailDisabled",
-	"ProvisionSiteOnDemand"
+    "ProvisionSiteOnDemand"
   ]
 }
 `, data.RandomInteger)

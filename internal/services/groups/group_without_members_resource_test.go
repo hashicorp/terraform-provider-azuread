@@ -658,13 +658,13 @@ resource "azuread_group_without_members" "test" {
 
   behaviors = [
     "AllowOnlyMembersToPost",
-	"CalendarMemberReadOnly",
-	"ConnectorsDisabled",
+    "CalendarMemberReadOnly",
+    "ConnectorsDisabled",
     "HideGroupInOutlook",
-	"SubscribeMembersToCalendarEventsDisabled",
+    "SubscribeMembersToCalendarEventsDisabled",
     "SubscribeNewGroupMembers",
     "WelcomeEmailDisabled",
-	"ProvisionSiteOnDemand"
+    "ProvisionSiteOnDemand"
   ]
 }
 `, data.RandomInteger)
