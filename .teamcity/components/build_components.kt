@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
+import java.io.File
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildFeatures.GolangFeature
 import jetbrains.buildServer.configs.kotlin.buildSteps.ScriptBuildStep
@@ -23,6 +24,13 @@ fun BuildFeatures.Golang() {
             testFormat = "json"
         })
     }
+}
+
+fun BuildSteps.SetBuildStartTime() {
+    step(ScriptBuildStep {
+        name = "Set Build Start Time"
+        scriptContent = File("scripts/set_build_start_time.sh").readText()
+    })
 }
 
 fun BuildSteps.ConfigureGoEnv() {
@@ -97,10 +105,24 @@ fun BuildSteps.RunAcceptanceTestsForPullRequest(packageName: String) {
     }
 }
 
+fun BuildSteps.PostTestResultsToGitHubPullRequest() {
+    step(ScriptBuildStep {
+        name = "Post Test Results to GitHub Pull Request"
+        scriptContent = File("scripts/post_github_comment.sh").readText()
+        executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
+    })
+}
+
 fun ParametrizedWithType.TerraformAcceptanceTestParameters(parallelism : Int, prefix : String, timeout: String) {
     text("PARALLELISM", "%d".format(parallelism))
     text("TEST_PREFIX", prefix)
     text("TIMEOUT", timeout)
+    text("POST_GITHUB_COMMENT", "false", "", "Whether to post a comment on the PR with the results of the tests")
+    text("TRACKING_ID", "0", "", "Tracking ID for comment management (typically PR commit SHA)")
+}
+
+fun ParametrizedWithType.BuildStartTime() {
+    hiddenVariable("env.BUILD_START_TIME", "0", "The time at which the build started - set by the first build step")
 }
 
 fun ParametrizedWithType.ReadOnlySettings() {

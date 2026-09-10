@@ -25,9 +25,11 @@ class pullRequest(displayName: String, environment: String, vcsRootId : String) 
             steps {
                 var packageName = "\"%SERVICES%\""
 
+                SetBuildStartTime()
                 ConfigureGoEnv()
                 DownloadTerraformBinary()
                 RunAcceptanceTestsForPullRequest(packageName)
+                PostTestResultsToGitHubPullRequest()
             }
 
             failureConditions {
@@ -44,6 +46,7 @@ class pullRequest(displayName: String, environment: String, vcsRootId : String) 
                 TerraformShouldPanicForSchemaErrors()
                 TerraformCoreBinaryTesting()
                 ReadOnlySettings()
+                BuildStartTime()
 
                 text("SERVICES", "portal")
             }
