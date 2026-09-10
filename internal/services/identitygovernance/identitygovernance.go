@@ -142,7 +142,7 @@ func flattenApprovalSettings(input *beta.ApprovalSettings) []map[string]interfac
 	}}
 
 	approvalStages := make([]interface{}, 0)
-	for _, v := range *input.ApprovalStages {
+	for _, v := range pointer.From(input.ApprovalStages) {
 		var alternativeApprovalInDays int
 		if w := v.EscalationTimeInMinutes.GetOrZero(); w > 0 {
 			alternativeApprovalInDays = int(w) / 60 / 24
@@ -411,13 +411,17 @@ func expandAccessPackageLocalizedContent(input map[string]interface{}) *beta.Acc
 }
 
 func flattenAccessPackageLocalizedContent(input *beta.AccessPackageLocalizedContent) []map[string]interface{} {
+	if input == nil {
+		return []map[string]interface{}{}
+	}
+
 	result := []map[string]interface{}{{
 		"default_text": input.DefaultText.GetOrZero(),
 	}}
 
 	texts := make([]map[string]interface{}, 0)
 
-	for _, v := range *input.LocalizedTexts {
+	for _, v := range pointer.From(input.LocalizedTexts) {
 		text := map[string]interface{}{
 			"language_code": v.LanguageCode.GetOrZero(),
 			"content":       v.Text.GetOrZero(),

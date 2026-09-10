@@ -122,14 +122,15 @@ func applicationTemplateDataSourceRead(ctx context.Context, d *pluginsdk.Resourc
 			return tf.ErrorDiagF(err, "Listing application templates for filter %q", *options.Filter)
 		}
 
+		templates := pointer.From(resp.Model)
 		switch {
-		case resp.Model == nil || len(*resp.Model) == 0:
+		case len(templates) == 0:
 			return tf.ErrorDiagF(fmt.Errorf("no application templates found matching filter: %q", *options.Filter), "Application template not found")
-		case len(*resp.Model) > 1:
+		case len(templates) > 1:
 			return tf.ErrorDiagF(fmt.Errorf("found multiple application templates matching filter: %q", *options.Filter), "Multiple application templates found")
 		}
 
-		template = &(*resp.Model)[0]
+		template = &templates[0]
 		if templateDisplayName := template.DisplayName.GetOrZero(); !strings.EqualFold(templateDisplayName, displayName) {
 			return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for application tempate matching filter: %q", templateDisplayName, displayName, *options.Filter), "Bad API Response")
 		}

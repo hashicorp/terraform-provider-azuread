@@ -111,6 +111,9 @@ func administrativeUnitDataSourceRead(ctx context.Context, d *pluginsdk.Resource
 			}
 			return tf.ErrorDiagF(err, "Retrieving administrative unit with object ID: %q", d.Id())
 		}
+		if resp.Model == nil {
+			return tf.ErrorDiagF(fmt.Errorf("model was nil"), "Retrieving administrative unit with object ID: %q", objectId)
+		}
 
 		administrativeUnit = *resp.Model
 	}

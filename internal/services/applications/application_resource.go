@@ -1226,14 +1226,12 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	d.SetId(id.ID())
 
 	// Save the password key ID and generated value to state
-	if app.PasswordCredentials != nil {
-		if password := d.Get("password").(*pluginsdk.Set).List(); len(password) == 1 {
-			pw := password[0].(map[string]interface{})
-			if creds := flattenApplicationPasswordCredentials(app.PasswordCredentials); len(creds) == 1 {
-				pw["key_id"] = creds[0]["key_id"]
-				pw["value"] = creds[0]["value"]
-				tf.Set(d, "password", []interface{}{pw})
-			}
+	if password := d.Get("password").(*pluginsdk.Set).List(); len(password) == 1 {
+		pw := password[0].(map[string]interface{})
+		if creds := flattenApplicationPasswordCredentials(app.PasswordCredentials); len(creds) == 1 {
+			pw["key_id"] = creds[0]["key_id"]
+			pw["value"] = creds[0]["value"]
+			tf.Set(d, "password", []interface{}{pw})
 		}
 	}
 
@@ -1659,29 +1657,25 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl.GetOrZero())
 	}
 
-	if app.PasswordCredentials != nil {
-		currentPassword := d.Get("password").(*pluginsdk.Set).List()
-		passwordToSave := make([]interface{}, 0)
+	currentPassword := d.Get("password").(*pluginsdk.Set).List()
+	passwordToSave := make([]interface{}, 0)
 
-		var keyIdToMatch, existingValue string
+	if len(currentPassword) == 1 {
+		keyIdToMatch := currentPassword[0].(map[string]interface{})["key_id"].(string)
+		existingValue := currentPassword[0].(map[string]interface{})["value"].(string)
 
-		if len(currentPassword) == 1 {
-			keyIdToMatch = currentPassword[0].(map[string]interface{})["key_id"].(string)
-			existingValue = currentPassword[0].(map[string]interface{})["value"].(string)
-
-			for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) {
-				// Match against the known key ID, or select the first returned password if not present in state
-				if credential["key_id"] == keyIdToMatch {
-					// Retain the value from state, if known
-					credential["value"] = existingValue
-					passwordToSave = append(passwordToSave, credential)
-					break
-				}
+		for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) {
+			// Match against the known key ID, or select the first returned password if not present in state
+			if credential["key_id"] == keyIdToMatch {
+				// Retain the value from state, if known
+				credential["value"] = existingValue
+				passwordToSave = append(passwordToSave, credential)
+				break
 			}
 		}
-
-		tf.Set(d, "password", passwordToSave)
 	}
+
+	tf.Set(d, "password", passwordToSave)
 
 	// API bug: the v1.0 API does not return the `oauth2RequiredPostResponse` field, so retrieve it using the beta API
 	// See https://github.com/microsoftgraph/msgraph-metadata/issues/273

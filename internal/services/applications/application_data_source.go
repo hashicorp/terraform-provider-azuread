@@ -553,14 +553,15 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 			return tf.ErrorDiagF(err, "Listing applications for filter %q", *options.Filter)
 		}
 
+		apps := pointer.From(resp.Model)
 		switch {
-		case resp.Model == nil || len(*resp.Model) == 0:
+		case len(apps) == 0:
 			return tf.ErrorDiagF(fmt.Errorf("no applications found matching filter: %q", *options.Filter), "Application not found")
-		case len(*resp.Model) > 1:
-			return tf.ErrorDiagF(fmt.Errorf("dound multiple applications matching filter: %q", *options.Filter), "Multiple applications found")
+		case len(apps) > 1:
+			return tf.ErrorDiagF(fmt.Errorf("found multiple applications matching filter: %q", *options.Filter), "Multiple applications found")
 		}
 
-		app = &(*resp.Model)[0]
+		app = &apps[0]
 		switch fieldName {
 		case "appId":
 			if appId := app.AppId.GetOrZero(); !strings.EqualFold(appId, fieldValue) {

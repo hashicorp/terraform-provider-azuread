@@ -134,6 +134,9 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 
 	if v, ok := d.GetOk("ip"); ok {
 		properties := expandIPNamedLocation(v.([]interface{}))
+		if properties == nil {
+			return tf.ErrorDiagF(errors.New("expanding `ip` block returned nil"), "Could not create named location")
+		}
 		properties.DisplayName = pointer.To(d.Get("display_name").(string))
 
 		resp, err := client.CreateConditionalAccessNamedLocation(ctx, *properties, conditionalaccessnamedlocation.DefaultCreateConditionalAccessNamedLocationOperationOptions())
@@ -163,6 +166,9 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		d.SetId(id.ID())
 	} else if v, ok = d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
+		if properties == nil {
+			return tf.ErrorDiagF(errors.New("expanding `country` block returned nil"), "Could not create named location")
+		}
 		properties.DisplayName = pointer.To(d.Get("display_name").(string))
 
 		resp, err := client.CreateConditionalAccessNamedLocation(ctx, *properties, conditionalaccessnamedlocation.DefaultCreateConditionalAccessNamedLocationOperationOptions())
@@ -205,6 +211,9 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 
 	if v, ok := d.GetOk("ip"); ok {
 		properties := expandIPNamedLocation(v.([]interface{}))
+		if properties == nil {
+			return tf.ErrorDiagF(errors.New("expanding `ip` block returned nil"), "Updating %s", id)
+		}
 
 		if d.HasChange("display_name") {
 			properties.DisplayName = pointer.To(d.Get("display_name").(string))
@@ -219,6 +228,9 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 		}
 	} else if v, ok := d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
+		if properties == nil {
+			return tf.ErrorDiagF(errors.New("expanding `country` block returned nil"), "Updating %s", id)
+		}
 
 		if d.HasChange("display_name") {
 			properties.DisplayName = pointer.To(d.Get("display_name").(string))

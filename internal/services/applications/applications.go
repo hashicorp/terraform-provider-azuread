@@ -111,7 +111,7 @@ func applicationDisableAppRoles(ctx context.Context, client *application.Applica
 	for i, existing := range existingRoles {
 		found := false
 		for _, newRole := range *newRoles {
-			if existing.Id != nil && *newRole.Id == *existing.Id {
+			if existing.Id != nil && newRole.Id != nil && *newRole.Id == *existing.Id {
 				found = true
 				break
 			}
@@ -226,7 +226,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *appli
 	for i, existing := range existingScopes {
 		found := false
 		for _, newScope := range *newScopes {
-			if existing.Id != nil && *newScope.Id == *existing.Id {
+			if existing.Id != nil && newScope.Id != nil && *newScope.Id == *existing.Id {
 				found = true
 				break
 			}
