@@ -12,8 +12,11 @@ on:
     types:
       - completed
 
+# issue-remove-label.yaml (called below) needs issues: write as well - a reusable workflow
+# cannot be granted more than its caller has, and the run fails at startup if it asks.
 permissions:
   pull-requests: write
+  issues: write
 
 jobs:
   add-or-remove-waiting-response:
