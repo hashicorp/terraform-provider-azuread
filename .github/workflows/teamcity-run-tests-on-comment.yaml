@@ -104,7 +104,7 @@ jobs:
       TCTEST_FILEREGEX: 'internal/services/[a-z]*/[_a-zA-Z]*(resource|data_source)'
       TCTEST_SKIP_QUEUE: 'true'
       TCTEST_TOKEN_TC: ${{ secrets.TCTEST_TOKEN_TC }}
-      TCTEST_BUILD_TYPE_ID: TF_AzureAD_AZUREAD_SERVICE_PUBLIC
+      TCTEST_BUILD_TYPE_ID: TerraformProviders_AzureAD_AZUREAD_SERVICE_PUBLIC
       TCTEST_BUILD_TYPE_ID_ADD_SERVICE_SUFFIX: true
       TCTEST_REPO: terraform-providers/terraform-provider-azuread
     steps:
