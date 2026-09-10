@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2023, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 
@@ -8,8 +8,8 @@ cd "${REPO_DIR}"
 
 TRUNK="main"
 
-# Uncomment to print commands instead of executing them
-#debug="echo "
+# set debug="echo " to print the release commands instead of running them
+debug="${debug:-}"
 
 usage() {
   echo "Usage: $0 -y [-C] [-f]" >&2
@@ -60,6 +60,7 @@ else
   SED="sed -r"
 fi
 
+
 DATE="$(date '+%B %d, %Y')"
 PROVIDER_URL="https:\/\/github.com\/hashicorp\/terraform-provider-azuread\/issues"
 
@@ -84,7 +85,7 @@ if [[ "${NOTEST}" == "1" ]]; then
   echo "Warning: Skipping tests"
 else
   echo "Running tests..."
-  ( set -x; TF_ACC= scripts/checks/test.sh )
+  ( set -x; TF_ACC='' scripts/checks/test.sh )
 fi
 
 echo "Preparing changelog for release..."
@@ -102,14 +103,18 @@ if [[ "${RELEASE}" == "" ]]; then
 fi
 
 # Ensure latest changes are checked out
+# shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
 ( set -x; ${debug}git pull --rebase origin "${TRUNK}" )
 
 # Replace [GH-nnnn] references with issue links
+# shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
 ( set -x; ${debug}$SED -i.bak "s/\[GH-([0-9]+)\]/\(\[#\1\]\(${PROVIDER_URL}\/\1\)\)/g" CHANGELOG.md )
 
 # Set the date for the latest release
+# shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
 ( set -x; ${debug}$SED -i.bak "s/^(## v?[0-9.]+) \(Unreleased\)/\1 (${DATE})/i" CHANGELOG.md )
 
+# shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
 ${debug}rm CHANGELOG.md.bak
 
 if [[ "${NOTAG}" == "1" ]]; then
@@ -120,7 +125,9 @@ fi
 echo "Committing changelog..."
 (
   set -x
+  # shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
   ${debug}git commit CHANGELOG.md -m v"${RELEASE}"
+  # shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
   ${debug}git push origin "${BRANCH}"
 )
 
@@ -129,6 +136,8 @@ echo "Releasing v${RELEASE}..."
 
 (
   set -x
+  # shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
   ${debug}git tag v"${RELEASE}"
+  # shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
   ${debug}git push origin v"${RELEASE}"
 )

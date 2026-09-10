@@ -7,6 +7,7 @@ Workflow files are grouped by prefix:
 | Prefix | Purpose |
 | --- | --- |
 | `pr-*` | Pull request automation (checks, labels, housekeeping) |
+| `pr-check-*` | Standalone PR checks that cannot live inside `pr-checks-combined.yaml` (special runners, OIDC auth, or their own path filters) |
 | `pr-waiting-response-*` | The `waiting-response` label machinery (see below) |
 | `issue-*` | Issue automation |
 | `milestone-*` | Milestone automation |
@@ -82,6 +83,16 @@ arbitrary PR number.
   `issue-remove-label.yaml`) are referenced by **file path** in `uses:` lines.
 - `teamcity-test.yaml` has a self-referencing `paths:` trigger that must be
   updated when the file is renamed.
+
+## The `/test` command
+
+`teamcity-run-tests-on-comment.yaml` lets members of the `terraform-azure` team
+(or the `TCTEST_ALLOWED_USERS` secret) trigger TeamCity acceptance test runs by
+commenting `/test [-f] [-s service] <TestPrefix>` on a PR. It dispatches via
+[katbyte/tctest](https://github.com/katbyte/tctest) with `POST_GITHUB_COMMENT=true`
+and the PR head SHA as `TRACKING_ID`, and the TeamCity build posts the results
+back as a PR comment (see `.teamcity/scripts/post_github_comment.sh`). Needs the
+`TCTEST_SERVER`, `TCTEST_TOKEN_TC` and `GH_MEMEBERSHIP_CHECK_TOKEN` secrets.
 
 ## TeamCity labels
 

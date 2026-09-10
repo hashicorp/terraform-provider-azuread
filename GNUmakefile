@@ -155,6 +155,16 @@ debugacc: ## Run acceptance tests under the delve debugger (TEST=./internal/serv
 	TF_ACC=1 dlv test $(TEST) --headless --listen=:2345 --api-version=2 -- -test.v $(TESTARGS)
 
 ##@ Documentation
+# markdown checked by markdownlint: docs guides and index, README, and the .github markdown
+# (PR/issue templates etc). The resource/data-source docs are exempt for now (leading \# ignore
+# glob, \# escapes the hash from make) - they carry a large backlog of emphasis-style findings.
+MARKDOWN_INPUTS='docs/**/*.md' README.md '.github/**/*.md' '\#docs/resources' '\#docs/data-sources'
+
+markdownlint: ## Check repo markdown with markdownlint (config in .markdownlint.yml)
+	@command -v markdownlint-cli2 >/dev/null || (echo "markdownlint-cli2 not installed. Install via: brew install markdownlint-cli2 (macOS) or npm install -g markdownlint-cli2" && exit 1)
+	@echo "==> Checking markdown with markdownlint..."
+	@markdownlint-cli2 $(MARKDOWN_INPUTS)
+
 docs-lint: ## Check the documentation for issues
 	@echo "==> Checking documentation spelling..."
 	@misspell -error -source=text -i hdinsight docs/
@@ -176,4 +186,4 @@ todo: ## List all TODOs in the codebase
 
 pr-check: generate build test lint docs-lint ## Run the same set of checks CI runs against a PR
 
-.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix golangci-with-modules actionlint yamllint shellcheck depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
+.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix golangci-with-modules actionlint yamllint markdownlint shellcheck depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
