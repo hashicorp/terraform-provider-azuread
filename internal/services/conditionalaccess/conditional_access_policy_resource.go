@@ -54,7 +54,6 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceConditionalAccessPolicyInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceConditionalAccessPolicyInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -631,7 +630,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 
 	properties := stable.ConditionalAccessPolicy{
 		DisplayName:     pointer.To(d.Get("display_name").(string)),
-		State:           pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
+		State:           pointer.ToEnum[stable.ConditionalAccessPolicyState](d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   grantControls,
 		SessionControls: sessionControls,
@@ -695,7 +694,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 
 	properties := stable.ConditionalAccessPolicy{
 		DisplayName:     pointer.To(d.Get("display_name").(string)),
-		State:           pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
+		State:           pointer.ToEnum[stable.ConditionalAccessPolicyState](d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   grantControls,
 		SessionControls: sessionControls,

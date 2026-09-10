@@ -36,7 +36,7 @@ func (r Registration) SupportedDataSources() map[string]*pluginsdk.Resource {
 func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 	return map[string]*pluginsdk.Resource{
 		"azuread_group":                 groupResource(),
-		"azuread_group_without_members": groupWithoutMembersResource(),
 		"azuread_group_member":          groupMemberResource(),
+		"azuread_group_without_members": groupWithoutMembersResource(),
 	}
 }

@@ -52,7 +52,6 @@ func namedLocationResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceNamedLocationInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceNamedLocationInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

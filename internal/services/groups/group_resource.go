@@ -68,7 +68,6 @@ func groupResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceGroupInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceGroupInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

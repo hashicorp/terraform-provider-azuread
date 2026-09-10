@@ -69,7 +69,6 @@ func applicationResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceApplicationInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceApplicationInstanceStateUpgradeV0,
-				Version: 0,
 			},
 			{
 				Type:    migrations.ResourceApplicationInstanceResourceV1().CoreConfigSchema().ImpliedType(),
@@ -484,26 +483,22 @@ func applicationResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"resource_app_id": {
-							Description: "",
-							Type:        pluginsdk.TypeString,
-							Required:    true,
+							Type:     pluginsdk.TypeString,
+							Required: true,
 						},
 
 						"resource_access": {
-							Description: "",
-							Type:        pluginsdk.TypeList,
-							Required:    true,
+							Type:     pluginsdk.TypeList,
+							Required: true,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"id": {
-										Description:  "",
 										Type:         pluginsdk.TypeString,
 										Required:     true,
 										ValidateFunc: validation.IsUUID,
 									},
 
 									"type": {
-										Description:  "",
 										Type:         pluginsdk.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(possibleValuesForResourceAccessType, false),

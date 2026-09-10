@@ -63,10 +63,6 @@ func Build(tenantId string) (*clients.Client, error) {
 
 			EnableAuthenticatingUsingClientCertificate: true,
 			EnableAuthenticatingUsingClientSecret:      true,
-			EnableAuthenticatingUsingAzureCLI:          false,
-			EnableAuthenticatingUsingManagedIdentity:   false,
-			EnableAuthenticationUsingOIDC:              false,
-			EnableAuthenticationUsingGitHubOIDC:        false,
 		}
 
 		builder := clients.ClientBuilder{

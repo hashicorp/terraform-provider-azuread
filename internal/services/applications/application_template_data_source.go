@@ -144,7 +144,7 @@ func applicationTemplateDataSourceRead(ctx context.Context, d *pluginsdk.Resourc
 		return tf.ErrorDiagF(fmt.Errorf("ID returned for application template is nil"), "Bad API Response")
 	}
 
-	d.SetId(*template.Id)
+	d.SetId(stable.NewApplicationTemplateID(*template.Id).ID())
 
 	tf.Set(d, "categories", tf.FlattenStringSlicePtr(template.Categories))
 	tf.Set(d, "display_name", template.DisplayName.GetOrZero())

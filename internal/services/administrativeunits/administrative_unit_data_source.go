@@ -122,7 +122,7 @@ func administrativeUnitDataSourceRead(ctx context.Context, d *pluginsdk.Resource
 		return tf.ErrorDiagF(fmt.Errorf("API returned administrative unit with nil object ID"), "Bad API response")
 	}
 
-	d.SetId(*administrativeUnit.Id)
+	d.SetId(stable.NewDirectoryAdministrativeUnitID(*administrativeUnit.Id).ID())
 
 	tf.Set(d, "description", administrativeUnit.Description.GetOrZero())
 	tf.Set(d, "display_name", administrativeUnit.DisplayName.GetOrZero())

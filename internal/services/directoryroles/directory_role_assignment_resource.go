@@ -49,7 +49,6 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceDirectoryRoleAssignmentInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceDirectoryRoleAssignmentInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -135,7 +134,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.Res
 		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for directory role %q assignment to principal %q to take effect", roleId, principalId)
 	}
 	timeout := time.Until(deadline)
-	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+	if _, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
@@ -151,8 +150,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.Res
 			}
 			return "stub", "Done", nil
 		},
-	}).WaitForStateContext(ctx)
-	if err != nil {
+	}).WaitForStateContext(ctx); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for role assignment for %q to reflect in directory role %q", principalId, roleId)
 	}
 
