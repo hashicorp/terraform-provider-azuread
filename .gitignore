@@ -43,3 +43,6 @@ terraform-provider-azuread
 
 # terraform version
 .terraform-version
+
+# golangci-lint custom binary with plugins, built by make golangci-with-modules
+scripts/golangci-with-modules

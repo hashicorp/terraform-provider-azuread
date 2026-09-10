@@ -34,22 +34,6 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 		SchemaVersion: 0,
 
 		Schema: map[string]*schema.Schema{
-			"service_principal_id": {
-				Description:  "The object ID of the service principal for which this synchronization job should be provisioned",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: stable.ValidateServicePrincipalID,
-			},
-
-			"synchronization_job_id": {
-				Description:  "The identifier for the synchronization jop.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: stable.ValidateServicePrincipalIdSynchronizationJobID,
-			},
-
 			"parameter": {
 				Description: "Represents the objects that will be provisioned and the synchronization rules executed. The resource is primarily used for on-demand provisioning.",
 				Type:        schema.TypeList,
@@ -90,10 +74,27 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 				},
 			},
 
+			"service_principal_id": {
+				Description:  "The object ID of the service principal for which this synchronization job should be provisioned",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: stable.ValidateServicePrincipalID,
+			},
+
+			"synchronization_job_id": {
+				Description:  "The identifier for the synchronization jop.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: stable.ValidateServicePrincipalIdSynchronizationJobID,
+			},
+
 			"triggers": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
+				Description: "Map of arbitrary keys and values that, when changed, will trigger a re-invocation",
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

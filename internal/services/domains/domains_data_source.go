@@ -8,6 +8,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -214,11 +215,8 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 				if len(state.SupportsServices) > 0 && v.SupportedServices != nil {
 					supported := 0
 					for _, serviceNeeded := range state.SupportsServices {
-						for _, serviceSupported := range *v.SupportedServices {
-							if serviceNeeded == serviceSupported {
-								supported++
-								break
-							}
+						if slices.Contains(*v.SupportedServices, serviceNeeded) {
+							supported++
 						}
 					}
 					if supported < len(state.SupportsServices) {

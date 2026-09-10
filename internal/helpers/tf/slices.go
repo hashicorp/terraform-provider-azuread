@@ -23,7 +23,7 @@ func Difference(a, b []string) []string {
 // FromCommaSeparated returns a []string from the supplied comma-separated-values
 func FromCommaSeparated(in string) []string {
 	out := make([]string, 0)
-	for _, v := range strings.Split(in, ",") {
+	for v := range strings.SplitSeq(in, ",") {
 		if v = strings.TrimSpace(v); v != "" {
 			out = append(out, v)
 		}
@@ -34,7 +34,7 @@ func FromCommaSeparated(in string) []string {
 // FromSpaceSeparated returns a []string from the supplied space-separated-values
 func FromSpaceSeparated(in string) []string {
 	out := make([]string, 0)
-	for _, v := range strings.Split(in, " ") {
+	for v := range strings.SplitSeq(in, " ") {
 		if v = strings.TrimSpace(v); v != "" {
 			out = append(out, v)
 		}

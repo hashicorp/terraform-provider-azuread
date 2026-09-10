@@ -696,7 +696,7 @@ func flattenApplicationGroupMembershipClaims(in nullable.Type[string]) []interfa
 	}
 
 	ret := make([]interface{}, 0)
-	for _, claim := range strings.Split(in.GetOrZero(), ",") {
+	for claim := range strings.SplitSeq(in.GetOrZero(), ",") {
 		ret = append(ret, strings.TrimSpace(claim))
 	}
 

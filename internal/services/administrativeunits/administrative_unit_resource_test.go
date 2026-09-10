@@ -68,7 +68,7 @@ func TestAccAdministrativeUnit_withMembers(t *testing.T) {
 	})
 }
 
-func TestAccGroup_preventDuplicateNamesPass(t *testing.T) {
+func TestAccAdministrativeUnit_preventDuplicateNamesPass(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit", "test")
 	r := AdministrativeUnitResource{}
 
@@ -83,7 +83,7 @@ func TestAccGroup_preventDuplicateNamesPass(t *testing.T) {
 	})
 }
 
-func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
+func TestAccAdministrativeUnit_preventDuplicateNamesFail(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit", "test")
 	r := AdministrativeUnitResource{}
 

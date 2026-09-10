@@ -1,54 +1,86 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# NOTE: this config enables the tfproviderlint module plugin, which only exists in the
+# custom-built binary produced by 'make golangci-with-modules' (see scripts/.custom-gcl.yml)
+# — run lints via 'make lint' / './scripts/golangci-with-modules run', not stock golangci-lint.
 version: "2"
 run:
   modules-download-mode: vendor
 linters:
   default: none
   enable:
-    - asasalint
-    - asciicheck
-    - bidichk
-    - decorder
-    - dupword
-    - durationcheck
-    - errcheck
-    - gocritic
-    - govet
-    - ineffassign
-    - misspell
-    - nilerr
-    - predeclared
-    - reassign
-    - staticcheck
-    - tagalign
-    - unconvert
-    - unparam
-    - unused
-    - wastedassign
-    - whitespace
+    - asasalint                 # check for pass []any as any in variadic func(...any)
+    - asciicheck                # ensure code does not contain non-ASCII identifiers
+    - bidichk                   # checks for dangerous unicode character sequences
+    - copyloopvar               # detects redundant x := x copies of loop variables (unnecessary since Go 1.22)
+    - decorder                  # check declaration order and count of types, constants, variables and functions
+    - dupword                   # check for duplicated words in comments
+    - durationcheck             # check for common mistakes when working with time.Duration
+    - errcheck                  # checking for unchecked errors
+    - errname                   # checks sentinel errors are named ErrFoo and error types FooError
+    - fatcontext                # detects nested contexts accidentally rebuilt in loops and function literals
+    - gocheckcompilerdirectives # checks //go: compiler directive comments are valid
+    - gocritic                  # linter for Go source code that specializes in simplifying code
+    - govet                     # reports suspicious constructs, roughly the same as 'go vet'
+    - ineffassign               # detects when assignments to existing variables are not used
+    - makezero                  # finds slices created with non-zero length that are later appended to (leaving zero-value elements)
+    - mirror                    # reports mismatched bytes/strings function pairs causing needless conversions
+    - misspell                  # finds commonly misspelled English words
+    - modernize                 # suggests modern Go idioms (range-over-int, slices/maps/strings helpers), autofixable - see settings below
+    - nilerr                    # finds code that returns nil after it checks that the error is not nil
+    - nilnesserr                # finds code that checks one error but mistakenly returns a different nil error
+    - noctx                     # finds http requests and exec commands made without a context.Context
+    - nosprintfhostport         # checks for misuse of Sprintf to construct host:port in a URL
+    - predeclared               # find code that shadows one of Go's predeclared identifiers
+    - reassign                  # checks that package variables are not reassigned
+    - staticcheck               # checks rules from staticcheck (not the same thing as the staticcheck binary)
+    - tagalign                  # checks struct tags are aligned and sorted (json/tfschema/computed first, per settings below)
+    - tfproviderlint            # terraform provider checks (AT/R/S/V + extended X*), module plugin - see scripts/.custom-gcl.yml
+    - unconvert                 # checks for unnecessary type conversions
+    - unparam                   # reports unused function parameters
+    - unused                    # checks Go code for unused constants, variables, functions and types
+    - wastedassign              # finds wasted assignment statements
+    - whitespace                # checks for unnecessary newlines at the start and end of functions, if, for, etc.
   settings:
     errcheck:
-      exclude-functions:
+      exclude-functions: # d.Set/SetNew/ForceNew only error on schema-key typos (caught by tests)
         - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).ForceNew
         - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).SetNew
         - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).SetNewComputed
         - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceData).Set
         - io.Close
-    nakedret:
-      max-func-lines: 40
+    govet:
+      enable:
+        - nilness # reports impossible/redundant nil comparisons and nil pointer dereferences
+    modernize:
+      disable:
+        - any # interface{} -> any: ~740 findings, to be flipped on in a dedicated mechanical pr
+        - newexpr # flags pointer.To(x) -> new(x), azuread standardises on pointer.To
     predeclared:
-      ignore:
+      ignore: # widely used as ordinary variable/parameter names across the provider (old/new in diffs, min/max in validation)
         - new
         - min
         - max
     tagalign:
-      sort: true
+      sort: true # fixed order below first, any remaining tags alphabetically after
       order:
         - json
         - tfschema
         - computed
+    custom:
+      tfproviderlint:
+        type: module
+        settings: # all checks run (including the tfproviderlintx X* checks, via extended) except those disabled below
+          extended: true
+          disable:
+            - AT004 # flags TestStep Configs declaring provider blocks, but azuread test configs intentionally declare provider "azuread" {}
+            - R009 # avoid panic() — intentional panics in the internal/acceptance test framework and internal/tools generators
+            - R018 # prefer retry/wait helpers over time.Sleep() — deliberate eventual-consistency waits in acceptance test helpers
+          flags:
+            - check: AT001 # TestCases should define CheckDestroy, check only ignores the data_source_ prefix by default and azuread suffixes their tests
+              flag: ignored-filename-suffixes
+              value: _data_source_test.go
   exclusions:
     generated: lax
     presets:
@@ -63,14 +95,29 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      # the V* checks want custom SchemaValidateFuncs replaced with the helper/validation ones;
+      # this package *is* azuread's validation helpers (wrapping/extending those), so exempt it
+      - path: internal/helpers/tf/validation/
+        linters:
+          - tfproviderlint
+        text: '^V[0-9]+:'
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
 formatters:
   enable:
+    - gci
     - gofmt
     - gofumpt
     - goimports
+  settings:
+    gci: # gci enforces canonical import sections (goimports alone preserves existing groups)
+      sections:
+        - standard
+        - blank
+        - default
+      custom-order: true
   exclusions:
     generated: lax
     paths:

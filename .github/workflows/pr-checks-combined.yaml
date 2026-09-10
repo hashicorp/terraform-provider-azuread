@@ -126,16 +126,19 @@ jobs:
           go-version-file: .go-version
       - name: Install tooling
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.12.2
+          # golangci-lint version is sourced from scripts/.custom-gcl.yml - the single source of truth
+          GOLANGCI_LINT_VERSION="$(sed -n 's/^version: *//p' scripts/.custom-gcl.yml)"
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" "$GOLANGCI_LINT_VERSION"
+          go install github.com/katbyte/terrafmt@latest
       - run: make quick-checks
       - name: Guidance on failure
         if: failure()
         run: |
           echo "::error::Quick CI Checks failed."
           echo ""
-          echo "Run 'make quick-checks' locally to run the quick checks: formatting (gofmt/gofumpt)"
-          echo "and the test package policy check."
-          echo "For formatting issues, 'make fmt' will fix them automatically."
+          echo "Run 'make quick-checks' locally to run the quick checks: formatting (gofmt/gofumpt/gci),"
+          echo "the test package policy check, and acceptance test terraform block formatting (terrafmt)."
+          echo "For formatting issues, 'make fmt', 'make goimports' and 'make terrafmt' will fix them automatically."
 
   quick-checks-save-artifacts:
     needs: quick-checks
@@ -215,14 +218,24 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: .go-version
-      - run: make tools
-      - run: make lint
+      # The tfproviderlint module plugin requires a custom-built golangci-lint binary (see
+      # scripts/.custom-gcl.yml); cache it so it is only rebuilt when the plugin config (which
+      # pins the golangci-lint version) changes. The make target rebuilds the binary when it
+      # is missing or its version is stale.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: scripts/golangci-with-modules
+          key: golangci-with-modules-${{ hashFiles('scripts/.custom-gcl.yml') }}
+      - name: Build golangci-lint with plugins
+        run: make golangci-with-modules
+      - name: Run golangci-lint
+        run: ./scripts/golangci-with-modules run -v ./...
       - name: Guidance on failure
         if: failure()
         run: |
           echo "::error::GoLangCI Linting failed."
           echo ""
-          echo "Run the Go linter locally: make lint"
+          echo "Run the Go linter locally: make lint (builds ./scripts/golangci-with-modules with the tfproviderlint plugin)"
           echo "Fix any reported issues before pushing. Common issues include:"
           echo "  - Unused variables or imports"
           echo "  - Error return values not checked"
@@ -249,50 +262,6 @@ jobs:
 
   # ------------------------------------------
 
-  tfproviderlint:
-    needs: [paths-filter, depscheck, quick-checks, docs-lint]
-    if: |
-      always() &&
-      needs.paths-filter.outputs.go == 'true' &&
-      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
-      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
-      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
-        with:
-          go-version-file: .go-version
-      - run: make tools
-      - run: make tfproviderlint
-      - name: Guidance on failure
-        if: failure()
-        run: |
-          echo "::error::Terraform Provider Linting failed."
-          echo ""
-          echo "Run 'make tfproviderlint' locally to check the resource schemas and"
-          echo "acceptance test terraform blocks, and fix any reported issues."
-
-  tfproviderlint-save-artifacts:
-    needs: tfproviderlint
-    if: always() && needs.tfproviderlint.result == 'failure'
-    uses: ./.github/workflows/pr-save-artifacts.yaml
-
-  tfproviderlint-on-fail:
-    needs: tfproviderlint
-    if: always() && needs.tfproviderlint.result == 'failure'
-    uses: ./.github/workflows/pr-comment-failure.yaml
-    with:
-      check_name: "Terraform Provider Linting"
-
-  tfproviderlint-on-success:
-    needs: tfproviderlint
-    if: always() && needs.tfproviderlint.result == 'success'
-    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
-    with:
-      check_name: "Terraform Provider Linting"
-
-  # ------------------------------------------
 
   gencheck:
     needs: [paths-filter, depscheck, quick-checks, docs-lint]
