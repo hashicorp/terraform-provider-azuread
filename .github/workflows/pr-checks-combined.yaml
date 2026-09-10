@@ -5,6 +5,7 @@ name: Combined PR Checks
 # paths-filter so each only runs when relevant files change. A check lives here
 # unless it *can't*: needing a special runner, OIDC auth, or its own trigger
 # moves it to a standalone pr-check-* workflow instead.
+# Display name is matched by the workflow_run list in pr-waiting-response-on-ci-fail.yaml.
 
 permissions:
   contents: read
@@ -21,9 +22,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
   # ==========================================
   # PATH FILTERING LOGIC
   # ==========================================
+  # We use dorny/paths-filter to only run heavy checks when relevant files change.
+  #
+  # How to add a new Phase 1 job:
+  # 1. Add a new filter to the `paths-filter` job below.
+  # 2. In your job, add `needs: paths-filter` and `if: needs.paths-filter.outputs.<your-filter> == 'true'`.
+  #
+  # How to add a new Phase 2/3 job:
+  # 1. It must depend on paths-filter and ALL Phase 1 jobs it needs.
+  # 2. Because GitHub Actions skips downstream jobs if any `needs` dependency is skipped,
+  #    you MUST use the following boilerplate `if` condition to ensure it runs correctly:
+  #    if: |
+  #      always() &&
+  #      needs.paths-filter.outputs.<your-filter> == 'true' &&
+  #      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && ...
+  # ==========================================
+
   paths-filter:
     runs-on: ubuntu-latest
     outputs:
@@ -70,6 +88,14 @@ jobs:
           go-version-file: .go-version
       - run: make tools
       - run: make depscheck
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Vendor Dependencies Check failed."
+          echo ""
+          echo "Do not modify files in the vendor/ directory directly."
+          echo "Instead, update dependencies in go.mod and run 'go mod tidy && go mod vendor' to sync the vendor directory."
+          echo "Then run 'make depscheck' locally to verify before pushing."
 
   depscheck-save-artifacts:
     needs: depscheck
@@ -80,6 +106,15 @@ jobs:
     needs: depscheck
     if: always() && needs.depscheck.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Vendor Dependencies Check"
+
+  depscheck-on-success:
+    needs: depscheck
+    if: always() && needs.depscheck.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Vendor Dependencies Check"
 
   # ------------------------------------------
 
@@ -96,6 +131,14 @@ jobs:
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.12.2
       - run: make quick-checks
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Quick CI Checks failed."
+          echo ""
+          echo "Run 'make quick-checks' locally to run the quick checks: formatting (gofmt/gofumpt)"
+          echo "and the test package policy check."
+          echo "For formatting issues, 'make fmt' will fix them automatically."
 
   quick-checks-save-artifacts:
     needs: quick-checks
@@ -106,6 +149,15 @@ jobs:
     needs: quick-checks
     if: always() && needs.quick-checks.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Quick CI Checks"
+
+  quick-checks-on-success:
+    needs: quick-checks
+    if: always() && needs.quick-checks.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Quick CI Checks"
 
   # ------------------------------------------
 
@@ -120,6 +172,14 @@ jobs:
           go-version-file: .go-version
       - run: make tools
       - run: make docs-lint
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Documentation Linting failed."
+          echo ""
+          echo "Run 'make docs-lint' locally."
+          echo "Check your documentation files under docs/ for spelling, structure, or"
+          echo "terraform block formatting issues."
 
   docs-lint-save-artifacts:
     needs: docs-lint
@@ -130,6 +190,15 @@ jobs:
     needs: docs-lint
     if: always() && needs.docs-lint.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Documentation Linting"
+
+  docs-lint-on-success:
+    needs: docs-lint
+    if: always() && needs.docs-lint.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Documentation Linting"
 
   # ==========================================
   # Phase 2 & 3: Heavy Checks
@@ -151,6 +220,16 @@ jobs:
           go-version-file: .go-version
       - run: make tools
       - run: make lint
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::GoLangCI Linting failed."
+          echo ""
+          echo "Run the Go linter locally: make lint"
+          echo "Fix any reported issues before pushing. Common issues include:"
+          echo "  - Unused variables or imports"
+          echo "  - Error return values not checked"
+          echo "  - Formatting issues (run 'make fmt')"
 
   golint-save-artifacts:
     needs: golint
@@ -161,6 +240,15 @@ jobs:
     needs: golint
     if: always() && needs.golint.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "GoLangCI Linting"
+
+  golint-on-success:
+    needs: golint
+    if: always() && needs.golint.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "GoLangCI Linting"
 
   # ------------------------------------------
 
@@ -180,6 +268,13 @@ jobs:
           go-version-file: .go-version
       - run: make tools
       - run: make tfproviderlint
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Terraform Provider Linting failed."
+          echo ""
+          echo "Run 'make tfproviderlint' locally to check the resource schemas and"
+          echo "acceptance test terraform blocks, and fix any reported issues."
 
   tfproviderlint-save-artifacts:
     needs: tfproviderlint
@@ -190,6 +285,15 @@ jobs:
     needs: tfproviderlint
     if: always() && needs.tfproviderlint.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Terraform Provider Linting"
+
+  tfproviderlint-on-success:
+    needs: tfproviderlint
+    if: always() && needs.tfproviderlint.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Terraform Provider Linting"
 
   # ------------------------------------------
 
@@ -209,6 +313,13 @@ jobs:
           go-version-file: .go-version
       - run: make tools
       - run: make gencheck
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Generation Check failed."
+          echo ""
+          echo "Run 'make generate' locally to regenerate auto-generated code, then commit the changes."
+          echo "This check ensures that generated files are up to date with their source definitions."
 
   gencheck-save-artifacts:
     needs: gencheck
@@ -219,6 +330,15 @@ jobs:
     needs: gencheck
     if: always() && needs.gencheck.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Generation Check"
+
+  gencheck-on-success:
+    needs: gencheck
+    if: always() && needs.gencheck.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Generation Check"
 
   # ------------------------------------------
 
@@ -239,6 +359,15 @@ jobs:
       - run: make test
         env:
           GITHUB_ACTIONS_STAGE: "UNIT_TESTS"
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Unit Tests failed."
+          echo ""
+          echo "Run 'make test' locally to reproduce and fix the failing tests."
+          echo "If you have added a new resource or data source, ensure you have added"
+          echo "the corresponding unit tests. Check the test output above for details"
+          echo "on which tests failed and why."
 
   unit-tests-save-artifacts:
     needs: unit-tests
@@ -249,6 +378,15 @@ jobs:
     needs: unit-tests
     if: always() && needs.unit-tests.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Unit Tests"
+
+  unit-tests-on-success:
+    needs: unit-tests
+    if: always() && needs.unit-tests.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Unit Tests"
 
   # ------------------------------------------
 
@@ -268,6 +406,14 @@ jobs:
           go-version-file: .go-version
       - run: make tools
       - run: make validate-examples
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Example Validation failed."
+          echo ""
+          echo "Run 'make validate-examples' locally to check that your example"
+          echo "Terraform configurations under examples/ are valid."
+          echo "Ensure all examples use valid HCL syntax and reference existing resources."
 
   validate-examples-save-artifacts:
     needs: validate-examples
@@ -278,6 +424,15 @@ jobs:
     needs: validate-examples
     if: always() && needs.validate-examples.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Validate Examples"
+
+  validate-examples-on-success:
+    needs: validate-examples
+    if: always() && needs.validate-examples.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Validate Examples"
 
   # ------------------------------------------
 
@@ -304,6 +459,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - run: make teamcity-test
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::TeamCity Config Test failed."
+          echo ""
+          echo "Run 'make teamcity-test' locally (requires Java 21 and Maven) to validate"
+          echo "the TeamCity Kotlin DSL under .teamcity/."
 
   teamcity-test-save-artifacts:
     needs: teamcity-test
@@ -314,6 +476,15 @@ jobs:
     needs: teamcity-test
     if: always() && needs.teamcity-test.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "TeamCity Config Test"
+
+  teamcity-test-on-success:
+    needs: teamcity-test
+    if: always() && needs.teamcity-test.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "TeamCity Config Test"
 
   # ------------------------------------------
 
@@ -394,6 +565,13 @@ jobs:
       - name: Clean Up Client Secret Path
         run: rm -f "${RUNNER_TEMP}/client-secret"
         if: always()
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Provider Tests failed."
+          echo ""
+          echo "Run make testacc TEST=./internal/provider TESTARGS=\"-run '^TestAcc'\" locally"
+          echo "to reproduce and fix the failing provider tests."
 
   provider-tests-save-artifacts:
     needs: provider-tests
@@ -404,3 +582,12 @@ jobs:
     needs: provider-tests
     if: always() && needs.provider-tests.result == 'failure'
     uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Provider Tests"
+
+  provider-tests-on-success:
+    needs: provider-tests
+    if: always() && needs.provider-tests.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Provider Tests"
