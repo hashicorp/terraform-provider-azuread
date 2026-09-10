@@ -71,5 +71,5 @@ func (id *PrivilegedAccessGroupScheduleId) ID() string {
 }
 
 func (id *PrivilegedAccessGroupScheduleId) String() string {
-	return fmt.Sprintf("Privileged Access Group Assigment Schedule ID: %q", id.ID())
+	return fmt.Sprintf("Privileged Access Group Assignment Schedule ID: %q", id.ID())
 }

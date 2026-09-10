@@ -7,6 +7,8 @@ TF_SCHEMA_PANIC_ON_ERROR=1
 # else, including the CI workflows, derives it from that file.
 GOLANGCI_LINT_VERSION := $(shell sed -n 's/^version: *//p' scripts/.custom-gcl.yml)
 
+TYPOS_VERSION := v1.50.1
+
 # The single source of truth for the actionlint version is the go install pin
 # in .github/workflows/workflow-actionlint.yml.
 ACTIONLINT_VERSION := $(shell sed -n 's/.*actionlint\/cmd\/actionlint@//p' .github/workflows/workflow-actionlint.yml)
@@ -115,6 +117,16 @@ tfproviderlint: golangci-with-modules ## Check terraform schema definitions with
 	@echo "==> Checking terraform schemas with tfproviderlint (via golangci-lint)..."
 	@./scripts/golangci-with-modules run -v --enable-only tfproviderlint ./...
 
+typos: ## Check spelling in code, docs and examples with typos (config in .typos.toml)
+	@command -v typos >/dev/null || (echo "typos not installed. Install via: brew install typos-cli (macOS) or see https://github.com/crate-ci/typos/releases/tag/$(TYPOS_VERSION)" && exit 1)
+	@echo "==> Checking spelling with typos..."
+	@typos || \
+		(echo; echo "Spelling errors found. Fix them with 'make typos-fix', or add false positives (Azure names, enum values) to .typos.toml."; exit 1)
+
+typos-fix: ## Fix spelling errors found by typos
+	@command -v typos >/dev/null || (echo "typos not installed. Install via: brew install typos-cli (macOS) or see https://github.com/crate-ci/typos/releases/tag/$(TYPOS_VERSION)" && exit 1)
+	@typos --write-changes
+
 yamllint: ## Check YAML files with yamllint (config in .yamllint.yml)
 	@command -v yamllint >/dev/null || (echo "yamllint not installed. Install via: brew install yamllint (macOS) or pip install yamllint" && exit 1)
 	@echo "==> Checking YAML files with yamllint..."
@@ -186,4 +198,4 @@ todo: ## List all TODOs in the codebase
 
 pr-check: generate build test lint docs-lint ## Run the same set of checks CI runs against a PR
 
-.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix golangci-with-modules actionlint yamllint markdownlint shellcheck depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
+.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix golangci-with-modules actionlint yamllint markdownlint typos typos-fix shellcheck depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check

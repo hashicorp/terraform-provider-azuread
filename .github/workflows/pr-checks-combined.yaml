@@ -53,7 +53,7 @@ jobs:
       examples: ${{ steps.filter.outputs.examples }}
       scripts: ${{ steps.filter.outputs.scripts }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
         id: filter
         with:
@@ -80,11 +80,11 @@ jobs:
 
   depscheck:
     needs: paths-filter
-    if: needs.paths-filter.outputs.vendor == 'true'
+    if: needs.paths-filter.outputs.vendor == 'true' || needs.paths-filter.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       - run: make tools
@@ -124,8 +124,8 @@ jobs:
     if: needs.paths-filter.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       - name: Install tooling
@@ -170,8 +170,8 @@ jobs:
     if: needs.paths-filter.outputs.docs == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       - run: make tools
@@ -211,7 +211,7 @@ jobs:
     if: needs.paths-filter.outputs.scripts == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - name: Run ShellCheck
         run: make shellcheck
       - name: Guidance on failure
@@ -242,6 +242,46 @@ jobs:
     with:
       check_name: "ShellCheck Scripts"
 
+  # ------------------------------------------
+
+  typos:
+    needs: paths-filter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - name: Install typos
+        run: |
+          v="$(sed -n 's/^TYPOS_VERSION := //p' GNUmakefile)"
+          curl -sSfL "https://github.com/crate-ci/typos/releases/download/${v}/typos-${v}-x86_64-unknown-linux-musl.tar.gz" | tar -xz -C /usr/local/bin ./typos
+      - name: Run typos
+        run: make typos
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::typos found spelling errors."
+          echo ""
+          echo "Run 'make typos' locally to reproduce and 'make typos-fix' to fix them."
+          echo "False positives (Azure names, API enum values) go in .typos.toml."
+
+  typos-save-artifacts:
+    needs: typos
+    if: always() && needs.typos.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  typos-on-fail:
+    needs: typos
+    if: always() && needs.typos.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Typos"
+
+  typos-on-success:
+    needs: typos
+    if: always() && needs.typos.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Typos"
+
   # ==========================================
   # Phase 2 & 3: Heavy Checks
   # ==========================================
@@ -257,8 +297,8 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       - name: Build Provider
@@ -302,15 +342,15 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       # The tfproviderlint module plugin requires a custom-built golangci-lint binary (see
       # scripts/.custom-gcl.yml); cache it so it is only rebuilt when the plugin config (which
       # pins the golangci-lint version) changes. The make target rebuilds the binary when it
       # is missing or its version is stale.
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: scripts/golangci-with-modules
           key: golangci-with-modules-${{ hashFiles('scripts/.custom-gcl.yml') }}
@@ -362,8 +402,8 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       - run: make tools
@@ -408,8 +448,8 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: custom-linux-large
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       - run: make test
@@ -457,8 +497,8 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       - run: make tools
@@ -521,15 +561,15 @@ jobs:
     if: needs.secrets-check.outputs.available == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Install Go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: ./.go-version
 
       - name: Azure CLI login (using OIDC)
-        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}

@@ -52,7 +52,8 @@ Concretely:
   names** (`workflow_run` matches names, not filenames), downloads the artifact,
   and adds the `waiting-response` label.
 - The same pattern powers the review flow: `pr-reviewed.yaml` uploads the
-  reviewer/state artifact, `pr-waiting-response-on-review.yaml` applies it.
+  reviewer/state artifact; `pr-waiting-response-on-review.yaml` applies the
+  label and `pr-assign-reviewer.yaml` assigns the reviewer on changes-requested.
 
 **When adding a new PR check**: if its failure should mark the PR
 `waiting-response`, the check must (a) call `pr-save-artifacts.yaml` on failure
@@ -78,7 +79,7 @@ arbitrary PR number.
 
 - `workflow_run` triggers reference workflow **display names** — renaming a
   workflow's `name:` silently breaks its consumers (`pr-waiting-response-on-ci-fail.yaml`,
-  `pr-waiting-response-on-review.yaml`).
+  `pr-waiting-response-on-review.yaml`, `pr-assign-reviewer.yaml`).
 - Reusable workflows (`pr-save-artifacts.yaml`, `pr-comment-failure*.yaml`,
   `issue-remove-label.yaml`) are referenced by **file path** in `uses:` lines.
 - `teamcity-test.yaml` has a self-referencing `paths:` trigger that must be
