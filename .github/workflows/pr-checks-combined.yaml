@@ -6,6 +6,8 @@ name: Combined PR Checks
 # unless it *can't*: needing a special runner, OIDC auth, or its own trigger
 # moves it to a standalone pr-check-* workflow instead.
 # Display name is matched by the workflow_run list in pr-waiting-response-on-ci-fail.yaml.
+# The check jobs are mirrored in main-checks.yaml (which re-runs them on pushes
+# to main) — keep the two in sync when adding or changing a check.
 
 permissions:
   contents: read
@@ -49,7 +51,7 @@ jobs:
       go: ${{ steps.filter.outputs.go }}
       vendor: ${{ steps.filter.outputs.vendor }}
       examples: ${{ steps.filter.outputs.examples }}
-      teamcity: ${{ steps.filter.outputs.teamcity }}
+      scripts: ${{ steps.filter.outputs.scripts }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
@@ -68,10 +70,9 @@ jobs:
               - 'go.sum'
             examples:
               - 'examples/**'
-            teamcity:
-              - '!.teamcity/components/generated/**'
-              - '!.teamcity/target/**'
-              - '.teamcity/**'
+            scripts:
+              - 'scripts/**'
+              - '**/*.sh'
 
   # ==========================================
   # Phase 1: Fail-Fast
@@ -200,18 +201,102 @@ jobs:
     with:
       check_name: "Documentation Linting"
 
+  # ------------------------------------------
+
+  shellcheck:
+    needs: paths-filter
+    if: needs.paths-filter.outputs.scripts == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Run ShellCheck
+        run: make shellcheck
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::ShellCheck failed."
+          echo ""
+          echo "Run 'make shellcheck' locally to check shell scripts for issues."
+          echo "ShellCheck identifies common shell scripting pitfalls and bugs."
+          echo "See https://www.shellcheck.net/wiki/ for explanations of each warning code."
+
+  shellcheck-save-artifacts:
+    needs: shellcheck
+    if: always() && needs.shellcheck.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  shellcheck-on-fail:
+    needs: shellcheck
+    if: always() && needs.shellcheck.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "ShellCheck Scripts"
+
+  shellcheck-on-success:
+    needs: shellcheck
+    if: always() && needs.shellcheck.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "ShellCheck Scripts"
+
   # ==========================================
   # Phase 2 & 3: Heavy Checks
   # ==========================================
 
-  golint:
-    needs: [paths-filter, depscheck, quick-checks, docs-lint]
+  build:
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
     if: |
       always() &&
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
       (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
-      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - name: Build Provider
+        run: go build -v -o /dev/null main.go
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::GoLang Compilation failed."
+          echo ""
+          echo "Run 'go build' or 'make build' locally to identify compilation errors."
+
+  build-save-artifacts:
+    needs: build
+    if: always() && needs.build.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  build-on-fail:
+    needs: build
+    if: always() && needs.build.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "GoLang Compilation"
+
+  build-on-success:
+    needs: build
+    if: always() && needs.build.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "GoLang Compilation"
+
+  # ------------------------------------------
+
+  golint:
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
+    if: |
+      always() &&
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -253,13 +338,14 @@ jobs:
   # ------------------------------------------
 
   tfproviderlint:
-    needs: [paths-filter, depscheck, quick-checks, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
     if: |
       always() &&
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
       (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
-      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -298,13 +384,14 @@ jobs:
   # ------------------------------------------
 
   gencheck:
-    needs: [paths-filter, depscheck, quick-checks, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
     if: |
       always() &&
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
       (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
-      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -343,13 +430,14 @@ jobs:
   # ------------------------------------------
 
   unit-tests:
-    needs: [paths-filter, depscheck, quick-checks, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
     if: |
       always() &&
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
       (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
-      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: custom-linux-large
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -391,13 +479,14 @@ jobs:
   # ------------------------------------------
 
   validate-examples:
-    needs: [paths-filter, depscheck, quick-checks, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
     if: |
       always() &&
       needs.paths-filter.outputs.examples == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
       (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
-      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -436,66 +525,16 @@ jobs:
 
   # ------------------------------------------
 
-  teamcity-test:
-    needs: [paths-filter, depscheck, quick-checks, docs-lint]
-    if: |
-      always() &&
-      needs.paths-filter.outputs.teamcity == 'true' &&
-      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
-      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
-      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
-        with:
-          distribution: zulu
-          java-version: 21
-          java-package: jdk
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-      - run: make teamcity-test
-      - name: Guidance on failure
-        if: failure()
-        run: |
-          echo "::error::TeamCity Config Test failed."
-          echo ""
-          echo "Run 'make teamcity-test' locally (requires Java 21 and Maven) to validate"
-          echo "the TeamCity Kotlin DSL under .teamcity/."
-
-  teamcity-test-save-artifacts:
-    needs: teamcity-test
-    if: always() && needs.teamcity-test.result == 'failure'
-    uses: ./.github/workflows/pr-save-artifacts.yaml
-
-  teamcity-test-on-fail:
-    needs: teamcity-test
-    if: always() && needs.teamcity-test.result == 'failure'
-    uses: ./.github/workflows/pr-comment-failure.yaml
-    with:
-      check_name: "TeamCity Config Test"
-
-  teamcity-test-on-success:
-    needs: teamcity-test
-    if: always() && needs.teamcity-test.result == 'success'
-    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
-    with:
-      check_name: "TeamCity Config Test"
-
-  # ------------------------------------------
 
   secrets-check:
-    needs: [paths-filter, depscheck, quick-checks, docs-lint]
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
     if: |
       always() &&
       needs.paths-filter.outputs.go == 'true' &&
       (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
       (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
-      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped')
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       available: "${{ steps.check-secrets.outputs.available }}"

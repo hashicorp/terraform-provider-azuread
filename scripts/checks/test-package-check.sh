@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-files=$(find . | egrep "/internal/services/[a-z]+/[a-z_]+(resource|data_source)[a-z_]+\.go$" | egrep "test.go")
+files=$(find . | grep -E "/internal/services/[a-z]+/[a-z_]+(resource|data_source)[a-z_]+\.go$" | grep -E "test.go")
 error=false
 
 echo "==> Checking that acceptance test packages are used..."
@@ -17,7 +17,7 @@ for f in $files; do
     fi
   done
 
-  if [ "local_error" = true ]; then
+  if [ "$local_error" = true ]; then
     echo "$f"
     error=true
   fi

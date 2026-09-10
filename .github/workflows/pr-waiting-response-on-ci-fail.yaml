@@ -12,6 +12,7 @@ on:
   workflow_run:
     workflows:
       - 'Combined PR Checks'
+      - 'TeamCity Config Test'
     types: [completed]
 
 permissions:

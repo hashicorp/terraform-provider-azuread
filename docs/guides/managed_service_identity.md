@@ -120,7 +120,6 @@ At this point running either `terraform plan` or `terraform apply` should allow 
 
 Next you should follow the [Configuring a Service Principal for managing Azure Active Directory][azuread-service-principal-configuration] guide to grant the Service Principal necessary permissions to create and modify Azure Active Directory objects such as users and groups.
 
-
 [azure-managed-identities]: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
 [azure-managed-identities-services]: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities
 [azuread-provider-fields]: https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#argument-reference

@@ -79,6 +79,7 @@ The provider can be configured to read the certificate bundle from the .pfx file
 Our recommended approach is storing the credentials as Environment Variables, for example:
 
 *Reading the certificate bundle from the filesystem*
+
 ```shell-session
 # sh
 $ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
@@ -86,6 +87,7 @@ $ export ARM_CLIENT_CERTIFICATE_PATH="/path/to/my/client/certificate.pfx"
 $ export ARM_CLIENT_CERTIFICATE_PASSWORD="Pa55w0rd123"
 $ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
 ```
+
 ```powershell
 # PowerShell
 > $env:ARM_CLIENT_ID = "00000000-0000-0000-0000-000000000000"
@@ -95,6 +97,7 @@ $ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
 ```
 
 *Passing the encoded certificate bundle directly*
+
 ```shell-session
 # sh
 $ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
@@ -102,6 +105,7 @@ $ export ARM_CLIENT_CERTIFICATE="$(base64 /path/to/my/client/certificate.pfx)"
 $ export ARM_CLIENT_CERTIFICATE_PASSWORD="Pa55w0rd123"
 $ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
 ```
+
 ```powershell
 # PowerShell
 > $env:ARM_CLIENT_ID = "00000000-0000-0000-0000-000000000000"
@@ -121,6 +125,7 @@ It's also possible to configure these variables either directly, or from variabl
 ~> **Caution** We recommend not defining these variables in-line since they could easily be checked into Source Control.
 
 *Reading the certificate bundle from the filesystem*
+
 ```hcl
 variable "client_certificate_path" {}
 variable "client_certificate_password" {}
@@ -134,6 +139,7 @@ provider "azuread" {
 ```
 
 *Passing the encoded certificate bundle directly*
+
 ```hcl
 variable "client_certificate" {}
 variable "client_certificate_password" {}

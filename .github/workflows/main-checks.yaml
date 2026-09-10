@@ -1,0 +1,161 @@
+---
+name: Main Branch Checks
+
+# Runs the tree-state CI checks on every push to main (and release branches).
+# PR checks only run on pull_request events, so without this workflow a merge to
+# main is never validated: two PRs that are each green in isolation can still
+# break main when combined (semantic merge conflicts, a renamed helper another
+# PR started using, etc.).
+#
+# Every job runs on every push - deliberately no path filtering. A per-push
+# paths filter makes the branch tip's green check meaningless: a docs-only or
+# workflow-only push would skip the Go checks and show green even when the
+# previous (code) push failed or had its run cancelled. Since every run covers
+# the complete tree state, cancelling a superseded run loses nothing.
+#
+# This intentionally duplicates the check jobs in pr-checks-combined.yaml (and
+# teamcity-test.yaml) rather than adding a push trigger to them: those workflows
+# feed the PR comment/labeling machinery (pr-save-artifacts.yaml -> workflow_run
+# watchers matched by display name), which has no PR to act on for a push
+# event. Keep the check steps here in sync with their PR counterparts when
+# updating either side.
+#
+# The OIDC provider acceptance tests are excluded — nightly TeamCity runs cover
+# main.
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - release/**
+
+concurrency:
+  # Only the newest push per branch matters - the tip includes earlier merges,
+  # and since every run executes all checks the newest run supersedes any it cancels.
+  group: 'main-checks-${{ github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+
+  # Unlike the PR workflow there is no fail-fast phasing here: on main we want
+  # the complete picture of everything broken in one run, not saved runner time.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - name: Build Provider
+        run: go build -v -o /dev/null main.go
+
+  depscheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: make tools
+      - run: make depscheck
+
+  quick-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - name: Install tooling
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.12.2
+      - run: make quick-checks
+
+  docs-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: make tools
+      - run: make docs-lint
+
+  golint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: make tools
+      - run: make lint
+
+  tfproviderlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: make tools
+      - run: make tfproviderlint
+
+  gencheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: make tools
+      - run: make gencheck
+
+  unit-tests:
+    runs-on: custom-linux-large
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: make test
+        env:
+          GITHUB_ACTIONS_STAGE: "UNIT_TESTS"
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Run ShellCheck
+        run: make shellcheck
+
+  validate-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: .go-version
+      - run: make tools
+      - run: make validate-examples
+
+  teamcity-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: zulu
+          java-version: 21
+          java-package: jdk
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - run: make teamcity-test
