@@ -9,6 +9,13 @@ GOLANGCI_LINT_VERSION := $(shell sed -n 's/^version: *//p' scripts/.custom-gcl.y
 
 TYPOS_VERSION := v1.50.1
 
+# Go tools installed by 'make tools'. terrafmt is also installed by the quick-checks CI
+# jobs, which sed its version out of this file.
+MISSPELL_VERSION := v0.3.4
+TFPROVIDERDOCS_VERSION := v0.12.1
+TERRAFMT_VERSION := v1.0.1
+GOFUMPT_VERSION := v0.12.0
+
 # The single source of truth for the actionlint version is the go install pin
 # in .github/workflows/workflow-actionlint.yml.
 ACTIONLINT_VERSION := $(shell sed -n 's/.*actionlint\/cmd\/actionlint@//p' .github/workflows/workflow-actionlint.yml)
@@ -32,10 +39,10 @@ tflint: ## renamed to tfproviderlint
 ##@ Build & Generate
 tools: ## Install the tools required to develop the provider
 	@echo "==> installing required tooling..."
-	go install github.com/client9/misspell/cmd/misspell@latest
-	go install github.com/bflad/tfproviderdocs@latest
-	go install github.com/katbyte/terrafmt@latest
-	go install mvdan.cc/gofumpt@latest
+	go install github.com/client9/misspell/cmd/misspell@$(MISSPELL_VERSION)
+	go install github.com/bflad/tfproviderdocs@$(TFPROVIDERDOCS_VERSION)
+	go install github.com/katbyte/terrafmt@$(TERRAFMT_VERSION)
+	go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION)
 	go install github.com/rhysd/actionlint/cmd/actionlint@$(ACTIONLINT_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH || $$GOPATH)/bin $(GOLANGCI_LINT_VERSION)
 	@$(MAKE) golangci-with-modules

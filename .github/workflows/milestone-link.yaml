@@ -25,7 +25,8 @@ jobs:
           # we cannot use go-version-file here because no repositories are checked out so there is no file to reference
           go-version: '1.25.3'
       - run: |
-          go install github.com/stephybun/link-milestone@latest
+          # link-milestone has no tagged releases, so pin to a commit
+          go install github.com/stephybun/link-milestone@1e48f06f81570d223831a9fca0fd8bb0ad11c7da
           link-milestone
         env:
           PR_NUMBER: ${{ github.event.number }}
