@@ -9,6 +9,7 @@ do
     r) release=${OPTARG};;
     u) milestone_url=${OPTARG};;
     t) token=${OPTARG};;
+    *) echo "Usage: $0 -u <milestone_url> -r <release> -t <token>" >&2; exit 1;;
   esac
 done
 
@@ -21,12 +22,13 @@ milestones=$(curl -L \
 
 milestone_number=0
 milestones_json=$(echo "$milestones" | jq -c -r '.[]')
-for milestone in ${milestones_json[@]}; do
-  if [[ $(echo $milestone | jq -r .title) == "$release" ]]; then
-    milestone_number=$(echo $milestone | jq -r .number)
+while IFS= read -r milestone; do
+  [[ -z "$milestone" ]] && continue
+  if [[ $(echo "$milestone" | jq -r .title) == "$release" ]]; then
+    milestone_number=$(echo "$milestone" | jq -r .number)
     break
   fi
-done
+done <<< "$milestones_json"
 
 if [[ $milestone_number != 0 ]]; then
 

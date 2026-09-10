@@ -106,6 +106,7 @@ Each entry shown is referred to as an `Azure CLI account`, which represents eith
 # sh
 export ARM_TENANT_ID=00000000-0000-2222-2222-222222222222
 ```
+
 ```powershell
 # PowerShell
 $env:ARM_TENANT_ID = 00000000-0000-2222-2222-222222222222

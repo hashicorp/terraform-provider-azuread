@@ -12,7 +12,6 @@
 - [Learn Tutorial](https://learn.hashicorp.com/tutorials/terraform/azure-ad)
 - [Slack Workspace for Contributors](https://terraform-azure.slack.com) ([Request Invite](https://join.slack.com/t/terraform-azure/shared_invite/zt-3qcv2dj6v-aKas6O6FSBZaxSSZph~Uvg))
 
-
 ## Usage Example
 
 ```
@@ -63,20 +62,19 @@ resource "azuread_user" "example" {
 
 Further [usage documentation](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs) is available on the Terraform website.
 
-
 ## Developer Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.12.x or later
 - [Go](https://golang.org/doc/install) 1.16.x (to build the provider plugin)
 
 If you're building on Windows, you will also need:
+
 - [Git Bash for Windows](https://git-scm.com/download/win)
 - [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)
 
 For *GNU32 Make*, make sure its bin path is added to your PATH environment variable.
 
 For *Git Bash for Windows*, at the step of "Adjusting your PATH environment", please choose "Use Git and optional Unix tools from Windows Command Prompt".
-
 
 ## Developing the Provider
 
@@ -102,7 +100,7 @@ $ $GOPATH/bin/terraform-provider-azuread
 ...
 ```
 
-To compile the provider for attached debugging run `make debug`. 
+To compile the provider for attached debugging run `make debug`.
 
 ```sh
 $ make debug
@@ -112,7 +110,6 @@ Provider started. To attach Terraform CLI, set the TF_REATTACH_PROVIDERS environ
 ```
 
 See the [documentation](https://developer.hashicorp.com/terraform/plugin/debugging#starting-a-provider-in-debug-mode) for attaching a debugger.
-
 
 In order to test the provider, you can simply run `make test`.
 
@@ -127,6 +124,7 @@ make testacc TESTARGS='-run=TestAccApplication'
 ```
 
 The following ENV variables must be set in your shell prior to running acceptance tests:
+
 - ARM_CLIENT_ID
 - ARM_CLIENT_SECRET
 - ARM_TENANT_ID

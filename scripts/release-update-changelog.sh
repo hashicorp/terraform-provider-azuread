@@ -10,6 +10,9 @@ else
   SED="sed -r"
 fi
 
+# set debug="echo " to print the release commands instead of running them
+debug="${debug:-}"
+
 DATE="$(date '+%B %d, %Y')"
 PROVIDER_URL="https:\/\/github.com\/hashicorp\/terraform-provider-azuread\/issues"
 
@@ -34,11 +37,14 @@ if [[ "${RELEASE}" == "" ]]; then
 fi
 
 # Replace [GH-nnnn] references with issue links
+# shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
 ( set -x; ${debug}$SED -i.bak "s/\[GH-([0-9]+)\]/\(\[#\1\]\(${PROVIDER_URL}\/\1\)\)/g" CHANGELOG.md )
 
 # Set the date for the latest release
+# shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
 ( set -x; ${debug}$SED -i.bak "s/^(## v?[0-9.]+) \(Unreleased\)/\1 (${DATE})/i" CHANGELOG.md )
 
+# shellcheck disable=SC2086 # debug is intentionally unquoted for command prefix pattern
 ${debug}rm CHANGELOG.md.bak
 
 # Update the version file with this new version
