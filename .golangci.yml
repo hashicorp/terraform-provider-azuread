@@ -77,6 +77,7 @@ linters:
             - AT004 # flags TestStep Configs declaring provider blocks, but azuread test configs intentionally declare provider "azuread" {}
             - R009 # avoid panic() — intentional panics in the internal/acceptance test framework and internal/tools generators
             - R018 # prefer retry/wait helpers over time.Sleep() — deliberate eventual-consistency waits in acceptance test helpers
+            - XS002 # schema attributes in alphabetical order - only matches schemas written as schema.Schema, not the pluginsdk.Schema alias used by every other resource, so it would enforce ordering on a single file
           flags:
             - check: AT001 # TestCases should define CheckDestroy, check only ignores the data_source_ prefix by default and azuread suffixes their tests
               flag: ignored-filename-suffixes
