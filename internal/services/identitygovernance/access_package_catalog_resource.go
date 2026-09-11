@@ -103,6 +103,9 @@ func accessPackageCatalogResourceCreate(ctx context.Context, d *pluginsdk.Resour
 	if catalog == nil {
 		return tf.ErrorDiagF(errors.New("model was nil"), "Creating access package catalog")
 	}
+	if catalog.Id == nil {
+		return tf.ErrorDiagF(errors.New("model ID was nil"), "Creating access package catalog")
+	}
 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(*catalog.Id)
 	d.SetId(id.AccessPackageCatalogId)

@@ -154,7 +154,7 @@ func (r ApplicationApiAccessResource) Exists(ctx context.Context, clients *clien
 	}
 
 	for _, api := range *app.RequiredResourceAccess {
-		if strings.EqualFold(*api.ResourceAppId, id.ApiClientId) {
+		if strings.EqualFold(pointer.From(api.ResourceAppId), id.ApiClientId) {
 			return pointer.To(true), nil
 		}
 	}

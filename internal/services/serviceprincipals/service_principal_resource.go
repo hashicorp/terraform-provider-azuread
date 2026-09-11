@@ -63,7 +63,6 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceServicePrincipalInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceServicePrincipalInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

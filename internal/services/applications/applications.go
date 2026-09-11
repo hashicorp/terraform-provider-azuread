@@ -80,10 +80,7 @@ func applicationDisableAppRoles(ctx context.Context, client *application.Applica
 		return fmt.Errorf("retrieving %s: model was nil", applicationId)
 	}
 
-	var existingRoles []stable.AppRole
-	if app.AppRoles != nil {
-		existingRoles = *app.AppRoles
-	}
+	existingRoles := pointer.From(app.AppRoles)
 
 	// Shortcut: don't update if no changes to be made
 	if reflect.DeepEqual(existingRoles, *newRoles) {
@@ -111,7 +108,7 @@ func applicationDisableAppRoles(ctx context.Context, client *application.Applica
 	for i, existing := range existingRoles {
 		found := false
 		for _, newRole := range *newRoles {
-			if existing.Id != nil && *newRole.Id == *existing.Id {
+			if existing.Id != nil && newRole.Id != nil && *newRole.Id == *existing.Id {
 				found = true
 				break
 			}
@@ -138,7 +135,7 @@ func applicationDisableAppRoles(ctx context.Context, client *application.Applica
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+		if _, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,
@@ -167,8 +164,7 @@ func applicationDisableAppRoles(ctx context.Context, client *application.Applica
 				}
 				return actualRoles, "Disabled", nil
 			},
-		}).WaitForStateContext(ctx)
-		if err != nil {
+		}).WaitForStateContext(ctx); err != nil {
 			return fmt.Errorf("waiting for App Roles to be disabled for %s: %v", applicationId, err)
 		}
 	}
@@ -226,7 +222,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *appli
 	for i, existing := range existingScopes {
 		found := false
 		for _, newScope := range *newScopes {
-			if existing.Id != nil && *newScope.Id == *existing.Id {
+			if existing.Id != nil && newScope.Id != nil && *newScope.Id == *existing.Id {
 				found = true
 				break
 			}
@@ -254,7 +250,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *appli
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+		if _, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,
@@ -283,8 +279,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *appli
 				}
 				return actualScopes, "Disabled", nil
 			},
-		}).WaitForStateContext(ctx)
-		if err != nil {
+		}).WaitForStateContext(ctx); err != nil {
 			return fmt.Errorf("waiting for OAuth2 Permission Scopes to be disabled for %s: %+v", applicationId, err)
 		}
 	}
@@ -771,10 +766,7 @@ func flattenApplicationRequiredResourceAccess(in *[]stable.RequiredResourceAcces
 
 	result := make([]map[string]interface{}, 0)
 	for _, requiredResourceAccess := range *in {
-		resourceAppId := ""
-		if requiredResourceAccess.ResourceAppId != nil {
-			resourceAppId = *requiredResourceAccess.ResourceAppId
-		}
+		resourceAppId := pointer.From(requiredResourceAccess.ResourceAppId)
 
 		result = append(result, map[string]interface{}{
 			"resource_app_id": resourceAppId,

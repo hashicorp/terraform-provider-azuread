@@ -1,6 +1,9 @@
 # Copyright IBM Corp. 2023, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+# NOTE: this config enables the azproviderlint module plugin, which only exists in the
+# custom-built binary produced by 'golangci-lint custom' (see scripts/.custom-gcl.yml) - run
+# lints via './scripts/golangci-with-modules run', not stock golangci-lint.
 version: "2"
 run:
   modules-download-mode: vendor
@@ -9,6 +12,7 @@ linters:
   enable:
     - asasalint
     - asciicheck
+    - azproviderlint            # custom azure provider checks (AZG/AZR/AZS/AZT), module plugin - see scripts/.custom-gcl.yml
     - bidichk
     - decorder
     - dupword
@@ -49,6 +53,33 @@ linters:
         - json
         - tfschema
         - computed
+    custom:
+      azproviderlint:
+        type: module
+        settings:
+          disable:
+            - AZR002 # split create and update - no findings in azuread, kept in step with azurerm
+            - AZT002 # tests should not obtain credentials via os.Getenv - 3 findings, investigate in a later pr
+            - AZR004 # Resource IDs should not be compared with == or != - no findings in azuread, kept in step with azurerm
+            - AZR003 # d.Get should not be used within a Delete function as it does not work as expected during deletion - no findings in azuread, kept in step with azurerm
+            - AZR007 # StateChangeConf should be replaced with a custom poller implementing pollers.PollerType - 10 findings, to migrate over time
+            - AZS003 # TypeList blocks where every property is optional with no default allow empty blocks - 33 findings to fix later
+            - AZS005 # resources with no corresponding data source - 45 findings, to determine if to be fixed later
+            - AZS006 # data sources missing properties that exist on the resource - 6 findings, todo later
+            - AZS007 # Optional+Computed fields missing a '// Note: O+C because ...' comment - 121 findings to fix later
+          AZG002:
+            use: pointer.To # rather than the go1.26 new(<expr>) builtin
+          AZG006:
+            # only inline temporaries into calls whose other arguments are all basic literals
+            # (e.g. d.Set("key", x)) - among identifier/expression siblings the name adds context
+            only-when-literals: true
+          AZS004:
+            # exact-match only: report hand-written lists that exactly match the enum (a pure
+            # PossibleValuesFor<Enum>() swap); deliberate subsets/supersets are left alone
+            allow-missing-values: true
+            allow-extra-values: true
+          AZS007:
+            exclude-packages: "migrations"
   exclusions:
     generated: lax
     presets:

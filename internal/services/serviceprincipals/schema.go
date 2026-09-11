@@ -7,9 +7,8 @@ import "github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/plug
 
 func schemaAppRolesComputed() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
-		Description: "",
-		Type:        pluginsdk.TypeList,
-		Computed:    true,
+		Type:     pluginsdk.TypeList,
+		Computed: true,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"id": {
@@ -57,9 +56,8 @@ func schemaAppRolesComputed() *pluginsdk.Schema {
 
 func schemaOauth2PermissionScopesComputed() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
-		Description: "",
-		Type:        pluginsdk.TypeList,
-		Computed:    true,
+		Type:     pluginsdk.TypeList,
+		Computed: true,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"id": {

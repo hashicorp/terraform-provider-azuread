@@ -30,8 +30,8 @@ func (r Registration) WebsiteCategories() []string {
 // SupportedDataSources returns the supported Data Sources supported by this Service
 func (r Registration) SupportedDataSources() map[string]*pluginsdk.Resource {
 	return map[string]*pluginsdk.Resource{
-		"azuread_directory_roles":          directoryRolesDataSource(),
 		"azuread_directory_role_templates": directoryRoleTemplatesDataSource(),
+		"azuread_directory_roles":          directoryRolesDataSource(),
 	}
 }
 
@@ -40,8 +40,8 @@ func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 	return map[string]*pluginsdk.Resource{
 		"azuread_custom_directory_role":                       customDirectoryRoleResource(),
 		"azuread_directory_role_assignment":                   directoryRoleAssignmentResource(),
-		"azuread_directory_role_member":                       directoryRoleMemberResource(),
 		"azuread_directory_role_eligibility_schedule_request": directoryRoleEligibilityScheduleRequestResource(),
+		"azuread_directory_role_member":                       directoryRoleMemberResource(),
 	}
 }
 
