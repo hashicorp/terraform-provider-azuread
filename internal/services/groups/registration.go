@@ -3,7 +3,10 @@
 
 package groups
 
-import "github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+import (
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
+)
 
 type Registration struct{}
 
@@ -38,5 +41,17 @@ func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 		"azuread_group":                 groupResource(),
 		"azuread_group_without_members": groupWithoutMembersResource(),
 		"azuread_group_member":          groupMemberResource(),
+	}
+}
+
+// DataSources returns the typed Data Sources supported by this Service
+func (r Registration) DataSources() []sdk.DataSource {
+	return []sdk.DataSource{}
+}
+
+// Resources returns the typed Resources supported by this Service
+func (r Registration) Resources() []sdk.Resource {
+	return []sdk.Resource{
+		GroupLicenseResource{},
 	}
 }
