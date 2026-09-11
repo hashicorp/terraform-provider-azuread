@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/response"
@@ -105,10 +106,8 @@ func (r ApplicationIdentifierUriResource) Create() sdk.ResourceFunc {
 			}
 
 			// Check for existing identifier URI
-			for _, uri := range newIdentifierUris {
-				if uri == model.IdentifierUri {
-					return metadata.ResourceRequiresImport(r.ResourceType(), id)
-				}
+			if slices.Contains(newIdentifierUris, model.IdentifierUri) {
+				return metadata.ResourceRequiresImport(r.ResourceType(), id)
 			}
 
 			newIdentifierUris = append(newIdentifierUris, model.IdentifierUri)

@@ -1,0 +1,55 @@
+# Configuration for typos (https://github.com/crate-ci/typos), run by `make typos` and the typos job in
+# .github/workflows/pr-checks-combined.yaml. It checks every file type and splits identifiers, so
+# misspelled function and variable names are caught as well as prose. It stays on the default locale
+# because UK and US spellings both appear in the provider.
+
+[files]
+ignore-hidden = false # the default skips dotfiles, which would leave .github/ workflows unchecked
+extend-exclude = [
+  ".git/",
+  ".idea/",
+  "**/vendor/",
+  "**/go.sum",
+]
+
+[default]
+extend-ignore-re = [
+  '[A-Za-z0-9+/=_-]{30,}', # base64 blobs, certificates, storage ids
+  '`[A-Z]{2}`',            # ISO country / region codes listed in docs
+  '-[0-9a-f]{12}\b',      # go.mod pseudo-version commit hashes (.tools/go.mod)
+]
+
+[default.extend-words]
+# names and abbreviations typos would otherwise "correct"
+aks = "aks"             # Azure Kubernetes Service (workload identity auth)
+hdinsight = "hdinsight" # misspell ignore entry in .golangci.yml / GNUmakefile
+hashi = "hashi"
+decorder = "decorder"   # golangci linter name
+copywrite = "copywrite" # .copywrite.hcl, the tool's own name
+
+# corrections typos' dictionary lacks but codespell caught in this repo: contractions written without
+# the apostrophe, run-together words and a few plain misspellings
+doesnt = "doesn't"
+dont = "don't"
+isnt = "isn't"
+cant = "can't"
+wont = "won't"
+couldt = "couldn't"
+theres = "there's"
+everytime = "every time"
+forthe = "for the"
+loner = "longer"
+manged = "managed"
+manger = "manager"
+followings = "following"
+implementor = "implementer"
+scrips = "scripts"
+dependant = "dependent"
+existant = "existent"
+tthe = "the"
+
+[default.extend-identifiers]
+# misspelled field name in the plugin SDK that the provider has to use as-is
+ContinuousTargetOccurence = "ContinuousTargetOccurence"
+# the GitHub Actions secret is named with this typo in the repository settings (shared with azurerm)
+GH_MEMEBERSHIP_CHECK_TOKEN = "GH_MEMEBERSHIP_CHECK_TOKEN"

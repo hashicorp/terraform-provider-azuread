@@ -2,11 +2,86 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 TESTTIMEOUT=180m
 TF_SCHEMA_PANIC_ON_ERROR=1
 
-# The single source of truth for the actionlint version is the go install pin
-# in .github/workflows/workflow-actionlint.yml.
-ACTIONLINT_VERSION := $(shell sed -n 's/.*actionlint\/cmd\/actionlint@//p' .github/workflows/workflow-actionlint.yml)
+# Go dev tools are built into .tools/bin (gitignored) from the versions pinned in .tools/go.mod,
+# the single source of truth for make and CI (dependabot keeps them bumped). Each target lists
+# the tool binaries it needs as prerequisites, so the first run builds them and nothing has to
+# be go installed by hand. .tools/bin is also prepended to PATH so the check scripts (which
+# shell out to golangci-lint/terrafmt by name) use the pinned builds.
+TOOLS_BIN=.tools/bin
+ACTIONLINT=$(TOOLS_BIN)/actionlint
+GOFUMPT=$(TOOLS_BIN)/gofumpt
+GOLANGCI_LINT=$(TOOLS_BIN)/golangci-lint
+MISSPELL=$(TOOLS_BIN)/misspell
+TCTEST=$(TOOLS_BIN)/tctest
+TERRAFMT=$(TOOLS_BIN)/terrafmt
+TFPROVIDERDOCS=$(TOOLS_BIN)/tfproviderdocs
+PATH := $(CURDIR)/$(TOOLS_BIN):$(PATH)
+
+# non-Go tools also live in .tools/bin at pinned versions, but the pins are here (dependabot
+# cannot bump them): shellcheck and typos are static binaries downloaded from their github
+# releases, yamllint is pip installed into a repo-local venv and markdownlint-cli2 is npm
+# installed into a repo-local prefix. all rebuild when this makefile changes.
+MARKDOWNLINT_CLI2_VERSION=0.23.2
+SHELLCHECK_VERSION=v0.11.0
+TYPOS_VERSION=v1.50.1
+YAMLLINT_VERSION=1.38.0
+MARKDOWNLINT=$(TOOLS_BIN)/markdownlint-cli2
+SHELLCHECK=$(TOOLS_BIN)/shellcheck
+TYPOS=$(TOOLS_BIN)/typos
+YAMLLINT=$(TOOLS_BIN)/yamllint
+
+# golangci-lint with the tfproviderlint module plugin compiled in (.tools/.custom-gcl.yml); the
+# lint targets use this binary, the plain one bootstraps `golangci-lint custom` and runs the
+# formatters
+GOLANGCI_LINT_MODULES=$(TOOLS_BIN)/golangci-with-modules
 
 .EXPORT_ALL_VARIABLES:
+
+# one rule builds any Go tool: the import path comes from the tool directives in .tools/go.mod
+# (via go list tool), so the makefile never repeats it - add a tool there and a variable above
+$(TOOLS_BIN)/%: .tools/go.mod .tools/go.sum
+	@echo "==> Building $* (version pinned in .tools/go.mod)..."
+	@cd .tools && go build -o bin/$* $$(go list tool | grep "/$*$$")
+
+# explicit rules take precedence over the pattern rule above; golangci-lint custom must run from
+# the directory holding .custom-gcl.yml, hence the cd
+$(GOLANGCI_LINT_MODULES): .tools/.custom-gcl.yml $(GOLANGCI_LINT)
+	@echo "==> Building golangci-lint with plugins (versions pinned in .tools/.custom-gcl.yml)..."
+	@cd .tools && bin/golangci-lint custom
+
+# tfproviderdocs is built in isolation (go install pkg@version resolves the tool's own go.mod)
+# rather than from the shared module: the goldmark bump the other tools bring in makes v0.12.1's
+# contents check report spurious "arguments section is not sorted" errors. The pin still lives
+# in .tools/go.mod (and dependabot bumps it there), it is just read out rather than built from.
+$(TFPROVIDERDOCS): .tools/go.mod
+	@echo "==> Building tfproviderdocs (version pinned in .tools/go.mod, isolated build)..."
+	@cd .tools && GOBIN=$(CURDIR)/$(TOOLS_BIN) go install github.com/bflad/tfproviderdocs@$$(go list -m -f '{{.Version}}' github.com/bflad/tfproviderdocs)
+
+HOST_OS=$(shell uname | tr A-Z a-z)
+HOST_ARCH=$(shell uname -m | sed 's/arm64/aarch64/')
+# typos publishes rust target triples
+TYPOS_TARGET=$(HOST_ARCH)-$(if $(filter darwin,$(HOST_OS)),apple-darwin,unknown-linux-musl)
+
+$(TOOLS_BIN):
+	@mkdir -p $@
+
+$(SHELLCHECK): GNUmakefile | $(TOOLS_BIN)
+	@echo "==> Downloading shellcheck $(SHELLCHECK_VERSION)..."
+	@curl -sSfL https://github.com/koalaman/shellcheck/releases/download/$(SHELLCHECK_VERSION)/shellcheck-$(SHELLCHECK_VERSION).$(HOST_OS).$(HOST_ARCH).tar.xz | tar -xJO shellcheck-$(SHELLCHECK_VERSION)/shellcheck > $@ && chmod +x $@
+
+$(TYPOS): GNUmakefile | $(TOOLS_BIN)
+	@echo "==> Downloading typos $(TYPOS_VERSION)..."
+	@curl -sSfL https://github.com/crate-ci/typos/releases/download/$(TYPOS_VERSION)/typos-$(TYPOS_VERSION)-$(TYPOS_TARGET).tar.gz | tar -xzO ./typos > $@ && chmod +x $@
+
+$(YAMLLINT): GNUmakefile | $(TOOLS_BIN)
+	@command -v python3 >/dev/null || (echo "python3 is required to install yamllint (macOS: xcode CLT; Debian/Ubuntu: apt install python3-venv)" && exit 1)
+	@echo "==> Installing yamllint $(YAMLLINT_VERSION) into .tools/venv..."
+	@python3 -m venv .tools/venv && .tools/venv/bin/pip install -q yamllint==$(YAMLLINT_VERSION) && ln -sf ../venv/bin/yamllint $@
+
+$(MARKDOWNLINT): GNUmakefile | $(TOOLS_BIN)
+	@command -v npm >/dev/null || (echo "npm is required to install markdownlint-cli2 (macOS: brew install node; Debian/Ubuntu: apt install npm)" && exit 1)
+	@echo "==> Installing markdownlint-cli2 $(MARKDOWNLINT_CLI2_VERSION) into .tools/npm..."
+	@npm install --silent --no-audit --no-fund --prefix .tools/npm markdownlint-cli2@$(MARKDOWNLINT_CLI2_VERSION) && ln -sf ../npm/node_modules/.bin/markdownlint-cli2 $@
 
 default: build
 
@@ -23,15 +98,7 @@ tflint: ## renamed to tfproviderlint
 	@$(MAKE) tfproviderlint
 
 ##@ Build & Generate
-tools: ## Install the tools required to develop the provider
-	@echo "==> installing required tooling..."
-	go install github.com/client9/misspell/cmd/misspell@latest
-	go install github.com/bflad/tfproviderlint/cmd/tfproviderlintx@latest
-	go install github.com/bflad/tfproviderdocs@latest
-	go install github.com/katbyte/terrafmt@latest
-	go install mvdan.cc/gofumpt@latest
-	go install github.com/rhysd/actionlint/cmd/actionlint@$(ACTIONLINT_VERSION)
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH || $$GOPATH)/bin v2.12.2
+tools: $(ACTIONLINT) $(GOFUMPT) $(GOLANGCI_LINT) $(GOLANGCI_LINT_MODULES) $(MISSPELL) $(TCTEST) $(TERRAFMT) $(TFPROVIDERDOCS) $(MARKDOWNLINT) $(SHELLCHECK) $(TYPOS) $(YAMLLINT) ## Install all pinned dev tools into .tools/bin (targets install what they need on demand)
 
 build: quick-checks generate ## Run the quick checks, generate code, and compile the provider
 	go install
@@ -54,65 +121,69 @@ gencheck: generate ## Check that generated code matches what is committed
 GOPATHS=main.go internal version
 
 # The fixers here (plus goimports below) should match the checks in scripts/checks/fmt-check.sh
-fmt: ## Fix Go formatting (gofmt, gofumpt, whitespace)
+fmt: $(GOFUMPT) $(GOLANGCI_LINT) ## Fix Go formatting (gofmt, gofumpt, whitespace)
 	@echo "==> Fixing source code with gofmt..."
 	@gofmt -s -w $(GOPATHS)
 	@echo "==> Fixing source code with gofumpt..."
-	@gofumpt -w $(GOPATHS)
+	@$(GOFUMPT) -w $(GOPATHS)
 	@echo "==> Fixing source code with whitespace linter..."
-	@golangci-lint run ./... --no-config --enable-only=whitespace --fix
+	@$(GOLANGCI_LINT) run ./... --no-config --enable-only=whitespace --fix
 
 # goimports runs via `golangci-lint fmt` as the standalone binary is single-threaded and far slower
-goimports: ## Fix Go import ordering (slower than fmt, so kept separate)
-	@echo "==> Fixing imports with goimports..."
-	@golangci-lint fmt -E goimports
+goimports: $(GOLANGCI_LINT) ## Fix Go import ordering/grouping (slower than fmt, so kept separate)
+	@echo "==> Fixing imports with goimports and gci..."
+	@$(GOLANGCI_LINT) fmt -E goimports,gci
 
-quick-checks: ## Run the quick CI checks (formatting + provider policies)
+quick-checks: $(GOLANGCI_LINT) $(TERRAFMT) ## Run the quick CI checks (formatting + provider policies)
 	@echo "==> Running the set of quick CI checks (formatting + provider policies)..."
 	@sh "$(CURDIR)/scripts/checks/fmt-check.sh"
 	@sh "$(CURDIR)/scripts/checks/test-package-check.sh"
+	@sh "$(CURDIR)/scripts/checks/terrafmt-acctests.sh"
 
-terrafmt: ## Fix terraform blocks in acceptance tests and docs
+terrafmt: $(TERRAFMT) ## Fix terraform blocks in acceptance tests and docs
 	@echo "==> Fixing acceptance test terraform blocks code with terrafmt..."
-	@terrafmt fmt -f -p "*_test.go" ./internal
+	@$(TERRAFMT) fmt -f -p "*_test.go" ./internal
 	@echo "==> Fixing documentation terraform blocks code with terrafmt..."
-	@terrafmt fmt -p "*.md" ./docs
+	@$(TERRAFMT) fmt -p "*.md" ./docs
 
 ##@ Linting & Dependencies
-lint: ## Check source code with the golangci linters
+# golangci-lint module plugins (tfproviderlint) only exist in a custom-built binary, so the lint
+# targets use .tools/bin/golangci-with-modules, rebuilt automatically whenever
+# .tools/.custom-gcl.yml or the golangci-lint pin in .tools/go.mod changes
+golangci-with-modules: $(GOLANGCI_LINT_MODULES) ## Build golangci-lint with plugins into .tools/bin (automatic when the pins change)
+
+lint: $(GOLANGCI_LINT_MODULES) ## Check source code with the golangci linters
 	@echo "==> Checking source code with golangci-lint..."
-	@golangci-lint run -v ./...
+	@$(GOLANGCI_LINT_MODULES) run -v ./...
 
-lint-fix: ## Fix source code with all golangci linters
+lint-fix: $(GOLANGCI_LINT_MODULES) ## Fix source code with all golangci linters
 	@echo "==> Fixing source code with all golangci linters..."
-	@golangci-lint run ./... --fix
+	@$(GOLANGCI_LINT_MODULES) run ./... --fix
 
-tfproviderlint: ## Check terraform schema definitions with tfproviderlint
-	@echo "==> Checking terraform schemas with tfproviderlint..."
-	@tfproviderlintx \
-        -AT005 -AT006 -AT007 -AT007\
-        -R001 -R002 -R003 -R004 -R006 -R007 -R008 -R010 -R012 -R013 -R014\
-        -S001 -S002 -S003 -S004 -S005 -S006 -S007 -S008 -S009 -S010 -S011 -S012 -S013 -S014 -S015 -S016 -S017 -S018 -S019 -S020\
-        -S021 -S022 -S023 -S024 -S025 -S026 -S027 -S028 -S029 -S030 -S031 -S032 -S033 -S034\
-        -V002 -V003 -V004 -V005 -V006 -V007\
-        -XR002\
-        ./internal/...
-	@sh -c "'$(CURDIR)/scripts/checks/terrafmt-acctests.sh'"
+# tfproviderlint runs as part of lint; this target runs just its checks
+tfproviderlint: $(GOLANGCI_LINT_MODULES) ## Check terraform schema definitions with only the tfproviderlint checks
+	@echo "==> Checking terraform schemas with tfproviderlint (via golangci-lint)..."
+	@$(GOLANGCI_LINT_MODULES) run -v --enable-only tfproviderlint ./...
 
-yamllint: ## Check YAML files with yamllint (config in .yamllint.yml)
-	@command -v yamllint >/dev/null || (echo "yamllint not installed. Install via: brew install yamllint (macOS) or pip install yamllint" && exit 1)
+typos: $(TYPOS) ## Check spelling in code, docs and examples with typos (config in .typos.toml)
+	@echo "==> Checking spelling with typos..."
+	@$(TYPOS) || \
+		(echo; echo "Spelling errors found. Fix them with 'make typos-fix', or add false positives (Azure names, enum values) to .typos.toml."; exit 1)
+
+typos-fix: $(TYPOS) ## Fix spelling errors found by typos
+	@$(TYPOS) --write-changes
+
+yamllint: $(YAMLLINT) ## Check YAML files with yamllint (config in .yamllint.yml)
 	@echo "==> Checking YAML files with yamllint..."
-	@yamllint -s .
+	@$(YAMLLINT) -s .
 
-actionlint: ## Check GitHub workflows with actionlint (incl. shellcheck on run blocks)
-	@command -v actionlint >/dev/null || (echo "actionlint not installed. Install via 'make tools' or: go install github.com/rhysd/actionlint/cmd/actionlint@$(ACTIONLINT_VERSION)" && exit 1)
+actionlint: $(ACTIONLINT) $(SHELLCHECK) ## Check GitHub workflows with actionlint (incl. shellcheck on run blocks)
 	@echo "==> Checking workflows with actionlint..."
-	@actionlint
+	@$(ACTIONLINT) -shellcheck=$(SHELLCHECK)
 
-shellcheck: ## Check shell scripts with shellcheck
-	@command -v shellcheck >/dev/null || (echo "shellcheck not installed. Install via: brew install shellcheck (macOS) or apt install shellcheck (Linux)" && exit 1)
+shellcheck: $(SHELLCHECK) ## Check shell scripts with shellcheck
 	@echo "==> Checking shell scripts with shellcheck..."
-	@shellcheck scripts/*.sh scripts/checks/*.sh scripts/automation/*.sh || \
+	@$(SHELLCHECK) scripts/*.sh scripts/checks/*.sh scripts/automation/*.sh || \
 		(echo; echo "ShellCheck found issues in shell scripts."; echo "Review the errors above and fix them. See https://www.shellcheck.net/ for detailed explanations of each rule."; exit 1)
 
 depscheck: ## Check that go.mod/go.sum and vendor/ are in sync
@@ -124,6 +195,15 @@ depscheck: ## Check that go.mod/go.sum and vendor/ are in sync
 	@go mod vendor
 	@git diff --compact-summary --exit-code -- vendor || \
 		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; echo "Do not modify files in the vendor/ directory directly."; exit 1)
+	@echo "==> Checking .tools/go.mod with go mod tidy..."
+	@cd .tools && go mod tidy
+	@git diff --exit-code -- .tools/go.mod .tools/go.sum || \
+		(echo; echo "Unexpected difference in .tools/go.mod/go.sum. Run 'cd .tools && go mod tidy' and commit."; exit 1)
+	@echo "==> Checking .tools/.custom-gcl.yml golangci-lint version matches .tools/go.mod..."
+	@modv=$$(cd .tools && go list -m -f '{{.Version}}' github.com/golangci/golangci-lint/v2); \
+		gclv=$$(sed -n 's/^version: *//p' .tools/.custom-gcl.yml); \
+		[ "$$modv" = "$$gclv" ] || \
+		(echo; echo "golangci-lint version mismatch: .tools/go.mod has $$modv but .tools/.custom-gcl.yml has $$gclv - update .custom-gcl.yml to match."; exit 1)
 
 ##@ Testing
 test: ## Run the unit tests
@@ -144,16 +224,15 @@ debugacc: ## Run acceptance tests under the delve debugger (TEST=./internal/serv
 # glob, \# escapes the hash from make) - they carry a large backlog of emphasis-style findings.
 MARKDOWN_INPUTS='docs/**/*.md' README.md '.github/**/*.md' '\#docs/resources' '\#docs/data-sources'
 
-markdownlint: ## Check repo markdown with markdownlint (config in .markdownlint.yml)
-	@command -v markdownlint-cli2 >/dev/null || (echo "markdownlint-cli2 not installed. Install via: brew install markdownlint-cli2 (macOS) or npm install -g markdownlint-cli2" && exit 1)
+markdownlint: $(MARKDOWNLINT) ## Check repo markdown with markdownlint (config in .markdownlint.yml)
 	@echo "==> Checking markdown with markdownlint..."
-	@markdownlint-cli2 $(MARKDOWN_INPUTS)
+	@$(MARKDOWNLINT) $(MARKDOWN_INPUTS)
 
-docs-lint: ## Check the documentation for issues
+docs-lint: $(MISSPELL) $(TFPROVIDERDOCS) $(TERRAFMT) ## Check the documentation for issues
 	@echo "==> Checking documentation spelling..."
-	@misspell -error -source=text -i hdinsight docs/
+	@$(MISSPELL) -error -source=text -i hdinsight docs/
 	@echo "==> Checking documentation for errors..."
-	@tfproviderdocs check -provider-name=azuread -allowed-guide-subcategories="Authentication,Upgrade Guides" -enable-contents-check -require-schema-ordering -require-guide-subcategory -require-resource-subcategory
+	@$(TFPROVIDERDOCS) check -provider-name=azuread -allowed-guide-subcategories="Authentication,Upgrade Guides" -enable-contents-check -require-schema-ordering -require-guide-subcategory -require-resource-subcategory
 	@sh -c "'$(CURDIR)/scripts/checks/terrafmt-docs.sh'"
 
 validate-examples: ## Check that the terraform examples are valid
@@ -168,6 +247,6 @@ teamcity-test: ## Test the TeamCity configuration
 todo: ## List all TODOs in the codebase
 	@grep --color=always --exclude=GNUmakefile --exclude-dir=.git --exclude-dir=vendor --line-number --recursive TODO "$(CURDIR)"
 
-pr-check: generate build test lint tfproviderlint docs-lint ## Run the same set of checks CI runs against a PR
+pr-check: generate build test lint docs-lint ## Run the same set of checks CI runs against a PR
 
-.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix actionlint yamllint markdownlint shellcheck depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
+.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix golangci-with-modules actionlint yamllint markdownlint typos typos-fix shellcheck depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check

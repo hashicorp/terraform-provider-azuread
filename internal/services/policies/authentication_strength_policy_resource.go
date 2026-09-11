@@ -42,11 +42,11 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, errs := stable.ValidatePolicyAuthenticationStrengthPolicyID(id, "id"); len(errs) > 0 {
-				out := ""
+				var out strings.Builder
 				for _, err := range errs {
-					out += err.Error()
+					out.WriteString(err.Error())
 				}
-				return errors.New(out)
+				return errors.New(out.String())
 			}
 			return nil
 		}),
@@ -85,8 +85,8 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 						if !ok {
 							return nil, []error{fmt.Errorf("expected a string value for %q", k)}
 						}
-						split := strings.Split(val, ",")
-						for _, s := range split {
+						split := strings.SplitSeq(val, ",")
+						for s := range split {
 							if !slices.Contains(stable.PossibleValuesForAuthenticationMethodModes(), strings.TrimSpace(s)) {
 								return nil, []error{fmt.Errorf("unrecognized authentication method %q in %q", s, k)}
 							}

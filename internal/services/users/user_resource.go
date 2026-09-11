@@ -47,11 +47,11 @@ func userResource() *pluginsdk.Resource {
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, errs := stable.ValidateUserID(id, "id"); len(errs) > 0 {
-				out := ""
+				var out strings.Builder
 				for _, err := range errs {
-					out += err.Error()
+					out.WriteString(err.Error())
 				}
-				return errors.New(out)
+				return errors.New(out.String())
 			}
 			return nil
 		}),
@@ -784,8 +784,8 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 	disablePasswordExpiration := false
 
 	if passwordPolicies := uExtra.PasswordPolicies; passwordPolicies != nil {
-		policies := strings.Split(passwordPolicies.GetOrZero(), ",")
-		for _, p := range policies {
+		policies := strings.SplitSeq(passwordPolicies.GetOrZero(), ",")
+		for p := range policies {
 			if strings.EqualFold(strings.TrimSpace(p), "DisableStrongPassword") {
 				disableStrongPassword = true
 			}

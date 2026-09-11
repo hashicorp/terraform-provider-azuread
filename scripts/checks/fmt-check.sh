@@ -4,7 +4,7 @@
 
 
 if ! command -v golangci-lint >/dev/null; then
-    echo "ERROR: golangci-lint is not installed. Run 'make tools' to install required tooling."
+    echo "ERROR: golangci-lint is not installed. Run this via 'make quick-checks', which builds the pinned .tools/bin/golangci-lint and adds it to PATH."
     exit 1
 fi
 

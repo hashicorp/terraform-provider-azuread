@@ -43,3 +43,8 @@ terraform-provider-azuread
 
 # terraform version
 .terraform-version
+
+# dev tools installed by make: Go tools from the pins in .tools/go.mod, the rest from the pins in GNUmakefile
+.tools/bin/
+.tools/npm/
+.tools/venv/
