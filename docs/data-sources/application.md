@@ -50,6 +50,7 @@ The following attributes are exported:
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
 * `display_name` - The display name for the application.
 * `fallback_public_client_enabled` - The fallback application type as public client, such as an installed application running on a mobile device.
+* `native_authentication_apis_enabled` - The native application has native authentication enabled, allowing public clients to directly interact with users to collect credentials without rediecting to browsers for authentication.
 * `feature_tags` - A `features` block as described below.
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
 * `id` - The Terraform resource ID for the application, for use when referencing this data source in your Terraform configuration.
