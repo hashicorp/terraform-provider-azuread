@@ -16,7 +16,7 @@ if ${error}; then
   echo "------------------------------------------------"
   echo ""
   echo "The preceding files contain terraform blocks that are not correctly formatted or contain errors."
-  echo "You can fix this by running make tools and then terrafmt on them."
+  echo "You can fix this by running 'make terrafmt', or the pinned .tools/bin/terrafmt on them directly:"
   echo ""
   echo "format a single file:"
   echo "$ terrafmt fmt -f ./path/to/source.go"

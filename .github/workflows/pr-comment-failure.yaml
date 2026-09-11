@@ -45,7 +45,7 @@ jobs:
               'Vendor Dependencies Check': 'Do not modify files in the `vendor/` directory directly. Instead, update dependencies in `go.mod` and run `go mod vendor` to sync the vendor directory. Then run `make depscheck` locally to verify.',
               'Quick CI Checks': 'Run `make quick-checks` locally to run the quick checks: gofmt/gofumpt/gci formatting, the test package policy check, and acceptance test terraform block formatting. Formatting issues can be fixed automatically with `make fmt`, `make goimports` and `make terrafmt`.',
               'Documentation Linting': 'Run `make docs-lint` locally to check the documentation under `docs/` for spelling, structure, and terraform block formatting issues.',
-              'GoLangCI Linting': 'Run the Go linter locally with `make lint` (builds `./scripts/golangci-with-modules` with the tfproviderlint plugin) and fix any reported issues.',
+              'GoLangCI Linting': 'Run the Go linter locally with `make lint` (builds `.tools/bin/golangci-with-modules` with the tfproviderlint plugin) and fix any reported issues.',
               'Generation Check': 'Run `make generate` locally to regenerate any auto-generated code, then commit the resulting changes.',
               'GoLang Compilation': 'Run `go build` or `make build` locally to reproduce and fix compilation errors.',
               'ShellCheck Scripts': 'Run `make shellcheck` locally to check shell scripts for issues and fix any warnings or errors.',

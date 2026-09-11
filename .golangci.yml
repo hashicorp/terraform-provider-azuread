@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 # NOTE: this config enables the tfproviderlint module plugin, which only exists in the
-# custom-built binary produced by 'make golangci-with-modules' (see scripts/.custom-gcl.yml)
-# — run lints via 'make lint' / './scripts/golangci-with-modules run', not stock golangci-lint.
+# custom-built binary produced by 'make golangci-with-modules' (see .tools/.custom-gcl.yml)
+# — run lints via 'make lint' / '.tools/bin/golangci-with-modules run', not stock golangci-lint.
 version: "2"
 run:
   modules-download-mode: vendor
@@ -36,7 +36,7 @@ linters:
     - reassign                  # checks that package variables are not reassigned
     - staticcheck               # checks rules from staticcheck (not the same thing as the staticcheck binary)
     - tagalign                  # checks struct tags are aligned and sorted (json/tfschema/computed first, per settings below)
-    - tfproviderlint            # terraform provider checks (AT/R/S/V + extended X*), module plugin - see scripts/.custom-gcl.yml
+    - tfproviderlint            # terraform provider checks (AT/R/S/V + extended X*), module plugin - see .tools/.custom-gcl.yml
     - unconvert                 # checks for unnecessary type conversions
     - unparam                   # reports unused function parameters
     - unused                    # checks Go code for unused constants, variables, functions and types

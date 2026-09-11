@@ -60,7 +60,6 @@ jobs:
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - run: make tools
       - run: make depscheck
 
   quick-checks:
@@ -70,13 +69,7 @@ jobs:
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - name: Install tooling
-        run: |
-          # golangci-lint version is sourced from scripts/.custom-gcl.yml - the single source of truth
-          GOLANGCI_LINT_VERSION="$(sed -n 's/^version: *//p' scripts/.custom-gcl.yml)"
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" "$GOLANGCI_LINT_VERSION"
-          # terrafmt version is pinned in the GNUmakefile (TERRAFMT_VERSION)
-          go install "github.com/katbyte/terrafmt@$(sed -n 's/^TERRAFMT_VERSION := //p' GNUmakefile)"
+      # make builds the golangci-lint and terrafmt versions pinned in .tools/go.mod on demand
       - run: make quick-checks
 
   docs-lint:
@@ -86,7 +79,6 @@ jobs:
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - run: make tools
       - run: make docs-lint
 
   golint:
@@ -97,17 +89,17 @@ jobs:
         with:
           go-version-file: .go-version
       # The tfproviderlint module plugin requires a custom-built golangci-lint binary (see
-      # scripts/.custom-gcl.yml); cache it so it is only rebuilt when the plugin config (which
-      # pins the golangci-lint version) changes. The make target rebuilds the binary when it
-      # is missing or its version is stale.
+      # .tools/.custom-gcl.yml); cache .tools/bin so it is only rebuilt when the pins
+      # (.tools/go.mod for golangci-lint, .custom-gcl.yml for the plugin) change. make rebuilds
+      # the binary when it is missing or older than either file.
       - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
-          path: scripts/golangci-with-modules
-          key: golangci-with-modules-${{ hashFiles('scripts/.custom-gcl.yml') }}
+          path: .tools/bin
+          key: golangci-with-modules-${{ hashFiles('.tools/go.mod', '.tools/go.sum', '.tools/.custom-gcl.yml') }}
       - name: Build golangci-lint with plugins
         run: make golangci-with-modules
       - name: Run golangci-lint
-        run: ./scripts/golangci-with-modules run -v ./...
+        run: .tools/bin/golangci-with-modules run -v ./...
 
   gencheck:
     runs-on: ubuntu-latest
@@ -116,7 +108,6 @@ jobs:
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - run: make tools
       - run: make gencheck
 
   unit-tests:
@@ -141,10 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
-      - name: Install typos
-        run: |
-          v="$(sed -n 's/^TYPOS_VERSION := //p' GNUmakefile)"
-          curl -sSfL "https://github.com/crate-ci/typos/releases/download/${v}/typos-${v}-x86_64-unknown-linux-musl.tar.gz" | tar -xz -C /usr/local/bin ./typos
+      # make downloads the typos release pinned in GNUmakefile into .tools/bin
       - name: Run typos
         run: make typos
 
@@ -155,7 +143,6 @@ jobs:
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - run: make tools
       - run: make validate-examples
 
   teamcity-test:

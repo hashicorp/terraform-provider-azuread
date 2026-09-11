@@ -16,6 +16,7 @@ extend-exclude = [
 extend-ignore-re = [
   '[A-Za-z0-9+/=_-]{30,}', # base64 blobs, certificates, storage ids
   '`[A-Z]{2}`',            # ISO country / region codes listed in docs
+  '-[0-9a-f]{12}\b',      # go.mod pseudo-version commit hashes (.tools/go.mod)
 ]
 
 [default.extend-words]
