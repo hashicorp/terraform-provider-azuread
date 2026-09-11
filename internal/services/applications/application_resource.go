@@ -1652,25 +1652,30 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl.GetOrZero())
 	}
 
-	currentPassword := d.Get("password").(*pluginsdk.Set).List()
-	passwordToSave := make([]interface{}, 0)
+	// The nil check is deliberate: when the API omits passwordCredentials the existing state is retained
+	if app.PasswordCredentials != nil {
+		currentPassword := d.Get("password").(*pluginsdk.Set).List()
+		passwordToSave := make([]interface{}, 0)
 
-	if len(currentPassword) == 1 {
-		keyIdToMatch := currentPassword[0].(map[string]interface{})["key_id"].(string)
-		existingValue := currentPassword[0].(map[string]interface{})["value"].(string)
+		var keyIdToMatch, existingValue string
 
-		for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) {
-			// Match against the known key ID, or select the first returned password if not present in state
-			if credential["key_id"] == keyIdToMatch {
-				// Retain the value from state, if known
-				credential["value"] = existingValue
-				passwordToSave = append(passwordToSave, credential)
-				break
+		if len(currentPassword) == 1 {
+			keyIdToMatch = currentPassword[0].(map[string]interface{})["key_id"].(string)
+			existingValue = currentPassword[0].(map[string]interface{})["value"].(string)
+
+			for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) { //nolint:azproviderlint // AZR010: the outer nil check intentionally retains state, see above
+				// Match against the known key ID, or select the first returned password if not present in state
+				if credential["key_id"] == keyIdToMatch {
+					// Retain the value from state, if known
+					credential["value"] = existingValue
+					passwordToSave = append(passwordToSave, credential)
+					break
+				}
 			}
 		}
-	}
 
-	tf.Set(d, "password", passwordToSave)
+		tf.Set(d, "password", passwordToSave)
+	}
 
 	// API bug: the v1.0 API does not return the `oauth2RequiredPostResponse` field, so retrieve it using the beta API
 	// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
