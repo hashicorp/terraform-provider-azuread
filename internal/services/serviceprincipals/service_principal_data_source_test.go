@@ -98,6 +98,7 @@ func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) accept
 		check.That(data.ResourceName).Key("feature_tags.0.custom_single_sign_on").HasValue("true"),
 		check.That(data.ResourceName).Key("feature_tags.0.enterprise").HasValue("true"),
 		check.That(data.ResourceName).Key("feature_tags.0.gallery").HasValue("true"),
+		check.That(data.ResourceName).Key("feature_tags.0.global_secure_access").HasValue("true"),
 		check.That(data.ResourceName).Key("feature_tags.0.hide").HasValue("true"),
 		check.That(data.ResourceName).Key("homepage_url").HasValue(fmt.Sprintf("https://test-%d.internal", data.RandomInteger)),
 		check.That(data.ResourceName).Key("login_url").HasValue(fmt.Sprintf("https://test-%d.internal/login", data.RandomInteger)),

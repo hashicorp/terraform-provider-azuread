@@ -486,6 +486,7 @@ resource "azuread_service_principal" "test" {
     custom_single_sign_on = true
     enterprise            = true
     gallery               = true
+	global_secure_access  = true
     hide                  = true
   }
 }
@@ -511,6 +512,7 @@ resource "azuread_service_principal" "test" {
     custom_single_sign_on = false
     enterprise            = false
     gallery               = false
+	global_secure_access  = false
     hide                  = false
   }
 

@@ -6,6 +6,7 @@ package applications
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -65,6 +66,12 @@ func ExpandFeatures(in []interface{}) []string {
 		out = append(out, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1")
 	} else if v, ok := features["gallery_application"]; ok && v.(bool) { // TODO: remove in v3.0
 		out = append(out, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1")
+	}
+
+	if v, ok := features["global_secure_access"]; ok && v.(bool) {
+		out = slices.Concat(out, []string{"IsAccessibleViaZTNAClient", "PrivateAccessNonWebApplication"})
+	} else if v, ok := features["global_secure_access_application"]; ok && v.(bool) { // TODO: remove in v3.0
+		out = slices.Concat(out, []string{"IsAccessibleViaZTNAClient", "PrivateAccessNonWebApplication"})
 	}
 
 	if v, ok := features["hide"]; ok && v.(bool) {
@@ -128,29 +135,38 @@ func FlattenFeatures(tags *[]string, deprecated bool) []interface{} {
 	// TODO: remove this in v3.0
 	if deprecated {
 		result := map[string]bool{
-			"custom_single_sign_on_app": false,
-			"enterprise_application":    false,
-			"gallery_application":       false,
-			"visible_to_users":          true,
+			"custom_single_sign_on_app":        false,
+			"enterprise_application":           false,
+			"gallery_application":              false,
+			"global_secure_access_application": false,
+			"visible_to_users":                 true,
 		}
 
 		if tags == nil || len(*tags) == 0 {
 			return []interface{}{result}
 		}
 
-		for _, tag := range *tags {
-			if strings.EqualFold(tag, "WindowsAzureActiveDirectoryCustomSingleSignOnApplication") {
+		lowerTags := make([]string, len(*tags))
+		for i, tag := range *tags {
+			lowerTags[i] = strings.ToLower(tag)
+		}
+
+		for _, tag := range lowerTags {
+			if tag == strings.ToLower("WindowsAzureActiveDirectoryCustomSingleSignOnApplication") {
 				result["custom_single_sign_on_app"] = true
 			}
-			if strings.EqualFold(tag, "WindowsAzureActiveDirectoryIntegratedApp") {
+			if tag == strings.ToLower("WindowsAzureActiveDirectoryIntegratedApp") {
 				result["enterprise_application"] = true
 			}
-			if strings.EqualFold(tag, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1") {
+			if tag == strings.ToLower("WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1") {
 				result["gallery_application"] = true
 			}
-			if strings.EqualFold(tag, "HideApp") {
+			if tag == strings.ToLower("HideApp") {
 				result["visible_to_users"] = false
 			}
+		}
+		if slices.Contains(lowerTags, strings.ToLower("IsAccessibleViaZTNAClient")) && slices.Contains(lowerTags, strings.ToLower("PrivateAccessNonWebApplication")) {
+			result["global_secure_access_application"] = true
 		}
 
 		return []interface{}{result}
@@ -160,24 +176,32 @@ func FlattenFeatures(tags *[]string, deprecated bool) []interface{} {
 		"custom_single_sign_on": false,
 		"enterprise":            false,
 		"gallery":               false,
+		"global_secure_access":  false,
 		"hide":                  false,
 	}
 
 	if tags == nil || len(*tags) == 0 {
 		return []interface{}{result}
 	}
+	lowerTags := make([]string, len(*tags))
+	for i, tag := range *tags {
+		lowerTags[i] = strings.ToLower(tag)
+	}
 
-	for _, tag := range *tags {
+	for _, tag := range lowerTags {
 		switch {
-		case strings.EqualFold(tag, "WindowsAzureActiveDirectoryCustomSingleSignOnApplication"):
+		case tag == strings.ToLower("WindowsAzureActiveDirectoryCustomSingleSignOnApplication"):
 			result["custom_single_sign_on"] = true
-		case strings.EqualFold(tag, "WindowsAzureActiveDirectoryIntegratedApp"):
+		case tag == strings.ToLower("WindowsAzureActiveDirectoryIntegratedApp"):
 			result["enterprise"] = true
-		case strings.EqualFold(tag, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1"):
+		case tag == strings.ToLower("WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1"):
 			result["gallery"] = true
-		case strings.EqualFold(tag, "HideApp"):
+		case tag == strings.ToLower("HideApp"):
 			result["hide"] = true
 		}
+	}
+	if slices.Contains(lowerTags, strings.ToLower("IsAccessibleViaZTNAClient")) && slices.Contains(lowerTags, strings.ToLower("PrivateAccessNonWebApplication")) {
+		result["global_secure_access"] = true
 	}
 
 	return []interface{}{result}
