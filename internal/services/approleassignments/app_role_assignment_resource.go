@@ -6,8 +6,10 @@ package approleassignments
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -102,6 +105,19 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 	}
 }
 
+// appRoleAssignmentExistsError is returned by Microsoft Graph when an assignment for the same
+// app role and principal is already present on the resource service principal.
+const appRoleAssignmentExistsError = "Permission being assigned already exists on the object"
+
+// defaultAppRoleId assigns a principal to the resource app without any specific app role, and is
+// never present in the resource service principal's appRoles collection.
+const defaultAppRoleId = "00000000-0000-0000-0000-000000000000"
+
+// appRoleConsistencyTimeout bounds how long to wait for a newly created app role to replicate.
+// It is deliberately short: the wait is an optimisation, and an app role that never appears is
+// better reported by the API than by a timeout here.
+const appRoleConsistencyTimeout = 1 * time.Minute
+
 func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
 	servicePrincipalClient := meta.(*clients.Client).AppRoleAssignments.ServicePrincipalClient
@@ -110,11 +126,43 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 	principalId := d.Get("principal_object_id").(string)
 	resourceId := d.Get("resource_object_id").(string)
 
-	if resp, err := servicePrincipalClient.GetServicePrincipal(ctx, stable.NewServicePrincipalID(resourceId), serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
+	servicePrincipalId := stable.NewServicePrincipalID(resourceId)
+
+	if resp, err := servicePrincipalClient.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagPathF(err, "principal_object_id", "Service principal not found for resource (Object ID: %q)", resourceId)
 		}
 		return tf.ErrorDiagF(err, "Could not retrieve service principal for resource (Object ID: %q)", resourceId)
+	}
+
+	// An app role created moments ago is not yet visible on every Graph replica. Letting it
+	// settle first keeps the create request below off its retry path, which is where duplicate
+	// assignments come from. Best effort: if the role never appears the request is sent anyway,
+	// so an app_role_id that is simply wrong is still reported by the API rather than as a
+	// timeout here.
+	if appRoleId != defaultAppRoleId {
+		if _, err := consistency.WaitForUpdateWithTimeout(ctx, appRoleConsistencyTimeout, func(ctx context.Context) (*bool, error) {
+			resp, err := servicePrincipalClient.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+			if err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
+					return pointer.To(false), nil
+				}
+				return nil, err
+			}
+			if resp.Model == nil || resp.Model.AppRoles == nil {
+				return pointer.To(false), nil
+			}
+
+			for _, appRole := range *resp.Model.AppRoles {
+				if strings.EqualFold(pointer.From(appRole.Id), appRoleId) {
+					return pointer.To(true), nil
+				}
+			}
+
+			return pointer.To(false), nil
+		}); err != nil {
+			log.Printf("[DEBUG] App role %q not yet visible on service principal %q, continuing anyway: %v", appRoleId, resourceId, err)
+		}
 	}
 
 	properties := stable.AppRoleAssignment{
@@ -123,19 +171,52 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 		ResourceId:  nullable.Value(resourceId),
 	}
 
+	// Graph reports a service principal or app role that has not finished replicating as missing,
+	// so the request below is retried. That request is a POST and is not idempotent, which means
+	// an attempt that did land can be replayed and answered with appRoleAssignmentExistsError.
+	// Track whether a retry happened so the two ways of reaching that error stay distinguishable.
+	retried := false
+
 	options := approleassignedto.CreateAppRoleAssignedToOperationOptions{
 		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			retry := false
 			if response.WasNotFound(resp) {
-				return true, nil
+				retry = true
 			} else if response.WasBadRequest(resp) && o != nil && o.Error != nil {
-				return o.Error.Match("Not a valid reference update"), nil
+				retry = o.Error.Match("Not a valid reference update")
 			}
-			return false, nil
+			if retry {
+				retried = true
+			}
+			return retry, nil
 		},
 	}
 
-	resp, err := client.CreateAppRoleAssignedTo(ctx, stable.NewServicePrincipalID(resourceId), properties, options)
+	resp, err := client.CreateAppRoleAssignedTo(ctx, servicePrincipalId, properties, options)
 	if err != nil {
+		if response.WasBadRequest(resp.HttpResponse) && resp.OData != nil && resp.OData.Error != nil && resp.OData.Error.Match(appRoleAssignmentExistsError) {
+			existingId, findErr := findAppRoleAssignment(ctx, client, servicePrincipalId, appRoleId, principalId)
+			if findErr != nil {
+				return tf.ErrorDiagF(findErr, "Could not create app role assignment")
+			}
+
+			if existingId != nil {
+				if !retried {
+					// Nothing this provider did created the assignment, so it needs importing
+					// rather than adopting.
+					return tf.ImportAsExistsDiag("azuread_app_role_assignment", existingId.ID())
+				}
+
+				// A retried attempt landed after all. Adopting it is the only way the caller can
+				// end up managing the assignment, since the ID is server generated and an
+				// assignment left unmanaged here fails every subsequent apply the same way.
+				log.Printf("[DEBUG] Adopting %s, which a retried create request had already made", existingId)
+				d.SetId(existingId.ID())
+
+				return appRoleAssignmentResourceRead(ctx, d, meta)
+			}
+		}
+
 		return tf.ErrorDiagF(err, "Could not create app role assignment")
 	}
 
@@ -204,4 +285,32 @@ func appRoleAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceD
 	}
 
 	return nil
+}
+
+// findAppRoleAssignment returns the ID of the assignment of appRoleId to principalId on the given
+// resource service principal, or nil when no such assignment exists. Graph does not support
+// filtering appRoleAssignedTo on appRoleId or principalId, so the collection is matched locally.
+func findAppRoleAssignment(ctx context.Context, client *approleassignedto.AppRoleAssignedToClient, servicePrincipalId stable.ServicePrincipalId, appRoleId, principalId string) (*stable.ServicePrincipalIdAppRoleAssignedToId, error) {
+	resp, err := client.ListAppRoleAssignedTosComplete(ctx, servicePrincipalId, approleassignedto.DefaultListAppRoleAssignedTosOperationOptions())
+	if err != nil {
+		return nil, fmt.Errorf("listing app role assignments for %s: %+v", servicePrincipalId, err)
+	}
+
+	for _, assignment := range resp.Items {
+		if assignment.Id == nil || *assignment.Id == "" {
+			continue
+		}
+		if !strings.EqualFold(pointer.From(assignment.AppRoleId), appRoleId) {
+			continue
+		}
+		if !strings.EqualFold(assignment.PrincipalId.GetOrZero(), principalId) {
+			continue
+		}
+
+		id := stable.NewServicePrincipalIdAppRoleAssignedToID(servicePrincipalId.ServicePrincipalId, *assignment.Id)
+
+		return &id, nil
+	}
+
+	return nil, nil
 }
