@@ -52,6 +52,22 @@ func TestAccGroup_basicUnified(t *testing.T) {
 	})
 }
 
+func TestAccGroup_mailNicknameFromUnknownValue(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.mailNicknameFromUnknownValue(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccGroup_completeUnified(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
@@ -637,6 +653,26 @@ resource "azuread_group" "test" {
   types            = ["Unified"]
   mail_enabled     = true
   mail_nickname    = "acctest.Group-%[1]d"
+  security_enabled = false
+}
+`, data.RandomInteger)
+}
+
+func (GroupResource) mailNicknameFromUnknownValue(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+provider "random" {}
+
+resource "random_string" "test" {
+  length  = 8
+  special = false
+}
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  types            = ["Unified"]
+  mail_enabled     = true
+  mail_nickname    = "acctest.Group-%[1]d-${random_string.test.result}"
   security_enabled = false
 }
 `, data.RandomInteger)
