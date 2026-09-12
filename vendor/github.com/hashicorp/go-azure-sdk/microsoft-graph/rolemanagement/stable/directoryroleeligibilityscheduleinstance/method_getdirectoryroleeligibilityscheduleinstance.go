@@ -1,4 +1,4 @@
-package directoryroleeligibilityschedule
+package directoryroleeligibilityscheduleinstance
 
 import (
 	"context"
@@ -12,30 +12,30 @@ import (
 // Copyright IBM Corp. 2021, 2025 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
-type GetDirectoryRoleEligibilityScheduleOperationResponse struct {
+type GetDirectoryRoleEligibilityScheduleInstanceOperationResponse struct {
 	HttpResponse *http.Response
 	OData        *odata.OData
-	Model        *stable.UnifiedRoleEligibilitySchedule
+	Model        *stable.UnifiedRoleEligibilityScheduleInstance
 }
 
-type GetDirectoryRoleEligibilityScheduleOperationOptions struct {
+type GetDirectoryRoleEligibilityScheduleInstanceOperationOptions struct {
 	Expand    *odata.Expand
 	Metadata  *odata.Metadata
 	RetryFunc client.RequestRetryFunc
 	Select    *[]string
 }
 
-func DefaultGetDirectoryRoleEligibilityScheduleOperationOptions() GetDirectoryRoleEligibilityScheduleOperationOptions {
-	return GetDirectoryRoleEligibilityScheduleOperationOptions{}
+func DefaultGetDirectoryRoleEligibilityScheduleInstanceOperationOptions() GetDirectoryRoleEligibilityScheduleInstanceOperationOptions {
+	return GetDirectoryRoleEligibilityScheduleInstanceOperationOptions{}
 }
 
-func (o GetDirectoryRoleEligibilityScheduleOperationOptions) ToHeaders() *client.Headers {
+func (o GetDirectoryRoleEligibilityScheduleInstanceOperationOptions) ToHeaders() *client.Headers {
 	out := client.Headers{}
 
 	return &out
 }
 
-func (o GetDirectoryRoleEligibilityScheduleOperationOptions) ToOData() *odata.Query {
+func (o GetDirectoryRoleEligibilityScheduleInstanceOperationOptions) ToOData() *odata.Query {
 	out := odata.Query{}
 	if o.Expand != nil {
 		out.Expand = *o.Expand
@@ -49,15 +49,15 @@ func (o GetDirectoryRoleEligibilityScheduleOperationOptions) ToOData() *odata.Qu
 	return &out
 }
 
-func (o GetDirectoryRoleEligibilityScheduleOperationOptions) ToQuery() *client.QueryParams {
+func (o GetDirectoryRoleEligibilityScheduleInstanceOperationOptions) ToQuery() *client.QueryParams {
 	out := client.QueryParams{}
 
 	return &out
 }
 
-// GetDirectoryRoleEligibilitySchedule - Get unifiedRoleEligibilitySchedule. Retrieve the schedule for a role
-// eligibility operation.
-func (c DirectoryRoleEligibilityScheduleClient) GetDirectoryRoleEligibilitySchedule(ctx context.Context, id stable.RoleManagementDirectoryRoleEligibilityScheduleId, options GetDirectoryRoleEligibilityScheduleOperationOptions) (result GetDirectoryRoleEligibilityScheduleOperationResponse, err error) {
+// GetDirectoryRoleEligibilityScheduleInstance - Get unifiedRoleEligibilityScheduleInstance. Get the instance of a role
+// eligibility.
+func (c DirectoryRoleEligibilityScheduleInstanceClient) GetDirectoryRoleEligibilityScheduleInstance(ctx context.Context, id stable.RoleManagementDirectoryRoleEligibilityScheduleInstanceId, options GetDirectoryRoleEligibilityScheduleInstanceOperationOptions) (result GetDirectoryRoleEligibilityScheduleInstanceOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
@@ -84,7 +84,7 @@ func (c DirectoryRoleEligibilityScheduleClient) GetDirectoryRoleEligibilitySched
 		return
 	}
 
-	var model stable.UnifiedRoleEligibilitySchedule
+	var model stable.UnifiedRoleEligibilityScheduleInstance
 	result.Model = &model
 	if err = resp.Unmarshal(result.Model); err != nil {
 		return

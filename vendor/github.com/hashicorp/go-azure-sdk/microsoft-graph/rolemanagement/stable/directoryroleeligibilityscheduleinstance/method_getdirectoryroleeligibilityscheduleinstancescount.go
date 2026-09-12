@@ -1,4 +1,4 @@
-package directoryroleeligibilityschedule
+package directoryroleeligibilityscheduleinstance
 
 import (
 	"context"
@@ -11,30 +11,30 @@ import (
 // Copyright IBM Corp. 2021, 2025 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
-type GetDirectoryRoleEligibilitySchedulesCountOperationResponse struct {
+type GetDirectoryRoleEligibilityScheduleInstancesCountOperationResponse struct {
 	HttpResponse *http.Response
 	OData        *odata.OData
 	Model        *[]byte
 }
 
-type GetDirectoryRoleEligibilitySchedulesCountOperationOptions struct {
+type GetDirectoryRoleEligibilityScheduleInstancesCountOperationOptions struct {
 	Filter    *string
 	Metadata  *odata.Metadata
 	RetryFunc client.RequestRetryFunc
 	Search    *string
 }
 
-func DefaultGetDirectoryRoleEligibilitySchedulesCountOperationOptions() GetDirectoryRoleEligibilitySchedulesCountOperationOptions {
-	return GetDirectoryRoleEligibilitySchedulesCountOperationOptions{}
+func DefaultGetDirectoryRoleEligibilityScheduleInstancesCountOperationOptions() GetDirectoryRoleEligibilityScheduleInstancesCountOperationOptions {
+	return GetDirectoryRoleEligibilityScheduleInstancesCountOperationOptions{}
 }
 
-func (o GetDirectoryRoleEligibilitySchedulesCountOperationOptions) ToHeaders() *client.Headers {
+func (o GetDirectoryRoleEligibilityScheduleInstancesCountOperationOptions) ToHeaders() *client.Headers {
 	out := client.Headers{}
 
 	return &out
 }
 
-func (o GetDirectoryRoleEligibilitySchedulesCountOperationOptions) ToOData() *odata.Query {
+func (o GetDirectoryRoleEligibilityScheduleInstancesCountOperationOptions) ToOData() *odata.Query {
 	out := odata.Query{}
 	if o.Filter != nil {
 		out.Filter = *o.Filter
@@ -48,14 +48,14 @@ func (o GetDirectoryRoleEligibilitySchedulesCountOperationOptions) ToOData() *od
 	return &out
 }
 
-func (o GetDirectoryRoleEligibilitySchedulesCountOperationOptions) ToQuery() *client.QueryParams {
+func (o GetDirectoryRoleEligibilityScheduleInstancesCountOperationOptions) ToQuery() *client.QueryParams {
 	out := client.QueryParams{}
 
 	return &out
 }
 
-// GetDirectoryRoleEligibilitySchedulesCount - Get the number of the resource
-func (c DirectoryRoleEligibilityScheduleClient) GetDirectoryRoleEligibilitySchedulesCount(ctx context.Context, options GetDirectoryRoleEligibilitySchedulesCountOperationOptions) (result GetDirectoryRoleEligibilitySchedulesCountOperationResponse, err error) {
+// GetDirectoryRoleEligibilityScheduleInstancesCount - Get the number of the resource
+func (c DirectoryRoleEligibilityScheduleInstanceClient) GetDirectoryRoleEligibilityScheduleInstancesCount(ctx context.Context, options GetDirectoryRoleEligibilityScheduleInstancesCountOperationOptions) (result GetDirectoryRoleEligibilityScheduleInstancesCountOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "text/plain",
 		ExpectedStatusCodes: []int{
@@ -63,7 +63,7 @@ func (c DirectoryRoleEligibilityScheduleClient) GetDirectoryRoleEligibilitySched
 		},
 		HttpMethod:    http.MethodGet,
 		OptionsObject: options,
-		Path:          "/roleManagement/directory/roleEligibilitySchedules/$count",
+		Path:          "/roleManagement/directory/roleEligibilityScheduleInstances/$count",
 		RetryFunc:     options.RetryFunc,
 	}
 
