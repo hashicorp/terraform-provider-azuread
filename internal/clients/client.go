@@ -23,6 +23,7 @@ import (
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
 	approleassignments "github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/client"
 	conditionalaccess "github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess/client"
+	customsecurityattributes "github.com/hashicorp/terraform-provider-azuread/internal/services/customsecurityattributes/client"
 	directoryobjects "github.com/hashicorp/terraform-provider-azuread/internal/services/directoryobjects/client"
 	directoryroles "github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/client"
 	domains "github.com/hashicorp/terraform-provider-azuread/internal/services/domains/client"
@@ -48,21 +49,22 @@ type Client struct {
 
 	StopContext context.Context
 
-	AdministrativeUnits *administrativeunits.Client
-	Applications        *applications.Client
-	AppRoleAssignments  *approleassignments.Client
-	ConditionalAccess   *conditionalaccess.Client
-	DirectoryObjects    *directoryobjects.Client
-	DirectoryRoles      *directoryroles.Client
-	Domains             *domains.Client
-	Groups              *groups.Client
-	IdentityGovernance  *identitygovernance.Client
-	Invitations         *invitations.Client
-	Policies            *policies.Client
-	ServicePrincipals   *serviceprincipals.Client
-	Synchronization     *synchronization.Client
-	UserFlows           *userflows.Client
-	Users               *users.Client
+	AdministrativeUnits      *administrativeunits.Client
+	Applications             *applications.Client
+	AppRoleAssignments       *approleassignments.Client
+	ConditionalAccess        *conditionalaccess.Client
+	CustomSecurityAttributes *customsecurityattributes.Client
+	DirectoryObjects         *directoryobjects.Client
+	DirectoryRoles           *directoryroles.Client
+	Domains                  *domains.Client
+	Groups                   *groups.Client
+	IdentityGovernance       *identitygovernance.Client
+	Invitations              *invitations.Client
+	Policies                 *policies.Client
+	ServicePrincipals        *serviceprincipals.Client
+	Synchronization          *synchronization.Client
+	UserFlows                *userflows.Client
+	Users                    *users.Client
 }
 
 func (client *Client) build(ctx context.Context, o *common.ClientOptions) error {
@@ -81,6 +83,9 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	}
 	if client.ConditionalAccess, err = conditionalaccess.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for ConditionalAccess: %v", err)
+	}
+	if client.CustomSecurityAttributes, err = customsecurityattributes.NewClient(o); err != nil {
+		return fmt.Errorf("building clients for CustomSecurityAttributes: %v", err)
 	}
 	if client.DirectoryObjects, err = directoryobjects.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for DirectoryObjects: %v", err)
