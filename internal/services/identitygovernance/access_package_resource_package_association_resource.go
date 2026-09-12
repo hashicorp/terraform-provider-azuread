@@ -8,13 +8,16 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageaccesspackageresourcerolescope"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogaccesspackageresource"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
@@ -57,15 +60,35 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 			},
 
 			"access_type": {
-				Description: "The role of access type to the specified resource, valid values are `Member` and `Owner`",
+				Description:   "The role of access type to the specified resource. Valid values are `Member`, `Owner`, `Eligible Member` and `Eligible Owner`. Cannot be used together with `resource_role_origin_id`",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Default:       "Member",
+				ConflictsWith: []string{"resource_role_origin_id"},
+				ValidateFunc: validation.StringInSlice(
+					[]string{
+						"Member",
+						"Owner",
+						"Eligible Member",
+						"Eligible Owner",
+					}, false,
+				),
+			},
+
+			"resource_role_origin_id": {
+				Description:   "The origin ID of the resource role (AppRole ID) for application resources. Cannot be used together with `access_type`",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"access_type"},
+				ValidateFunc:  validation.IsUUID,
+			},
+
+			"resource_role_display_name": {
+				Description: "The display name of the resource role",
 				Type:        pluginsdk.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Default:     "Member",
-				ValidateFunc: validation.StringInSlice([]string{
-					"Member",
-					"Owner",
-				}, false),
+				Computed:    true,
 			},
 		},
 	}
@@ -82,6 +105,7 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 	}
 
 	accessType := d.Get("access_type").(string)
+	resourceRoleOriginId := d.Get("resource_role_origin_id").(string)
 	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(d.Get("access_package_id").(string))
 
 	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(catalogResourceAssociationId.CatalogId)
@@ -99,39 +123,123 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 
 	resource := pointer.To((*resourceResp.Model)[0])
 
-	properties := beta.AccessPackageResourceRoleScope{
-		AccessPackageResourceRole: &beta.AccessPackageResourceRole{
-			DisplayName:  nullable.NoZero(accessType),
-			OriginId:     nullable.Value(fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)),
-			OriginSystem: resource.OriginSystem,
-			AccessPackageResource: &beta.AccessPackageResource{
-				Id:           resource.Id,
-				ResourceType: resource.ResourceType,
-				OriginId:     resource.OriginId,
+	var properties beta.AccessPackageResourceRoleScope
+
+	originSystem := resource.OriginSystem.GetOrZero()
+
+	if resourceRoleOriginId != "" {
+		// Application resource role (AppRole)
+		if originSystem != "AadApplication" {
+			return tf.ErrorDiagPathF(nil, "resource_role_origin_id", "`resource_role_origin_id` can only be used with application resources (AadApplication), but the resource origin system is %q", originSystem)
+		}
+
+		// For AadApplication, the catalog resource originId is the service principal object ID.
+		// We look up AppRoles on the service principal.
+		spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+		spId := stable.NewServicePrincipalID(catalogResourceAssociationId.OriginId)
+		spResp, err := spClient.GetServicePrincipal(ctx, spId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		if err != nil {
+			return tf.ErrorDiagF(err, "Retrieving Service Principal %s", spId)
+		}
+		if spResp.Model == nil {
+			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving Service Principal %s", spId)
+		}
+		sp := spResp.Model
+
+		var roleDisplayName, roleDescription string
+		var found bool
+
+		if sp.AppRoles != nil {
+			for _, appRole := range *sp.AppRoles {
+				if appRole.Id != nil && *appRole.Id == resourceRoleOriginId {
+					roleDisplayName = appRole.DisplayName.GetOrZero()
+					roleDescription = appRole.Description.GetOrZero()
+					found = true
+					break
+				}
+			}
+		}
+
+		if !found {
+			var availableRoles []string
+			if sp.AppRoles != nil {
+				for _, appRole := range *sp.AppRoles {
+					if appRole.Id != nil {
+						availableRoles = append(availableRoles, fmt.Sprintf("%s (%s)", appRole.DisplayName.GetOrZero(), *appRole.Id))
+					}
+				}
+			}
+			return tf.ErrorDiagPathF(
+				nil, "resource_role_origin_id",
+				"No AppRole with ID %q found on Service Principal %s. Available AppRoles: %s",
+				resourceRoleOriginId, spId, strings.Join(availableRoles, ", "),
+			)
+		}
+
+		properties = beta.AccessPackageResourceRoleScope{
+			AccessPackageResourceRole: &beta.AccessPackageResourceRole{
+				DisplayName:  nullable.NoZero(roleDisplayName),
+				Description:  nullable.NoZero(roleDescription),
+				OriginId:     nullable.Value(resourceRoleOriginId),
+				OriginSystem: resource.OriginSystem,
+				AccessPackageResource: &beta.AccessPackageResource{
+					Id:           resource.Id,
+					ResourceType: resource.ResourceType,
+					OriginId:     resource.OriginId,
+				},
 			},
-		},
-		AccessPackageResourceScope: &beta.AccessPackageResourceScope{
-			OriginSystem: resource.OriginSystem,
-			OriginId:     nullable.Value(catalogResourceAssociationId.OriginId),
-		},
+			AccessPackageResourceScope: &beta.AccessPackageResourceScope{
+				OriginSystem: resource.OriginSystem,
+				OriginId:     nullable.Value(catalogResourceAssociationId.OriginId),
+			},
+		}
+	} else {
+		// Group resource role (Member, Owner, Eligible Member, Eligible Owner)
+		// Strip spaces for the originId prefix: "Eligible Member" -> "EligibleMember"
+		originIdPrefix := strings.ReplaceAll(accessType, " ", "")
+
+		properties = beta.AccessPackageResourceRoleScope{
+			AccessPackageResourceRole: &beta.AccessPackageResourceRole{
+				DisplayName:  nullable.NoZero(accessType),
+				OriginId:     nullable.Value(fmt.Sprintf("%s_%s", originIdPrefix, catalogResourceAssociationId.OriginId)),
+				OriginSystem: resource.OriginSystem,
+				AccessPackageResource: &beta.AccessPackageResource{
+					Id:           resource.Id,
+					ResourceType: resource.ResourceType,
+					OriginId:     resource.OriginId,
+				},
+			},
+			AccessPackageResourceScope: &beta.AccessPackageResourceScope{
+				OriginSystem: resource.OriginSystem,
+				OriginId:     nullable.Value(catalogResourceAssociationId.OriginId),
+			},
+		}
 	}
 
 	createMsg := `Creating Access Package Resource Association from resource %q@%q to access package %q`
 
 	resp, err := client.CreateEntitlementManagementAccessPackageResourceRoleScope(ctx, accessPackageId, properties, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultCreateEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+		return tf.ErrorDiagF(err, createMsg, catalogResourceAssociationId.OriginId, originSystem, accessPackageId)
 	}
 
 	resourceRoleScope := resp.Model
 	if resourceRoleScope == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+		return tf.ErrorDiagF(errors.New("model was nil"), createMsg, catalogResourceAssociationId.OriginId, originSystem, accessPackageId)
 	}
 	if resourceRoleScope.Id == nil {
-		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg, catalogResourceAssociationId.OriginId, originSystem, accessPackageId)
 	}
 
-	resourceId := parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, accessType)
+	var resourceId parse.AccessPackageResourcePackageAssociationId
+	if resourceRoleOriginId != "" {
+		resourceId = parse.NewAccessPackageResourcePackageAssociationIDWithRoleOrigin(
+			accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, resourceRoleOriginId,
+		)
+	} else {
+		resourceId = parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, accessType)
+	}
+
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
 
 	// Poll for AccessPackageResourceRoleScope
@@ -186,8 +294,17 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 	catalogResourceAssociationId := parse.NewAccessPackageResourceCatalogAssociationID(accessPackage.CatalogId.GetOrZero(), resourceId.OriginId)
 
 	tf.Set(d, "access_package_id", resourceId.AccessPackageId)
-	tf.Set(d, "access_type", resourceId.AccessType)
 	tf.Set(d, "catalog_resource_association_id", catalogResourceAssociationId.ID())
+
+	if resourceId.RoleOriginId != "" {
+		tf.Set(d, "resource_role_origin_id", resourceId.RoleOriginId)
+		// Read the display name from the role scope
+		if roleScope.AccessPackageResourceRole != nil {
+			tf.Set(d, "resource_role_display_name", roleScope.AccessPackageResourceRole.DisplayName.GetOrZero())
+		}
+	} else {
+		tf.Set(d, "access_type", resourceId.AccessType)
+	}
 
 	return nil
 }
