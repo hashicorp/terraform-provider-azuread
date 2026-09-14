@@ -24,9 +24,11 @@ class serviceDetails(name: String, displayName: String, environment: String, vcs
             }
 
             steps {
+                SetBuildStartTime()
                 ConfigureGoEnv()
                 DownloadTerraformBinary()
                 RunAcceptanceTests(packageName)
+                PostTestResultsToGitHubPullRequest()
             }
 
             failureConditions {
@@ -43,6 +45,7 @@ class serviceDetails(name: String, displayName: String, environment: String, vcs
                 TerraformCoreBinaryTesting()
                 TerraformShouldPanicForSchemaErrors()
                 ReadOnlySettings()
+                BuildStartTime()
                 WorkingDirectory(packageName)
             }
 

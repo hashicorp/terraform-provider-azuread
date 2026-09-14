@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package serviceprincipals
@@ -275,8 +275,9 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 	newKeyCredentials := make([]stable.KeyCredential, 0)
 	if servicePrincipal.KeyCredentials != nil {
 		for _, cred := range *servicePrincipal.KeyCredentials {
-			if !strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
+			if strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
 				customKeyId = cred.CustomKeyIdentifier.GetOrZero()
+				break
 			}
 		}
 		for _, cred := range *servicePrincipal.KeyCredentials {

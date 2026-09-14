@@ -1,0 +1,68 @@
+---
+name: TeamCity Config Test
+
+# Validates the .teamcity/ Kotlin DSL configuration (Maven test run) whenever it
+# changes.
+# Display name is matched by the workflow_run list in pr-waiting-response-on-ci-fail.yaml.
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+on:
+  pull_request:
+    types: ['opened', 'synchronize']
+    paths:
+      - '.github/workflows/teamcity-test.yaml'
+      - '!.teamcity/components/generated/**'
+      - '!.teamcity/target/**'
+      - '.teamcity/**'
+
+concurrency:
+  group: 'tctest-${{ github.head_ref }}'
+  cancel-in-progress: true
+
+jobs:
+  teamcity-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: zulu
+          java-version: 21
+          java-package: jdk
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - run: make teamcity-test
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::TeamCity Config Test failed."
+          echo ""
+          echo "Run 'make teamcity-test' locally (requires Java 21 and Maven) to validate"
+          echo "the TeamCity Kotlin DSL under .teamcity/."
+
+  save-artifacts-on-fail:
+    needs: teamcity-test
+    if: ${{ failure() }}
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  comment-on-fail:
+    needs: teamcity-test
+    if: ${{ failure() }}
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "TeamCity Config Test"
+
+  comment-outdated-on-pass:
+    needs: teamcity-test
+    if: ${{ success() }}
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "TeamCity Config Test"

@@ -1,0 +1,30 @@
+name: Markdown Lint
+
+# markdownlint over the repo's markdown (docs guides and index, README, .github).
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: ['opened', 'synchronize']
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - '.github/**/*.md'
+      - '.markdownlint.yml'
+      - '.github/workflows/pr-check-markdown.yaml'
+      - 'GNUmakefile'
+
+concurrency:
+  group: 'pr-check-markdown-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Install markdownlint-cli2
+        run: npm install -g markdownlint-cli2@0.23.2
+      - run: make markdownlint

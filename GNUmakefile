@@ -2,6 +2,10 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 TESTTIMEOUT=180m
 TF_SCHEMA_PANIC_ON_ERROR=1
 
+# The single source of truth for the actionlint version is the go install pin
+# in .github/workflows/workflow-actionlint.yml.
+ACTIONLINT_VERSION := $(shell sed -n 's/.*actionlint\/cmd\/actionlint@//p' .github/workflows/workflow-actionlint.yml)
+
 .EXPORT_ALL_VARIABLES:
 
 default: build
@@ -26,6 +30,7 @@ tools: ## Install the tools required to develop the provider
 	go install github.com/bflad/tfproviderdocs@latest
 	go install github.com/katbyte/terrafmt@latest
 	go install mvdan.cc/gofumpt@latest
+	go install github.com/rhysd/actionlint/cmd/actionlint@$(ACTIONLINT_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH || $$GOPATH)/bin v2.12.2
 
 build: quick-checks generate ## Run the quick checks, generate code, and compile the provider
@@ -94,6 +99,16 @@ tfproviderlint: ## Check terraform schema definitions with tfproviderlint
         ./internal/...
 	@sh -c "'$(CURDIR)/scripts/checks/terrafmt-acctests.sh'"
 
+yamllint: ## Check YAML files with yamllint (config in .yamllint.yml)
+	@command -v yamllint >/dev/null || (echo "yamllint not installed. Install via: brew install yamllint (macOS) or pip install yamllint" && exit 1)
+	@echo "==> Checking YAML files with yamllint..."
+	@yamllint -s .
+
+actionlint: ## Check GitHub workflows with actionlint (incl. shellcheck on run blocks)
+	@command -v actionlint >/dev/null || (echo "actionlint not installed. Install via 'make tools' or: go install github.com/rhysd/actionlint/cmd/actionlint@$(ACTIONLINT_VERSION)" && exit 1)
+	@echo "==> Checking workflows with actionlint..."
+	@actionlint
+
 shellcheck: ## Check shell scripts with shellcheck
 	@command -v shellcheck >/dev/null || (echo "shellcheck not installed. Install via: brew install shellcheck (macOS) or apt install shellcheck (Linux)" && exit 1)
 	@echo "==> Checking shell scripts with shellcheck..."
@@ -124,6 +139,16 @@ debugacc: ## Run acceptance tests under the delve debugger (TEST=./internal/serv
 	TF_ACC=1 dlv test $(TEST) --headless --listen=:2345 --api-version=2 -- -test.v $(TESTARGS)
 
 ##@ Documentation
+# markdown checked by markdownlint: docs guides and index, README, and the .github markdown
+# (PR/issue templates etc). The resource/data-source docs are exempt for now (leading \# ignore
+# glob, \# escapes the hash from make) - they carry a large backlog of emphasis-style findings.
+MARKDOWN_INPUTS='docs/**/*.md' README.md '.github/**/*.md' '\#docs/resources' '\#docs/data-sources'
+
+markdownlint: ## Check repo markdown with markdownlint (config in .markdownlint.yml)
+	@command -v markdownlint-cli2 >/dev/null || (echo "markdownlint-cli2 not installed. Install via: brew install markdownlint-cli2 (macOS) or npm install -g markdownlint-cli2" && exit 1)
+	@echo "==> Checking markdown with markdownlint..."
+	@markdownlint-cli2 $(MARKDOWN_INPUTS)
+
 docs-lint: ## Check the documentation for issues
 	@echo "==> Checking documentation spelling..."
 	@misspell -error -source=text -i hdinsight docs/
@@ -145,4 +170,4 @@ todo: ## List all TODOs in the codebase
 
 pr-check: generate build test lint tfproviderlint docs-lint ## Run the same set of checks CI runs against a PR
 
-.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix shellcheck depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
+.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix actionlint yamllint markdownlint shellcheck depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
