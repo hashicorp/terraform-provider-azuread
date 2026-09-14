@@ -20,7 +20,7 @@ func NewGroupLicenseID(groupId, skuId string) GroupLicenseId {
 }
 
 func (id GroupLicenseId) ID() string {
-	return id.ObjectSubResourceId.String()
+	return id.String()
 }
 
 func GroupLicenseID(idString string) (*GroupLicenseId, error) {
