@@ -33,9 +33,7 @@ class buildCacheConfiguration(environment: String, vcsRootId: String) {
             triggers {
                 RunNightly(
                     nightlyTestsEnabled = true,
-                    startHour = 22,
-                    daysOfWeek = "*",
-                    daysOfMonth = "*"
+                    startHour = 23
                 )
             }
 

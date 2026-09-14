@@ -13,7 +13,7 @@ fun AzureAD(environment: String, config : ClientConfiguration) : Project {
         var pullRequestBuildConfig = pullRequestBuildConfiguration(environment, config)
         buildType(pullRequestBuildConfig)
 
-        var cacheBuildConfig = buildConfigurationForCache(environment, configuration)
+        var cacheBuildConfig = buildConfigurationForCache(environment, config)
         buildType(cacheBuildConfig)
 
         var buildConfigs = buildConfigurationsForServices(services, providerName, environment, config)
