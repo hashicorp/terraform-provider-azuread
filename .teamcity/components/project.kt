@@ -13,6 +13,9 @@ fun AzureAD(environment: String, config : ClientConfiguration) : Project {
         var pullRequestBuildConfig = pullRequestBuildConfiguration(environment, config)
         buildType(pullRequestBuildConfig)
 
+        var cacheBuildConfig = buildConfigurationForCache(environment, configuration)
+        buildType(cacheBuildConfig)
+
         var buildConfigs = buildConfigurationsForServices(services, providerName, environment, config)
         buildConfigs.forEach { buildConfiguration ->
             buildType(buildConfiguration)
@@ -48,6 +51,10 @@ fun pullRequestBuildConfiguration(environment: String, config: ClientConfigurati
     buildConfiguration.params.ConfigureAzureSpecificTestParameters(environment, config, locationsForEnv)
     buildConfiguration.params.ConfigureGitHubCommentParameters(config)
     return buildConfiguration
+}
+
+fun buildConfigurationForCache(environment: String, config: ClientConfiguration) : BuildType {
+    return buildCacheConfiguration(environment, config.vcsRootId).buildConfiguration(providerName)
 }
 
 class testConfiguration(parallelism: Int, startHour: Int) {
