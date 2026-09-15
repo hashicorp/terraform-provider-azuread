@@ -25,7 +25,7 @@ import (
 )
 
 type GroupLicenseResourceModel struct {
-	GroupId       string   `tfschema:"group_id"`
+	GroupObjectId string   `tfschema:"group_object_id"`
 	SkuId         string   `tfschema:"sku_id"`
 	DisabledPlans []string `tfschema:"disabled_plans"`
 }
@@ -48,7 +48,7 @@ func (r GroupLicenseResource) ModelObject() interface{} {
 
 func (r GroupLicenseResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
-		"group_id": {
+		"group_object_id": {
 			Description:  "The object ID of the group to which the license should be assigned",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
@@ -92,11 +92,11 @@ func (r GroupLicenseResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			groupId := beta.NewGroupID(model.GroupId)
-			id := parse.NewGroupLicenseID(model.GroupId, model.SkuId)
+			groupId := beta.NewGroupID(model.GroupObjectId)
+			id := parse.NewGroupLicenseID(model.GroupObjectId, model.SkuId)
 
-			tf.LockByName(groupResourceName, model.GroupId)
-			defer tf.UnlockByName(groupResourceName, model.GroupId)
+			tf.LockByName(groupResourceName, model.GroupObjectId)
+			defer tf.UnlockByName(groupResourceName, model.GroupObjectId)
 
 			resp, err := client.GetGroup(ctx, groupId, group.GetGroupOperationOptions{
 				Select: &[]string{"id", "assignedLicenses"},
@@ -194,7 +194,7 @@ func (r GroupLicenseResource) Read() sdk.ResourceFunc {
 			}
 
 			state := GroupLicenseResourceModel{
-				GroupId:       id.GroupId,
+				GroupObjectId: id.GroupId,
 				SkuId:         id.SkuId,
 				DisabledPlans: pointer.From(assignment.DisabledPlans),
 			}
