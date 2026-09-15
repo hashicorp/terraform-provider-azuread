@@ -36,7 +36,7 @@ func TestAccGroupLicense_basic(t *testing.T) {
 			Config: r.basic(data, skuId),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("group_id").Exists(),
+				check.That(data.ResourceName).Key("group_object_id").Exists(),
 				check.That(data.ResourceName).Key("sku_id").HasValue(skuId),
 			),
 		},
@@ -135,8 +135,8 @@ func (r GroupLicenseResource) basic(data acceptance.TestData, skuId string) stri
 %[1]s
 
 resource "azuread_group_license" "test" {
-  group_id = azuread_group.test.object_id
-  sku_id   = "%[2]s"
+  group_object_id = azuread_group.test.object_id
+  sku_id          = "%[2]s"
 }
 `, r.template(data), skuId)
 }
@@ -146,8 +146,8 @@ func (r GroupLicenseResource) requiresImport(data acceptance.TestData, skuId str
 %[1]s
 
 resource "azuread_group_license" "import" {
-  group_id = azuread_group_license.test.group_id
-  sku_id   = azuread_group_license.test.sku_id
+  group_object_id = azuread_group_license.test.group_id
+  sku_id          = azuread_group_license.test.sku_id
 }
 `, r.basic(data, skuId))
 }
@@ -157,9 +157,9 @@ func (r GroupLicenseResource) disabledPlans(data acceptance.TestData, skuId, dis
 %[1]s
 
 resource "azuread_group_license" "test" {
-  group_id       = azuread_group.test.object_id
-  sku_id         = "%[2]s"
-  disabled_plans = ["%[3]s"]
+  group_object_id = azuread_group.test.object_id
+  sku_id          = "%[2]s"
+  disabled_plans  = ["%[3]s"]
 }
 `, r.template(data), skuId, disabledPlanId)
 }

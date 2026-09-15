@@ -27,8 +27,8 @@ resource "azuread_group" "example" {
 }
 
 resource "azuread_group_license" "example" {
-  group_id = azuread_group.example.object_id
-  sku_id   = "c7df2760-2c81-4ef7-b578-5b5392b571df"
+  group_object_id = azuread_group.example.object_id
+  sku_id          = "c7df2760-2c81-4ef7-b578-5b5392b571df"
 }
 ```
 
@@ -36,9 +36,9 @@ resource "azuread_group_license" "example" {
 
 ```terraform
 resource "azuread_group_license" "example" {
-  group_id       = azuread_group.example.object_id
-  sku_id         = "c7df2760-2c81-4ef7-b578-5b5392b571df"
-  disabled_plans = ["a23b959c-7ce8-4e57-9140-b90eb88a9e97"]
+  group_object_id = azuread_group.example.object_id
+  sku_id          = "c7df2760-2c81-4ef7-b578-5b5392b571df"
+  disabled_plans  = ["a23b959c-7ce8-4e57-9140-b90eb88a9e97"]
 }
 ```
 
@@ -49,7 +49,7 @@ resource "azuread_group_license" "example" {
 The following arguments are supported:
 
 * `disabled_plans` - (Optional) A set of unique identifiers (GUIDs) for the service plans to disable for this license. Changing this forces a new resource to be created.
-* `group_id` - (Required) The object ID of the group to which the license should be assigned. Changing this forces a new resource to be created.
+* `group_object_id` - (Required) The object ID of the group to which the license should be assigned. Changing this forces a new resource to be created.
 * `sku_id` - (Required) The unique identifier (GUID) for the SKU (license) to assign to the group. Changing this forces a new resource to be created.
 
 ## Attributes Reference
