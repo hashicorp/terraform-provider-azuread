@@ -4,7 +4,6 @@ go 1.26.6
 
 tool (
 	github.com/bflad/tfproviderdocs
-	github.com/client9/misspell/cmd/misspell
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	github.com/katbyte/tctest
 	github.com/katbyte/terrafmt
@@ -14,7 +13,6 @@ tool (
 
 require (
 	github.com/bflad/tfproviderdocs v0.12.1
-	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint/v2 v2.12.2
 	github.com/katbyte/tctest v1.3.1
 	github.com/katbyte/terrafmt v1.0.1

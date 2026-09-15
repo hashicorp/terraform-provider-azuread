@@ -11,7 +11,6 @@ TOOLS_BIN=.tools/bin
 ACTIONLINT=$(TOOLS_BIN)/actionlint
 GOFUMPT=$(TOOLS_BIN)/gofumpt
 GOLANGCI_LINT=$(TOOLS_BIN)/golangci-lint
-MISSPELL=$(TOOLS_BIN)/misspell
 TCTEST=$(TOOLS_BIN)/tctest
 TERRAFMT=$(TOOLS_BIN)/terrafmt
 TFPROVIDERDOCS=$(TOOLS_BIN)/tfproviderdocs
@@ -98,7 +97,7 @@ tflint: ## renamed to tfproviderlint
 	@$(MAKE) tfproviderlint
 
 ##@ Build & Generate
-tools: $(ACTIONLINT) $(GOFUMPT) $(GOLANGCI_LINT) $(GOLANGCI_LINT_MODULES) $(MISSPELL) $(TCTEST) $(TERRAFMT) $(TFPROVIDERDOCS) $(MARKDOWNLINT) $(SHELLCHECK) $(TYPOS) $(YAMLLINT) ## Install all pinned dev tools into .tools/bin (targets install what they need on demand)
+tools: $(ACTIONLINT) $(GOFUMPT) $(GOLANGCI_LINT) $(GOLANGCI_LINT_MODULES) $(TCTEST) $(TERRAFMT) $(TFPROVIDERDOCS) $(MARKDOWNLINT) $(SHELLCHECK) $(TYPOS) $(YAMLLINT) ## Install all pinned dev tools into .tools/bin (targets install what they need on demand)
 
 build: quick-checks generate ## Run the quick checks, generate code, and compile the provider
 	go install
@@ -228,9 +227,7 @@ markdownlint: $(MARKDOWNLINT) ## Check repo markdown with markdownlint (config i
 	@echo "==> Checking markdown with markdownlint..."
 	@$(MARKDOWNLINT) $(MARKDOWN_INPUTS)
 
-docs-lint: $(MISSPELL) $(TFPROVIDERDOCS) $(TERRAFMT) ## Check the documentation for issues
-	@echo "==> Checking documentation spelling..."
-	@$(MISSPELL) -error -source=text -i hdinsight docs/
+docs-lint: $(TFPROVIDERDOCS) $(TERRAFMT) ## Check the documentation for issues
 	@echo "==> Checking documentation for errors..."
 	@$(TFPROVIDERDOCS) check -provider-name=azuread -allowed-guide-subcategories="Authentication,Upgrade Guides" -enable-contents-check -require-schema-ordering -require-guide-subcategory -require-resource-subcategory
 	@sh -c "'$(CURDIR)/scripts/checks/terrafmt-docs.sh'"
