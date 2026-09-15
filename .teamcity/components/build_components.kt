@@ -5,6 +5,7 @@
 
 import java.io.File
 import jetbrains.buildServer.configs.kotlin.*
+import jetbrains.buildServer.configs.kotlin.buildFeatures.BuildCacheFeature
 import jetbrains.buildServer.configs.kotlin.buildFeatures.GolangFeature
 import jetbrains.buildServer.configs.kotlin.buildSteps.ScriptBuildStep
 import jetbrains.buildServer.configs.kotlin.triggers.schedule
@@ -24,6 +25,13 @@ fun BuildFeatures.Golang() {
             testFormat = "json"
         })
     }
+}
+
+fun BuildFeatures.BuildCacheFeature() {
+        feature(BuildCacheFeature {
+            name = "terraform-provider-azuread-build-cache"
+            publish = false
+        })
 }
 
 fun BuildSteps.SetBuildStartTime() {
@@ -70,9 +78,13 @@ fun BuildSteps.RunAcceptanceTests(packageName: String) {
         })
     } else {
         step(ScriptBuildStep {
-            name = "Compile Test Binary"
-            scriptContent = "go test -c -o test-binary"
-            workingDir = "%SERVICE_PATH%"
+              name = "Compile Test Binary"
+              scriptContent = """
+                              mkdir -p %env.GOMODCACHE%
+                              mkdir -p %env.GOCACHE%
+                              go test -c -o test-binary
+                              """.trimIndent()
+              workingDir = "%SERVICE_PATH%"
         })
 
         step(ScriptBuildStep {
@@ -119,6 +131,11 @@ fun ParametrizedWithType.TerraformAcceptanceTestParameters(parallelism : Int, pr
     text("TIMEOUT", timeout)
     text("POST_GITHUB_COMMENT", "false", "", "Whether to post a comment on the PR with the results of the tests")
     text("TRACKING_ID", "0", "", "Tracking ID for comment management (typically PR commit SHA)")
+}
+
+fun ParametrizedWithType.GoCache() {
+    text("env.GOMODCACHE", "%teamcity.agent.work.dir%/go-cache/mod", "The location of the Go Module Cache")
+    text("env.GOCACHE", "%teamcity.agent.work.dir%/go-cache/build", "The location of the Go Cache")
 }
 
 fun ParametrizedWithType.BuildStartTime() {

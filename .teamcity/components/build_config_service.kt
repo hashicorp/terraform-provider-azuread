@@ -37,6 +37,7 @@ class serviceDetails(name: String, displayName: String, environment: String, vcs
 
             features {
                 Golang()
+                BuildCacheFeature()
             }
 
             params {
@@ -46,6 +47,7 @@ class serviceDetails(name: String, displayName: String, environment: String, vcs
                 TerraformShouldPanicForSchemaErrors()
                 ReadOnlySettings()
                 BuildStartTime()
+                GoCache()
                 WorkingDirectory(packageName)
             }
 
