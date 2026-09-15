@@ -146,7 +146,7 @@ func (r GroupLicenseResource) requiresImport(data acceptance.TestData, skuId str
 %[1]s
 
 resource "azuread_group_license" "import" {
-  group_object_id = azuread_group_license.test.group_id
+  group_object_id = azuread_group_license.test.group_object_id
   sku_id          = azuread_group_license.test.sku_id
 }
 `, r.basic(data, skuId))
