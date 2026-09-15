@@ -6,6 +6,11 @@ TF_SCHEMA_PANIC_ON_ERROR=1
 # in .github/workflows/workflow-actionlint.yml.
 ACTIONLINT_VERSION := $(shell sed -n 's/.*actionlint\/cmd\/actionlint@//p' .github/workflows/workflow-actionlint.yml)
 
+# The single source of truth for the golangci-lint version is the 'version:' field in
+# scripts/.custom-gcl.yml (it is required to live there for the plugin build); everything
+# else derives it from that file.
+GOLANGCI_LINT_VERSION := $(shell sed -n 's/^version: *//p' scripts/.custom-gcl.yml)
+
 .EXPORT_ALL_VARIABLES:
 
 default: build
@@ -31,7 +36,8 @@ tools: ## Install the tools required to develop the provider
 	go install github.com/katbyte/terrafmt@latest
 	go install mvdan.cc/gofumpt@latest
 	go install github.com/rhysd/actionlint/cmd/actionlint@$(ACTIONLINT_VERSION)
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH || $$GOPATH)/bin v2.12.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH || $$GOPATH)/bin $(GOLANGCI_LINT_VERSION)
+	@$(MAKE) golangci-with-modules
 
 build: quick-checks generate ## Run the quick checks, generate code, and compile the provider
 	go install
@@ -79,13 +85,34 @@ terrafmt: ## Fix terraform blocks in acceptance tests and docs
 	@terrafmt fmt -p "*.md" ./docs
 
 ##@ Linting & Dependencies
-lint: ## Check source code with the golangci linters
-	@echo "==> Checking source code with golangci-lint..."
-	@golangci-lint run -v ./...
+# golangci-lint module plugins (azproviderlint) only exist in a custom-built binary, so lint
+# targets use scripts/golangci-with-modules, rebuilt automatically whenever the config (which
+# pins the golangci-lint version) changes. The pinned version is installed before building so
+# the host binary running 'golangci-lint custom' always matches the pin. The config filename
+# and its living in the build cwd are both fixed by golangci-lint, hence the cd into scripts/.
+scripts/golangci-with-modules: scripts/.custom-gcl.yml
+	@echo "==> Building golangci-lint with plugins (scripts/golangci-with-modules)..."
+	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH)/bin $(GOLANGCI_LINT_VERSION)
+	@cd scripts && $$(go env GOPATH)/bin/golangci-lint custom
 
-lint-fix: ## Fix source code with all golangci linters
+golangci-with-modules: ## Build golangci-lint with plugins (automatic when the config or pinned version changes)
+	@if [ -x scripts/golangci-with-modules ] && ! ./scripts/golangci-with-modules version 2>/dev/null | grep -qF -- "$(GOLANGCI_LINT_VERSION:v%=%)"; then \
+		echo "==> scripts/golangci-with-modules is not $(GOLANGCI_LINT_VERSION), rebuilding..."; \
+		rm -f scripts/golangci-with-modules; \
+	fi
+	@$(MAKE) scripts/golangci-with-modules
+
+lint: golangci-with-modules ## Check source code with the golangci linters
+	@echo "==> Checking source code with golangci-lint..."
+	@./scripts/golangci-with-modules run -v ./...
+
+lint-fix: golangci-with-modules ## Fix source code with all golangci linters
 	@echo "==> Fixing source code with all golangci linters..."
-	@golangci-lint run ./... --fix
+	@./scripts/golangci-with-modules run ./... --fix
+
+azproviderlint: golangci-with-modules ## Check source code with only the azproviderlint checks
+	@echo "==> Checking source code with azproviderlint (via golangci-lint)..."
+	@./scripts/golangci-with-modules run -v --enable-only azproviderlint ./...
 
 tfproviderlint: ## Check terraform schema definitions with tfproviderlint
 	@echo "==> Checking terraform schemas with tfproviderlint..."

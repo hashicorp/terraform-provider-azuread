@@ -61,7 +61,6 @@ func userResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceUserInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceUserInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -483,8 +482,7 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("employee_hire_date"); ok {
-		_, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
+		if _, err := time.Parse(time.RFC3339, v.(string)); err != nil {
 			tf.ErrorDiagF(err, "Unable to parse the provided employee_hire_date %q: %+v", v, err)
 		}
 		properties.EmployeeHireDate = nullable.NoZero(v.(string))
@@ -627,8 +625,7 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	if d.HasChange("employee_hire_date") {
-		_, err := time.Parse(time.RFC3339, d.Get("employee_hire_date").(string))
-		if err != nil {
+		if _, err := time.Parse(time.RFC3339, d.Get("employee_hire_date").(string)); err != nil {
 			tf.ErrorDiagF(err, "Unable to parse the provided employee_hire_date %q: %+v", d.Get("employee_hire_date"), err)
 		}
 		properties.EmployeeHireDate = nullable.NoZero(d.Get("employee_hire_date").(string))

@@ -43,7 +43,6 @@ func applicationPasswordResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceApplicationPasswordInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceApplicationPasswordInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

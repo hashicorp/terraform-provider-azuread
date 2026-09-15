@@ -51,7 +51,6 @@ func directoryRoleMemberResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceDirectoryRoleMemberInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceDirectoryRoleMemberInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

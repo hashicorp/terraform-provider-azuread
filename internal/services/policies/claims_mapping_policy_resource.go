@@ -50,7 +50,6 @@ func claimsMappingPolicyResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceClaimsMappingPolicyInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceClaimsMappingPolicyInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

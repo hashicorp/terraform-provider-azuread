@@ -168,7 +168,7 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 				return fmt.Errorf("attempting to discover object ID for authenticated service principal: %+v", err)
 			}
 
-			if resp.Model != nil && len(*resp.Model) != 1 {
+			if resp.Model == nil || len(*resp.Model) != 1 {
 				respLen := "nil"
 				if resp.Model != nil {
 					respLen = strconv.Itoa(len(*resp.Model))
