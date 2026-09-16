@@ -5,8 +5,7 @@
 # locale is "en" (accept both UK and US spellings) and should stay that way. The provider mixes them
 # irreducibly: schema descriptions are written in British ("unique in the organisation"), while
 # published names are American and cannot change (azuread_access_package_catalog, the `behaviors`
-# attribute on azuread_group). Setting en-gb gives 1388 findings, en-ca 566, and en-ca's largest
-# group is catalog -> catalogue, which would rename a resource.
+# attribute on azuread_group).
 
 [files]
 ignore-hidden = false # the default skips dotfiles, which would leave .github/ workflows unchecked
