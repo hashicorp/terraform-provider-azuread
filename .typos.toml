@@ -1,7 +1,12 @@
 # Configuration for typos (https://github.com/crate-ci/typos), run by `make typos` and the typos job in
 # .github/workflows/pr-checks-combined.yaml. It checks every file type and splits identifiers, so
-# misspelled function and variable names are caught as well as prose. It stays on the default locale
-# because UK and US spellings both appear in the provider.
+# misspelled function and variable names are caught as well as prose.
+#
+# locale is "en" (accept both UK and US spellings) and should stay that way. The provider mixes them
+# irreducibly: schema descriptions are written in British ("unique in the organisation"), while
+# published names are American and cannot change (azuread_access_package_catalog, the `behaviors`
+# attribute on azuread_group). Setting en-gb gives 1388 findings, en-ca 566, and en-ca's largest
+# group is catalog -> catalogue, which would rename a resource.
 
 [files]
 ignore-hidden = false # the default skips dotfiles, which would leave .github/ workflows unchecked
@@ -13,6 +18,7 @@ extend-exclude = [
 ]
 
 [default]
+locale = "en" # accept both UK and US spellings; see the note above before changing
 extend-ignore-re = [
   '[A-Za-z0-9+/=-]{30,}', # base64 blobs, certificates, storage ids (no underscore, so long snake_case names are still checked)
   '`[A-Z]{2}`',            # ISO country / region codes listed in docs
