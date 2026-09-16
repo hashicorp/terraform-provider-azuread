@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -110,10 +111,8 @@ func (r ApplicationIdentifierUriResource) Exists(ctx context.Context, clients *c
 		return pointer.To(false), nil
 	}
 
-	for _, existingUri := range *app.IdentifierUris {
-		if existingUri == string(uriFromIdSegment) {
-			return pointer.To(true), nil
-		}
+	if slices.Contains(*app.IdentifierUris, string(uriFromIdSegment)) {
+		return pointer.To(true), nil
 	}
 
 	return pointer.To(false), nil

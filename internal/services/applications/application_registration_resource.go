@@ -376,7 +376,7 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 				properties.SignInAudience = nullable.Value(model.SignInAudience)
 			}
 
-			if rd.HasChange("marketing_url") || rd.HasChange("privacy_statement_url") || rd.HasChange("support_url") || rd.HasChange("terms_of_service_url") {
+			if rd.HasChanges("marketing_url", "privacy_statement_url", "support_url", "terms_of_service_url") {
 				properties.Info = &stable.InformationalUrl{}
 
 				if rd.HasChange("marketing_url") {
@@ -396,7 +396,7 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 				}
 			}
 
-			if rd.HasChange("implicit_access_token_issuance_enabled") || rd.HasChange("homepage_url") || rd.HasChange("implicit_id_token_issuance_enabled") || rd.HasChange("logout_url") {
+			if rd.HasChanges("implicit_access_token_issuance_enabled", "homepage_url", "implicit_id_token_issuance_enabled", "logout_url") {
 				properties.Web = &stable.WebApplication{}
 
 				if rd.HasChange("homepage_url") {
@@ -407,7 +407,7 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 					properties.Web.LogoutUrl = nullable.NoZero(model.LogoutUrl)
 				}
 
-				if rd.HasChange("implicit_access_token_issuance_enabled") || rd.HasChange("implicit_id_token_issuance_enabled") {
+				if rd.HasChanges("implicit_access_token_issuance_enabled", "implicit_id_token_issuance_enabled") {
 					properties.Web.ImplicitGrantSettings = &stable.ImplicitGrantSettings{}
 
 					if rd.HasChange("implicit_access_token_issuance_enabled") {

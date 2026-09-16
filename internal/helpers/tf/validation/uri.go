@@ -6,6 +6,7 @@ package validation
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
@@ -96,10 +97,8 @@ func IsUriFunc(validUriSchemes []string, urnAllowed bool, allowTrailingSlash boo
 			return nil, []error{fmt.Errorf("URI must have a trailing slash when there is no path segment for %q", k)}
 		}
 
-		for _, s := range validUriSchemes {
-			if u.Scheme == s {
-				return nil, nil
-			}
+		if slices.Contains(validUriSchemes, u.Scheme) {
+			return nil, nil
 		}
 
 		return nil, []error{fmt.Errorf("unexpected URI scheme for %q, expected one of: %s", k, strings.Join(validUriSchemes, ", "))}

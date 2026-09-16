@@ -91,9 +91,10 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 			},
 
 			"triggers": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
+				Description: "Map of arbitrary keys and values that, when changed, will trigger a re-invocation",
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

@@ -87,7 +87,7 @@ $ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com
 $ git clone https://github.com/hashicorp/terraform-provider-azuread
 ```
 
-Change to the clone directory and run `make tools` to install the dependent tooling needed to test and build the provider.
+The tooling the provider uses is pinned (Go tools such as golangci-lint, terrafmt and gofumpt in `.tools/go.mod`; shellcheck, typos, yamllint and markdownlint-cli2 in the `GNUmakefile`) and installed into `.tools/bin` by make as needed, so nothing has to be installed by hand; `make tools` installs all of it up front. The non-Go tools need `python3` and `npm` on the machine.
 
 To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 

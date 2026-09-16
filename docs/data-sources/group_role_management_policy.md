@@ -31,7 +31,7 @@ data "azuread_group_role_management_policy" "owners_policy" {
 ## Argument Reference
 
 * `group_id` - (Required) The ID of the Azure AD group for which the policy applies.
-* `role_id` - (Required) The type of assignment this policy coveres. Can be either `member` or `owner`.
+* `role_id` - (Required) The type of assignment this policy covers. Can be either `member` or `owner`.
 
 ## Attributes Reference
 

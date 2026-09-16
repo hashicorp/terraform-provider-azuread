@@ -275,7 +275,7 @@ func flattenGuestsOrExternalUsers(in *stable.ConditionalAccessGuestsOrExternalUs
 	}
 
 	guestOrExternalUserTypes := make([]string, 0)
-	for _, v := range strings.Split(string(pointer.From(in.GuestOrExternalUserTypes)), ",") {
+	for v := range strings.SplitSeq(string(pointer.From(in.GuestOrExternalUserTypes)), ",") {
 		guestOrExternalUserTypes = append(guestOrExternalUserTypes, strings.TrimSpace(v))
 	}
 
@@ -373,7 +373,7 @@ func flattenAuthenticationFlowTransferMethods(in *stable.ConditionalAccessAuthen
 		return result
 	}
 
-	for _, m := range strings.Split(pointer.FromEnum(in.TransferMethods), ",") {
+	for m := range strings.SplitSeq(pointer.FromEnum(in.TransferMethods), ",") {
 		result = append(result, m)
 	}
 
@@ -656,7 +656,7 @@ func expandConditionalAccessSessionControls(in []interface{}) *stable.Conditiona
 	}
 
 	// API returns 400 error if signInFrequency is set with all default/zero values
-	if (signInFrequency.IsEnabled.GetOrZero()) ||
+	if signInFrequency.IsEnabled.GetOrZero() ||
 		(signInFrequency.FrequencyInterval != nil && *signInFrequency.FrequencyInterval != stable.SignInFrequencyInterval_TimeBased) ||
 		(signInFrequency.AuthenticationType != nil && *signInFrequency.AuthenticationType != stable.SignInFrequencyAuthenticationType_PrimaryAndSecondaryAuthentication) {
 		result.SignInFrequency = &signInFrequency

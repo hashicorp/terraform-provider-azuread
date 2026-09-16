@@ -135,10 +135,8 @@ func (td TestData) ResourceSequentialTest(t *testing.T, testResource types.TestR
 
 func RunTestsInSequence(t *testing.T, tests map[string]map[string]func(t *testing.T)) {
 	for group, m := range tests {
-		m := m
 		t.Run(group, func(t *testing.T) {
 			for name, tc := range m {
-				tc := tc
 				t.Run(name, func(t *testing.T) {
 					tc(t)
 				})
