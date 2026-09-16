@@ -14,7 +14,7 @@ tool (
 require (
 	github.com/bflad/tfproviderdocs v0.12.1
 	github.com/golangci/golangci-lint/v2 v2.12.2
-	github.com/katbyte/tctest v1.3.1
+	github.com/katbyte/tctest v1.3.3
 	github.com/katbyte/terrafmt v1.0.1
 	github.com/rhysd/actionlint v1.7.12
 	mvdan.cc/gofumpt v0.12.0
