@@ -95,6 +95,12 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 					},
 				},
 			},
+
+			"object_id": {
+				Description: "The object ID of the authentication strength policy",
+				Type:        pluginsdk.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -205,6 +211,7 @@ func authenticationStrengthPolicyRead(ctx context.Context, d *pluginsdk.Resource
 
 	tf.Set(d, "display_name", pointer.From(authenticationStrengthPolicy.DisplayName))
 	tf.Set(d, "description", authenticationStrengthPolicy.Description.GetOrZero())
+	tf.Set(d, "object_id", pointer.From(authenticationStrengthPolicy.Id))
 
 	allowedCombinations := make([]string, 0)
 	for _, v := range pointer.From(authenticationStrengthPolicy.AllowedCombinations) {
