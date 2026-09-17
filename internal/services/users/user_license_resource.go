@@ -25,7 +25,7 @@ import (
 )
 
 type UserLicenseResourceModel struct {
-	UserId        string   `tfschema:"user_id"`
+	UserObjectId  string   `tfschema:"user_object_id"`
 	SkuId         string   `tfschema:"sku_id"`
 	DisabledPlans []string `tfschema:"disabled_plans"`
 }
@@ -48,7 +48,7 @@ func (r UserLicenseResource) ModelObject() interface{} {
 
 func (r UserLicenseResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
-		"user_id": {
+		"user_object_id": {
 			Description:  "The object ID of the user to which the license should be assigned",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
@@ -92,11 +92,11 @@ func (r UserLicenseResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			userId := stable.NewUserID(model.UserId)
-			id := parse.NewUserLicenseID(model.UserId, model.SkuId)
+			userId := stable.NewUserID(model.UserObjectId)
+			id := parse.NewUserLicenseID(model.UserObjectId, model.SkuId)
 
-			tf.LockByName(userResourceName, model.UserId)
-			defer tf.UnlockByName(userResourceName, model.UserId)
+			tf.LockByName(userResourceName, model.UserObjectId)
+			defer tf.UnlockByName(userResourceName, model.UserObjectId)
 
 			resp, err := client.GetUser(ctx, userId, user.GetUserOperationOptions{
 				Select: &[]string{"id", "usageLocation", "assignedLicenses", "licenseAssignmentStates"},
@@ -200,7 +200,7 @@ func (r UserLicenseResource) Read() sdk.ResourceFunc {
 			}
 
 			state := UserLicenseResourceModel{
-				UserId:        id.UserId,
+				UserObjectId:  id.UserId,
 				SkuId:         id.SkuId,
 				DisabledPlans: pointer.From(assignment.DisabledPlans),
 			}

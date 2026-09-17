@@ -36,7 +36,7 @@ func TestAccUserLicense_basic(t *testing.T) {
 			Config: r.basic(data, skuId),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("user_id").Exists(),
+				check.That(data.ResourceName).Key("user_object_id").Exists(),
 				check.That(data.ResourceName).Key("sku_id").HasValue(skuId),
 			),
 		},
@@ -141,8 +141,8 @@ func (r UserLicenseResource) basic(data acceptance.TestData, skuId string) strin
 %[1]s
 
 resource "azuread_user_license" "test" {
-  user_id = azuread_user.test.object_id
-  sku_id  = "%[2]s"
+  user_object_id = azuread_user.test.object_id
+  sku_id         = "%[2]s"
 }
 `, r.template(data), skuId)
 }
@@ -152,8 +152,8 @@ func (r UserLicenseResource) requiresImport(data acceptance.TestData, skuId stri
 %[1]s
 
 resource "azuread_user_license" "import" {
-  user_id = azuread_user_license.test.user_id
-  sku_id  = azuread_user_license.test.sku_id
+  user_object_id = azuread_user_license.test.user_object_id
+  sku_id         = azuread_user_license.test.sku_id
 }
 `, r.basic(data, skuId))
 }
@@ -163,7 +163,7 @@ func (r UserLicenseResource) disabledPlans(data acceptance.TestData, skuId, disa
 %[1]s
 
 resource "azuread_user_license" "test" {
-  user_id        = azuread_user.test.object_id
+  user_object_id = azuread_user.test.object_id
   sku_id         = "%[2]s"
   disabled_plans = ["%[3]s"]
 }

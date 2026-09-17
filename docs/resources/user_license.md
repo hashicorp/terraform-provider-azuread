@@ -29,8 +29,8 @@ resource "azuread_user" "example" {
 }
 
 resource "azuread_user_license" "example" {
-  user_id = azuread_user.example.object_id
-  sku_id  = "c7df2760-2c81-4ef7-b578-5b5392b571df"
+  user_object_id = azuread_user.example.object_id
+  sku_id         = "c7df2760-2c81-4ef7-b578-5b5392b571df"
 }
 ```
 
@@ -38,7 +38,7 @@ resource "azuread_user_license" "example" {
 
 ```terraform
 resource "azuread_user_license" "example" {
-  user_id        = azuread_user.example.object_id
+  user_object_id = azuread_user.example.object_id
   sku_id         = "c7df2760-2c81-4ef7-b578-5b5392b571df"
   disabled_plans = ["a23b959c-7ce8-4e57-9140-b90eb88a9e97"]
 }
@@ -52,7 +52,7 @@ The following arguments are supported:
 
 * `disabled_plans` - (Optional) A set of unique identifiers (GUIDs) for the service plans to disable for this license. Changing this forces a new resource to be created.
 * `sku_id` - (Required) The unique identifier (GUID) for the SKU (license) to assign to the user. Changing this forces a new resource to be created.
-* `user_id` - (Required) The object ID of the user to which the license should be assigned. Changing this forces a new resource to be created.
+* `user_object_id` - (Required) The object ID of the user to which the license should be assigned. Changing this forces a new resource to be created.
 
 ~> **Group-based licensing** This resource only manages licenses assigned directly to a user. Licenses inherited via group-based licensing are ignored and are not managed by this resource.
 
