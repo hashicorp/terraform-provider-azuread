@@ -72,7 +72,7 @@ minimized once every entry is fixed. The `check_name` strings are the join key
 between the two files and the guidance table - keep all three in sync.
 
 **Security note**: artifact contents come from the untrusted side. Never trust
-them for anything more dangerous than labeling — a malicious PR could upload an
+them for anything more dangerous than labelling — a malicious PR could upload an
 arbitrary PR number.
 
 ## Renaming caveats
