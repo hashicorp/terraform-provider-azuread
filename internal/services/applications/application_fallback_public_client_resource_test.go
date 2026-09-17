@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package applications_test
@@ -37,6 +37,7 @@ func TestAccApplicationFallbackPublicClient_basic(t *testing.T) {
 		data.ImportStep(),
 	})
 }
+
 func TestAccApplicationFallbackPublicClient_disabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_fallback_public_client", "test")
 	r := ApplicationFallbackPublicClientResource{}

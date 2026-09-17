@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package validation
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -53,10 +54,8 @@ func FloatInSlice(valid []float64) func(interface{}, string) ([]string, []error)
 			return warnings, errors
 		}
 
-		for _, validFloat := range valid {
-			if v == validFloat {
-				return warnings, errors
-			}
+		if slices.Contains(valid, v) {
+			return warnings, errors
 		}
 
 		errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %f", k, valid, v))

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitygovernance
@@ -85,7 +85,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"duration_in_days"},
 				ValidateFunc:  validation.IsRFC3339Time,
-				//DiffSuppressFunc: assignmentPolicyDiffSuppress,
+				// DiffSuppressFunc: assignmentPolicyDiffSuppress,
 			},
 
 			"extension_enabled": {

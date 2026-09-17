@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package applications_test
@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -110,10 +111,8 @@ func (r ApplicationIdentifierUriResource) Exists(ctx context.Context, clients *c
 		return pointer.To(false), nil
 	}
 
-	for _, existingUri := range *app.IdentifierUris {
-		if existingUri == string(uriFromIdSegment) {
-			return pointer.To(true), nil
-		}
+	if slices.Contains(*app.IdentifierUris, string(uriFromIdSegment)) {
+		return pointer.To(true), nil
 	}
 
 	return pointer.To(false), nil

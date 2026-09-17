@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package serviceprincipals_test
@@ -367,7 +367,7 @@ resource "azuread_application" "test" {
   sign_in_audience = "AzureADMyOrg"
 
   identifier_uris = [
-    "api://acctestServicePrincipal-%[1]d",
+    "api://${data.azuread_domains.test.domains[0].domain_name}/acctestServicePrincipal-%[1]d",
     "https://${data.azuread_domains.test.domains[0].domain_name}/acctestServicePrincipal-%[1]d",
   ]
 

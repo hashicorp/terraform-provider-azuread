@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directoryroles
@@ -6,8 +6,8 @@ package directoryroles
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/response"
@@ -37,11 +37,11 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, errs := stable.ValidateRoleManagementDirectoryRoleDefinitionID(id, "id"); len(errs) > 0 {
-				out := ""
+				var out strings.Builder
 				for _, err := range errs {
-					out += err.Error()
+					out.WriteString(err.Error())
 				}
-				return errors.New(out)
+				return errors.New(out.String())
 			}
 			return nil
 		}),
@@ -227,7 +227,7 @@ func customDirectoryRoleResourceDelete(ctx context.Context, d *pluginsdk.Resourc
 	resp, err := client.GetDirectoryRoleDefinition(ctx, *id, directoryroledefinition.DefaultGetDirectoryRoleDefinitionOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagPathF(fmt.Errorf("Custom Directory Role was not found"), "id", "Retrieving %s", id)
+			return tf.ErrorDiagPathF(errors.New("the Custom Directory Role was not found"), "id", "Retrieving %s", id)
 		}
 		return tf.ErrorDiagPathF(err, "id", "Retrieving %s", id)
 	}

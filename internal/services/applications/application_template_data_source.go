@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package applications
@@ -131,7 +131,7 @@ func applicationTemplateDataSourceRead(ctx context.Context, d *pluginsdk.Resourc
 
 		template = &(*resp.Model)[0]
 		if templateDisplayName := template.DisplayName.GetOrZero(); !strings.EqualFold(templateDisplayName, displayName) {
-			return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for application tempate matching filter: %q", templateDisplayName, displayName, *options.Filter), "Bad API Response")
+			return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for application template matching filter: %q", templateDisplayName, displayName, *options.Filter), "Bad API Response")
 		}
 	}
 

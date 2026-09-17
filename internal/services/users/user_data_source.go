@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package users
@@ -352,7 +352,6 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		}
 
 		foundObjectId = (*resp.Model)[0].Id
-
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		resp, err := client.GetUser(ctx, stable.NewUserID(objectId), user.DefaultGetUserOperationOptions())
 		if err != nil {
@@ -367,7 +366,6 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		}
 
 		foundObjectId = resp.Model.Id
-
 	} else if mail, ok := d.Get("mail").(string); ok && mail != "" {
 		options := user.ListUsersOperationOptions{
 			Filter: pointer.To(fmt.Sprintf("mail eq '%s'", odata.EscapeSingleQuote(mail))),
@@ -384,13 +382,12 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 
 		count := len(*resp.Model)
 		if count > 1 {
-			return tf.ErrorDiagPathF(nil, "mail", "More than one user found with mail: %q", upn)
+			return tf.ErrorDiagPathF(nil, "mail", "More than one user found with mail: %q", mail)
 		} else if count == 0 {
-			return tf.ErrorDiagPathF(err, "mail", "User not found with mail: %q", upn)
+			return tf.ErrorDiagPathF(err, "mail", "User not found with mail: %q", mail)
 		}
 
 		foundObjectId = (*resp.Model)[0].Id
-
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		options := user.ListUsersOperationOptions{
 			Filter: pointer.To(fmt.Sprintf("mailNickname eq '%s'", odata.EscapeSingleQuote(mailNickname))),
@@ -413,7 +410,6 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		}
 
 		foundObjectId = (*resp.Model)[0].Id
-
 	} else if employeeId, ok := d.Get("employee_id").(string); ok && employeeId != "" {
 		options := user.ListUsersOperationOptions{
 			Filter: pointer.To(fmt.Sprintf("employeeId eq '%s'", odata.EscapeSingleQuote(employeeId))),
@@ -436,7 +432,6 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		}
 
 		foundObjectId = (*resp.Model)[0].Id
-
 	} else {
 		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name`, `mail_nickname` or `employee_id` must be supplied")
 	}

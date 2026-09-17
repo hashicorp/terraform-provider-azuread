@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package policies_test
@@ -29,6 +29,7 @@ func TestAccAuthenticationStrengthPolicy_basic(t *testing.T) {
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("object_id").IsUuid(),
 			),
 		},
 		data.ImportStep(),
@@ -44,6 +45,7 @@ func TestAccAuthenticationStrengthPolicy_complete(t *testing.T) {
 			Config: r.complete(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("object_id").IsUuid(),
 			),
 		},
 		data.ImportStep(),

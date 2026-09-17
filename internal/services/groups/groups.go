@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package groups
@@ -18,7 +18,7 @@ import (
 func groupDefaultMailNickname() string {
 	charSet := "0123456789abcdef"
 	result := make([]byte, 9)
-	for i := 0; i < 9; i++ {
+	for i := range 9 {
 		result[i] = charSet[rand.Intn(len(charSet))]
 	}
 	resultString := string(result)

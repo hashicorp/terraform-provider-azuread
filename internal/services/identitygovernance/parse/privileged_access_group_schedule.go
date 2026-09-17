@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package parse
@@ -71,5 +71,5 @@ func (id *PrivilegedAccessGroupScheduleId) ID() string {
 }
 
 func (id *PrivilegedAccessGroupScheduleId) String() string {
-	return fmt.Sprintf("Privileged Access Group Assigment Schedule ID: %q", id.ID())
+	return fmt.Sprintf("Privileged Access Group Assignment Schedule ID: %q", id.ID())
 }

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package policies
@@ -65,7 +65,6 @@ func getPolicyId(ctx context.Context, metadata sdk.ResourceMetaData, scopeId, ro
 		}
 		return &exists, nil
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("waiting for policy assignment to become available: %v", err)
 	}

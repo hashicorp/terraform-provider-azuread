@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tf
@@ -9,7 +9,7 @@ import (
 )
 
 func Set(d *schema.ResourceData, attr string, value interface{}) diag.Diagnostics {
-	//lintignore:R001
+	// lintignore:R001
 	if err := d.Set(attr, value); err != nil {
 		return ErrorDiagPathF(err, attr, "Could not set attribute")
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitygovernance
@@ -93,7 +93,6 @@ func accessPackageDataRead(ctx context.Context, d *pluginsdk.ResourceData, meta 
 			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 		}
 		accessPackage = resp.Model
-
 	} else if displayName != "" && catalogId != "" {
 		// We can only filter on displayName
 		options := entitlementmanagementaccesspackage.ListEntitlementManagementAccessPackagesOperationOptions{

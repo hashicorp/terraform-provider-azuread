@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package policies
@@ -710,9 +710,7 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *stable.Unified
 		updatedRules = append(updatedRules, rule)
 	}
 
-	if metadata.ResourceData.HasChange("active_assignment_rules.0.require_multifactor_authentication") ||
-		metadata.ResourceData.HasChange("active_assignment_rules.0.require_justification") {
-
+	if metadata.ResourceData.HasChanges("active_assignment_rules.0.require_multifactor_authentication", "active_assignment_rules.0.require_justification") {
 		enabledRules := make([]string, 0)
 		if model.ActiveAssignmentRules[0].RequireMultiFactorAuth {
 			enabledRules = append(enabledRules, "MultiFactorAuthentication")
@@ -736,9 +734,7 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *stable.Unified
 		updatedRules = append(updatedRules, rule)
 	}
 
-	if metadata.ResourceData.HasChange("active_assignment_rules.0.expiration_required") ||
-		metadata.ResourceData.HasChange("active_assignment_rules.0.expire_after") {
-
+	if metadata.ResourceData.HasChanges("active_assignment_rules.0.expiration_required", "active_assignment_rules.0.expire_after") {
 		rule := stable.UnifiedRoleManagementPolicyExpirationRule{
 			Id:                   pointer.To("Expiration_Admin_Assignment"),
 			IsExpirationRequired: nullable.Value(model.ActiveAssignmentRules[0].ExpirationRequired),
@@ -765,9 +761,7 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *stable.Unified
 		updatedRules = append(updatedRules, rule)
 	}
 
-	if metadata.ResourceData.HasChange("activation_rules.0.require_approval") ||
-		metadata.ResourceData.HasChange("activation_rules.0.approval_stage") {
-
+	if metadata.ResourceData.HasChanges("activation_rules.0.require_approval", "activation_rules.0.approval_stage") {
 		rule := stable.UnifiedRoleManagementPolicyApprovalRule{
 			Id: pointer.To("Approval_EndUser_Assignment"),
 			Setting: &stable.ApprovalSettings{
@@ -831,10 +825,7 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *stable.Unified
 		updatedRules = append(updatedRules, rule)
 	}
 
-	if metadata.ResourceData.HasChange("activation_rules.0.require_multifactor_authentication") ||
-		metadata.ResourceData.HasChange("activation_rules.0.require_justification") ||
-		metadata.ResourceData.HasChange("activation_rules.0.require_ticket_info") {
-
+	if metadata.ResourceData.HasChanges("activation_rules.0.require_multifactor_authentication", "activation_rules.0.require_justification", "activation_rules.0.require_ticket_info") {
 		enabledRules := make([]string, 0)
 		if model.ActivationRules[0].RequireMultiFactorAuth {
 			enabledRules = append(enabledRules, "MultiFactorAuthentication")

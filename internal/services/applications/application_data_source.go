@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package applications
@@ -526,7 +526,6 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		}
 
 		app = resp.Model
-
 	} else {
 		var filter, fieldName, fieldValue string
 		if clientId, ok := d.GetOk("client_id"); ok && clientId.(string) != "" {

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package groups_test
@@ -25,6 +25,7 @@ func TestAccGroupDataSource_byDisplayName(t *testing.T) {
 		},
 	})
 }
+
 func TestAccGroupDataSource_byDisplayNameWithSecurity(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package parse
@@ -70,7 +70,7 @@ func PasswordID(idString string) (*CredentialId, error) {
 func OldPasswordID(id string) (*CredentialId, error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("Password ID expected to be in the format {objectId}/{keyId} - but got %q", id)
+		return nil, fmt.Errorf("password ID expected to be in the format {objectId}/{keyId} - but got %q", id)
 	}
 
 	newId := parts[0] + "/password/" + parts[1]

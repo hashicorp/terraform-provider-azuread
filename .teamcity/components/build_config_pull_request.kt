@@ -25,9 +25,11 @@ class pullRequest(displayName: String, environment: String, vcsRootId : String) 
             steps {
                 var packageName = "\"%SERVICES%\""
 
+                SetBuildStartTime()
                 ConfigureGoEnv()
                 DownloadTerraformBinary()
                 RunAcceptanceTestsForPullRequest(packageName)
+                PostTestResultsToGitHubPullRequest()
             }
 
             failureConditions {
@@ -36,6 +38,7 @@ class pullRequest(displayName: String, environment: String, vcsRootId : String) 
 
             features {
                 Golang()
+                BuildCacheFeature()
             }
 
             params {
@@ -44,6 +47,8 @@ class pullRequest(displayName: String, environment: String, vcsRootId : String) 
                 TerraformShouldPanicForSchemaErrors()
                 TerraformCoreBinaryTesting()
                 ReadOnlySettings()
+                GoCache()
+                BuildStartTime()
 
                 text("SERVICES", "portal")
             }

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acceptance
@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/provider"
 )
 
-var AzureADProvider *schema.Provider
-var once sync.Once
+var (
+	AzureADProvider *schema.Provider
+	once            sync.Once
+)
 
 func init() {
 	if os.Getenv("TF_ACC") == "" {

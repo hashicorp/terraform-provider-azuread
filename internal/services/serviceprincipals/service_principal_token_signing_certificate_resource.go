@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package serviceprincipals
@@ -6,7 +6,6 @@ package serviceprincipals
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -261,7 +260,7 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 	resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "service_principal_id", "Retrieving %s", servicePrincipalId)
+			return tf.ErrorDiagPathF(errors.New("the Service Principal was not found"), "service_principal_id", "Retrieving %s", servicePrincipalId)
 		}
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving %s", servicePrincipalId)
 	}
@@ -276,8 +275,9 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 	newKeyCredentials := make([]stable.KeyCredential, 0)
 	if servicePrincipal.KeyCredentials != nil {
 		for _, cred := range *servicePrincipal.KeyCredentials {
-			if !strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
+			if strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
 				customKeyId = cred.CustomKeyIdentifier.GetOrZero()
+				break
 			}
 		}
 		for _, cred := range *servicePrincipal.KeyCredentials {

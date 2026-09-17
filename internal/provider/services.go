@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package provider
@@ -29,9 +29,11 @@ func SupportedTypedServices() []sdk.TypedServiceRegistration {
 		applications.Registration{},
 		directoryroles.Registration{},
 		domains.Registration{},
+		groups.Registration{},
 		policies.Registration{},
 		identitygovernance.Registration{},
 		serviceprincipals.Registration{},
+		users.Registration{},
 	}
 }
 

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tf
@@ -60,6 +60,6 @@ func ImportAsExistsDiag(resourceName, id string) diag.Diagnostics {
 }
 
 func ImportAsExistsError(resourceName, id string) error {
-	msg := "A resource with the ID %q already exists - to be managed via Terraform this resource needs to be imported into the State. Please see the resource documentation for %q for more information."
+	msg := "a resource with the ID %q already exists - to be managed via Terraform this resource needs to be imported into the State. Please see the resource documentation for %q for more information"
 	return fmt.Errorf(msg, id, resourceName)
 }

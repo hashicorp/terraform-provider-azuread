@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package helpers
@@ -31,7 +31,12 @@ func existsFunc(shouldExist bool) func(*clients.Client, types.TestResource, stri
 
 			rs, ok := s.RootModule().Resources[resourceName]
 			if !ok {
-				return fmt.Errorf("%q was not found in the state", resourceName)
+				switch shouldExist {
+				case true:
+					return fmt.Errorf("%q was not found in the state", resourceName)
+				default:
+					return nil // removed from state, so we assume a successful delete
+				}
 			}
 
 			result, err := testResource.Exists(ctx, client, rs.Primary)

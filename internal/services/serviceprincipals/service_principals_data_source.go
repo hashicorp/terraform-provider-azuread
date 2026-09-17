@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package serviceprincipals
@@ -215,7 +215,6 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		}
 
 		servicePrincipals = append(servicePrincipals, *resp.Model...)
-
 	} else if len(clientIdsToSearch) > 0 {
 		expectedCount = len(clientIdsToSearch)
 		for _, v := range clientIdsToSearch {
@@ -243,7 +242,6 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 
 			servicePrincipals = append(servicePrincipals, (*resp.Model)[0])
 		}
-
 	} else if displayNames, ok := d.Get("display_names").([]interface{}); ok && len(displayNames) > 0 {
 		expectedCount = len(displayNames)
 		for _, v := range tf.ExpandStringSlice(displayNames) {
@@ -269,7 +267,6 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 
 			servicePrincipals = append(servicePrincipals, (*resp.Model)[0])
 		}
-
 	} else if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
 		expectedCount = len(objectIds)
 		for _, v := range objectIds {

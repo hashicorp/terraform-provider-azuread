@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directoryroles
@@ -30,8 +30,10 @@ type DirectoryRoleModel struct {
 	TemplateId  string `tfschema:"template_id"`
 }
 
-var _ sdk.Resource = DirectoryRoleResource{}
-var _ sdk.ResourceWithStateMigration = DirectoryRoleResource{}
+var (
+	_ sdk.Resource                   = DirectoryRoleResource{}
+	_ sdk.ResourceWithStateMigration = DirectoryRoleResource{}
+)
 
 type DirectoryRoleResource struct{}
 

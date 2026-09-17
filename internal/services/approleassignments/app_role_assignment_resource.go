@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package approleassignments
@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -38,11 +39,11 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, errs := stable.ValidateServicePrincipalIdAppRoleAssignedToID(id, "id"); len(errs) > 0 {
-				out := ""
+				var out strings.Builder
 				for _, err := range errs {
-					out += err.Error()
+					out.WriteString(err.Error())
 				}
-				return errors.New(out)
+				return errors.New(out.String())
 			}
 			return nil
 		}),
@@ -145,11 +146,11 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 	}
 
 	if appRoleAssignment.Id == nil || *appRoleAssignment.Id == "" {
-		return tf.ErrorDiagF(errors.New("ID returned for app role assignment is nil"), "Bad API response")
+		return tf.ErrorDiagF(errors.New("the ID returned for app role assignment is nil"), "Bad API response")
 	}
 
 	if appRoleAssignment.ResourceId.IsNull() || appRoleAssignment.ResourceId.GetOrZero() == "" {
-		return tf.ErrorDiagF(errors.New("Resource ID returned for app role assignment is nil"), "Bad API response")
+		return tf.ErrorDiagF(errors.New("resource ID returned for app role assignment is nil"), "Bad API response")
 	}
 
 	id := stable.NewServicePrincipalIdAppRoleAssignedToID(appRoleAssignment.ResourceId.GetOrZero(), pointer.From(appRoleAssignment.Id))

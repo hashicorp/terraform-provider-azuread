@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pluginsdk
@@ -28,8 +28,10 @@ const (
 	SchemaConfigModeBlock = schema.SchemaConfigModeBlock
 )
 
-type SchemaDiffSuppressFunc = schema.SchemaDiffSuppressFunc
-type SchemaDefaultFunc = schema.SchemaDefaultFunc
+type (
+	SchemaDiffSuppressFunc = schema.SchemaDiffSuppressFunc
+	SchemaDefaultFunc      = schema.SchemaDefaultFunc
+)
 
 // EnvDefaultFunc is a helper function that returns the value of the
 // given environment variable, if one exists, or the default value

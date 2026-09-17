@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package conditionalaccess
@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -38,11 +39,11 @@ func namedLocationResource() *pluginsdk.Resource {
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, errs := stable.ValidateIdentityConditionalAccessNamedLocationID(id, "id"); len(errs) > 0 {
-				out := ""
+				var out strings.Builder
 				for _, err := range errs {
-					out += err.Error()
+					out.WriteString(err.Error())
 				}
-				return errors.New(out)
+				return errors.New(out.String())
 			}
 			return nil
 		}),
@@ -161,7 +162,6 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		}
 
 		d.SetId(id.ID())
-
 	} else if v, ok = d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
 		properties.DisplayName = pointer.To(d.Get("display_name").(string))
@@ -189,7 +189,6 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*15, countryNamedLocationWait(client, &id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for creation of %s", id)
 		}
-
 	} else {
 		return tf.ErrorDiagF(errors.New("one of `ip` or `country` must be specified"), "Unable to determine named location type")
 	}
@@ -219,7 +218,6 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 		if err := consistency.WaitForUpdate(ctx, ipNamedLocationWait(client, id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for update of %s", id)
 		}
-
 	} else if v, ok := d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
 

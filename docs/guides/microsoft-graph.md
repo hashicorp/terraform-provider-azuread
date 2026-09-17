@@ -44,6 +44,7 @@ terraform {
 ```
 
 Older versions of Terraform (0.12.x) can pin the provider version using the `version` attribute within the `provider` block:
+
 ```hcl
 provider "azuread" {
   version = "~> 1.5.0"
@@ -314,11 +315,13 @@ The `fallback_public_client_enabled` field is no longer Computed, omitting this 
 The `group_membership_claims` property was previously a single string value but has been changed to a list of strings. If this property is present in your configuration, you will need to update it. For example:
 
 *From:*
+
 ```terraform
 group_membership_claims = "All"
 ```
 
 *To:*
+
 ```terraform
 group_membership_claims = ["All"]
 ```

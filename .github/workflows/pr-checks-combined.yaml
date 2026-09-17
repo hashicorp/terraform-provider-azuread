@@ -1,0 +1,630 @@
+---
+name: Combined PR Checks
+
+# All PR checks are combined into this single workflow as jobs, sharing one
+# paths-filter so each only runs when relevant files change. A check lives here
+# unless it *can't*: needing a special runner, OIDC auth, or its own trigger
+# moves it to a standalone pr-check-* workflow instead.
+# Display name is matched by the workflow_run list in pr-waiting-response-on-ci-fail.yaml.
+# The check jobs are mirrored in main-checks.yaml (which re-runs them on pushes
+# to main) — keep the two in sync when adding or changing a check.
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+on:
+  pull_request:
+    types: ['opened', 'synchronize', 'reopened']
+
+concurrency:
+  group: 'pr-checks-combined-${{ github.event.pull_request.number || github.run_id }}'
+  cancel-in-progress: true
+
+jobs:
+
+  # ==========================================
+  # PATH FILTERING LOGIC
+  # ==========================================
+  # We use dorny/paths-filter to only run heavy checks when relevant files change.
+  #
+  # How to add a new Phase 1 job:
+  # 1. Add a new filter to the `paths-filter` job below.
+  # 2. In your job, add `needs: paths-filter` and `if: needs.paths-filter.outputs.<your-filter> == 'true'`.
+  #
+  # How to add a new Phase 2/3 job:
+  # 1. It must depend on paths-filter and ALL Phase 1 jobs it needs.
+  # 2. Because GitHub Actions skips downstream jobs if any `needs` dependency is skipped,
+  #    you MUST use the following boilerplate `if` condition to ensure it runs correctly:
+  #    if: |
+  #      always() &&
+  #      needs.paths-filter.outputs.<your-filter> == 'true' &&
+  #      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') && ...
+  # ==========================================
+
+  paths-filter:
+    runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.filter.outputs.docs }}
+      go: ${{ steps.filter.outputs.go }}
+      vendor: ${{ steps.filter.outputs.vendor }}
+      examples: ${{ steps.filter.outputs.examples }}
+      scripts: ${{ steps.filter.outputs.scripts }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+              - '.tools/**'
+            vendor:
+              - 'vendor/**'
+              - 'go.mod'
+              - 'go.sum'
+              - '.tools/**'
+            examples:
+              - 'examples/**'
+            scripts:
+              - 'scripts/**'
+              - '**/*.sh'
+
+  # ==========================================
+  # Phase 1: Fail-Fast
+  # ==========================================
+
+  depscheck:
+    needs: paths-filter
+    if: needs.paths-filter.outputs.vendor == 'true' || needs.paths-filter.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .go-version
+      - run: make depscheck
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Vendor Dependencies Check failed."
+          echo ""
+          echo "Do not modify files in the vendor/ directory directly."
+          echo "Instead, update dependencies in go.mod and run 'go mod tidy && go mod vendor' to sync the vendor directory."
+          echo "Then run 'make depscheck' locally to verify before pushing."
+
+  depscheck-save-artifacts:
+    needs: depscheck
+    if: always() && needs.depscheck.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  depscheck-on-fail:
+    needs: depscheck
+    if: always() && needs.depscheck.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Vendor Dependencies Check"
+
+  depscheck-on-success:
+    needs: depscheck
+    if: always() && needs.depscheck.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Vendor Dependencies Check"
+
+  # ------------------------------------------
+
+  quick-checks:
+    needs: paths-filter
+    if: needs.paths-filter.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .go-version
+      # make builds the golangci-lint and terrafmt versions pinned in .tools/go.mod on demand
+      - run: make quick-checks
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Quick CI Checks failed."
+          echo ""
+          echo "Run 'make quick-checks' locally to run the quick checks: formatting (gofmt/gofumpt/gci),"
+          echo "the test package policy check, and acceptance test terraform block formatting (terrafmt)."
+          echo "For formatting issues, 'make fmt', 'make goimports' and 'make terrafmt' will fix them automatically."
+
+  quick-checks-save-artifacts:
+    needs: quick-checks
+    if: always() && needs.quick-checks.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  quick-checks-on-fail:
+    needs: quick-checks
+    if: always() && needs.quick-checks.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Quick CI Checks"
+
+  quick-checks-on-success:
+    needs: quick-checks
+    if: always() && needs.quick-checks.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Quick CI Checks"
+
+  # ------------------------------------------
+
+  docs-lint:
+    needs: paths-filter
+    if: needs.paths-filter.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .go-version
+      - run: make docs-lint
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Documentation Linting failed."
+          echo ""
+          echo "Run 'make docs-lint' locally."
+          echo "Check your documentation files under docs/ for spelling, structure, or"
+          echo "terraform block formatting issues."
+
+  docs-lint-save-artifacts:
+    needs: docs-lint
+    if: always() && needs.docs-lint.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  docs-lint-on-fail:
+    needs: docs-lint
+    if: always() && needs.docs-lint.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Documentation Linting"
+
+  docs-lint-on-success:
+    needs: docs-lint
+    if: always() && needs.docs-lint.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Documentation Linting"
+
+  # ------------------------------------------
+
+  shellcheck:
+    needs: paths-filter
+    if: needs.paths-filter.outputs.scripts == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - name: Run ShellCheck
+        run: make shellcheck
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::ShellCheck failed."
+          echo ""
+          echo "Run 'make shellcheck' locally to check shell scripts for issues."
+          echo "ShellCheck identifies common shell scripting pitfalls and bugs."
+          echo "See https://www.shellcheck.net/wiki/ for explanations of each warning code."
+
+  shellcheck-save-artifacts:
+    needs: shellcheck
+    if: always() && needs.shellcheck.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  shellcheck-on-fail:
+    needs: shellcheck
+    if: always() && needs.shellcheck.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "ShellCheck Scripts"
+
+  shellcheck-on-success:
+    needs: shellcheck
+    if: always() && needs.shellcheck.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "ShellCheck Scripts"
+
+  # ------------------------------------------
+
+  typos:
+    needs: paths-filter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      # make downloads the typos release pinned in GNUmakefile into .tools/bin
+      - name: Run typos
+        run: make typos
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::typos found spelling errors."
+          echo ""
+          echo "Run 'make typos' locally to reproduce and 'make typos-fix' to fix them."
+          echo "False positives (Azure names, API enum values) go in .typos.toml."
+
+  typos-save-artifacts:
+    needs: typos
+    if: always() && needs.typos.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  typos-on-fail:
+    needs: typos
+    if: always() && needs.typos.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Typos"
+
+  typos-on-success:
+    needs: typos
+    if: always() && needs.typos.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Typos"
+
+  # ==========================================
+  # Phase 2 & 3: Heavy Checks
+  # ==========================================
+
+  build:
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
+    if: |
+      always() &&
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .go-version
+      - name: Build Provider
+        run: go build -v -o /dev/null main.go
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::GoLang Compilation failed."
+          echo ""
+          echo "Run 'go build' or 'make build' locally to identify compilation errors."
+
+  build-save-artifacts:
+    needs: build
+    if: always() && needs.build.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  build-on-fail:
+    needs: build
+    if: always() && needs.build.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "GoLang Compilation"
+
+  build-on-success:
+    needs: build
+    if: always() && needs.build.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "GoLang Compilation"
+
+  # ------------------------------------------
+
+  golint:
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
+    if: |
+      always() &&
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .go-version
+      # The tfproviderlint module plugin requires a custom-built golangci-lint binary (see
+      # .tools/.custom-gcl.yml); cache .tools/bin so it is only rebuilt when the pins
+      # (.tools/go.mod for golangci-lint, .custom-gcl.yml for the plugin) change. make rebuilds
+      # the binary when it is missing or older than either file.
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .tools/bin
+          key: golangci-with-modules-${{ hashFiles('.tools/go.mod', '.tools/go.sum', '.tools/.custom-gcl.yml') }}
+      - name: Build golangci-lint with plugins
+        run: make golangci-with-modules
+      - name: Run golangci-lint
+        run: .tools/bin/golangci-with-modules run -v ./...
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::GoLangCI Linting failed."
+          echo ""
+          echo "Run the Go linter locally: make lint (builds .tools/bin/golangci-with-modules with the tfproviderlint plugin)"
+          echo "Fix any reported issues before pushing. Common issues include:"
+          echo "  - Unused variables or imports"
+          echo "  - Error return values not checked"
+          echo "  - Formatting issues (run 'make fmt')"
+
+  golint-save-artifacts:
+    needs: golint
+    if: always() && needs.golint.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  golint-on-fail:
+    needs: golint
+    if: always() && needs.golint.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "GoLangCI Linting"
+
+  golint-on-success:
+    needs: golint
+    if: always() && needs.golint.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "GoLangCI Linting"
+
+  # ------------------------------------------
+
+
+  gencheck:
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
+    if: |
+      always() &&
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .go-version
+      - run: make gencheck
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Generation Check failed."
+          echo ""
+          echo "Run 'make generate' locally to regenerate auto-generated code, then commit the changes."
+          echo "This check ensures that generated files are up to date with their source definitions."
+
+  gencheck-save-artifacts:
+    needs: gencheck
+    if: always() && needs.gencheck.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  gencheck-on-fail:
+    needs: gencheck
+    if: always() && needs.gencheck.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Generation Check"
+
+  gencheck-on-success:
+    needs: gencheck
+    if: always() && needs.gencheck.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Generation Check"
+
+  # ------------------------------------------
+
+  unit-tests:
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
+    if: |
+      always() &&
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
+    runs-on: custom-linux-large
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .go-version
+      - run: make test
+        env:
+          GITHUB_ACTIONS_STAGE: "UNIT_TESTS"
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Unit Tests failed."
+          echo ""
+          echo "Run 'make test' locally to reproduce and fix the failing tests."
+          echo "If you have added a new resource or data source, ensure you have added"
+          echo "the corresponding unit tests. Check the test output above for details"
+          echo "on which tests failed and why."
+
+  unit-tests-save-artifacts:
+    needs: unit-tests
+    if: always() && needs.unit-tests.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  unit-tests-on-fail:
+    needs: unit-tests
+    if: always() && needs.unit-tests.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Unit Tests"
+
+  unit-tests-on-success:
+    needs: unit-tests
+    if: always() && needs.unit-tests.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Unit Tests"
+
+  # ------------------------------------------
+
+  validate-examples:
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
+    if: |
+      always() &&
+      needs.paths-filter.outputs.examples == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .go-version
+      - run: make validate-examples
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Example Validation failed."
+          echo ""
+          echo "Run 'make validate-examples' locally to check that your example"
+          echo "Terraform configurations under examples/ are valid."
+          echo "Ensure all examples use valid HCL syntax and reference existing resources."
+
+  validate-examples-save-artifacts:
+    needs: validate-examples
+    if: always() && needs.validate-examples.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  validate-examples-on-fail:
+    needs: validate-examples
+    if: always() && needs.validate-examples.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Validate Examples"
+
+  validate-examples-on-success:
+    needs: validate-examples
+    if: always() && needs.validate-examples.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Validate Examples"
+
+  # ------------------------------------------
+
+
+  secrets-check:
+    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
+    if: |
+      always() &&
+      needs.paths-filter.outputs.go == 'true' &&
+      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
+      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
+      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
+    runs-on: ubuntu-latest
+    outputs:
+      available: "${{ steps.check-secrets.outputs.available }}"
+    steps:
+      - id: check-secrets
+        run: |
+          if [[ "${ACTIONS_ID_TOKEN_REQUEST_URL}" == "" ]]; then
+            echo "available=false" | tee "${GITHUB_OUTPUT}"
+          else
+            echo "available=true" | tee "${GITHUB_OUTPUT}"
+          fi
+
+  provider-tests:
+    runs-on: custom-linux-large
+    needs: [secrets-check]
+    if: needs.secrets-check.outputs.available == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Install Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: ./.go-version
+
+      - name: Azure CLI login (using OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
+
+      - name: Set OIDC Token
+        run: |
+          echo "ARM_OIDC_TOKEN=$(curl -H "Accept: application/json; api-version=2.0" -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" -H "Content-Type: application/json" -G --data-urlencode "audience=api://AzureADTokenExchange" "${ACTIONS_ID_TOKEN_REQUEST_URL}" | jq -r '.value')" >>"${GITHUB_ENV}"
+
+      - name: Set OIDC Token File Path
+        run: echo "${ARM_OIDC_TOKEN}" >"${RUNNER_TEMP}/oidc-token.jwt" && echo "ARM_OIDC_TOKEN_FILE_PATH=${RUNNER_TEMP}/oidc-token.jwt" >>"${GITHUB_ENV}"
+
+      - name: Set Client ID Path
+        run: echo "${{ secrets.ARM_CLIENT_ID }}" >"${RUNNER_TEMP}/client-id" && echo "ARM_CLIENT_ID_PATH=${RUNNER_TEMP}/client-id" >>"${GITHUB_ENV}"
+
+      - name: Set Client Secret Path
+        run: echo "${{ secrets.ARM_CLIENT_SECRET }}" >"${RUNNER_TEMP}/client-secret" && echo "ARM_CLIENT_SECRET_PATH=${RUNNER_TEMP}/client-secret" >>"${GITHUB_ENV}"
+
+      - name: Set Client Certificate Path
+        run: echo "${{ secrets.ARM_CLIENT_CERTIFICATE }}" | base64 -d >"${RUNNER_TEMP}/client-certificate.pfx" && echo "ARM_CLIENT_CERTIFICATE_PATH=${RUNNER_TEMP}/client-certificate.pfx" >>"${GITHUB_ENV}"
+
+      - name: Run provider tests
+        run: make testacc TEST=./internal/provider TESTARGS="-run '^TestAcc'"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_CERTIFICATE: ${{ secrets.ARM_CLIENT_CERTIFICATE }}
+          ARM_CLIENT_CERTIFICATE_PASSWORD: ${{ secrets.ARM_CLIENT_CERTIFICATE_PASSWORD }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Clean Up OIDC Token File Path
+        run: rm -f "${RUNNER_TEMP}/oidc-token.jwt"
+        if: always()
+
+      - name: Clean Up Client ID Path
+        run: rm -f "${RUNNER_TEMP}/client-id"
+        if: always()
+
+      - name: Clean Up Client Secret Path
+        run: rm -f "${RUNNER_TEMP}/client-secret"
+        if: always()
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::Provider Tests failed."
+          echo ""
+          echo "Run make testacc TEST=./internal/provider TESTARGS=\"-run '^TestAcc'\" locally"
+          echo "to reproduce and fix the failing provider tests."
+
+  provider-tests-save-artifacts:
+    needs: provider-tests
+    if: always() && needs.provider-tests.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  provider-tests-on-fail:
+    needs: provider-tests
+    if: always() && needs.provider-tests.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Provider Tests"
+
+  provider-tests-on-success:
+    needs: provider-tests
+    if: always() && needs.provider-tests.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Provider Tests"

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package conditionalaccess
@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -40,11 +41,11 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, errs := stable.ValidateIdentityConditionalAccessPolicyID(id, "id"); len(errs) > 0 {
-				out := ""
+				var out strings.Builder
 				for _, err := range errs {
-					out += err.Error()
+					out.WriteString(err.Error())
 				}
-				return errors.New(out)
+				return errors.New(out.String())
 			}
 			return nil
 		}),
@@ -325,6 +326,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							},
 						},
 
+						// The Microsoft Entra admin center renamed this condition from "Location" to "Network", however this is
+						// a portal label change only and the underlying Microsoft Graph API is unchanged (still `locations`).
+						// See https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network
+						// TODO: consider renaming this block to `network` in v4.0 to align with the portal terminology.
 						"locations": {
 							Type:     pluginsdk.TypeList,
 							Optional: true,
@@ -644,7 +649,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 	}
 
 	if policy.Id == nil || *policy.Id == "" {
-		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for conditional access policy is nil/empty")
+		return tf.ErrorDiagF(errors.New("bad API response"), "Object ID returned for conditional access policy is nil/empty")
 	}
 
 	id := stable.NewIdentityConditionalAccessPolicyID(pointer.From(policy.Id))

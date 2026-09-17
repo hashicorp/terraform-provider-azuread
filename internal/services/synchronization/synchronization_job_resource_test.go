@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package synchronization_test
@@ -20,7 +20,7 @@ import (
 
 type SynchronizationJobResource struct{}
 
-func TestAccSynchronizationJob(t *testing.T) {
+func TestAccSynchronizationJob_sequential(t *testing.T) {
 	acceptance.RunTestsInSequence(t, map[string]map[string]func(t *testing.T){
 		"synchronizationJob": {
 			"basic":    testAccSynchronizationJob_basic,

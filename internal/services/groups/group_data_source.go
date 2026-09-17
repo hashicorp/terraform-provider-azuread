@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package groups
@@ -315,7 +315,6 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		foundGroup = (*groups)[0]
-
 	} else if mailNickname != "" {
 		filter := fmt.Sprintf("mailNickname eq '%s'", mailNickname)
 		if mailEnabled != nil {
@@ -346,7 +345,6 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		foundGroup = (*groups)[0]
-
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		resp, err := client.GetGroup(ctx, beta.NewGroupID(objectId), groupBeta.DefaultGetGroupOperationOptions())
 		if err != nil {

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package groups
@@ -52,11 +52,11 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, errs := beta.ValidateGroupID(id, "id"); len(errs) > 0 {
-				out := ""
+				var out strings.Builder
 				for _, err := range errs {
-					out += err.Error()
+					out.WriteString(err.Error())
 				}
-				return errors.New(out)
+				return errors.New(out.String())
 			}
 			return nil
 		}),
@@ -620,7 +620,6 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 					return tf.ErrorDiagF(errors.New("returned model was not a group"), "Creating group in %s", administrativeUnitId)
 				}
 				groupObjectId = pointer.From(newGroup.Id)
-
 			} else {
 				ref := beta.ReferenceCreate{
 					ODataId: pointer.To(fmt.Sprintf("%s%s", client.Client.BaseUri, beta.NewDirectoryObjectID(groupObjectId).ID())),
@@ -630,7 +629,6 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 				}
 			}
 		}
-
 	} else {
 		options := groupBeta.CreateGroupOperationOptions{
 			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
