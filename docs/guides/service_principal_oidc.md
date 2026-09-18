@@ -165,6 +165,61 @@ It is recommend to use the `AzureCLI@2` task as below (note the `azureSubscripti
     ARM_ADO_PIPELINE_SERVICE_CONNECTION_ID: $(SERVICE_CONNECTION_ID)
 ```
 
+**AKS Workload Identity**
+
+When running Terraform in a pod on an AKS cluster with [Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview) enabled, set `use_aks_workload_identity` in the provider block, or the `ARM_USE_AKS_WORKLOAD_IDENTITY` environment variable, to `true`.
+
+The provider will then source the following environment variables, which are projected into the pod by the AKS Workload Identity mutating admission webhook:
+
+* `AZURE_FEDERATED_TOKEN_FILE` - the path to the projected service account token, used as the OIDC token
+* `AZURE_CLIENT_ID` - the client ID of the application to authenticate as
+* `AZURE_TENANT_ID` - the tenant ID to authenticate against
+
+Values that are also configured explicitly, in the provider block or via the corresponding `ARM_*` environment variables, must match the values provided by AKS Workload Identity - the provider returns an error if the two conflict. If `use_aks_workload_identity` is enabled but `AZURE_FEDERATED_TOKEN_FILE` is not set and no OIDC token is configured, the provider returns an error rather than falling back to unauthenticated access.
+
+The pod must use a Kubernetes service account that is annotated with the client ID of the application, and labelled for workload identity:
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: terraform
+  namespace: tooling
+  annotations:
+    azure.workload.identity/client-id: "00000000-0000-0000-0000-000000000000"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: terraform
+  namespace: tooling
+  labels:
+    azure.workload.identity/use: "true"
+spec:
+  serviceAccountName: terraform
+  containers:
+    - name: terraform
+      image: hashicorp/terraform:latest
+      env:
+        - name: ARM_USE_AKS_WORKLOAD_IDENTITY
+          value: "true"
+```
+
+The application must trust the cluster's OIDC issuer. The federated identity credential can be managed with this provider, where `issuer` is the cluster's OIDC issuer URL and `subject` identifies the Kubernetes service account:
+
+```hcl
+resource "azuread_application_federated_identity_credential" "terraform" {
+  application_id = azuread_application.example.id
+  display_name   = "aks-workload-identity"
+  description    = "Terraform running on AKS"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://oidc.prod-aks.azure.com/00000000-0000-0000-0000-000000000000/"
+  subject        = "system:serviceaccount:tooling:terraform"
+}
+```
+
+~> **Note:** The `subject` must be in the form `system:serviceaccount:<namespace>:<service-account-name>`, and the `issuer` must exactly match the OIDC issuer URL of the cluster, including the trailing slash.
+
 ---
 
 -> **Note:** Support for OpenID Connect was added in version 2.23.0 of the Terraform AzureAD provider.
