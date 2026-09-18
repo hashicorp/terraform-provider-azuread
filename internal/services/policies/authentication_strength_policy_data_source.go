@@ -5,9 +5,11 @@ package policies
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,6 +21,7 @@ import (
 var _ sdk.DataSource = AuthenticationStrengthPolicyDataSource{}
 
 type AuthenticationStrengthPolicyDataSourceModel struct {
+	ObjectId            string   `tfschema:"object_id"`
 	DisplayName         string   `tfschema:"display_name"`
 	Description         string   `tfschema:"description"`
 	AllowedCombinations []string `tfschema:"allowed_combinations"`
@@ -28,10 +31,21 @@ type AuthenticationStrengthPolicyDataSource struct{}
 
 func (r AuthenticationStrengthPolicyDataSource) Arguments() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"object_id": {
+			Description:  "The object ID of the authentication strength policy",
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ExactlyOneOf: []string{"display_name", "object_id"},
+			ValidateFunc: validation.IsUUID,
+		},
+
 		"display_name": {
 			Description:  "The display name for the authentication strength policy",
 			Type:         pluginsdk.TypeString,
-			Required:     true,
+			Optional:     true,
+			Computed:     true,
+			ExactlyOneOf: []string{"display_name", "object_id"},
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 	}
@@ -74,30 +88,48 @@ func (r AuthenticationStrengthPolicyDataSource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			resp, err := client.ListAuthenticationStrengthPoliciesComplete(ctx, authenticationstrengthpolicy.DefaultListAuthenticationStrengthPoliciesOperationOptions())
-			if err != nil {
-				return fmt.Errorf("listing authentication strength policies: %+v", err)
-			}
+			var policy *stable.AuthenticationStrengthPolicy
 
-			var matches []stable.AuthenticationStrengthPolicy
-			for _, policy := range resp.Items {
-				if pointer.From(policy.DisplayName) == model.DisplayName {
-					matches = append(matches, policy)
+			if model.ObjectId != "" {
+				id := stable.NewPolicyAuthenticationStrengthPolicyID(model.ObjectId)
+
+				resp, err := client.GetAuthenticationStrengthPolicy(ctx, id, authenticationstrengthpolicy.DefaultGetAuthenticationStrengthPolicyOperationOptions())
+				if err != nil {
+					if response.WasNotFound(resp.HttpResponse) {
+						return fmt.Errorf("no authentication strength policy found with object ID %q", model.ObjectId)
+					}
+					return fmt.Errorf("retrieving %s: %+v", id, err)
+				}
+				if resp.Model == nil {
+					return fmt.Errorf("retrieving %s: API error, model was nil", id)
+				}
+
+				policy = resp.Model
+			} else {
+				resp, err := client.ListAuthenticationStrengthPoliciesComplete(ctx, authenticationstrengthpolicy.DefaultListAuthenticationStrengthPoliciesOperationOptions())
+				if err != nil {
+					return fmt.Errorf("listing authentication strength policies: %+v", err)
+				}
+
+				var matches []stable.AuthenticationStrengthPolicy
+				for _, item := range resp.Items {
+					if pointer.From(item.DisplayName) == model.DisplayName {
+						matches = append(matches, item)
+					}
+				}
+
+				switch len(matches) {
+				case 0:
+					return fmt.Errorf("no authentication strength policy found with display name %q", model.DisplayName)
+				case 1:
+					policy = &matches[0]
+				default:
+					return fmt.Errorf("multiple authentication strength policies found with display name %q, please specify `object_id` instead", model.DisplayName)
 				}
 			}
 
-			switch len(matches) {
-			case 0:
-				return fmt.Errorf("no authentication strength policy found with display name %q", model.DisplayName)
-			case 1:
-				// Expected, continue below
-			default:
-				return fmt.Errorf("multiple authentication strength policies found with display name %q, please ensure the display name is unique", model.DisplayName)
-			}
-
-			policy := matches[0]
 			if policy.Id == nil {
-				return fmt.Errorf("retrieving authentication strength policy with display name %q: API error, ID was nil", model.DisplayName)
+				return errors.New("retrieving authentication strength policy: API error, ID was nil")
 			}
 
 			id := stable.NewPolicyAuthenticationStrengthPolicyID(*policy.Id)
@@ -108,6 +140,7 @@ func (r AuthenticationStrengthPolicyDataSource) Read() sdk.ResourceFunc {
 			}
 
 			state := AuthenticationStrengthPolicyDataSourceModel{
+				ObjectId:            pointer.From(policy.Id),
 				DisplayName:         pointer.From(policy.DisplayName),
 				Description:         policy.Description.GetOrZero(),
 				AllowedCombinations: allowedCombinations,
