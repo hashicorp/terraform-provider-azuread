@@ -13,13 +13,30 @@ import (
 
 type AuthenticationStrengthPolicyDataSource struct{}
 
-func TestAccAuthenticationStrengthPolicyDataSource_basic(t *testing.T) {
+func TestAccAuthenticationStrengthPolicyDataSource_displayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_authentication_strength_policy", "test")
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: AuthenticationStrengthPolicyDataSource{}.basic(data),
+			Config: AuthenticationStrengthPolicyDataSource{}.displayName(data),
 			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("object_id").Exists(),
+				check.That(data.ResourceName).Key("display_name").Exists(),
+				check.That(data.ResourceName).Key("description").Exists(),
+				check.That(data.ResourceName).Key("allowed_combinations.#").HasValue("1"),
+			),
+		},
+	})
+}
+
+func TestAccAuthenticationStrengthPolicyDataSource_objectId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_authentication_strength_policy", "test")
+
+	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: AuthenticationStrengthPolicyDataSource{}.objectId(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("display_name").Exists(),
 				check.That(data.ResourceName).Key("description").Exists(),
 				check.That(data.ResourceName).Key("allowed_combinations.#").HasValue("1"),
@@ -36,18 +53,29 @@ func TestAccAuthenticationStrengthPolicyDataSource_builtIn(t *testing.T) {
 			Config: AuthenticationStrengthPolicyDataSource{}.builtIn(),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue("Multifactor authentication"),
+				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("allowed_combinations.#").Exists(),
 			),
 		},
 	})
 }
 
-func (AuthenticationStrengthPolicyDataSource) basic(data acceptance.TestData) string {
+func (AuthenticationStrengthPolicyDataSource) displayName(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
 data "azuread_authentication_strength_policy" "test" {
   display_name = azuread_authentication_strength_policy.test.display_name
+}
+`, AuthenticationStrengthPolicyResource{}.basic(data))
+}
+
+func (AuthenticationStrengthPolicyDataSource) objectId(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_authentication_strength_policy" "test" {
+  object_id = azuread_authentication_strength_policy.test.object_id
 }
 `, AuthenticationStrengthPolicyResource{}.basic(data))
 }
