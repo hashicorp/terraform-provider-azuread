@@ -40,7 +40,7 @@ func decodeCertificate(clientCertificate string) ([]byte, error) {
 }
 
 func getOidcToken(d *pluginsdk.ResourceData) (*string, error) {
-	idToken := d.Get("oidc_token").(string)
+	idToken := strings.TrimSpace(d.Get("oidc_token").(string))
 
 	if path := d.Get("oidc_token_file_path").(string); path != "" {
 		fileTokenRaw, err := os.ReadFile(path)
@@ -52,6 +52,22 @@ func getOidcToken(d *pluginsdk.ResourceData) (*string, error) {
 
 		if idToken != "" && idToken != fileToken {
 			return nil, fmt.Errorf("mismatch between supplied OIDC token and supplied OIDC token file contents - please either remove one or ensure they match")
+		}
+
+		idToken = fileToken
+	}
+
+	if d.Get("use_aks_workload_identity").(bool) && os.Getenv("AZURE_FEDERATED_TOKEN_FILE") != "" {
+		path := os.Getenv("AZURE_FEDERATED_TOKEN_FILE")
+		fileTokenRaw, err := os.ReadFile(os.Getenv("AZURE_FEDERATED_TOKEN_FILE"))
+		if err != nil {
+			return nil, fmt.Errorf("reading OIDC Token from file %q provided by AKS Workload Identity: %v", path, err)
+		}
+
+		fileToken := strings.TrimSpace(string(fileTokenRaw))
+
+		if idToken != "" && idToken != fileToken {
+			return nil, fmt.Errorf("mismatch between supplied OIDC token and OIDC token file contents provided by AKS Workload Identity - please either remove one, ensure they match, or disable use_aks_workload_identity")
 		}
 
 		idToken = fileToken
@@ -76,6 +92,14 @@ func getClientId(d *pluginsdk.ResourceData) (*string, error) {
 		}
 
 		clientId = fileClientId
+	}
+
+	if d.Get("use_aks_workload_identity").(bool) && os.Getenv("AZURE_CLIENT_ID") != "" {
+		aksClientId := os.Getenv("AZURE_CLIENT_ID")
+		if clientId != "" && clientId != aksClientId {
+			return nil, fmt.Errorf("mismatch between supplied Client ID and that provided by AKS Workload Identity - please remove, ensure they match, or disable use_aks_workload_identity")
+		}
+		clientId = aksClientId
 	}
 
 	return &clientId, nil
