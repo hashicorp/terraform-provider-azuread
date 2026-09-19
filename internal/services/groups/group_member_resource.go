@@ -101,6 +101,18 @@ func groupMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		return tf.ErrorDiagF(err, "Adding %s", id)
 	}
 
+	// Wait for membership link to be created
+	if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		if member, err := groupGetMember(ctx, memberClient, id); err != nil {
+			return nil, err
+		} else if member != nil {
+			return pointer.To(true), nil
+		}
+		return pointer.To(false), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
+	}
+
 	d.SetId(resourceId.String())
 
 	return groupMemberResourceRead(ctx, d, meta)
