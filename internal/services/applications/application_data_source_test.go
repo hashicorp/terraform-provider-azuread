@@ -74,6 +74,7 @@ func (ApplicationDataSource) testCheck(data acceptance.TestData) acceptance.Test
 		check.That(data.ResourceName).Key("feature_tags.0.enterprise").HasValue("true"),
 		check.That(data.ResourceName).Key("feature_tags.0.gallery").HasValue("true"),
 		check.That(data.ResourceName).Key("feature_tags.0.hide").HasValue("true"),
+		check.That(data.ResourceName).Key("native_authentication_apis_enabled").HasValue("none"),
 		check.That(data.ResourceName).Key("group_membership_claims.#").HasValue("1"),
 		check.That(data.ResourceName).Key("group_membership_claims.0").HasValue("All"),
 		check.That(data.ResourceName).Key("identifier_uris.#").HasValue("2"),
