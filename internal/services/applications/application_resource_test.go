@@ -235,6 +235,30 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsMatchingIdAndValueWith
 	})
 }
 
+func TestAccApplication_duplicateAppRolesOauth2PermissionsMatchingIdAndValueUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+	permissionId := data.UUID()
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.duplicateAppRolesOauth2PermissionsMatchingIdAndValueUpdate(data, permissionId, `"User"`),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
+				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"),
+			),
+		},
+		{
+			Config: r.duplicateAppRolesOauth2PermissionsMatchingIdAndValueUpdate(data, permissionId, `"Application", "User"`),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
+				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccApplication_duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithMismatchingMetadata(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -1516,6 +1540,36 @@ resource "azuread_application" "test" {
   }
 }
 `, data.RandomInteger, data.UUID())
+}
+
+func (ApplicationResource) duplicateAppRolesOauth2PermissionsMatchingIdAndValueUpdate(data acceptance.TestData, permissionId, allowedMemberTypes string) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "%[2]s"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+
+  app_role {
+    allowed_member_types = [%[3]s]
+    description          = "Administer the application"
+    display_name         = "Administer"
+    enabled              = true
+    id                   = "%[2]s"
+    value                = "administer"
+  }
+}
+`, data.RandomInteger, permissionId, allowedMemberTypes)
 }
 
 func (ApplicationResource) duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithMismatchingMetadata(data acceptance.TestData) string {

@@ -288,14 +288,21 @@ func (r ApplicationAppRoleResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("updating %s: could not identify existing app role", id)
 			}
 
-			// Disable the existing role prior to update
-			if err = applicationDisableAppRoles(ctx, client, applicationId, &newRoles); err != nil {
+			// Disable changed permissions prior to update. Permission scopes that share
+			// an ID with the role must be patched atomically by Microsoft Graph.
+			roles, scopes, err := applicationPrepareAppRoleAndOauth2PermissionScopeUpdate(ctx, client, applicationId, &newRoles, nil)
+			if err != nil {
 				return fmt.Errorf("disabling %s in preparation for update: %+v", id, err)
 			}
 
 			properties := stable.Application{
 				Id:       &applicationId.ApplicationId,
-				AppRoles: &newRoles,
+				AppRoles: roles,
+			}
+			if scopes != nil {
+				properties.Api = &stable.ApiApplication{
+					OAuth2PermissionScopes: scopes,
+				}
 			}
 
 			// Patch the application with the new set of roles
@@ -353,14 +360,21 @@ func (r ApplicationAppRoleResource) Delete() sdk.ResourceFunc {
 				return fmt.Errorf("deleting %s: could not identify existing app role", id)
 			}
 
-			// Disable the existing role prior to update
-			if err = applicationDisableAppRoles(ctx, client, applicationId, &newRoles); err != nil {
+			// Disable changed permissions prior to deletion. Permission scopes that
+			// share an ID with the role must be patched atomically by Microsoft Graph.
+			roles, scopes, err := applicationPrepareAppRoleAndOauth2PermissionScopeUpdate(ctx, client, applicationId, &newRoles, nil)
+			if err != nil {
 				return fmt.Errorf("disabling %s in preparation for deletion: %+v", id, err)
 			}
 
 			properties := stable.Application{
 				Id:       &applicationId.ApplicationId,
-				AppRoles: &newRoles,
+				AppRoles: roles,
+			}
+			if scopes != nil {
+				properties.Api = &stable.ApiApplication{
+					OAuth2PermissionScopes: scopes,
+				}
 			}
 
 			// Patch the application with the new set of roles

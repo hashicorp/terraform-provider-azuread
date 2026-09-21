@@ -1505,20 +1505,23 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	api := expandApplicationApi(d.Get("api").([]interface{}))
 
-	if d.HasChange("app_role") {
-		appRoles := expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())
-		if err = applicationDisableAppRoles(ctx, client, *id, appRoles); err != nil {
-			return tf.ErrorDiagPathF(err, "app_role", "Could not disable App Roles for application with object ID %q", id.ApplicationId)
+	if d.HasChange("app_role") || d.HasChange("api.0.oauth2_permission_scope") {
+		var appRoles *[]stable.AppRole
+		if d.HasChange("app_role") {
+			appRoles = expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())
+		}
+		var scopes *[]stable.PermissionScope
+		if d.HasChange("api.0.oauth2_permission_scope") {
+			scopes = expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List())
 		}
 
-		properties.AppRoles = expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())
-	}
-
-	if d.HasChange("api.0.oauth2_permission_scope") {
-		scopes := expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List())
-		if err = applicationDisableOauth2PermissionScopes(ctx, client, *id, scopes); err != nil {
-			return tf.ErrorDiagPathF(err, "api.0.oauth2_permission_scope", "Could not disable OAuth2 Permission Scopes for application with object ID %q", id.ApplicationId)
+		appRoles, scopes, err = applicationPrepareAppRoleAndOauth2PermissionScopeUpdate(ctx, client, *id, appRoles, scopes)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not prepare App Roles and OAuth2 Permission Scopes update for application with object ID %q", id.ApplicationId)
 		}
+
+		properties.AppRoles = appRoles
+		api.OAuth2PermissionScopes = scopes
 	} else {
 		api.OAuth2PermissionScopes = nil
 	}

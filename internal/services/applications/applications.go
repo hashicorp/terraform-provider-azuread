@@ -61,23 +61,22 @@ func applicationAppRoleChanged(existingRole stable.AppRole, newRole stable.AppRo
 	return true
 }
 
-func applicationDisableAppRoles(ctx context.Context, client *application.ApplicationClient, applicationId stable.ApplicationId, newRoles *[]stable.AppRole) error {
-	if newRoles == nil {
-		newRoles = &[]stable.AppRole{}
-	}
+func applicationPrepareAppRoleAndOauth2PermissionScopeUpdate(ctx context.Context, client *application.ApplicationClient, applicationId stable.ApplicationId, newRoles *[]stable.AppRole, newScopes *[]stable.PermissionScope) (*[]stable.AppRole, *[]stable.PermissionScope, error) {
+	updateRoles := newRoles != nil
+	updateScopes := newScopes != nil
 
 	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return fmt.Errorf("%s was not found", applicationId)
+			return nil, nil, fmt.Errorf("%s was not found", applicationId)
 		}
 
-		return fmt.Errorf("retrieving %s: %v", applicationId, err)
+		return nil, nil, fmt.Errorf("retrieving %s: %v", applicationId, err)
 	}
 
 	app := resp.Model
 	if app == nil {
-		return fmt.Errorf("retrieving %s: model was nil", applicationId)
+		return nil, nil, fmt.Errorf("retrieving %s: model was nil", applicationId)
 	}
 
 	var existingRoles []stable.AppRole
@@ -85,211 +84,185 @@ func applicationDisableAppRoles(ctx context.Context, client *application.Applica
 		existingRoles = *app.AppRoles
 	}
 
-	// Shortcut: don't update if no changes to be made
-	if reflect.DeepEqual(existingRoles, *newRoles) {
-		return nil
-	}
-
-	// Identify any roles to be changed
-	var disable bool
-	for _, newRole := range *newRoles {
-		if newRole.Id == nil || *newRole.Id == "" {
-			return fmt.Errorf("new role provided with nil or empty ID")
-		}
-		for i, existing := range existingRoles {
-			if existing.Id != nil && *existing.Id == *newRole.Id {
-				if existing.IsEnabled != nil && *existing.IsEnabled && applicationAppRoleChanged(existing, newRole) {
-					*existingRoles[i].IsEnabled = false
-					disable = true
-				}
-				break
-			}
-		}
-	}
-
-	// Identify any roles to be removed
-	for i, existing := range existingRoles {
-		found := false
-		for _, newRole := range *newRoles {
-			if existing.Id != nil && *newRole.Id == *existing.Id {
-				found = true
-				break
-			}
-		}
-		if !found {
-			*existingRoles[i].IsEnabled = false
-			disable = true
-		}
-	}
-
-	if disable {
-		// Disable any changed or removed roles
-		properties := stable.Application{
-			Id:       app.Id,
-			AppRoles: &existingRoles,
-		}
-		if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
-			return fmt.Errorf("disabling App Roles for %s: %v", applicationId, err)
-		}
-
-		// Wait for application manifest to reflect the disabled roles
-		deadline, ok := ctx.Deadline()
-		if !ok {
-			return fmt.Errorf("context has no deadline")
-		}
-		timeout := time.Until(deadline)
-		_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-			Pending:    []string{"Waiting"},
-			Target:     []string{"Disabled"},
-			Timeout:    timeout,
-			MinTimeout: 1 * time.Second,
-			Refresh: func() (interface{}, string, error) {
-				resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
-				if err != nil {
-					return nil, "Error", fmt.Errorf("retrieving %s: %v", applicationId, err)
-				}
-				app := resp.Model
-				if app == nil || app.AppRoles == nil {
-					return nil, "Error", fmt.Errorf("reading roles for %s: %v", applicationId, err)
-				}
-				actualRoles := *app.AppRoles
-				for _, expectedRole := range existingRoles {
-					if expectedRole.IsEnabled != nil && !*expectedRole.IsEnabled {
-						for _, actualRole := range actualRoles {
-							if expectedRole.Id != nil && actualRole.Id != nil && *expectedRole.Id == *actualRole.Id {
-								if actualRole.IsEnabled != nil && *actualRole.IsEnabled {
-									return actualRoles, "Waiting", nil
-								}
-								break
-							}
-						}
-					}
-				}
-				return actualRoles, "Disabled", nil
-			},
-		}).WaitForStateContext(ctx)
-		if err != nil {
-			return fmt.Errorf("waiting for App Roles to be disabled for %s: %v", applicationId, err)
-		}
-	}
-
-	return nil
-}
-
-func applicationDisableOauth2PermissionScopes(ctx context.Context, client *application.ApplicationClient, applicationId stable.ApplicationId, newScopes *[]stable.PermissionScope) error {
-	if newScopes == nil {
-		newScopes = &[]stable.PermissionScope{}
-	}
-
-	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
-	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			return fmt.Errorf("%s was not found", applicationId)
-		}
-
-		return fmt.Errorf("retrieving %s: %v", applicationId, err)
-	}
-
-	app := resp.Model
-	if app == nil {
-		return fmt.Errorf("retrieving %s: model was nil", applicationId)
-	}
-
 	var existingScopes []stable.PermissionScope
 	if app.Api != nil && app.Api.OAuth2PermissionScopes != nil {
 		existingScopes = *app.Api.OAuth2PermissionScopes
 	}
 
-	// Don't update if no changes to be made
-	if reflect.DeepEqual(existingScopes, *newScopes) {
-		return nil
+	// A nil collection is unmanaged by the caller, so use the current values when
+	// checking for shared IDs without including the collection in an unrelated update.
+	if newRoles == nil {
+		newRoles = &existingRoles
+	}
+	if newScopes == nil {
+		newScopes = &existingScopes
 	}
 
-	// Identify any scopes to be changed
-	var disable bool
+	newRolesById := make(map[string]stable.AppRole, len(*newRoles))
+	for _, newRole := range *newRoles {
+		if newRole.Id == nil || *newRole.Id == "" {
+			return nil, nil, fmt.Errorf("new role provided with nil or empty ID")
+		}
+		newRolesById[strings.ToLower(*newRole.Id)] = newRole
+	}
+
+	newScopesById := make(map[string]stable.PermissionScope, len(*newScopes))
 	for _, newScope := range *newScopes {
 		if newScope.Id == nil || *newScope.Id == "" {
-			return fmt.Errorf("new scope provided with nil or empty ID")
+			return nil, nil, fmt.Errorf("new scope provided with nil or empty ID")
 		}
-		for i, existing := range existingScopes {
-			if existing.Id != nil && *existing.Id == *newScope.Id {
-				if existing.IsEnabled != nil && *existing.IsEnabled && !reflect.DeepEqual(existing, newScope) {
-					*existingScopes[i].IsEnabled = false
-					disable = true
-				}
-				break
+		newScopesById[strings.ToLower(*newScope.Id)] = newScope
+	}
+
+	idsToDisable := make(map[string]struct{})
+	for _, existingRole := range existingRoles {
+		if existingRole.Id == nil || existingRole.IsEnabled == nil || !*existingRole.IsEnabled {
+			continue
+		}
+
+		id := strings.ToLower(*existingRole.Id)
+		newRole, found := newRolesById[id]
+		if !found || applicationAppRoleChanged(existingRole, newRole) {
+			idsToDisable[id] = struct{}{}
+		}
+	}
+
+	for _, existingScope := range existingScopes {
+		if existingScope.Id == nil || existingScope.IsEnabled == nil || !*existingScope.IsEnabled {
+			continue
+		}
+
+		id := strings.ToLower(*existingScope.Id)
+		newScope, found := newScopesById[id]
+		if !found || !reflect.DeepEqual(existingScope, newScope) {
+			idsToDisable[id] = struct{}{}
+		}
+	}
+
+	if len(idsToDisable) == 0 {
+		if !updateRoles {
+			newRoles = nil
+		}
+		if !updateScopes {
+			newScopes = nil
+		}
+		return newRoles, newScopes, nil
+	}
+
+	existingRoleIds := make(map[string]struct{}, len(existingRoles))
+	for _, existingRole := range existingRoles {
+		if existingRole.Id != nil {
+			existingRoleIds[strings.ToLower(*existingRole.Id)] = struct{}{}
+		}
+	}
+	existingScopeIds := make(map[string]struct{}, len(existingScopes))
+	for _, existingScope := range existingScopes {
+		if existingScope.Id != nil {
+			existingScopeIds[strings.ToLower(*existingScope.Id)] = struct{}{}
+		}
+	}
+	for id := range idsToDisable {
+		_, roleExists := existingRoleIds[id]
+		_, scopeExists := existingScopeIds[id]
+		if roleExists && scopeExists {
+			updateRoles = true
+			updateScopes = true
+			break
+		}
+	}
+
+	disabledRoles := append([]stable.AppRole(nil), existingRoles...)
+	for i, existingRole := range disabledRoles {
+		if existingRole.Id != nil {
+			if _, disable := idsToDisable[strings.ToLower(*existingRole.Id)]; disable {
+				disabledRoles[i].IsEnabled = pointer.To(false)
 			}
 		}
 	}
 
-	// Identify any scopes to be removed
-	for i, existing := range existingScopes {
-		found := false
-		for _, newScope := range *newScopes {
-			if existing.Id != nil && *newScope.Id == *existing.Id {
-				found = true
-				break
+	disabledScopes := append([]stable.PermissionScope(nil), existingScopes...)
+	for i, existingScope := range disabledScopes {
+		if existingScope.Id != nil {
+			if _, disable := idsToDisable[strings.ToLower(*existingScope.Id)]; disable {
+				disabledScopes[i].IsEnabled = pointer.To(false)
 			}
-		}
-		if !found {
-			*existingScopes[i].IsEnabled = false
-			disable = true
 		}
 	}
 
-	if disable {
-		// Disable any changed or removed scopes
-		properties := stable.Application{
-			Api: &stable.ApiApplication{
-				OAuth2PermissionScopes: &existingScopes,
-			},
+	// Microsoft Graph requires roles and scopes sharing an ID to have matching common
+	// properties. Patch both collections together so disabling one does not create an
+	// invalid intermediate application manifest.
+	properties := stable.Application{
+		Id: app.Id,
+	}
+	if updateRoles {
+		properties.AppRoles = &disabledRoles
+	}
+	if updateScopes {
+		properties.Api = &stable.ApiApplication{
+			OAuth2PermissionScopes: &disabledScopes,
 		}
-		if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
-			return fmt.Errorf("disabling OAuth2 Permission Scopes for %s: %+v", applicationId, err)
-		}
+	}
+	if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+		return nil, nil, fmt.Errorf("disabling App Roles and OAuth2 Permission Scopes for %s: %v", applicationId, err)
+	}
 
-		// Wait for application manifest to reflect the disabled scopes
-		deadline, ok := ctx.Deadline()
-		if !ok {
-			return fmt.Errorf("context has no deadline")
-		}
-		timeout := time.Until(deadline)
-		_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-			Pending:    []string{"Waiting"},
-			Target:     []string{"Disabled"},
-			Timeout:    timeout,
-			MinTimeout: 1 * time.Second,
-			Refresh: func() (interface{}, string, error) {
-				resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
-				if err != nil {
-					return nil, "Error", fmt.Errorf("retrieving %s: %+v", applicationId, err)
-				}
-				app := resp.Model
-				if app == nil || app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
-					return nil, "Error", fmt.Errorf("reading scopes for %s: %+v", applicationId, err)
-				}
-				actualScopes := *app.Api.OAuth2PermissionScopes
-				for _, expectedScope := range existingScopes {
-					if expectedScope.IsEnabled != nil && !*expectedScope.IsEnabled {
-						for _, actualScope := range actualScopes {
-							if expectedScope.Id != nil && actualScope.Id != nil && *expectedScope.Id == *actualScope.Id {
-								if actualScope.IsEnabled != nil && *actualScope.IsEnabled {
-									return actualScopes, "Waiting", nil
-								}
-								break
-							}
+	// Wait for the application manifest to reflect all disabled permissions.
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return nil, nil, fmt.Errorf("context has no deadline")
+	}
+	timeout := time.Until(deadline)
+	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+		Pending:    []string{"Waiting"},
+		Target:     []string{"Disabled"},
+		Timeout:    timeout,
+		MinTimeout: 1 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
+			if err != nil {
+				return nil, "Error", fmt.Errorf("retrieving %s: %v", applicationId, err)
+			}
+
+			app := resp.Model
+			if app == nil {
+				return nil, "Error", fmt.Errorf("reading permissions for %s: model was nil", applicationId)
+			}
+
+			if app.AppRoles != nil {
+				for _, actualRole := range *app.AppRoles {
+					if actualRole.Id != nil {
+						if _, expectedDisabled := idsToDisable[strings.ToLower(*actualRole.Id)]; expectedDisabled && actualRole.IsEnabled != nil && *actualRole.IsEnabled {
+							return app, "Waiting", nil
 						}
 					}
 				}
-				return actualScopes, "Disabled", nil
-			},
-		}).WaitForStateContext(ctx)
-		if err != nil {
-			return fmt.Errorf("waiting for OAuth2 Permission Scopes to be disabled for %s: %+v", applicationId, err)
-		}
+			}
+
+			if app.Api != nil && app.Api.OAuth2PermissionScopes != nil {
+				for _, actualScope := range *app.Api.OAuth2PermissionScopes {
+					if actualScope.Id != nil {
+						if _, expectedDisabled := idsToDisable[strings.ToLower(*actualScope.Id)]; expectedDisabled && actualScope.IsEnabled != nil && *actualScope.IsEnabled {
+							return app, "Waiting", nil
+						}
+					}
+				}
+			}
+
+			return app, "Disabled", nil
+		},
+	}).WaitForStateContext(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("waiting for App Roles and OAuth2 Permission Scopes to be disabled for %s: %v", applicationId, err)
 	}
 
-	return nil
+	if !updateRoles {
+		newRoles = nil
+	}
+	if !updateScopes {
+		newScopes = nil
+	}
+	return newRoles, newScopes, nil
 }
 
 func applicationFindByName(ctx context.Context, client *application.ApplicationClient, displayName string) (*[]stable.Application, error) {

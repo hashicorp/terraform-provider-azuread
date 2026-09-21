@@ -109,6 +109,47 @@ func TestAccApplicationAppRole_multipleUpdate(t *testing.T) {
 	})
 }
 
+func TestAccApplicationAppRole_sharedWithPermissionScope(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_app_role", "test")
+	r := ApplicationAppRoleResource{}
+	permissionId := data.UUID()
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.sharedWithPermissionScope(data, permissionId, `"User"`),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("allowed_member_types.#").HasValue("1"),
+			),
+		},
+		{
+			Config: r.sharedWithPermissionScope(data, permissionId, `"Application", "User"`),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("allowed_member_types.#").HasValue("2"),
+			),
+		},
+		{
+			Config: r.sharedPermissionScopeOnly(data, permissionId),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That("azuread_application_permission_scope.test").Key("scope_id").HasValue(permissionId),
+			),
+		},
+		{
+			Config: r.sharedWithPermissionScope(data, permissionId, `"User"`),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		{
+			Config: r.sharedAppRoleOnly(data, permissionId),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+	})
+}
+
 func TestAccApplicationAppRole_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_app_role", "test")
 	r := ApplicationAppRoleResource{}
@@ -246,6 +287,76 @@ resource "azuread_application_app_role" "test2" {
   value                = "luser"
 }
 `, data.RandomInteger)
+}
+
+func (ApplicationAppRoleResource) sharedWithPermissionScope(data acceptance.TestData, permissionId, allowedMemberTypes string) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application_registration" "test" {
+  display_name = "acctest-AppRegistration-%[1]d"
+}
+
+resource "azuread_application_app_role" "test" {
+  application_id = azuread_application_registration.test.id
+  role_id        = "%[2]s"
+
+  allowed_member_types = [%[3]s]
+  description          = "Administer the application"
+  display_name         = "Administer"
+  value                = "administer"
+}
+
+resource "azuread_application_permission_scope" "test" {
+  application_id = azuread_application_registration.test.id
+  scope_id       = "%[2]s"
+  value          = "administer"
+
+  admin_consent_description  = "Administer the application"
+  admin_consent_display_name = "Administer"
+
+  depends_on = [azuread_application_app_role.test]
+}
+`, data.RandomInteger, permissionId, allowedMemberTypes)
+}
+
+func (ApplicationAppRoleResource) sharedPermissionScopeOnly(data acceptance.TestData, permissionId string) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application_registration" "test" {
+  display_name = "acctest-AppRegistration-%[1]d"
+}
+
+resource "azuread_application_permission_scope" "test" {
+  application_id = azuread_application_registration.test.id
+  scope_id       = "%[2]s"
+  value          = "administer"
+
+  admin_consent_description  = "Administer the application"
+  admin_consent_display_name = "Administer"
+}
+`, data.RandomInteger, permissionId)
+}
+
+func (ApplicationAppRoleResource) sharedAppRoleOnly(data acceptance.TestData, permissionId string) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application_registration" "test" {
+  display_name = "acctest-AppRegistration-%[1]d"
+}
+
+resource "azuread_application_app_role" "test" {
+  application_id = azuread_application_registration.test.id
+  role_id        = "%[2]s"
+
+  allowed_member_types = ["User"]
+  description          = "Administer the application"
+  display_name         = "Administer"
+  value                = "administer"
+}
+`, data.RandomInteger, permissionId)
 }
 
 func (ApplicationAppRoleResource) requiresImport(data acceptance.TestData) string {
