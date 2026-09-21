@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -40,11 +41,11 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, errs := stable.ValidateIdentityConditionalAccessPolicyID(id, "id"); len(errs) > 0 {
-				out := ""
+				var out strings.Builder
 				for _, err := range errs {
-					out += err.Error()
+					out.WriteString(err.Error())
 				}
-				return errors.New(out)
+				return errors.New(out.String())
 			}
 			return nil
 		}),

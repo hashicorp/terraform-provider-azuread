@@ -42,11 +42,11 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, errs := stable.ValidatePolicyAuthenticationStrengthPolicyID(id, "id"); len(errs) > 0 {
-				out := ""
+				var out strings.Builder
 				for _, err := range errs {
-					out += err.Error()
+					out.WriteString(err.Error())
 				}
-				return errors.New(out)
+				return errors.New(out.String())
 			}
 			return nil
 		}),
@@ -84,8 +84,8 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 						if !ok {
 							return nil, []error{fmt.Errorf("expected a string value for %q", k)}
 						}
-						split := strings.Split(val, ",")
-						for _, s := range split {
+						split := strings.SplitSeq(val, ",")
+						for s := range split {
 							if !slices.Contains(stable.PossibleValuesForAuthenticationMethodModes(), strings.TrimSpace(s)) {
 								return nil, []error{fmt.Errorf("unrecognized authentication method %q in %q", s, k)}
 							}
@@ -93,6 +93,12 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 						return nil, nil
 					},
 				},
+			},
+
+			"object_id": {
+				Description: "The object ID of the authentication strength policy",
+				Type:        pluginsdk.TypeString,
+				Computed:    true,
 			},
 		},
 	}
@@ -204,6 +210,7 @@ func authenticationStrengthPolicyRead(ctx context.Context, d *pluginsdk.Resource
 
 	tf.Set(d, "display_name", pointer.From(authenticationStrengthPolicy.DisplayName))
 	tf.Set(d, "description", authenticationStrengthPolicy.Description.GetOrZero())
+	tf.Set(d, "object_id", pointer.From(authenticationStrengthPolicy.Id))
 
 	allowedCombinations := make([]string, 0)
 	for _, v := range pointer.From(authenticationStrengthPolicy.AllowedCombinations) {

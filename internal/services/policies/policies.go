@@ -8,6 +8,9 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicycombinationconfiguration"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicyassignment"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
@@ -50,6 +53,54 @@ func tryGetPolicyId(ctx context.Context, metadata sdk.ResourceMetaData, scopeId,
 
 	policyId := parse.NewRoleManagementPolicyID(assignmentId.ScopeType, assignmentId.ScopeId, assignmentId.PolicyId)
 	return policyId, true, nil
+}
+
+func findCombinationConfiguration(ctx context.Context, client *authenticationstrengthpolicycombinationconfiguration.AuthenticationStrengthPolicyCombinationConfigurationClient, policyId stable.PolicyAuthenticationStrengthPolicyId, predicate func(stable.AuthenticationCombinationConfiguration) bool) (string, error) {
+	resp, err := client.ListAuthenticationStrengthPolicyCombinationConfigurations(ctx, policyId, authenticationstrengthpolicycombinationconfiguration.DefaultListAuthenticationStrengthPolicyCombinationConfigurationsOperationOptions())
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	if resp.Model == nil {
+		return "", nil
+	}
+
+	for _, config := range *resp.Model {
+		if predicate(config) {
+			return pointer.From(config.AuthenticationCombinationConfiguration().Id), nil
+		}
+	}
+
+	return "", nil
+}
+
+func waitForCombinationConfiguration(ctx context.Context, client *authenticationstrengthpolicycombinationconfiguration.AuthenticationStrengthPolicyCombinationConfigurationClient, id stable.PolicyAuthenticationStrengthPolicyIdCombinationConfigurationId) error {
+	return consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetAuthenticationStrengthPolicyCombinationConfiguration(ctx, id, authenticationstrengthpolicycombinationconfiguration.DefaultGetAuthenticationStrengthPolicyCombinationConfigurationOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return pointer.To(false), err
+		}
+		return pointer.To(true), nil
+	})
+}
+
+func waitForCombinationConfigurationDeletion(ctx context.Context, client *authenticationstrengthpolicycombinationconfiguration.AuthenticationStrengthPolicyCombinationConfigurationClient, id stable.PolicyAuthenticationStrengthPolicyIdCombinationConfigurationId) error {
+	return consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetAuthenticationStrengthPolicyCombinationConfiguration(ctx, id, authenticationstrengthpolicycombinationconfiguration.DefaultGetAuthenticationStrengthPolicyCombinationConfigurationOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return nil, err
+		}
+		return pointer.To(true), nil
+	})
 }
 
 // getPolicyId reliably fetches the policy ID, waiting for eventual consistency

@@ -53,7 +53,7 @@ jobs:
       examples: ${{ steps.filter.outputs.examples }}
       scripts: ${{ steps.filter.outputs.scripts }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
         id: filter
         with:
@@ -64,10 +64,12 @@ jobs:
               - '**/*.go'
               - 'go.mod'
               - 'go.sum'
+              - '.tools/**'
             vendor:
               - 'vendor/**'
               - 'go.mod'
               - 'go.sum'
+              - '.tools/**'
             examples:
               - 'examples/**'
             scripts:
@@ -80,14 +82,13 @@ jobs:
 
   depscheck:
     needs: paths-filter
-    if: needs.paths-filter.outputs.vendor == 'true'
+    if: needs.paths-filter.outputs.vendor == 'true' || needs.paths-filter.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - run: make tools
       - run: make depscheck
       - name: Guidance on failure
         if: failure()
@@ -124,22 +125,20 @@ jobs:
     if: needs.paths-filter.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - name: Install tooling
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.12.2
+      # make builds the golangci-lint and terrafmt versions pinned in .tools/go.mod on demand
       - run: make quick-checks
       - name: Guidance on failure
         if: failure()
         run: |
           echo "::error::Quick CI Checks failed."
           echo ""
-          echo "Run 'make quick-checks' locally to run the quick checks: formatting (gofmt/gofumpt)"
-          echo "and the test package policy check."
-          echo "For formatting issues, 'make fmt' will fix them automatically."
+          echo "Run 'make quick-checks' locally to run the quick checks: formatting (gofmt/gofumpt/gci),"
+          echo "the test package policy check, and acceptance test terraform block formatting (terrafmt)."
+          echo "For formatting issues, 'make fmt', 'make goimports' and 'make terrafmt' will fix them automatically."
 
   quick-checks-save-artifacts:
     needs: quick-checks
@@ -167,11 +166,10 @@ jobs:
     if: needs.paths-filter.outputs.docs == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - run: make tools
       - run: make docs-lint
       - name: Guidance on failure
         if: failure()
@@ -208,7 +206,7 @@ jobs:
     if: needs.paths-filter.outputs.scripts == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - name: Run ShellCheck
         run: make shellcheck
       - name: Guidance on failure
@@ -239,6 +237,43 @@ jobs:
     with:
       check_name: "ShellCheck Scripts"
 
+  # ------------------------------------------
+
+  typos:
+    needs: paths-filter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      # make downloads the typos release pinned in GNUmakefile into .tools/bin
+      - name: Run typos
+        run: make typos
+      - name: Guidance on failure
+        if: failure()
+        run: |
+          echo "::error::typos found spelling errors."
+          echo ""
+          echo "Run 'make typos' locally to reproduce and 'make typos-fix' to fix them."
+          echo "False positives (Azure names, API enum values) go in .typos.toml."
+
+  typos-save-artifacts:
+    needs: typos
+    if: always() && needs.typos.result == 'failure'
+    uses: ./.github/workflows/pr-save-artifacts.yaml
+
+  typos-on-fail:
+    needs: typos
+    if: always() && needs.typos.result == 'failure'
+    uses: ./.github/workflows/pr-comment-failure.yaml
+    with:
+      check_name: "Typos"
+
+  typos-on-success:
+    needs: typos
+    if: always() && needs.typos.result == 'success'
+    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
+    with:
+      check_name: "Typos"
+
   # ==========================================
   # Phase 2 & 3: Heavy Checks
   # ==========================================
@@ -254,8 +289,8 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       - name: Build Provider
@@ -299,18 +334,28 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - run: make tools
-      - run: make lint
+      # The tfproviderlint module plugin requires a custom-built golangci-lint binary (see
+      # .tools/.custom-gcl.yml); cache .tools/bin so it is only rebuilt when the pins
+      # (.tools/go.mod for golangci-lint, .custom-gcl.yml for the plugin) change. make rebuilds
+      # the binary when it is missing or older than either file.
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .tools/bin
+          key: golangci-with-modules-${{ hashFiles('.tools/go.mod', '.tools/go.sum', '.tools/.custom-gcl.yml') }}
+      - name: Build golangci-lint with plugins
+        run: make golangci-with-modules
+      - name: Run golangci-lint
+        run: .tools/bin/golangci-with-modules run -v ./...
       - name: Guidance on failure
         if: failure()
         run: |
           echo "::error::GoLangCI Linting failed."
           echo ""
-          echo "Run the Go linter locally: make lint"
+          echo "Run the Go linter locally: make lint (builds .tools/bin/golangci-with-modules with the tfproviderlint plugin)"
           echo "Fix any reported issues before pushing. Common issues include:"
           echo "  - Unused variables or imports"
           echo "  - Error return values not checked"
@@ -337,51 +382,6 @@ jobs:
 
   # ------------------------------------------
 
-  tfproviderlint:
-    needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
-    if: |
-      always() &&
-      needs.paths-filter.outputs.go == 'true' &&
-      (needs.depscheck.result == 'success' || needs.depscheck.result == 'skipped') &&
-      (needs.quick-checks.result == 'success' || needs.quick-checks.result == 'skipped') &&
-      (needs.docs-lint.result == 'success' || needs.docs-lint.result == 'skipped') &&
-      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
-        with:
-          go-version-file: .go-version
-      - run: make tools
-      - run: make tfproviderlint
-      - name: Guidance on failure
-        if: failure()
-        run: |
-          echo "::error::Terraform Provider Linting failed."
-          echo ""
-          echo "Run 'make tfproviderlint' locally to check the resource schemas and"
-          echo "acceptance test terraform blocks, and fix any reported issues."
-
-  tfproviderlint-save-artifacts:
-    needs: tfproviderlint
-    if: always() && needs.tfproviderlint.result == 'failure'
-    uses: ./.github/workflows/pr-save-artifacts.yaml
-
-  tfproviderlint-on-fail:
-    needs: tfproviderlint
-    if: always() && needs.tfproviderlint.result == 'failure'
-    uses: ./.github/workflows/pr-comment-failure.yaml
-    with:
-      check_name: "Terraform Provider Linting"
-
-  tfproviderlint-on-success:
-    needs: tfproviderlint
-    if: always() && needs.tfproviderlint.result == 'success'
-    uses: ./.github/workflows/pr-comment-failure-outdated.yaml
-    with:
-      check_name: "Terraform Provider Linting"
-
-  # ------------------------------------------
 
   gencheck:
     needs: [paths-filter, depscheck, quick-checks, docs-lint, shellcheck]
@@ -394,11 +394,10 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - run: make tools
       - run: make gencheck
       - name: Guidance on failure
         if: failure()
@@ -440,8 +439,8 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: custom-linux-large
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
       - run: make test
@@ -489,11 +488,10 @@ jobs:
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: .go-version
-      - run: make tools
       - run: make validate-examples
       - name: Guidance on failure
         if: failure()
@@ -553,15 +551,15 @@ jobs:
     if: needs.secrets-check.outputs.available == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Install Go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: ./.go-version
 
       - name: Azure CLI login (using OIDC)
-        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}

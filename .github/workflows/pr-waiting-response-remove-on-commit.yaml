@@ -3,8 +3,11 @@ name: Pull Request New Commit
 
 # Removes the waiting-response label whenever new commits are pushed to a PR.
 
+# issue-remove-label.yaml (called below) needs issues: write as well - a reusable workflow
+# cannot be granted more than its caller has, and the run fails at startup if it asks.
 permissions:
   pull-requests: write
+  issues: write
 
 on:
   pull_request_target:

@@ -39,7 +39,7 @@ BUG FIXES:
 FEATURES:
 * **New Resource:** `azuread_flexible_federated_identity_credential`  ([#1788](https://github.com/hashicorp/terraform-provider-azuread/issues/1788))
 
-EHANCEMENTS:
+ENHANCEMENTS:
 
 * Dependencies: `go-azure-sdk` updated to `v0.20251029.1173336` ([#1787](https://github.com/hashicorp/terraform-provider-azuread/issues/1787))
 * Dependencies: `Go` updated to `v1.25.3` ([#1792](https://github.com/hashicorp/terraform-provider-azuread/issues/1792))
@@ -1372,7 +1372,7 @@ IMPROVEMENTS:
 * validation: adding validation to all fields ([#30](https://github.com/hashicorp/terraform-provider-azuread/issues/30))
 * `azuread_application` - support for `required_resource_access` property ([#23](https://github.com/hashicorp/terraform-provider-azuread/issues/23))
 * `azuread_service_principal` - support for the `tags` property ([#31](https://github.com/hashicorp/terraform-provider-azuread/issues/31))
-* `azuread_service_principal_password` - support for realitive ends dates with the `end_date_relative` property ([#53](https://github.com/hashicorp/terraform-provider-azuread/issues/53))
+* `azuread_service_principal_password` - support for relative ends dates with the `end_date_relative` property ([#53](https://github.com/hashicorp/terraform-provider-azuread/issues/53))
 
 BUG FIXES:
 

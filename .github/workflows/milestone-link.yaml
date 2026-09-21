@@ -20,12 +20,13 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           # we cannot use go-version-file here because no repositories are checked out so there is no file to reference
           go-version: '1.25.3'
       - run: |
-          go install github.com/stephybun/link-milestone@latest
+          # link-milestone has no tagged releases, so pin to a commit
+          go install github.com/stephybun/link-milestone@1e48f06f81570d223831a9fca0fd8bb0ad11c7da
           link-milestone
         env:
           PR_NUMBER: ${{ github.event.number }}

@@ -38,6 +38,7 @@ class pullRequest(displayName: String, environment: String, vcsRootId : String) 
 
             features {
                 Golang()
+                BuildCacheFeature()
             }
 
             params {
@@ -46,6 +47,7 @@ class pullRequest(displayName: String, environment: String, vcsRootId : String) 
                 TerraformShouldPanicForSchemaErrors()
                 TerraformCoreBinaryTesting()
                 ReadOnlySettings()
+                GoCache()
                 BuildStartTime()
 
                 text("SERVICES", "portal")

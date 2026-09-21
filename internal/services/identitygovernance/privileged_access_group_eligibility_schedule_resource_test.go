@@ -152,16 +152,16 @@ resource "azuread_group" "pam" {
   }
 }
 
-resource "azuread_user" "eligibile_owner" {
-  user_principal_name = "pam-eligible-owner-eligibile-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "acctest PAM Owner (Eligibile) %[1]s"
+resource "azuread_user" "eligible_owner" {
+  user_principal_name = "pam-eligible-owner-eligible-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctest PAM Owner (Eligible) %[1]s"
   password            = "%[2]s"
 }
 
 
 resource "azuread_privileged_access_group_eligibility_schedule" "owner" {
   group_id        = azuread_group.pam.object_id
-  principal_id    = azuread_user.eligibile_owner.object_id
+  principal_id    = azuread_user.eligible_owner.object_id
   assignment_type = "owner"
   duration        = "%[3]s"
   justification   = "%[4]s"

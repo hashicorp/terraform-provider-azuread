@@ -49,7 +49,7 @@ resource "azuread_privileged_access_group_assignment_schedule" "example" {
 * `start_date` (Optional) The date from which this assignment is valid, formatted as an RFC3339 date string (e.g. 2018-01-01T01:02:03Z). If not provided, the assignment is immediately valid.
 * `expiration_date` (Optional) The date that this assignment expires, formatted as an RFC3339 date string (e.g. 2018-01-01T01:02:03Z).
 * `duration` (Optional) The duration that this assignment is valid for, formatted as an ISO8601 duration (e.g. P30D for 30 days, PT3H for three hours).
-* `permanent_assignment` (Optional) Is this assigment permanently valid.
+* `permanent_assignment` (Optional) Is this assignment permanently valid.
 
 At least one of `expiration_date`, `duration`, or `permanent_assignment` must be supplied. The role policy may limit the maximum duration which can be supplied.
 

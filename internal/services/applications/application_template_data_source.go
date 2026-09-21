@@ -132,7 +132,7 @@ func applicationTemplateDataSourceRead(ctx context.Context, d *pluginsdk.Resourc
 
 		template = &templates[0]
 		if templateDisplayName := template.DisplayName.GetOrZero(); !strings.EqualFold(templateDisplayName, displayName) {
-			return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for application tempate matching filter: %q", templateDisplayName, displayName, *options.Filter), "Bad API Response")
+			return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for application template matching filter: %q", templateDisplayName, displayName, *options.Filter), "Bad API Response")
 		}
 	}
 

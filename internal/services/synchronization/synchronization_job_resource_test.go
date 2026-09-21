@@ -20,7 +20,7 @@ import (
 
 type SynchronizationJobResource struct{}
 
-func TestAccSynchronizationJob(t *testing.T) {
+func TestAccSynchronizationJob_sequential(t *testing.T) {
 	acceptance.RunTestsInSequence(t, map[string]map[string]func(t *testing.T){
 		"synchronizationJob": {
 			"basic":    testAccSynchronizationJob_basic,
