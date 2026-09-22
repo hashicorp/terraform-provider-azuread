@@ -1519,9 +1519,13 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 
 	if appRoles != nil || scopes != nil {
-		if err = applicationDisableChangedPermissions(ctx, client, *id, appRoles, scopes); err != nil {
+		var permissions applicationPermissions
+		if permissions, err = applicationDisableChangedPermissions(ctx, client, *id, appRoles, scopes); err != nil {
 			return tf.ErrorDiagF(err, "Could not disable App Roles and OAuth2 Permission Scopes for application with object ID %q", id.ApplicationId)
 		}
+
+		appRoles = permissions.AppRoles
+		scopes = permissions.OAuth2PermissionScopes
 	}
 
 	properties.AppRoles = appRoles

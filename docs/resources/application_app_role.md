@@ -76,6 +76,8 @@ The following arguments are supported:
 
 -> **Roles and Permission Scopes** In Azure Active Directory, application roles and permission scopes exported by an application share the same namespace and cannot contain duplicate values.
 
+~> **Shared Identifiers** An app role and a permission scope may share an identifier, in which case Azure Active Directory requires them to have matching `description`/`admin_consent_description`, `display_name`/`admin_consent_display_name` and `value` properties at all times. Changing any of these on one side alone is rejected, and this resource cannot update the other side for you. To change them, declare both permissions in the `app_role` and `api.oauth2_permission_scope` blocks of the `azuread_application` resource, which updates both together.
+
 ## Attributes Reference
 
 No additional attributes are exported.

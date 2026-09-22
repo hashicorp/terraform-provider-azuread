@@ -279,3 +279,83 @@ func TestPermissionScopesDisablingChangedRejectsEmptyId(t *testing.T) {
 		}
 	}
 }
+
+func TestApplicationSharedPermissionIds(t *testing.T) {
+	roles := []stable.AppRole{appRole("shared", "Shared", pointer.To(true)), appRole("role-only", "Role", pointer.To(true))}
+	scopes := []stable.PermissionScope{permissionScope("shared", "Shared", pointer.To(true)), permissionScope("scope-only", "Scope", pointer.To(true))}
+
+	shared := applicationSharedPermissionIds(roles, scopes)
+
+	if len(shared) != 1 {
+		t.Fatalf("expected 1 shared ID, got %d", len(shared))
+	}
+	if _, ok := shared["shared"]; !ok {
+		t.Fatal(`expected "shared" to be reported as a shared ID`)
+	}
+}
+
+func TestApplicationValidateSharedPermissions(t *testing.T) {
+	mismatchedValue := permissionScope("shared", "Shared", pointer.To(true))
+	mismatchedValue.Value = nullable.Value("something-else")
+
+	mismatchedDisplayName := permissionScope("shared", "Shared", pointer.To(true))
+	mismatchedDisplayName.AdminConsentDisplayName = nullable.Value("Renamed")
+
+	mismatchedDescription := permissionScope("shared", "Shared", pointer.To(true))
+	mismatchedDescription.AdminConsentDescription = nullable.Value("Rewritten")
+
+	testCases := []struct {
+		name      string
+		roles     []stable.AppRole
+		scopes    []stable.PermissionScope
+		wantError bool
+	}{
+		{
+			name:   "matching shared permission is accepted",
+			roles:  []stable.AppRole{appRole("shared", "Shared", pointer.To(true))},
+			scopes: []stable.PermissionScope{permissionScope("shared", "Shared", pointer.To(true))},
+		},
+		{
+			name:   "unshared permissions are not compared",
+			roles:  []stable.AppRole{appRole("role-1", "One", pointer.To(true))},
+			scopes: []stable.PermissionScope{permissionScope("scope-1", "Two", pointer.To(true))},
+		},
+		{
+			name:      "mismatched value is rejected",
+			roles:     []stable.AppRole{appRole("shared", "Shared", pointer.To(true))},
+			scopes:    []stable.PermissionScope{mismatchedValue},
+			wantError: true,
+		},
+		{
+			name:      "mismatched display name is rejected",
+			roles:     []stable.AppRole{appRole("shared", "Shared", pointer.To(true))},
+			scopes:    []stable.PermissionScope{mismatchedDisplayName},
+			wantError: true,
+		},
+		{
+			name:      "mismatched description is rejected",
+			roles:     []stable.AppRole{appRole("shared", "Shared", pointer.To(true))},
+			scopes:    []stable.PermissionScope{mismatchedDescription},
+			wantError: true,
+		},
+		{
+			name:      "mismatched enabled state is rejected",
+			roles:     []stable.AppRole{appRole("shared", "Shared", pointer.To(true))},
+			scopes:    []stable.PermissionScope{permissionScope("shared", "Shared", pointer.To(false))},
+			wantError: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := applicationValidateSharedPermissions(testCase.roles, testCase.scopes)
+
+			if testCase.wantError && err == nil {
+				t.Fatal("expected an error, got nil")
+			}
+			if !testCase.wantError && err != nil {
+				t.Fatalf("unexpected error: %+v", err)
+			}
+		})
+	}
+}

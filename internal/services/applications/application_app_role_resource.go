@@ -289,14 +289,15 @@ func (r ApplicationAppRoleResource) Update() sdk.ResourceFunc {
 			}
 
 			// Disable the existing role prior to update
-			if err = applicationDisableChangedPermissions(ctx, client, applicationId, &newRoles, nil); err != nil {
+			permissions, err := applicationDisableChangedPermissions(ctx, client, applicationId, &newRoles, nil)
+			if err != nil {
 				return fmt.Errorf("disabling %s in preparation for update: %+v", id, err)
 			}
 
 			properties := stable.Application{
-				Id:       &applicationId.ApplicationId,
-				AppRoles: &newRoles,
+				Id: &applicationId.ApplicationId,
 			}
+			permissions.applyTo(&properties)
 
 			// Patch the application with the new set of roles
 			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
@@ -353,15 +354,16 @@ func (r ApplicationAppRoleResource) Delete() sdk.ResourceFunc {
 				return fmt.Errorf("deleting %s: could not identify existing app role", id)
 			}
 
-			// Disable the existing role prior to update
-			if err = applicationDisableChangedPermissions(ctx, client, applicationId, &newRoles, nil); err != nil {
+			// Disable the existing role prior to deletion
+			permissions, err := applicationDisableChangedPermissions(ctx, client, applicationId, &newRoles, nil)
+			if err != nil {
 				return fmt.Errorf("disabling %s in preparation for deletion: %+v", id, err)
 			}
 
 			properties := stable.Application{
-				Id:       &applicationId.ApplicationId,
-				AppRoles: &newRoles,
+				Id: &applicationId.ApplicationId,
 			}
+			permissions.applyTo(&properties)
 
 			// Patch the application with the new set of roles
 			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {

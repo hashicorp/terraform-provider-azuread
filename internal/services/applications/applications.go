@@ -62,26 +62,50 @@ func applicationAppRoleChanged(existingRole stable.AppRole, newRole stable.AppRo
 	return true
 }
 
+// applicationPermissions holds the app role and OAuth2 permission scope collections
+// involved in an application update. A nil collection is one the caller does not
+// manage, and is left out of the request so that Microsoft Graph leaves it untouched.
+type applicationPermissions struct {
+	AppRoles               *[]stable.AppRole
+	OAuth2PermissionScopes *[]stable.PermissionScope
+}
+
+// applyTo sets the permission collections on an application update payload.
+func (p applicationPermissions) applyTo(properties *stable.Application) {
+	properties.AppRoles = p.AppRoles
+
+	if p.OAuth2PermissionScopes != nil {
+		if properties.Api == nil {
+			properties.Api = &stable.ApiApplication{}
+		}
+		properties.Api.OAuth2PermissionScopes = p.OAuth2PermissionScopes
+	}
+}
+
 // applicationDisableChangedPermissions disables any app roles and OAuth2 permission
 // scopes that are being changed or removed, which Microsoft Graph requires before a
 // permission can be modified, then waits for the application manifest to reflect the
 // change.
 //
-// Pass nil for a collection the caller does not manage. Such a collection is omitted
-// from the request, so that Microsoft Graph leaves it untouched.
-func applicationDisableChangedPermissions(ctx context.Context, client *application.ApplicationClient, applicationId stable.ApplicationId, newRoles *[]stable.AppRole, newScopes *[]stable.PermissionScope) error {
+// Pass nil for a collection the caller does not manage. The returned collections are
+// those the caller must send in its follow-up request: an unmanaged collection is
+// returned unchanged when it holds the counterpart of a shared permission, so that the
+// counterpart is re-enabled in the same request that applies the change.
+func applicationDisableChangedPermissions(ctx context.Context, client *application.ApplicationClient, applicationId stable.ApplicationId, newRoles *[]stable.AppRole, newScopes *[]stable.PermissionScope) (applicationPermissions, error) {
+	permissions := applicationPermissions{AppRoles: newRoles, OAuth2PermissionScopes: newScopes}
+
 	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return fmt.Errorf("%s was not found", applicationId)
+			return permissions, fmt.Errorf("%s was not found", applicationId)
 		}
 
-		return fmt.Errorf("retrieving %s: %+v", applicationId, err)
+		return permissions, fmt.Errorf("retrieving %s: %+v", applicationId, err)
 	}
 
 	app := resp.Model
 	if app == nil {
-		return fmt.Errorf("retrieving %s: model was nil", applicationId)
+		return permissions, fmt.Errorf("retrieving %s: model was nil", applicationId)
 	}
 
 	var existingRoles []stable.AppRole
@@ -97,15 +121,53 @@ func applicationDisableChangedPermissions(ctx context.Context, client *applicati
 	roleIds := make(map[string]struct{})
 	if newRoles != nil {
 		if roleIds, err = appRoleIdsToDisable(existingRoles, *newRoles); err != nil {
-			return err
+			return permissions, err
 		}
 	}
 
 	scopeIds := make(map[string]struct{})
 	if newScopes != nil {
 		if scopeIds, err = permissionScopeIdsToDisable(existingScopes, *newScopes); err != nil {
-			return err
+			return permissions, err
 		}
+	}
+
+	// An app role and an OAuth2 permission scope may share an ID, in which case Microsoft
+	// Graph requires them to agree on their common properties. Neither can be disabled
+	// without the other, so disabling one also disables its counterpart, even when the
+	// caller does not manage that collection.
+	desiredRoles, desiredScopes := existingRoles, existingScopes
+	if newRoles != nil {
+		desiredRoles = *newRoles
+	}
+	if newScopes != nil {
+		desiredScopes = *newScopes
+	}
+
+	sharedIds := applicationSharedPermissionIds(existingRoles, existingScopes)
+	disablingShared := make(map[string]struct{})
+	for id := range sharedIds {
+		_, disablingRole := roleIds[id]
+		_, disablingScope := scopeIds[id]
+		if disablingRole || disablingScope {
+			disablingShared[id] = struct{}{}
+		}
+	}
+
+	if len(disablingShared) > 0 {
+		// Graph would reject the caller's follow-up request, by which point this one has
+		// already disabled both sides, so fail before changing anything.
+		if err = applicationValidateSharedPermissions(desiredRoles, desiredScopes); err != nil {
+			return permissions, err
+		}
+
+		for id := range disablingShared {
+			roleIds[id] = struct{}{}
+			scopeIds[id] = struct{}{}
+		}
+
+		permissions.AppRoles = &desiredRoles
+		permissions.OAuth2PermissionScopes = &desiredScopes
 	}
 
 	disabledRoles := appRolesDisabling(existingRoles, roleIds)
@@ -113,7 +175,7 @@ func applicationDisableChangedPermissions(ctx context.Context, client *applicati
 
 	// Shortcut: don't update if there is nothing to disable
 	if disabledRoles == nil && disabledScopes == nil {
-		return nil
+		return permissions, nil
 	}
 
 	properties := stable.Application{
@@ -127,10 +189,77 @@ func applicationDisableChangedPermissions(ctx context.Context, client *applicati
 	}
 
 	if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
-		return fmt.Errorf("disabling App Roles and OAuth2 Permission Scopes for %s: %+v", applicationId, err)
+		return permissions, fmt.Errorf("disabling App Roles and OAuth2 Permission Scopes for %s: %+v", applicationId, err)
 	}
 
-	return applicationWaitForPermissionsDisabled(ctx, client, applicationId, disabledRoles, disabledScopes)
+	if err = applicationWaitForPermissionsDisabled(ctx, client, applicationId, disabledRoles, disabledScopes); err != nil {
+		return permissions, err
+	}
+
+	return permissions, nil
+}
+
+// applicationSharedPermissionIds returns the IDs that are used by both an app role and
+// an OAuth2 permission scope. Microsoft Graph permits an application to expose the same
+// permission as both, but requires the two entries to agree on their common properties.
+func applicationSharedPermissionIds(roles []stable.AppRole, scopes []stable.PermissionScope) map[string]struct{} {
+	roleIds := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		if role.Id != nil {
+			roleIds[*role.Id] = struct{}{}
+		}
+	}
+
+	shared := make(map[string]struct{})
+	for _, scope := range scopes {
+		if scope.Id == nil {
+			continue
+		}
+
+		if _, isRole := roleIds[*scope.Id]; isRole {
+			shared[*scope.Id] = struct{}{}
+		}
+	}
+
+	return shared
+}
+
+// applicationValidateSharedPermissions returns an error when an app role and an OAuth2
+// permission scope share an ID but disagree on the properties Microsoft Graph requires
+// to match. Origin is read-only and never sent, so it is not compared.
+//
+// The azuread_application resource rejects this at plan time, but the app role and
+// permission scope resources cannot see each other's configuration, so a mismatch
+// between them is only detectable once both collections have been retrieved.
+func applicationValidateSharedPermissions(roles []stable.AppRole, scopes []stable.PermissionScope) error {
+	rolesById := make(map[string]stable.AppRole, len(roles))
+	for _, role := range roles {
+		if role.Id != nil {
+			rolesById[*role.Id] = role
+		}
+	}
+
+	for _, scope := range scopes {
+		if scope.Id == nil {
+			continue
+		}
+
+		role, shared := rolesById[*scope.Id]
+		if !shared {
+			continue
+		}
+
+		if role.Description.GetOrZero() == scope.AdminConsentDescription.GetOrZero() &&
+			role.DisplayName.GetOrZero() == scope.AdminConsentDisplayName.GetOrZero() &&
+			role.Value.GetOrZero() == scope.Value.GetOrZero() &&
+			pointer.From(role.IsEnabled) == pointer.From(scope.IsEnabled) {
+			continue
+		}
+
+		return fmt.Errorf("the following values must match for the 'oauth2Permissions' and 'appRoles' properties with identifier %q: (description, adminConsentDescription), (displayName, adminConsentDisplayName), (isEnabled, isEnabled), (value, value). An app role and a permission scope sharing an ID must be updated together, which the azuread_application_app_role and azuread_application_permission_scope resources cannot do; declare both permissions in the app_role and api.oauth2_permission_scope blocks of azuread_application instead", *scope.Id)
+	}
+
+	return nil
 }
 
 // appRoleIdsToDisable returns the IDs of the app roles that newRoles changes or removes,

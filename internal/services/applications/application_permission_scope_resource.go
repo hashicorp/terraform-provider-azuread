@@ -307,15 +307,13 @@ func (r ApplicationPermissionScopeResource) Update() sdk.ResourceFunc {
 			}
 
 			// Disable the existing scope prior to update
-			if err = applicationDisableChangedPermissions(ctx, client, applicationId, nil, &newScopes); err != nil {
+			permissions, err := applicationDisableChangedPermissions(ctx, client, applicationId, nil, &newScopes)
+			if err != nil {
 				return fmt.Errorf("disabling %s in preparation for update: %+v", id, err)
 			}
 
-			properties := stable.Application{
-				Api: &stable.ApiApplication{
-					OAuth2PermissionScopes: &newScopes,
-				},
-			}
+			properties := stable.Application{}
+			permissions.applyTo(&properties)
 
 			// Patch the application with the new set of scopes
 			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
@@ -371,16 +369,14 @@ func (r ApplicationPermissionScopeResource) Delete() sdk.ResourceFunc {
 				return fmt.Errorf("deleting %s: could not identify existing permission scope", id)
 			}
 
-			// Disable the existing scope prior to update
-			if err = applicationDisableChangedPermissions(ctx, client, applicationId, nil, &newScopes); err != nil {
+			// Disable the existing scope prior to deletion
+			permissions, err := applicationDisableChangedPermissions(ctx, client, applicationId, nil, &newScopes)
+			if err != nil {
 				return fmt.Errorf("disabling %s in preparation for deletion: %+v", id, err)
 			}
 
-			properties := stable.Application{
-				Api: &stable.ApiApplication{
-					OAuth2PermissionScopes: &newScopes,
-				},
-			}
+			properties := stable.Application{}
+			permissions.applyTo(&properties)
 
 			// Patch the application with the new set of scopes
 			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
