@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicycombinationconfiguration"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -20,11 +21,26 @@ import (
 
 var _ sdk.DataSource = AuthenticationStrengthPolicyDataSource{}
 
+const (
+	combinationConfigurationTypeFido2           = "fido2"
+	combinationConfigurationTypeX509Certificate = "x509Certificate"
+)
+
 type AuthenticationStrengthPolicyDataSourceModel struct {
-	ObjectId            string   `tfschema:"object_id"`
-	DisplayName         string   `tfschema:"display_name"`
-	Description         string   `tfschema:"description"`
-	AllowedCombinations []string `tfschema:"allowed_combinations"`
+	ObjectId                  string                                                      `tfschema:"object_id"`
+	DisplayName               string                                                      `tfschema:"display_name"`
+	Description               string                                                      `tfschema:"description"`
+	AllowedCombinations       []string                                                    `tfschema:"allowed_combinations"`
+	CombinationConfigurations []AuthenticationStrengthPolicyCombinationConfigurationModel `tfschema:"combination_configurations"`
+}
+
+type AuthenticationStrengthPolicyCombinationConfigurationModel struct {
+	ObjectId              string   `tfschema:"object_id"`
+	Type                  string   `tfschema:"type"`
+	AppliesToCombinations []string `tfschema:"applies_to_combinations"`
+	AllowedAAGUIDs        []string `tfschema:"allowed_aaguids"`
+	AllowedIssuerSkis     []string `tfschema:"allowed_issuer_skis"`
+	AllowedPolicyOIDs     []string `tfschema:"allowed_policy_oids"`
 }
 
 type AuthenticationStrengthPolicyDataSource struct{}
@@ -65,6 +81,63 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 			Computed:    true,
 			Elem: &pluginsdk.Schema{
 				Type: pluginsdk.TypeString,
+			},
+		},
+
+		"combination_configurations": {
+			Description: "The combination configurations which further constrain the allowed combinations for this policy",
+			Type:        pluginsdk.TypeList,
+			Computed:    true,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"object_id": {
+						Description: "The object ID of the combination configuration",
+						Type:        pluginsdk.TypeString,
+						Computed:    true,
+					},
+
+					"type": {
+						Description: "The type of the combination configuration",
+						Type:        pluginsdk.TypeString,
+						Computed:    true,
+					},
+
+					"applies_to_combinations": {
+						Description: "The authentication method combinations this configuration applies to",
+						Type:        pluginsdk.TypeList,
+						Computed:    true,
+						Elem: &pluginsdk.Schema{
+							Type: pluginsdk.TypeString,
+						},
+					},
+
+					"allowed_aaguids": {
+						Description: "The AAGUIDs allowed by this configuration, for the `fido2` type",
+						Type:        pluginsdk.TypeList,
+						Computed:    true,
+						Elem: &pluginsdk.Schema{
+							Type: pluginsdk.TypeString,
+						},
+					},
+
+					"allowed_issuer_skis": {
+						Description: "The certificate issuer subject key identifiers allowed by this configuration, for the `x509Certificate` type",
+						Type:        pluginsdk.TypeList,
+						Computed:    true,
+						Elem: &pluginsdk.Schema{
+							Type: pluginsdk.TypeString,
+						},
+					},
+
+					"allowed_policy_oids": {
+						Description: "The certificate policy OIDs allowed by this configuration, for the `x509Certificate` type",
+						Type:        pluginsdk.TypeList,
+						Computed:    true,
+						Elem: &pluginsdk.Schema{
+							Type: pluginsdk.TypeString,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -134,20 +207,71 @@ func (r AuthenticationStrengthPolicyDataSource) Read() sdk.ResourceFunc {
 
 			id := stable.NewPolicyAuthenticationStrengthPolicyID(*policy.Id)
 
-			allowedCombinations := make([]string, 0)
-			for _, v := range pointer.From(policy.AllowedCombinations) {
-				allowedCombinations = append(allowedCombinations, string(v))
+			combinationConfigurations, err := flattenCombinationConfigurations(ctx, metadata, id)
+			if err != nil {
+				return err
 			}
 
 			state := AuthenticationStrengthPolicyDataSourceModel{
-				ObjectId:            pointer.From(policy.Id),
-				DisplayName:         pointer.From(policy.DisplayName),
-				Description:         policy.Description.GetOrZero(),
-				AllowedCombinations: allowedCombinations,
+				ObjectId:                  pointer.From(policy.Id),
+				DisplayName:               pointer.From(policy.DisplayName),
+				Description:               policy.Description.GetOrZero(),
+				AllowedCombinations:       flattenAuthenticationMethodModes(policy.AllowedCombinations),
+				CombinationConfigurations: combinationConfigurations,
 			}
 
 			metadata.ResourceData.SetId(id.ID())
 			return metadata.Encode(&state)
 		},
 	}
+}
+
+func flattenAuthenticationMethodModes(input *[]stable.AuthenticationMethodModes) []string {
+	output := make([]string, 0)
+	for _, v := range pointer.From(input) {
+		output = append(output, string(v))
+	}
+	return output
+}
+
+func flattenCombinationConfigurations(ctx context.Context, metadata sdk.ResourceMetaData, policyId stable.PolicyAuthenticationStrengthPolicyId) ([]AuthenticationStrengthPolicyCombinationConfigurationModel, error) {
+	client := metadata.Client.Policies.AuthenticationStrengthPolicyCombinationConfigurationClient
+
+	resp, err := client.ListAuthenticationStrengthPolicyCombinationConfigurationsComplete(ctx, policyId, authenticationstrengthpolicycombinationconfiguration.DefaultListAuthenticationStrengthPolicyCombinationConfigurationsOperationOptions())
+	if err != nil {
+		return nil, fmt.Errorf("listing combination configurations for %s: %+v", policyId, err)
+	}
+
+	output := make([]AuthenticationStrengthPolicyCombinationConfigurationModel, 0)
+	for _, item := range resp.Items {
+		base := item.AuthenticationCombinationConfiguration()
+
+		combinationConfiguration := AuthenticationStrengthPolicyCombinationConfigurationModel{
+			ObjectId:              pointer.From(base.Id),
+			AppliesToCombinations: flattenAuthenticationMethodModes(base.AppliesToCombinations),
+			AllowedAAGUIDs:        make([]string, 0),
+			AllowedIssuerSkis:     make([]string, 0),
+			AllowedPolicyOIDs:     make([]string, 0),
+		}
+
+		switch v := item.(type) {
+		case stable.Fido2CombinationConfiguration:
+			combinationConfiguration.Type = combinationConfigurationTypeFido2
+			if v.AllowedAAGUIDs != nil {
+				combinationConfiguration.AllowedAAGUIDs = *v.AllowedAAGUIDs
+			}
+		case stable.X509CertificateCombinationConfiguration:
+			combinationConfiguration.Type = combinationConfigurationTypeX509Certificate
+			if v.AllowedIssuerSkis != nil {
+				combinationConfiguration.AllowedIssuerSkis = *v.AllowedIssuerSkis
+			}
+			if v.AllowedPolicyOIDs != nil {
+				combinationConfiguration.AllowedPolicyOIDs = *v.AllowedPolicyOIDs
+			}
+		}
+
+		output = append(output, combinationConfiguration)
+	}
+
+	return output, nil
 }
