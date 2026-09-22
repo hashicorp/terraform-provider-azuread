@@ -8,4 +8,6 @@ const (
 	RoleDefinitionIdOwner  = "owner"
 )
 
+const authenticationStrengthPolicyResourceName = "azuread_authentication_strength_policy"
+
 var possibleValuesForRoleDefinitionId = []string{RoleDefinitionIdMember, RoleDefinitionIdOwner}
