@@ -62,7 +62,21 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `allowed_combinations` - A list of allowed authentication methods combinations for this authentication strength policy.
+* `combination_configurations` - A list of `combination_configurations` blocks as documented below, which further constrain the allowed combinations for this policy.
 * `description` - The description of this authentication strength policy.
 * `display_name` - The display name of this authentication strength policy.
 * `id` - The ID of this authentication strength policy.
 * `object_id` - The object ID of this authentication strength policy.
+
+---
+
+`combination_configurations` block exports the following:
+
+* `allowed_aaguids` - A list of AAGUIDs allowed by this combination configuration. Only populated when `type` is `fido2`.
+* `allowed_issuer_skis` - A list of allowed certificate issuer subject key identifier values. Only populated when `type` is `x509Certificate`.
+* `allowed_policy_oids` - A list of allowed certificate policy OIDs. Only populated when `type` is `x509Certificate`.
+* `applies_to_combinations` - A list of authentication method combinations this configuration applies to.
+* `object_id` - The object ID of this combination configuration.
+* `type` - The type of this combination configuration, either `fido2` or `x509Certificate`.
+
+~> Combination configurations are managed using the `azuread_authentication_strength_policy_fido2_combination_configuration` and `azuread_authentication_strength_policy_x509_combination_configuration` resources.
