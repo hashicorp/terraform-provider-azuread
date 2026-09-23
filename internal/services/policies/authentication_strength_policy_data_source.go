@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2023, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package policies
@@ -7,12 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicy"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicycombinationconfiguration"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -22,8 +22,8 @@ import (
 var _ sdk.DataSource = AuthenticationStrengthPolicyDataSource{}
 
 const (
-	combinationConfigurationTypeFido2           = "fido2"
-	combinationConfigurationTypeX509Certificate = "x509Certificate"
+	combinationConfigurationTypeFido2           = "fido2CombinationConfiguration"
+	combinationConfigurationTypeX509Certificate = "x509CertificateCombinationConfiguration"
 )
 
 type AuthenticationStrengthPolicyDataSourceModel struct {
@@ -112,7 +112,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 					},
 
 					"allowed_aaguids": {
-						Description: "The AAGUIDs allowed by this configuration, for the `fido2` type",
+						Description: "The AAGUIDs allowed by this configuration, for the `fido2CombinationConfiguration` type",
 						Type:        pluginsdk.TypeList,
 						Computed:    true,
 						Elem: &pluginsdk.Schema{
@@ -121,7 +121,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 					},
 
 					"allowed_issuer_skis": {
-						Description: "The certificate issuer subject key identifiers allowed by this configuration, for the `x509Certificate` type",
+						Description: "The certificate issuer subject key identifiers allowed by this configuration, for the `x509CertificateCombinationConfiguration` type",
 						Type:        pluginsdk.TypeList,
 						Computed:    true,
 						Elem: &pluginsdk.Schema{
@@ -130,7 +130,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 					},
 
 					"allowed_policy_oids": {
-						Description: "The certificate policy OIDs allowed by this configuration, for the `x509Certificate` type",
+						Description: "The certificate policy OIDs allowed by this configuration, for the `x509CertificateCombinationConfiguration` type",
 						Type:        pluginsdk.TypeList,
 						Computed:    true,
 						Elem: &pluginsdk.Schema{
@@ -207,17 +207,12 @@ func (r AuthenticationStrengthPolicyDataSource) Read() sdk.ResourceFunc {
 
 			id := stable.NewPolicyAuthenticationStrengthPolicyID(*policy.Id)
 
-			combinationConfigurations, err := flattenCombinationConfigurations(ctx, metadata, id)
-			if err != nil {
-				return err
-			}
-
 			state := AuthenticationStrengthPolicyDataSourceModel{
 				ObjectId:                  pointer.From(policy.Id),
 				DisplayName:               pointer.From(policy.DisplayName),
 				Description:               policy.Description.GetOrZero(),
 				AllowedCombinations:       flattenAuthenticationMethodModes(policy.AllowedCombinations),
-				CombinationConfigurations: combinationConfigurations,
+				CombinationConfigurations: flattenCombinationConfigurations(policy.CombinationConfigurations),
 			}
 
 			metadata.ResourceData.SetId(id.ID())
@@ -234,16 +229,9 @@ func flattenAuthenticationMethodModes(input *[]stable.AuthenticationMethodModes)
 	return output
 }
 
-func flattenCombinationConfigurations(ctx context.Context, metadata sdk.ResourceMetaData, policyId stable.PolicyAuthenticationStrengthPolicyId) ([]AuthenticationStrengthPolicyCombinationConfigurationModel, error) {
-	client := metadata.Client.Policies.AuthenticationStrengthPolicyCombinationConfigurationClient
-
-	resp, err := client.ListAuthenticationStrengthPolicyCombinationConfigurationsComplete(ctx, policyId, authenticationstrengthpolicycombinationconfiguration.DefaultListAuthenticationStrengthPolicyCombinationConfigurationsOperationOptions())
-	if err != nil {
-		return nil, fmt.Errorf("listing combination configurations for %s: %+v", policyId, err)
-	}
-
+func flattenCombinationConfigurations(input *[]stable.AuthenticationCombinationConfiguration) []AuthenticationStrengthPolicyCombinationConfigurationModel {
 	output := make([]AuthenticationStrengthPolicyCombinationConfigurationModel, 0)
-	for _, item := range resp.Items {
+	for _, item := range pointer.From(input) {
 		base := item.AuthenticationCombinationConfiguration()
 
 		combinationConfiguration := AuthenticationStrengthPolicyCombinationConfigurationModel{
@@ -268,10 +256,13 @@ func flattenCombinationConfigurations(ctx context.Context, metadata sdk.Resource
 			if v.AllowedPolicyOIDs != nil {
 				combinationConfiguration.AllowedPolicyOIDs = *v.AllowedPolicyOIDs
 			}
+		default:
+			// The SDK returns a raw type for discriminators it doesn't model, so fall back to the raw @odata.type
+			combinationConfiguration.Type = strings.TrimPrefix(pointer.From(base.ODataType), "#microsoft.graph.")
 		}
 
 		output = append(output, combinationConfiguration)
 	}
 
-	return output, nil
+	return output
 }
