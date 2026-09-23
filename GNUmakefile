@@ -11,6 +11,7 @@ TOOLS_BIN=.tools/bin
 ACTIONLINT=$(TOOLS_BIN)/actionlint
 GOFUMPT=$(TOOLS_BIN)/gofumpt
 GOLANGCI_LINT=$(TOOLS_BIN)/golangci-lint
+LICENSE_EYE=$(TOOLS_BIN)/license-eye
 TCTEST=$(TOOLS_BIN)/tctest
 TERRAFMT=$(TOOLS_BIN)/terrafmt
 TFPROVIDERDOCS=$(TOOLS_BIN)/tfproviderdocs
@@ -97,7 +98,7 @@ tflint: ## renamed to tfproviderlint
 	@$(MAKE) tfproviderlint
 
 ##@ Build & Generate
-tools: $(ACTIONLINT) $(GOFUMPT) $(GOLANGCI_LINT) $(GOLANGCI_LINT_MODULES) $(TCTEST) $(TERRAFMT) $(TFPROVIDERDOCS) $(MARKDOWNLINT) $(SHELLCHECK) $(TYPOS) $(YAMLLINT) ## Install all pinned dev tools into .tools/bin (targets install what they need on demand)
+tools: $(ACTIONLINT) $(GOFUMPT) $(GOLANGCI_LINT) $(GOLANGCI_LINT_MODULES) $(LICENSE_EYE) $(TCTEST) $(TERRAFMT) $(TFPROVIDERDOCS) $(MARKDOWNLINT) $(SHELLCHECK) $(TYPOS) $(YAMLLINT) ## Install all pinned dev tools into .tools/bin (targets install what they need on demand)
 
 build: quick-checks generate ## Run the quick checks, generate code, and compile the provider
 	go install
@@ -180,6 +181,14 @@ actionlint: $(ACTIONLINT) $(SHELLCHECK) ## Check GitHub workflows with actionlin
 	@echo "==> Checking workflows with actionlint..."
 	@$(ACTIONLINT) -shellcheck=$(SHELLCHECK)
 
+copyright: $(LICENSE_EYE) ## Check copyright headers with license-eye (config in .licenserc.yaml)
+	@echo "==> Checking copyright headers with license-eye..."
+	@$(LICENSE_EYE) header check
+
+copyright-fix: $(LICENSE_EYE) ## Add missing copyright headers with license-eye
+	@echo "==> Adding missing copyright headers with license-eye..."
+	@$(LICENSE_EYE) header fix
+
 shellcheck: $(SHELLCHECK) ## Check shell scripts with shellcheck
 	@echo "==> Checking shell scripts with shellcheck..."
 	@$(SHELLCHECK) scripts/*.sh scripts/checks/*.sh scripts/automation/*.sh || \
@@ -246,4 +255,4 @@ todo: ## List all TODOs in the codebase
 
 pr-check: generate build test lint docs-lint ## Run the same set of checks CI runs against a PR
 
-.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix golangci-with-modules actionlint yamllint markdownlint typos typos-fix shellcheck depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
+.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix golangci-with-modules actionlint yamllint markdownlint typos typos-fix shellcheck copyright copyright-fix depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
