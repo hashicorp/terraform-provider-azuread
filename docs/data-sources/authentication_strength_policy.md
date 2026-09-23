@@ -28,7 +28,7 @@ The display names of the built-in policies supplied by Microsoft are:
 
 * `Multifactor authentication`
 * `Passwordless MFA`
-* `Phishing resistant MFA`
+* `Phishing-resistant MFA`
 
 *Look up a policy by object ID*
 
@@ -72,11 +72,11 @@ In addition to all arguments above, the following attributes are exported:
 
 `combination_configurations` block exports the following:
 
-* `allowed_aaguids` - A list of AAGUIDs allowed by this combination configuration. Only populated when `type` is `fido2`.
-* `allowed_issuer_skis` - A list of allowed certificate issuer subject key identifier values. Only populated when `type` is `x509Certificate`.
-* `allowed_policy_oids` - A list of allowed certificate policy OIDs. Only populated when `type` is `x509Certificate`.
-* `applies_to_combinations` - A list of authentication method combinations this configuration applies to.
+* `allowed_aaguids` - A list of AAGUIDs allowed by this combination configuration. Only populated when `type` is `fido2CombinationConfiguration`.
+* `allowed_issuer_skis` - A list of allowed certificate issuer subject key identifier values. Only populated when `type` is `x509CertificateCombinationConfiguration`.
+* `allowed_policy_oids` - A list of allowed certificate policy OIDs. Only populated when `type` is `x509CertificateCombinationConfiguration`.
+* `applies_to_combinations` - A list of authentication method combinations this configuration applies to, for example `fido2` or `x509CertificateSingleFactor`. This is distinct from `type`, which identifies the kind of combination configuration.
 * `object_id` - The object ID of this combination configuration.
-* `type` - The type of this combination configuration, either `fido2` or `x509Certificate`.
+* `type` - The type of this combination configuration, either `fido2CombinationConfiguration` or `x509CertificateCombinationConfiguration`.
 
 ~> Combination configurations are managed using the `azuread_authentication_strength_policy_fido2_combination_configuration` and `azuread_authentication_strength_policy_x509_combination_configuration` resources.
