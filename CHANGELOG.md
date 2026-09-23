@@ -1,3 +1,11 @@
+## Unreleased
+
+BUG:
+
+* `azuread_application` - update app roles and OAuth2 permission scopes sharing an identifier in a single request ([#1177](https://github.com/hashicorp/terraform-provider-azuread/issues/1177))
+* `azuread_application_app_role` - support removing a role that shares an identifier with a permission scope ([#1177](https://github.com/hashicorp/terraform-provider-azuread/issues/1177))
+* `azuread_application_permission_scope` - support removing a scope that shares an identifier with an app role ([#1177](https://github.com/hashicorp/terraform-provider-azuread/issues/1177))
+
 ## 3.9.0 (June 18, 2026)
 
 ENHANCEMENTS:
