@@ -133,6 +133,16 @@ More information on [how to configure a Service Principal using OpenID Connect c
 
 ---
 
+When authenticating using AKS Workload Identity, the following fields can be set:
+
+* `use_aks_workload_identity` - (Optional) Should AKS Workload Identity be used for Authentication? This can also be sourced from the `ARM_USE_AKS_WORKLOAD_IDENTITY` Environment Variable. Defaults to `false`.
+
+When enabled, the provider sources the OIDC token from the file referenced by the `AZURE_FEDERATED_TOKEN_FILE` environment variable, the client ID from the `AZURE_CLIENT_ID` environment variable, and the tenant ID from the `AZURE_TENANT_ID` environment variable. These are injected into the pod by the AKS Workload Identity mutating admission webhook. Any value that is also configured explicitly, in the provider block or via the corresponding `ARM_*` environment variable, must match the value provided by AKS Workload Identity - the provider returns an error if the two conflict.
+
+More information on [how to configure a Service Principal using OpenID Connect can be found in this guide](guides/service_principal_oidc.html).
+
+---
+
 When authenticating using Managed Identity, the following fields can be set:
 
 * `msi_endpoint` - (Optional) The path to a custom endpoint for Managed Identity - in most circumstances this should be detected automatically. This can also be sourced from the `ARM_MSI_ENDPOINT` environment variable.

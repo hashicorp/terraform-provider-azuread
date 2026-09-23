@@ -39,22 +39,74 @@ func decodeCertificate(clientCertificate string) ([]byte, error) {
 	return pfx, nil
 }
 
+// readTrimmedFile reads the file at path and returns its contents with surrounding
+// whitespace removed.
+func readTrimmedFile(path string) (string, error) {
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(contents)), nil
+}
+
+// reconcile returns candidate when existing is empty or identical, and an error
+// describing the conflict otherwise. name is the human readable name of the value,
+// e.g. "Client ID", and source describes where candidate came from.
+func reconcile(name, existing, candidate, source string) (string, error) {
+	if existing != "" && existing != candidate {
+		return "", fmt.Errorf("mismatch between supplied %[1]s and %[1]s %[2]s - please either remove one or ensure they match", name, source)
+	}
+
+	return candidate, nil
+}
+
+// reconcileAksWorkloadIdentityEnv reconciles existing with the value of the environment
+// variable envVar, which is projected into the pod by the AKS Workload Identity mutating
+// admission webhook. When the environment variable is unset, existing is returned as-is.
+func reconcileAksWorkloadIdentityEnv(d *pluginsdk.ResourceData, name, existing, envVar string) (string, error) {
+	if !d.Get("use_aks_workload_identity").(bool) {
+		return existing, nil
+	}
+
+	candidate := strings.TrimSpace(os.Getenv(envVar))
+	if candidate == "" {
+		return existing, nil
+	}
+
+	return reconcile(name, existing, candidate, fmt.Sprintf("provided by AKS Workload Identity in %s", envVar))
+}
+
 func getOidcToken(d *pluginsdk.ResourceData) (*string, error) {
 	idToken := d.Get("oidc_token").(string)
 
 	if path := d.Get("oidc_token_file_path").(string); path != "" {
-		fileTokenRaw, err := os.ReadFile(path)
+		fileToken, err := readTrimmedFile(path)
 		if err != nil {
 			return nil, fmt.Errorf("reading OIDC Token from file %q: %v", path, err)
 		}
 
-		fileToken := strings.TrimSpace(string(fileTokenRaw))
+		if idToken, err = reconcile("OIDC token", idToken, fileToken, fmt.Sprintf("read from the file %q", path)); err != nil {
+			return nil, err
+		}
+	}
 
-		if idToken != "" && idToken != fileToken {
-			return nil, fmt.Errorf("mismatch between supplied OIDC token and supplied OIDC token file contents - please either remove one or ensure they match")
+	if d.Get("use_aks_workload_identity").(bool) {
+		path := strings.TrimSpace(os.Getenv("AZURE_FEDERATED_TOKEN_FILE"))
+		if path == "" && idToken == "" {
+			return nil, fmt.Errorf("no OIDC token was found: use_aks_workload_identity is enabled but AZURE_FEDERATED_TOKEN_FILE is not set - please ensure the pod is labelled with `azure.workload.identity/use: \"true\"`, or configure oidc_token or oidc_token_file_path")
 		}
 
-		idToken = fileToken
+		if path != "" {
+			fileToken, err := readTrimmedFile(path)
+			if err != nil {
+				return nil, fmt.Errorf("reading OIDC Token from file %q provided by AKS Workload Identity: %v", path, err)
+			}
+
+			if idToken, err = reconcile("OIDC token", idToken, fileToken, fmt.Sprintf("read from the file %q provided by AKS Workload Identity in AZURE_FEDERATED_TOKEN_FILE", path)); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return &idToken, nil
@@ -64,18 +116,19 @@ func getClientId(d *pluginsdk.ResourceData) (*string, error) {
 	clientId := strings.TrimSpace(d.Get("client_id").(string))
 
 	if path := d.Get("client_id_file_path").(string); path != "" {
-		fileClientIdRaw, err := os.ReadFile(path)
+		fileClientId, err := readTrimmedFile(path)
 		if err != nil {
 			return nil, fmt.Errorf("reading Client ID from file %q: %v", path, err)
 		}
 
-		fileClientId := strings.TrimSpace(string(fileClientIdRaw))
-
-		if clientId != "" && clientId != fileClientId {
-			return nil, fmt.Errorf("mismatch between supplied Client ID and supplied Client ID file contents - please either remove one or ensure they match")
+		if clientId, err = reconcile("Client ID", clientId, fileClientId, fmt.Sprintf("read from the file %q", path)); err != nil {
+			return nil, err
 		}
+	}
 
-		clientId = fileClientId
+	clientId, err := reconcileAksWorkloadIdentityEnv(d, "Client ID", clientId, "AZURE_CLIENT_ID")
+	if err != nil {
+		return nil, err
 	}
 
 	return &clientId, nil
@@ -85,18 +138,14 @@ func getClientSecret(d *pluginsdk.ResourceData) (*string, error) {
 	clientSecret := strings.TrimSpace(d.Get("client_secret").(string))
 
 	if path := d.Get("client_secret_file_path").(string); path != "" {
-		fileSecretRaw, err := os.ReadFile(path)
+		fileSecret, err := readTrimmedFile(path)
 		if err != nil {
 			return nil, fmt.Errorf("reading Client Secret from file %q: %v", path, err)
 		}
 
-		fileSecret := strings.TrimSpace(string(fileSecretRaw))
-
-		if clientSecret != "" && clientSecret != fileSecret {
-			return nil, fmt.Errorf("mismatch between supplied Client Secret and supplied Client Secret file contents - please either remove one or ensure they match")
+		if clientSecret, err = reconcile("Client Secret", clientSecret, fileSecret, fmt.Sprintf("read from the file %q", path)); err != nil {
+			return nil, err
 		}
-
-		clientSecret = fileSecret
 	}
 
 	return &clientSecret, nil
@@ -105,12 +154,9 @@ func getClientSecret(d *pluginsdk.ResourceData) (*string, error) {
 func getTenantId(d *pluginsdk.ResourceData) (*string, error) {
 	tenantId := strings.TrimSpace(d.Get("tenant_id").(string))
 
-	if d.Get("use_aks_workload_identity").(bool) && os.Getenv("AZURE_TENANT_ID") != "" {
-		aksTenantId := os.Getenv("AZURE_TENANT_ID")
-		if tenantId != "" && tenantId != aksTenantId {
-			return nil, fmt.Errorf("mismatch between supplied Tenant ID and that provided by AKS Workload Identity - please remove, ensure they match, or disable use_aks_workload_identity")
-		}
-		tenantId = aksTenantId
+	tenantId, err := reconcileAksWorkloadIdentityEnv(d, "Tenant ID", tenantId, "AZURE_TENANT_ID")
+	if err != nil {
+		return nil, err
 	}
 
 	return &tenantId, nil

@@ -1,3 +1,9 @@
+## 3.10.0 (Unreleased)
+
+BUG:
+
+* provider: `use_aks_workload_identity` now sources the OIDC token from the `AZURE_FEDERATED_TOKEN_FILE` environment variable and the client ID from the `AZURE_CLIENT_ID` environment variable, as provided by AKS Workload Identity
+
 ## 3.9.0 (June 18, 2026)
 
 ENHANCEMENTS:
