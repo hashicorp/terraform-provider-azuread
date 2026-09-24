@@ -70,7 +70,7 @@ func expandRequestorSettings(input []interface{}) (*beta.RequestorSettings, erro
 
 func flattenRequestorSettings(input *beta.RequestorSettings) []map[string]interface{} {
 	if input == nil {
-		return nil
+		return []map[string]interface{}{}
 	}
 
 	return []map[string]interface{}{{
@@ -132,7 +132,7 @@ func expandApprovalSettings(input []interface{}) (*beta.ApprovalSettings, error)
 
 func flattenApprovalSettings(input *beta.ApprovalSettings) []map[string]interface{} {
 	if input == nil {
-		return nil
+		return []map[string]interface{}{}
 	}
 
 	result := []map[string]interface{}{{
@@ -142,7 +142,7 @@ func flattenApprovalSettings(input *beta.ApprovalSettings) []map[string]interfac
 	}}
 
 	approvalStages := make([]interface{}, 0)
-	for _, v := range *input.ApprovalStages {
+	for _, v := range pointer.From(input.ApprovalStages) {
 		var alternativeApprovalInDays int
 		if w := v.EscalationTimeInMinutes.GetOrZero(); w > 0 {
 			alternativeApprovalInDays = int(w) / 60 / 24
@@ -172,7 +172,7 @@ func expandAssignmentReviewSettings(input []interface{}) (*beta.AssignmentReview
 	in := input[0].(map[string]interface{})
 
 	result := beta.AssignmentReviewSettings{
-		AccessReviewTimeoutBehavior:     pointer.To(beta.AccessReviewTimeoutBehavior(in["access_review_timeout_behavior"].(string))),
+		AccessReviewTimeoutBehavior:     pointer.ToEnum[beta.AccessReviewTimeoutBehavior](in["access_review_timeout_behavior"].(string)),
 		DurationInDays:                  nullable.Value(int64(in["duration_in_days"].(int))),
 		IsAccessRecommendationEnabled:   nullable.Value(in["access_recommendation_enabled"].(bool)),
 		IsApprovalJustificationRequired: nullable.Value(in["approver_justification_required"].(bool)),
@@ -202,7 +202,7 @@ func expandAssignmentReviewSettings(input []interface{}) (*beta.AssignmentReview
 
 func flattenAssignmentReviewSettings(input *beta.AssignmentReviewSettings) []map[string]interface{} {
 	if input == nil {
-		return nil
+		return []map[string]interface{}{}
 	}
 
 	return []map[string]interface{}{{
@@ -272,7 +272,7 @@ func expandUserSets(input []interface{}) (*[]beta.UserSet, error) {
 
 func flattenUserSets(input *[]beta.UserSet) []map[string]interface{} {
 	if input == nil || len(*input) == 0 {
-		return nil
+		return []map[string]interface{}{}
 	}
 
 	userSets := make([]map[string]interface{}, 0)
@@ -352,7 +352,7 @@ func expandAccessPackageQuestions(input []interface{}) *[]beta.AccessPackageQues
 
 func flattenAccessPackageQuestions(input *[]beta.AccessPackageQuestion) []map[string]interface{} {
 	if input == nil || len(*input) == 0 {
-		return nil
+		return []map[string]interface{}{}
 	}
 
 	questions := make([]map[string]interface{}, 0)
@@ -411,13 +411,17 @@ func expandAccessPackageLocalizedContent(input map[string]interface{}) *beta.Acc
 }
 
 func flattenAccessPackageLocalizedContent(input *beta.AccessPackageLocalizedContent) []map[string]interface{} {
+	if input == nil {
+		return []map[string]interface{}{}
+	}
+
 	result := []map[string]interface{}{{
 		"default_text": input.DefaultText.GetOrZero(),
 	}}
 
 	texts := make([]map[string]interface{}, 0)
 
-	for _, v := range *input.LocalizedTexts {
+	for _, v := range pointer.From(input.LocalizedTexts) {
 		text := map[string]interface{}{
 			"language_code": v.LanguageCode.GetOrZero(),
 			"content":       v.Text.GetOrZero(),

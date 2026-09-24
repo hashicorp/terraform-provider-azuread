@@ -58,8 +58,7 @@ func ValidatePrivilegedAccessGroupScheduleID(input interface{}, key string) (war
 		return
 	}
 
-	_, err := ParsePrivilegedAccessGroupScheduleID(v)
-	if err != nil {
+	if _, err := ParsePrivilegedAccessGroupScheduleID(v); err != nil {
 		errors = append(errors, err)
 	}
 

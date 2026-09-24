@@ -317,7 +317,9 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			}
 		}
 
-		if env.MicrosoftGraph == nil {
+		if env == nil {
+			return nil, pluginsdk.DiagErrorf("cloud environment could not be determined")
+		} else if env.MicrosoftGraph == nil {
 			return nil, pluginsdk.DiagErrorf("Microsoft Graph was not configured for the specified environment")
 		} else if endpoint, ok := env.MicrosoftGraph.Endpoint(); !ok || *endpoint == "" {
 			return nil, pluginsdk.DiagErrorf("Microsoft Graph endpoint could not be determined for the specified environment")

@@ -181,7 +181,6 @@ var services = mapOf(
 	for _, service := range provider.SupportedTypedServices() {
 		info := reflect.TypeOf(service)
 		packageSegments := strings.Split(info.PkgPath(), "/")
-		packageName := packageSegments[len(packageSegments)-1]
 		serviceName := service.Name()
 
 		// Service Registrations are reused across Typed and Untyped Services now
@@ -189,13 +188,12 @@ var services = mapOf(
 			continue
 		}
 
-		services[serviceName] = packageName
+		services[serviceName] = packageSegments[len(packageSegments)-1]
 		serviceNames = append(serviceNames, serviceName)
 	}
 	for _, service := range provider.SupportedUntypedServices() {
 		info := reflect.TypeOf(service)
 		packageSegments := strings.Split(info.PkgPath(), "/")
-		packageName := packageSegments[len(packageSegments)-1]
 		serviceName := service.Name()
 
 		// Service Registrations are reused across Typed and Untyped Services now
@@ -203,7 +201,7 @@ var services = mapOf(
 			continue
 		}
 
-		services[serviceName] = packageName
+		services[serviceName] = packageSegments[len(packageSegments)-1]
 		serviceNames = append(serviceNames, serviceName)
 	}
 

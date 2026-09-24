@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/domains/stable/domain"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
@@ -227,10 +228,7 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 				if v.Id != nil {
 					domainNames = append(domainNames, *v.Id)
 
-					var authenticationType string
-					if v.AuthenticationType != nil {
-						authenticationType = *v.AuthenticationType
-					}
+					authenticationType := pointer.From(v.AuthenticationType)
 
 					supportedServices := make([]string, 0)
 					if v.SupportedServices != nil {

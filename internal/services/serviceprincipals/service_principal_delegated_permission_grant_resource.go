@@ -55,7 +55,6 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceServicePrincipalDelegatedPermissionGrantInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceServicePrincipalDelegatedPermissionGrantInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

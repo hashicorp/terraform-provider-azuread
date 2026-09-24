@@ -64,6 +64,10 @@ func GetAuthConfig(t *testing.T) *auth.Credentials {
 		t.Fatalf("building test client: %+v", err)
 		return nil
 	}
+	if env == nil {
+		t.Fatalf("building test client: environment was nil")
+		return nil
+	}
 
 	return &auth.Credentials{
 		Environment: *env,
@@ -76,10 +80,6 @@ func GetAuthConfig(t *testing.T) *auth.Credentials {
 
 		EnableAuthenticatingUsingClientCertificate: true,
 		EnableAuthenticatingUsingClientSecret:      true,
-		EnableAuthenticatingUsingAzureCLI:          false,
-		EnableAuthenticatingUsingManagedIdentity:   false,
-		EnableAuthenticationUsingOIDC:              false,
-		EnableAuthenticationUsingGitHubOIDC:        false,
 	}
 }
 

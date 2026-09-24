@@ -30,7 +30,7 @@ SHELLCHECK=$(TOOLS_BIN)/shellcheck
 TYPOS=$(TOOLS_BIN)/typos
 YAMLLINT=$(TOOLS_BIN)/yamllint
 
-# golangci-lint with the tfproviderlint module plugin compiled in (.tools/.custom-gcl.yml); the
+# golangci-lint with the azproviderlint and tfproviderlint module plugins compiled in (.tools/.custom-gcl.yml); the
 # lint targets use this binary, the plain one bootstraps `golangci-lint custom` and runs the
 # formatters
 GOLANGCI_LINT_MODULES=$(TOOLS_BIN)/golangci-with-modules
@@ -147,7 +147,7 @@ terrafmt: $(TERRAFMT) ## Fix terraform blocks in acceptance tests and docs
 	@$(TERRAFMT) fmt -p "*.md" ./docs
 
 ##@ Linting & Dependencies
-# golangci-lint module plugins (tfproviderlint) only exist in a custom-built binary, so the lint
+# golangci-lint module plugins (azproviderlint, tfproviderlint) only exist in a custom-built binary, so the lint
 # targets use .tools/bin/golangci-with-modules, rebuilt automatically whenever
 # .tools/.custom-gcl.yml or the golangci-lint pin in .tools/go.mod changes
 golangci-with-modules: $(GOLANGCI_LINT_MODULES) ## Build golangci-lint with plugins into .tools/bin (automatic when the pins change)
@@ -159,6 +159,11 @@ lint: $(GOLANGCI_LINT_MODULES) ## Check source code with the golangci linters
 lint-fix: $(GOLANGCI_LINT_MODULES) ## Fix source code with all golangci linters
 	@echo "==> Fixing source code with all golangci linters..."
 	@$(GOLANGCI_LINT_MODULES) run ./... --fix
+
+# azproviderlint runs as part of lint; this target runs just its checks
+azproviderlint: $(GOLANGCI_LINT_MODULES) ## Check source code with only the azproviderlint checks
+	@echo "==> Checking source code with azproviderlint (via golangci-lint)..."
+	@$(GOLANGCI_LINT_MODULES) run -v --enable-only azproviderlint ./...
 
 # tfproviderlint runs as part of lint; this target runs just its checks
 tfproviderlint: $(GOLANGCI_LINT_MODULES) ## Check terraform schema definitions with only the tfproviderlint checks
@@ -255,4 +260,4 @@ todo: ## List all TODOs in the codebase
 
 pr-check: generate build test lint docs-lint ## Run the same set of checks CI runs against a PR
 
-.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix golangci-with-modules actionlint yamllint markdownlint typos typos-fix shellcheck copyright copyright-fix depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
+.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix golangci-with-modules actionlint yamllint markdownlint typos typos-fix shellcheck copyright copyright-fix depscheck gencheck azproviderlint tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
