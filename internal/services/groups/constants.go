@@ -24,6 +24,7 @@ const (
 	GroupResourceBehaviorOptionSubscribeMembersToCalendarEventsDisabled = "SubscribeMembersToCalendarEventsDisabled"
 	GroupResourceBehaviorOptionSubscribeNewGroupMembers                 = "SubscribeNewGroupMembers"
 	GroupResourceBehaviorOptionWelcomeEmailDisabled                     = "WelcomeEmailDisabled"
+	GroupResourceBehaviorOptionProvisionSiteOnDemand                    = "ProvisionSiteOnDemand"
 )
 
 var possibleValuesForGroupResourceBehaviorOptions = []string{
@@ -35,6 +36,7 @@ var possibleValuesForGroupResourceBehaviorOptions = []string{
 	GroupResourceBehaviorOptionSubscribeMembersToCalendarEventsDisabled,
 	GroupResourceBehaviorOptionSubscribeNewGroupMembers,
 	GroupResourceBehaviorOptionWelcomeEmailDisabled,
+	GroupResourceBehaviorOptionProvisionSiteOnDemand,
 }
 
 const (
