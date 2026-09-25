@@ -158,6 +158,8 @@ func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d 
 		resource = pointer.To((*resp.Model)[0])
 	}
 
+	// Note: this endpoint returns an empty collection rather than a 404 when the parent
+	// catalog does not exist, so this branch also covers a deleted catalog.
 	if resource == nil {
 		log.Printf("[DEBUG] Access Package Resource Catalog Associations was not found - removing from state!")
 		d.SetId("")
@@ -194,8 +196,11 @@ func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, 
 		resource = pointer.To((*resp.Model)[0])
 	}
 
+	// The association is already gone, so there is nothing to remove. As above, this also
+	// covers the case where the parent catalog itself has been deleted.
 	if resource == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving Access Package Resource Catalog Association")
+		log.Printf("[DEBUG] Access Package Resource Catalog Association was not found - already deleted")
+		return nil
 	}
 
 	properties := beta.AccessPackageResourceRequest{
