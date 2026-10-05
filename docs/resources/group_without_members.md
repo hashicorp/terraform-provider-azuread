@@ -132,6 +132,7 @@ The following arguments are supported:
 -> **Group Name Uniqueness** Group names are not unique within Azure Active Directory. Use the `prevent_duplicate_names` argument to check for existing groups if you want to avoid name collisions.
 
 * `writeback_enabled` - (Optional) Whether the group will be written back to the configured on-premises Active Directory when Azure AD Connect is used.
+* `group_name_verification_delay_seconds` - (Optional) Delay in seconds between the two PATCH requests during group name verification after creation. This can help with Azure AD replication delays. Defaults to `0` (no delay). Must be a non-negative integer.
 
 ---
 
