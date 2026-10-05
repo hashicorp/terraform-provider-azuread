@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageaccesspackageresourcerolescope"
@@ -175,6 +176,11 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 
 	accessPackageResp, err := accessPackageClient.GetEntitlementManagementAccessPackage(ctx, accessPackageId, entitlementmanagementaccesspackage.DefaultGetEntitlementManagementAccessPackageOperationOptions())
 	if err != nil {
+		if response.WasNotFound(accessPackageResp.HttpResponse) {
+			log.Printf("[DEBUG] %s was not found - removing from state!", accessPackageId)
+			d.SetId("")
+			return nil
+		}
 		return tf.ErrorDiagF(err, "Retrieving %s", accessPackageId)
 	}
 
@@ -202,7 +208,12 @@ func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, 
 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
 
-	if _, err = client.DeleteEntitlementManagementAccessPackageResourceRoleScope(ctx, id, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultDeleteEntitlementManagementAccessPackageResourceRoleScopeOperationOptions()); err != nil {
+	resp, err := client.DeleteEntitlementManagementAccessPackageResourceRoleScope(ctx, id, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultDeleteEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s already deleted", id)
+			return nil
+		}
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 
