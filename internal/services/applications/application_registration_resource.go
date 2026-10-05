@@ -251,6 +251,21 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 			}
 
 			id := stable.NewApplicationID(*app.Id)
+
+			// Wait for the application to be available
+			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				resp, err := client.GetApplication(ctx, id, application.DefaultGetApplicationOperationOptions())
+				if err != nil {
+					if response.WasNotFound(resp.HttpResponse) {
+						return pointer.To(false), nil
+					}
+					return pointer.To(false), err
+				}
+				return pointer.To(resp.Model != nil), nil
+			}); err != nil {
+				return fmt.Errorf("waiting for creation of %s: %v", id, err)
+			}
+
 			metadata.SetID(id)
 
 			return nil
