@@ -16,7 +16,7 @@ require (
 	github.com/apache/skywalking-eyes v0.9.0
 	github.com/bflad/tfproviderdocs v0.12.1
 	github.com/golangci/golangci-lint/v2 v2.12.2
-	github.com/katbyte/tctest v1.3.3
+	github.com/katbyte/tctest v1.3.4
 	github.com/katbyte/terrafmt v1.0.1
 	github.com/rhysd/actionlint v1.7.12
 	mvdan.cc/gofumpt v0.12.0
@@ -269,12 +269,12 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.3 // indirect
 	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260209203927-2842357ff358 // indirect
-	golang.org/x/mod v0.40.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/oauth2 v0.37.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
