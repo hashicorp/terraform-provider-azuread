@@ -1505,23 +1505,27 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	api := expandApplicationApi(d.Get("api").([]interface{}))
 
+	// Microsoft Graph rejects an application manifest in which an app role and an OAuth2
+	// permission scope share an ID but disagree on their common properties, so both
+	// collections are disabled in one request.
+	var appRoles *[]stable.AppRole
 	if d.HasChange("app_role") {
-		appRoles := expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())
-		if err = applicationDisableAppRoles(ctx, client, *id, appRoles); err != nil {
-			return tf.ErrorDiagPathF(err, "app_role", "Could not disable App Roles for application with object ID %q", id.ApplicationId)
-		}
-
-		properties.AppRoles = expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())
+		appRoles = expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())
 	}
 
+	var scopes *[]stable.PermissionScope
 	if d.HasChange("api.0.oauth2_permission_scope") {
-		scopes := expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List())
-		if err = applicationDisableOauth2PermissionScopes(ctx, client, *id, scopes); err != nil {
-			return tf.ErrorDiagPathF(err, "api.0.oauth2_permission_scope", "Could not disable OAuth2 Permission Scopes for application with object ID %q", id.ApplicationId)
-		}
-	} else {
-		api.OAuth2PermissionScopes = nil
+		scopes = expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List())
 	}
+
+	if appRoles != nil || scopes != nil {
+		if err = applicationDisableChangedPermissions(ctx, client, *id, appRoles, scopes); err != nil {
+			return tf.ErrorDiagF(err, "Could not disable App Roles and OAuth2 Permission Scopes for application with object ID %q", id.ApplicationId)
+		}
+	}
+
+	properties.AppRoles = appRoles
+	api.OAuth2PermissionScopes = scopes
 
 	if d.HasChange("identifier_uris") {
 		properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*pluginsdk.Set).List())
