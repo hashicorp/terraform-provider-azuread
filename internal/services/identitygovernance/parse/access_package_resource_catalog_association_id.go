@@ -32,10 +32,14 @@ func AccessPackageResourceCatalogAssociationID(idString string) (*AccessPackageR
 		return nil, fmt.Errorf("ID should be in the format {catalogId}/{originId} - but got %q", idString)
 	}
 
-	for i, p := range parts {
-		if _, err := uuid.ParseUUID(p); err != nil {
-			return nil, fmt.Errorf("specified ID segment #%d (%q) is not a valid UUID: %s", i, p, err)
-		}
+	// Only the catalog id is a UUID. originId is the resource's origin identifier, whose format
+	// depends on the origin system (a UUID for AadGroup/AadApplication, but a site URL for
+	// SharePointOnline), so it is validated only as non-empty.
+	if _, err := uuid.ParseUUID(parts[0]); err != nil {
+		return nil, fmt.Errorf("specified ID segment #0 (%q) is not a valid UUID: %s", parts[0], err)
+	}
+	if parts[1] == "" {
+		return nil, fmt.Errorf("specified ID segment #1 (originId) must not be empty - got %q", idString)
 	}
 
 	return &AccessPackageResourceCatalogAssociationId{
