@@ -1,4 +1,4 @@
-package directoryroleeligibilityschedule
+package directoryroleeligibilityscheduleinstance
 
 import (
 	"context"
@@ -12,27 +12,27 @@ import (
 // Copyright IBM Corp. 2021, 2025 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
-type UpdateDirectoryRoleEligibilityScheduleOperationResponse struct {
+type UpdateDirectoryRoleEligibilityScheduleInstanceOperationResponse struct {
 	HttpResponse *http.Response
 	OData        *odata.OData
 }
 
-type UpdateDirectoryRoleEligibilityScheduleOperationOptions struct {
+type UpdateDirectoryRoleEligibilityScheduleInstanceOperationOptions struct {
 	Metadata  *odata.Metadata
 	RetryFunc client.RequestRetryFunc
 }
 
-func DefaultUpdateDirectoryRoleEligibilityScheduleOperationOptions() UpdateDirectoryRoleEligibilityScheduleOperationOptions {
-	return UpdateDirectoryRoleEligibilityScheduleOperationOptions{}
+func DefaultUpdateDirectoryRoleEligibilityScheduleInstanceOperationOptions() UpdateDirectoryRoleEligibilityScheduleInstanceOperationOptions {
+	return UpdateDirectoryRoleEligibilityScheduleInstanceOperationOptions{}
 }
 
-func (o UpdateDirectoryRoleEligibilityScheduleOperationOptions) ToHeaders() *client.Headers {
+func (o UpdateDirectoryRoleEligibilityScheduleInstanceOperationOptions) ToHeaders() *client.Headers {
 	out := client.Headers{}
 
 	return &out
 }
 
-func (o UpdateDirectoryRoleEligibilityScheduleOperationOptions) ToOData() *odata.Query {
+func (o UpdateDirectoryRoleEligibilityScheduleInstanceOperationOptions) ToOData() *odata.Query {
 	out := odata.Query{}
 	if o.Metadata != nil {
 		out.Metadata = *o.Metadata
@@ -40,14 +40,15 @@ func (o UpdateDirectoryRoleEligibilityScheduleOperationOptions) ToOData() *odata
 	return &out
 }
 
-func (o UpdateDirectoryRoleEligibilityScheduleOperationOptions) ToQuery() *client.QueryParams {
+func (o UpdateDirectoryRoleEligibilityScheduleInstanceOperationOptions) ToQuery() *client.QueryParams {
 	out := client.QueryParams{}
 
 	return &out
 }
 
-// UpdateDirectoryRoleEligibilitySchedule - Update the navigation property roleEligibilitySchedules in roleManagement
-func (c DirectoryRoleEligibilityScheduleClient) UpdateDirectoryRoleEligibilitySchedule(ctx context.Context, id stable.RoleManagementDirectoryRoleEligibilityScheduleId, input stable.UnifiedRoleEligibilitySchedule, options UpdateDirectoryRoleEligibilityScheduleOperationOptions) (result UpdateDirectoryRoleEligibilityScheduleOperationResponse, err error) {
+// UpdateDirectoryRoleEligibilityScheduleInstance - Update the navigation property roleEligibilityScheduleInstances in
+// roleManagement
+func (c DirectoryRoleEligibilityScheduleInstanceClient) UpdateDirectoryRoleEligibilityScheduleInstance(ctx context.Context, id stable.RoleManagementDirectoryRoleEligibilityScheduleInstanceId, input stable.UnifiedRoleEligibilityScheduleInstance, options UpdateDirectoryRoleEligibilityScheduleInstanceOperationOptions) (result UpdateDirectoryRoleEligibilityScheduleInstanceOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{

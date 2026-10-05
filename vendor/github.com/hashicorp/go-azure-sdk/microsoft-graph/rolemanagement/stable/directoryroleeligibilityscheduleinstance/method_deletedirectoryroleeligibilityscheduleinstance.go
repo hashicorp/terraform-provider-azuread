@@ -1,4 +1,4 @@
-package directoryroleeligibilityschedule
+package directoryroleeligibilityscheduleinstance
 
 import (
 	"context"
@@ -13,22 +13,22 @@ import (
 // Copyright IBM Corp. 2021, 2025 All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
-type DeleteDirectoryRoleEligibilityScheduleOperationResponse struct {
+type DeleteDirectoryRoleEligibilityScheduleInstanceOperationResponse struct {
 	HttpResponse *http.Response
 	OData        *odata.OData
 }
 
-type DeleteDirectoryRoleEligibilityScheduleOperationOptions struct {
+type DeleteDirectoryRoleEligibilityScheduleInstanceOperationOptions struct {
 	IfMatch   *string
 	Metadata  *odata.Metadata
 	RetryFunc client.RequestRetryFunc
 }
 
-func DefaultDeleteDirectoryRoleEligibilityScheduleOperationOptions() DeleteDirectoryRoleEligibilityScheduleOperationOptions {
-	return DeleteDirectoryRoleEligibilityScheduleOperationOptions{}
+func DefaultDeleteDirectoryRoleEligibilityScheduleInstanceOperationOptions() DeleteDirectoryRoleEligibilityScheduleInstanceOperationOptions {
+	return DeleteDirectoryRoleEligibilityScheduleInstanceOperationOptions{}
 }
 
-func (o DeleteDirectoryRoleEligibilityScheduleOperationOptions) ToHeaders() *client.Headers {
+func (o DeleteDirectoryRoleEligibilityScheduleInstanceOperationOptions) ToHeaders() *client.Headers {
 	out := client.Headers{}
 	if o.IfMatch != nil {
 		out.Append("If-Match", fmt.Sprintf("%v", *o.IfMatch))
@@ -36,7 +36,7 @@ func (o DeleteDirectoryRoleEligibilityScheduleOperationOptions) ToHeaders() *cli
 	return &out
 }
 
-func (o DeleteDirectoryRoleEligibilityScheduleOperationOptions) ToOData() *odata.Query {
+func (o DeleteDirectoryRoleEligibilityScheduleInstanceOperationOptions) ToOData() *odata.Query {
 	out := odata.Query{}
 	if o.Metadata != nil {
 		out.Metadata = *o.Metadata
@@ -44,14 +44,15 @@ func (o DeleteDirectoryRoleEligibilityScheduleOperationOptions) ToOData() *odata
 	return &out
 }
 
-func (o DeleteDirectoryRoleEligibilityScheduleOperationOptions) ToQuery() *client.QueryParams {
+func (o DeleteDirectoryRoleEligibilityScheduleInstanceOperationOptions) ToQuery() *client.QueryParams {
 	out := client.QueryParams{}
 
 	return &out
 }
 
-// DeleteDirectoryRoleEligibilitySchedule - Delete navigation property roleEligibilitySchedules for roleManagement
-func (c DirectoryRoleEligibilityScheduleClient) DeleteDirectoryRoleEligibilitySchedule(ctx context.Context, id stable.RoleManagementDirectoryRoleEligibilityScheduleId, options DeleteDirectoryRoleEligibilityScheduleOperationOptions) (result DeleteDirectoryRoleEligibilityScheduleOperationResponse, err error) {
+// DeleteDirectoryRoleEligibilityScheduleInstance - Delete navigation property roleEligibilityScheduleInstances for
+// roleManagement
+func (c DirectoryRoleEligibilityScheduleInstanceClient) DeleteDirectoryRoleEligibilityScheduleInstance(ctx context.Context, id stable.RoleManagementDirectoryRoleEligibilityScheduleInstanceId, options DeleteDirectoryRoleEligibilityScheduleInstanceOperationOptions) (result DeleteDirectoryRoleEligibilityScheduleInstanceOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
