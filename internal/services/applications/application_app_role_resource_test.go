@@ -154,7 +154,7 @@ func (r ApplicationAppRoleResource) Exists(ctx context.Context, clients *clients
 	}
 
 	for _, role := range *app.AppRoles {
-		if strings.EqualFold(*role.Id, id.RoleID) {
+		if strings.EqualFold(pointer.From(role.Id), id.RoleID) {
 			return pointer.To(true), nil
 		}
 	}

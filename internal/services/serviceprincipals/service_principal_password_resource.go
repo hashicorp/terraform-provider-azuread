@@ -41,7 +41,6 @@ func servicePrincipalPasswordResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceServicePrincipalPasswordInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceServicePrincipalPasswordInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

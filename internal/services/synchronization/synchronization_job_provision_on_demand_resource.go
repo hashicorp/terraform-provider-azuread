@@ -31,8 +31,6 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 			Read:   schema.DefaultTimeout(1 * time.Minute),
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
-		SchemaVersion: 0,
-
 		Schema: map[string]*schema.Schema{
 			"service_principal_id": {
 				Description:  "The object ID of the service principal for which this synchronization job should be provisioned",

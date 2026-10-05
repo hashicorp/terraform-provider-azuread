@@ -158,7 +158,7 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 		return tf.ErrorDiagF(errors.New("bad API response"), "Object ID returned for invitation is nil/empty")
 	}
 
-	d.SetId(*invite.Id)
+	d.SetId(*invite.Id) //nolint:azproviderlint // AZR001: the SDK has no ID type for invitations and this ID is never parsed
 
 	if invite.InvitedUser == nil || invite.InvitedUser.Id == nil || *invite.InvitedUser.Id == "" {
 		return tf.ErrorDiagF(errors.New("bad API response"), "Invited user object ID returned for invitation is nil/empty")

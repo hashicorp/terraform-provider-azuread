@@ -222,9 +222,8 @@ func ResourceServicePrincipalInstanceResourceV0() *pluginsdk.Resource {
 			},
 
 			"oauth2_permission_scopes": {
-				Description: "",
-				Type:        pluginsdk.TypeList,
-				Computed:    true,
+				Type:     pluginsdk.TypeList,
+				Computed: true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"id": {

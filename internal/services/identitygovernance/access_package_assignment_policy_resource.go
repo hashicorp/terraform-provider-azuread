@@ -385,6 +385,9 @@ func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *plugins
 	if resp.Model == nil {
 		return tf.ErrorDiagF(errors.New("model was nil"), "Creating access package assignment policy")
 	}
+	if resp.Model.Id == nil {
+		return tf.ErrorDiagF(errors.New("model ID was nil"), "Creating access package assignment policy")
+	}
 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageAssignmentPolicyID(*resp.Model.Id)
 	d.SetId(id.AccessPackageAssignmentPolicyId)
