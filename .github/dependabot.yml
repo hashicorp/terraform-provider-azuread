@@ -3,11 +3,15 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     ignore:
       - dependency-name: "*"
         update-types:
           - "version-update:semver-major"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   # go dev tools (golangci-lint, terrafmt, gofumpt, ...) pinned in .tools/go.mod, built by make
   # into .tools/bin; tools should move slowly so only check quarterly
@@ -15,3 +19,7 @@ updates:
     directory: "/.tools"
     schedule:
       interval: "quarterly"
+    groups:
+      go-tools:
+        patterns:
+          - "*"
