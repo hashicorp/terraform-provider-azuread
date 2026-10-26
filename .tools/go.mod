@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-azuread/tools
 
-go 1.26.6
+go 1.26.10
 
 tool (
 	github.com/apache/skywalking-eyes/cmd/license-eye
