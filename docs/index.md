@@ -158,6 +158,8 @@ For more advanced scenarios, the following additional arguments are supported:
 
 It's also possible to use multiple Provider blocks within a single Terraform configuration, for example to work with resources across multiple Azure Active Directory Tenants or Environments - more information can be found [in the documentation for Providers](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations).
 
+The value of the `TF_APPEND_USER_AGENT` environment variable is appended to the User-Agent header sent with each request to Microsoft Graph, in addition to the Terraform, Plugin SDK and provider versions which are always sent. This is useful for identifying requests made by a particular automation or tooling.
+
 ---
 
 ## Logging and Tracing

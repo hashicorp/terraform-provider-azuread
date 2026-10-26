@@ -16,11 +16,14 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/client/msgraph"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/version"
 )
 
 type contextKey string
+
+// providerName is the reporting name of this provider, as sent in the User-Agent header.
+const providerName = "terraform-provider-azuread"
 
 type ClientOptions struct {
 	Environment environments.Environment
@@ -106,8 +109,11 @@ Request ID: %s
 }
 
 func (o ClientOptions) userAgent(sdkUserAgent string) (userAgent string) {
-	tfUserAgent := fmt.Sprintf("HashiCorp Terraform/%s (+https://www.terraform.io) Terraform Plugin SDK/%s", o.TerraformVersion, meta.SDKVersionString()) //nolint:staticcheck
-	providerUserAgent := fmt.Sprintf("%s terraform-provider-azuread/%s", tfUserAgent, version.ProviderVersion)
+	// Defer to the Plugin SDK for the Terraform, SDK and provider versions, which also appends the
+	// value of the TF_APPEND_USER_AGENT environment variable when set. Provider.UserAgent reads only
+	// the TerraformVersion field, so a bare Provider suffices here and this remains valid for the
+	// acceptance test client, which builds clients without instantiating the provider.
+	providerUserAgent := (&schema.Provider{TerraformVersion: o.TerraformVersion}).UserAgent(providerName, version.ProviderVersion)
 	userAgent = strings.TrimSpace(fmt.Sprintf("%s %s", providerUserAgent, sdkUserAgent))
 
 	// append the CloudShell version to the user agent if it exists
