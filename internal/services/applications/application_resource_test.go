@@ -132,6 +132,38 @@ func TestAccApplication_update(t *testing.T) {
 	})
 }
 
+func TestAccApplication_disabled(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.disabled(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("disabled").HasValue("true"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("disabled").HasValue("false"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.disabled(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("disabled").HasValue("true"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccApplication_appRoles(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -787,6 +819,17 @@ provider "azuread" {}
 resource "azuread_application" "test" {
   display_name            = "acctest-APP-%[1]d"
   group_membership_claims = ["DirectoryRole", "SecurityGroup", "ApplicationGroup"]
+}
+`, data.RandomInteger)
+}
+
+func (ApplicationResource) disabled(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+  disabled     = true
 }
 `, data.RandomInteger)
 }
