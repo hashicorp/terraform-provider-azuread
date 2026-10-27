@@ -160,9 +160,9 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*stable.KeyCredential,
 			expiry := time.Now().Add(d)
 			endDate = &expiry
 		} else {
-			startDateTime, err := time.Parse(time.RFC3339, v.(string))
+			startDateTime, err := time.Parse(time.RFC3339, credential.StartDateTime.GetOrZero())
 			if err != nil {
-				return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
+				return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", credential.StartDateTime.GetOrZero(), err), attr: "start_date"}
 			}
 			expiry := startDateTime.Add(d)
 			endDate = &expiry
