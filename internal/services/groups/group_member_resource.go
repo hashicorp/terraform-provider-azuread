@@ -77,7 +77,7 @@ func groupMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		return tf.ErrorDiagPathF(err, "object_id", "Retrieving %s", groupId)
 	}
 
-	resp, err := memberClient.ListMembers(ctx, groupId, memberBeta.DefaultListMembersOperationOptions())
+	resp, err := memberClient.ListMembers(ctx, groupId, listMembersOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Listing existing members for %s", groupId)
 	}

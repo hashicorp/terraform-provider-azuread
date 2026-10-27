@@ -15,9 +15,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
-	memberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/member"
-	ownerBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner"
-	transitivememberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/transitivemember"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
@@ -458,7 +455,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	includeTransitiveMembers := d.Get("include_transitive_members").(bool)
 	var members *[]string
 	if includeTransitiveMembers {
-		resp, err := transitiveMemberClient.ListTransitiveMembers(ctx, beta.GroupId(id), transitivememberBeta.DefaultListTransitiveMembersOperationOptions())
+		resp, err := transitiveMemberClient.ListTransitiveMembers(ctx, beta.GroupId(id), listTransitiveMembersOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve transitive group members for group with object ID: %q", d.Id())
 		}
@@ -470,7 +467,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			members = &transitiveMembers
 		}
 	} else {
-		resp, err := memberClient.ListMembers(ctx, beta.GroupId(id), memberBeta.DefaultListMembersOperationOptions())
+		resp, err := memberClient.ListMembers(ctx, beta.GroupId(id), listMembersOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group members for group with object ID: %q", d.Id())
 		}
@@ -484,7 +481,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	}
 	tf.Set(d, "members", members)
 
-	resp, err := ownerClient.ListOwners(ctx, beta.GroupId(id), ownerBeta.DefaultListOwnersOperationOptions())
+	resp, err := ownerClient.ListOwners(ctx, beta.GroupId(id), listOwnersOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not retrieve group owners for group with object ID: %q", d.Id())
 	}

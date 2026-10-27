@@ -1089,7 +1089,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	}
 
 	if d.HasChange("members") {
-		resp, err := memberClient.ListMembers(ctx, *id, memberBeta.DefaultListMembersOperationOptions())
+		resp, err := memberClient.ListMembers(ctx, *id, listMembersOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve members for %s", id)
 		}
@@ -1123,7 +1123,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
-		resp, err := ownerClient.ListOwners(ctx, *id, ownerBeta.DefaultListOwnersOperationOptions())
+		resp, err := ownerClient.ListOwners(ctx, *id, listOwnersOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve members for %s", id)
 		}
@@ -1313,7 +1313,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		tf.Set(d, "hide_from_outlook_clients", hideFromOutlookClients)
 
 		owners := make([]string, 0)
-		if resp, err := ownerClient.ListOwners(ctx, *id, ownerBeta.DefaultListOwnersOperationOptions()); err != nil {
+		if resp, err := ownerClient.ListOwners(ctx, *id, listOwnersOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for %s", id)
 		} else if resp.Model != nil {
 			for _, o := range *resp.Model {
@@ -1323,7 +1323,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		tf.Set(d, "owners", owners)
 
 		members := make([]string, 0)
-		if resp, err := memberClient.ListMembers(ctx, *id, memberBeta.DefaultListMembersOperationOptions()); err != nil {
+		if resp, err := memberClient.ListMembers(ctx, *id, listMembersOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "members", "Could not retrieve members for %s", id)
 		} else if resp.Model != nil {
 			for _, o := range *resp.Model {
