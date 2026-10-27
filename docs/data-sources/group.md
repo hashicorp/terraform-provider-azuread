@@ -28,6 +28,7 @@ data "azuread_group" "example" {
 The following arguments are supported:
 
 * `display_name` - (Optional) The display name for the group.
+*  `include_members` - (Optional) Whether to include the members of the group in the return. Defaults to `true`.
 * `include_transitive_members` - (Optional) Whether to include transitive members (a flat list of all nested members). Defaults to `false`.
 * `mail_nickname` - (Optional) The mail alias for the group, unique in the organisation.
 * `mail_enabled` - (Optional) Whether the group is mail-enabled.
@@ -53,7 +54,7 @@ The following attributes are exported:
 * `mail` - The SMTP address for the group.
 * `mail_enabled` - Whether the group is mail-enabled.
 * `mail_nickname` - The mail alias for the group, unique in the organisation.
-* `members` - List of object IDs of the group members. When `include_transitive_members` is `true`, contains a list of object IDs of all transitive group members.
+* `members` - List of object IDs of the group members. When `include_transitive_members` is `true`, contains a list of object IDs of all transitive group members. When `include_members` is `false`, this attribute will be an empty list. If both ìnclude_members` and `include_transitive_members` are `true`, this attribute will contain only transitive members.
 * `onpremises_domain_name` - The on-premises FQDN, also called dnsDomainName, synchronised from the on-premises directory when Azure AD Connect is used.
 * `onpremises_group_type` - The on-premises group type that the AAD group will be written as, when writeback is enabled. Possible values are `UniversalDistributionGroup`, `UniversalMailEnabledSecurityGroup`, or `UniversalSecurityGroup`.
 * `onpremises_netbios_name` - The on-premises NetBIOS name, synchronised from the on-premises directory when Azure AD Connect is used.
