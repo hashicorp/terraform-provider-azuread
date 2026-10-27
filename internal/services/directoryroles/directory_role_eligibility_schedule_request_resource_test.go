@@ -31,6 +31,7 @@ func TestAccRoleEligibilityScheduleRequest_builtin(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
+		data.ImportStep(),
 	})
 }
 
