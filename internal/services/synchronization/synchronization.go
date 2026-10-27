@@ -32,7 +32,7 @@ func emptySynchronizationSecretKeyStringValuePair(in []interface{}) *[]stable.Sy
 		item := raw.(map[string]interface{})
 
 		result = append(result, stable.SynchronizationSecretKeyStringValuePair{
-			Key:   pointer.To(stable.SynchronizationSecret(item["key"].(string))),
+			Key:   pointer.ToEnum[stable.SynchronizationSecret](item["key"].(string)),
 			Value: nullable.Value(""),
 		})
 	}
@@ -50,7 +50,7 @@ func expandSynchronizationSecretKeyStringValuePair(in []interface{}) *[]stable.S
 		item := raw.(map[string]interface{})
 
 		result = append(result, stable.SynchronizationSecretKeyStringValuePair{
-			Key:   pointer.To(stable.SynchronizationSecret(item["key"].(string))),
+			Key:   pointer.ToEnum[stable.SynchronizationSecret](item["key"].(string)),
 			Value: nullable.Value(item["value"].(string)),
 		})
 	}

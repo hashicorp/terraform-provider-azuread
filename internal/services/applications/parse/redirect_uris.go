@@ -51,8 +51,7 @@ func ValidateRedirectUrisID(input interface{}, key string) (warnings []string, e
 		return
 	}
 
-	_, err := ParseRedirectUrisID(v)
-	if err != nil {
+	if _, err := ParseRedirectUrisID(v); err != nil {
 		errors = append(errors, err)
 		return
 	}

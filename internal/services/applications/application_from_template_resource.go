@@ -119,11 +119,11 @@ func (r ApplicationFromTemplateResource) Create() sdk.ResourceFunc {
 			if resp.Model == nil {
 				return fmt.Errorf("creating %s: model was nil", templateId)
 			}
-			if resp.Model.Application == nil {
-				return fmt.Errorf("creating %s: application was nil", templateId)
+			if resp.Model.Application == nil || resp.Model.Application.Id == nil {
+				return fmt.Errorf("creating %s: application or its ID was nil", templateId)
 			}
-			if resp.Model.ServicePrincipal == nil {
-				return fmt.Errorf("creating %s: servicePrincipal was nil", templateId)
+			if resp.Model.ServicePrincipal == nil || resp.Model.ServicePrincipal.Id == nil {
+				return fmt.Errorf("creating %s: servicePrincipal or its ID was nil", templateId)
 			}
 
 			id := parse.NewFromTemplateID(model.TemplateId, *resp.Model.Application.Id, *resp.Model.ServicePrincipal.Id)

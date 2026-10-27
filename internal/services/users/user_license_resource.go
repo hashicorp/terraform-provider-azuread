@@ -271,8 +271,7 @@ func findDirectLicenseAssignment(u *stable.User, skuId string) *stable.LicenseAs
 		// SKU IDs are UUIDs and therefore case-insensitive; Microsoft Graph returns them lowercased but a
 		// user may supply an uppercase GUID, so compare case-insensitively to avoid spurious diffs.
 		if strings.EqualFold(state.SkuId.GetOrZero(), skuId) && state.AssignedByGroup.GetOrZero() == "" {
-			assignmentState := state
-			return &assignmentState
+			return pointer.To(state)
 		}
 	}
 
