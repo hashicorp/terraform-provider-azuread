@@ -15,5 +15,6 @@ import (
 	_ "github.com/katbyte/tctest"
 	_ "github.com/katbyte/terrafmt"
 	_ "github.com/rhysd/actionlint/cmd/actionlint"
+	_ "github.com/sreallymatt/changeloggy"
 	_ "mvdan.cc/gofumpt"
 )

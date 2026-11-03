@@ -10,6 +10,7 @@ Workflow files are grouped by prefix:
 | `pr-check-*` | Standalone PR checks that cannot live inside `pr-checks-combined.yaml` (special runners, OIDC auth, or their own path filters) |
 | `pr-waiting-response-*` | The `waiting-response` label machinery (see below) |
 | `issue-*` | Issue automation |
+| `changelog-*` | Changelog automation |
 | `milestone-*` | Milestone automation |
 | `workflow-*` | Linting of the workflow files themselves (actionlint, yamllint) |
 | `teamcity-*` | TeamCity (acceptance test infrastructure) configuration and triggers |

@@ -28,11 +28,11 @@ For state migrations please test the changes locally and provide details here, s
 
 ## Change Log
 
-Below please provide what should go into the changelog (if anything) conforming to the [Changelog Format documented here](../blob/main/contributing/topics/maintainer-changelog.md).
+Add user-facing changes to `.changelog/<PR number>.hcl` on your PR branch. Run `make changelog-types` to see the available types, then run `make changelog TYPE=<type> BODY='<body>' [PR=<PR number>]` and commit the resulting file. Omit `PR` before opening the PR and rename `0.hcl` to the PR number afterwards.
 
-<!-- Replace the changelog example below with your entry. One resource per line. -->
+For changes with no user-facing impact, such as documentation or internal tooling changes, check this box instead:
 
-* `azuread_resource` - support for the `thing1` property [GH-00000]
+- [ ] This change does not require a changelog entry
 
 <!-- What type of PR is this? -->
 This is a (please select all that apply):
