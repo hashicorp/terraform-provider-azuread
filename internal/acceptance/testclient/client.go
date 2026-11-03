@@ -44,6 +44,9 @@ func Build(tenantId string) (*clients.Client, error) {
 		} else if env, err = environments.FromName(envName); err != nil {
 			return nil, fmt.Errorf("building test client: %+v", err)
 		}
+		if env == nil {
+			return nil, fmt.Errorf("building test client: environment was nil")
+		}
 
 		if tenantId == "" {
 			tenantId = os.Getenv("ARM_TENANT_ID")
@@ -60,10 +63,6 @@ func Build(tenantId string) (*clients.Client, error) {
 
 			EnableAuthenticatingUsingClientCertificate: true,
 			EnableAuthenticatingUsingClientSecret:      true,
-			EnableAuthenticatingUsingAzureCLI:          false,
-			EnableAuthenticatingUsingManagedIdentity:   false,
-			EnableAuthenticationUsingOIDC:              false,
-			EnableAuthenticationUsingGitHubOIDC:        false,
 		}
 
 		builder := clients.ClientBuilder{

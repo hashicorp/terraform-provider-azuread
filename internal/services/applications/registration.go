@@ -58,7 +58,6 @@ func (r Registration) Resources() []sdk.Resource {
 		ApplicationApiAccessResource{},
 		ApplicationAppRoleResource{},
 		ApplicationFallbackPublicClientResource{},
-		flexibleFederatedIdentityCredentialResource{},
 		ApplicationFromTemplateResource{},
 		ApplicationIdentifierUriResource{},
 		ApplicationKnownClientsResource{},
@@ -67,5 +66,6 @@ func (r Registration) Resources() []sdk.Resource {
 		ApplicationPermissionScopeResource{},
 		ApplicationRedirectUrisResource{},
 		ApplicationRegistrationResource{},
+		flexibleFederatedIdentityCredentialResource{},
 	}
 }

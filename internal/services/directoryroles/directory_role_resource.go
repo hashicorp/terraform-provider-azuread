@@ -183,8 +183,7 @@ func (r DirectoryRoleResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving directory role for template ID %q: ID was nil (API error)", templateId)
 			}
 
-			id := stable.NewDirectoryRoleID(*directoryRole.Id)
-			metadata.SetID(id)
+			metadata.SetID(stable.NewDirectoryRoleID(*directoryRole.Id))
 
 			return nil
 		},

@@ -489,7 +489,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		return tf.ErrorDiagF(err, "Could not retrieve group owners for group with object ID: %q", d.Id())
 	}
 	owners := make([]string, 0)
-	for _, object := range *resp.Model {
+	for _, object := range pointer.From(resp.Model) {
 		owners = append(owners, pointer.From(object.DirectoryObject().Id))
 	}
 	tf.Set(d, "owners", owners)

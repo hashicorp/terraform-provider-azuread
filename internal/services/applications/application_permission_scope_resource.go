@@ -156,7 +156,7 @@ func (r ApplicationPermissionScopeResource) Create() sdk.ResourceFunc {
 
 			// Check for existing scope ID
 			for _, scope := range newScopes {
-				if strings.EqualFold(*scope.Id, id.ScopeID) {
+				if strings.EqualFold(pointer.From(scope.Id), id.ScopeID) {
 					return metadata.ResourceRequiresImport(r.ResourceType(), id)
 				}
 			}
@@ -223,7 +223,7 @@ func (r ApplicationPermissionScopeResource) Read() sdk.ResourceFunc {
 			// Identify the scope by ID
 			var scope *stable.PermissionScope
 			for _, existingScope := range *app.Api.OAuth2PermissionScopes {
-				if strings.EqualFold(*existingScope.Id, id.ScopeID) {
+				if strings.EqualFold(pointer.From(existingScope.Id), id.ScopeID) {
 					scope = &existingScope
 					break
 				}
@@ -295,7 +295,7 @@ func (r ApplicationPermissionScopeResource) Update() sdk.ResourceFunc {
 			newScopes := make([]stable.PermissionScope, 0)
 			found := false
 			for _, existingScope := range *app.Api.OAuth2PermissionScopes {
-				if strings.EqualFold(*existingScope.Id, id.ScopeID) {
+				if strings.EqualFold(pointer.From(existingScope.Id), id.ScopeID) {
 					newScopes = append(newScopes, scope)
 					found = true
 				} else {
@@ -361,7 +361,7 @@ func (r ApplicationPermissionScopeResource) Delete() sdk.ResourceFunc {
 			newScopes := make([]stable.PermissionScope, 0)
 			found := false
 			for _, existingScope := range *app.Api.OAuth2PermissionScopes {
-				if strings.EqualFold(*existingScope.Id, id.ScopeID) {
+				if strings.EqualFold(pointer.From(existingScope.Id), id.ScopeID) {
 					found = true
 				} else {
 					newScopes = append(newScopes, existingScope)

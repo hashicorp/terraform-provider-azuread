@@ -51,7 +51,6 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceCustomDirectoryRoleInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceCustomDirectoryRoleInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

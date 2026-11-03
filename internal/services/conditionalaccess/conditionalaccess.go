@@ -307,10 +307,7 @@ func flattenCountryNamedLocation(in *stable.CountryNamedLocation) []interface{} 
 		return []interface{}{}
 	}
 
-	includeUnknown := false
-	if in.IncludeUnknownCountriesAndRegions != nil {
-		includeUnknown = *in.IncludeUnknownCountriesAndRegions
-	}
+	includeUnknown := pointer.From(in.IncludeUnknownCountriesAndRegions)
 
 	countryLookupMethod := stable.CountryLookupMethodType_ClientIPAddress
 	if in.CountryLookupMethod != nil {
@@ -331,10 +328,7 @@ func flattenIPNamedLocation(in *stable.IPNamedLocation) []interface{} {
 		return []interface{}{}
 	}
 
-	trusted := false
-	if in.IsTrusted != nil {
-		trusted = *in.IsTrusted
-	}
+	trusted := pointer.From(in.IsTrusted)
 
 	return []interface{}{
 		map[string]interface{}{
@@ -417,7 +411,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *stable.ConditionalAc
 	}
 
 	if insiderRiskLevel, ok := config["insider_risk_levels"]; ok && insiderRiskLevel.(string) != "" {
-		result.InsiderRiskLevels = pointer.To(stable.ConditionalAccessInsiderRiskLevels(insiderRiskLevel.(string)))
+		result.InsiderRiskLevels = pointer.ToEnum[stable.ConditionalAccessInsiderRiskLevels](insiderRiskLevel.(string))
 	}
 
 	result.Applications = expandConditionalAccessApplications(applications)
@@ -609,21 +603,21 @@ func expandConditionalAccessSessionControls(in []interface{}) *stable.Conditiona
 	if cloudAppSecurity := config["cloud_app_security_policy"]; cloudAppSecurity.(string) != "" {
 		result.CloudAppSecurity = &stable.CloudAppSecuritySessionControl{
 			IsEnabled:            nullable.Value(true),
-			CloudAppSecurityType: pointer.To(stable.CloudAppSecuritySessionControlType(cloudAppSecurity.(string))),
+			CloudAppSecurityType: pointer.ToEnum[stable.CloudAppSecuritySessionControlType](cloudAppSecurity.(string)),
 		}
 	}
 
 	if persistentBrowserMode := config["persistent_browser_mode"]; persistentBrowserMode.(string) != "" {
 		result.PersistentBrowser = &stable.PersistentBrowserSessionControl{
 			IsEnabled: nullable.Value(true),
-			Mode:      pointer.To(stable.PersistentBrowserSessionMode(persistentBrowserMode.(string))),
+			Mode:      pointer.ToEnum[stable.PersistentBrowserSessionMode](persistentBrowserMode.(string)),
 		}
 	}
 
 	signInFrequency := stable.SignInFrequencySessionControl{}
 	if frequencyValue := config["sign_in_frequency"].(int); frequencyValue > 0 {
 		signInFrequency.IsEnabled = nullable.Value(true)
-		signInFrequency.Type = pointer.To(stable.SigninFrequencyType(config["sign_in_frequency_period"].(string)))
+		signInFrequency.Type = pointer.ToEnum[stable.SigninFrequencyType](config["sign_in_frequency_period"].(string))
 		signInFrequency.Value = nullable.Value(int64(frequencyValue))
 
 		signInFrequency.AuthenticationType = pointer.To(stable.SignInFrequencyAuthenticationType_PrimaryAndSecondaryAuthentication)
@@ -631,7 +625,7 @@ func expandConditionalAccessSessionControls(in []interface{}) *stable.Conditiona
 	}
 
 	if authenticationType, ok := config["sign_in_frequency_authentication_type"]; ok && authenticationType.(string) != "" {
-		signInFrequency.AuthenticationType = pointer.To(stable.SignInFrequencyAuthenticationType(authenticationType.(string)))
+		signInFrequency.AuthenticationType = pointer.ToEnum[stable.SignInFrequencyAuthenticationType](authenticationType.(string))
 	}
 
 	if interval, ok := config["sign_in_frequency_interval"]; ok && interval.(string) != "" {
@@ -640,7 +634,7 @@ func expandConditionalAccessSessionControls(in []interface{}) *stable.Conditiona
 		if authType := config["sign_in_frequency_authentication_type"].(string); authType != "" {
 			signInFrequency.AuthenticationType = pointer.ToEnum[stable.SignInFrequencyAuthenticationType](authType)
 		}
-		signInFrequency.FrequencyInterval = pointer.To(stable.SignInFrequencyInterval(interval.(string)))
+		signInFrequency.FrequencyInterval = pointer.ToEnum[stable.SignInFrequencyInterval](interval.(string))
 	}
 
 	applicationEnforcedRestrictions := config["application_enforced_restrictions_enabled"].(bool)
@@ -681,7 +675,7 @@ func expandConditionalAccessFilter(in []interface{}) *stable.ConditionalAccessFi
 
 	config := in[0].(map[string]interface{})
 
-	result.Mode = pointer.To(stable.FilterMode(config["mode"].(string)))
+	result.Mode = pointer.ToEnum[stable.FilterMode](config["mode"].(string))
 	result.Rule = pointer.To(config["rule"].(string))
 
 	return &result
@@ -698,7 +692,7 @@ func expandGuestsOrExternalUsers(in []interface{}) *stable.ConditionalAccessGues
 	var guestOrExternalUserTypes *stable.ConditionalAccessGuestOrExternalUserTypes
 	if len(config["guest_or_external_user_types"].([]interface{})) > 0 {
 		values := strings.Join(tf.ExpandStringSlice(config["guest_or_external_user_types"].([]interface{})), ",")
-		guestOrExternalUserTypes = pointer.To(stable.ConditionalAccessGuestOrExternalUserTypes(values))
+		guestOrExternalUserTypes = pointer.ToEnum[stable.ConditionalAccessGuestOrExternalUserTypes](values)
 	}
 
 	result.GuestOrExternalUserTypes = guestOrExternalUserTypes
@@ -748,7 +742,7 @@ func expandCountryNamedLocation(in []interface{}) *stable.CountryNamedLocation {
 	result.IncludeUnknownCountriesAndRegions = pointer.To(includeUnknown.(bool))
 
 	if countryLookupMethodType, ok := config["country_lookup_method"]; ok && countryLookupMethodType.(string) != "" {
-		result.CountryLookupMethod = pointer.To(stable.CountryLookupMethodType(countryLookupMethodType.(string)))
+		result.CountryLookupMethod = pointer.ToEnum[stable.CountryLookupMethodType](countryLookupMethodType.(string))
 	}
 
 	return &result

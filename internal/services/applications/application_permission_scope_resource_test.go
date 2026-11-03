@@ -206,7 +206,7 @@ func (r ApplicationPermissionScopeResource) Exists(ctx context.Context, clients 
 	}
 
 	for _, scope := range *app.Api.OAuth2PermissionScopes {
-		if strings.EqualFold(*scope.Id, id.ScopeID) {
+		if strings.EqualFold(pointer.From(scope.Id), id.ScopeID) {
 			return pointer.To(true), nil
 		}
 	}

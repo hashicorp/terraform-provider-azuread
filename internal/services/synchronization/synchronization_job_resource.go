@@ -54,7 +54,6 @@ func synchronizationJobResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceSynchronizationJobInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceSynchronizationJobInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
