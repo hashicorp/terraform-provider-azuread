@@ -27,6 +27,7 @@ header:
     - '**/*.yaml'
     - '**/*.yml'
   paths-ignore:
+    - '.changelog/**'
     - '.ci/**'
     - '.github/**'
     - '.idea/**'

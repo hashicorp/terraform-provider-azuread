@@ -8,6 +8,7 @@ project {
   copyright_year = 2019
 
   header_ignore = [
+    ".changelog/**",
     ".ci/**",
     ".github/**",
     ".teamcity/**",

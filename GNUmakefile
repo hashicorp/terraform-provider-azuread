@@ -9,6 +9,7 @@ TF_SCHEMA_PANIC_ON_ERROR=1
 # shell out to golangci-lint/terrafmt by name) use the pinned builds.
 TOOLS_BIN=.tools/bin
 ACTIONLINT=$(TOOLS_BIN)/actionlint
+CHANGELOGGY=$(TOOLS_BIN)/changeloggy
 GOFUMPT=$(TOOLS_BIN)/gofumpt
 GOLANGCI_LINT=$(TOOLS_BIN)/golangci-lint
 LICENSE_EYE=$(TOOLS_BIN)/license-eye
@@ -98,7 +99,7 @@ tflint: ## renamed to tfproviderlint
 	@$(MAKE) tfproviderlint
 
 ##@ Build & Generate
-tools: $(ACTIONLINT) $(GOFUMPT) $(GOLANGCI_LINT) $(GOLANGCI_LINT_MODULES) $(LICENSE_EYE) $(TCTEST) $(TERRAFMT) $(TFPROVIDERDOCS) $(MARKDOWNLINT) $(SHELLCHECK) $(TYPOS) $(YAMLLINT) ## Install all pinned dev tools into .tools/bin (targets install what they need on demand)
+tools: $(ACTIONLINT) $(CHANGELOGGY) $(GOFUMPT) $(GOLANGCI_LINT) $(GOLANGCI_LINT_MODULES) $(LICENSE_EYE) $(TCTEST) $(TERRAFMT) $(TFPROVIDERDOCS) $(MARKDOWNLINT) $(SHELLCHECK) $(TYPOS) $(YAMLLINT) ## Install all pinned dev tools into .tools/bin (targets install what they need on demand)
 
 build: quick-checks generate ## Run the quick checks, generate code, and compile the provider
 	go install
@@ -219,6 +220,19 @@ test: ## Run the unit tests
 
 testacc: ## Run acceptance tests for a package (TEST=./internal/services/<service>)
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout $(TESTTIMEOUT) -ldflags="-X=github.com/hashicorp/terraform-provider-azuread/version.ProviderVersion=acc"
+
+##@ Changelog
+changelog: $(CHANGELOGGY) ## Add an entry (TYPE=<type> BODY='<body>' [PR=<number>])
+	@test -n "$(TYPE)" || (echo "Error: TYPE is required (e.g. TYPE=new-resource)"; exit 1)
+	@test -n '$(value BODY)' || (echo "Error: BODY is required"; exit 1)
+	@CHANGELOG_TYPE='$(TYPE)' CHANGELOG_PR='$(or $(PR),0)' CHANGELOG_BODY='$(value BODY)' \
+		sh -c '$(CHANGELOGGY) add --pr "$$CHANGELOG_PR" --type "$$CHANGELOG_TYPE" "$$CHANGELOG_BODY"'
+
+changelog-types: $(CHANGELOGGY) ## List accepted changelog entry types
+	@$(CHANGELOGGY) types
+
+release-changelog: $(CHANGELOGGY) ## Generate the release changelog and update version/VERSION
+	@./scripts/release-update-changelog.sh
 
 acctests: ## Run acceptance tests for a service (SERVICE=<service>)
 	TF_ACC=1 go test -v ./internal/services/$(SERVICE)/ $(TESTARGS) -timeout $(TESTTIMEOUT) -ldflags="-X=github.com/hashicorp/terraform-provider-azuread/version.ProviderVersion=acc"
