@@ -142,7 +142,12 @@ func accessPackageCatalogRoleAssignmentResourceDelete(ctx context.Context, d *pl
 
 	id := beta.NewRoleManagementEntitlementManagementRoleAssignmentID(d.Id())
 
-	if _, err := client.DeleteEntitlementManagementRoleAssignment(ctx, id, entitlementmanagementroleassignment.DefaultDeleteEntitlementManagementRoleAssignmentOperationOptions()); err != nil {
+	resp, err := client.DeleteEntitlementManagementRoleAssignment(ctx, id, entitlementmanagementroleassignment.DefaultDeleteEntitlementManagementRoleAssignmentOperationOptions())
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s already deleted", id)
+			return nil
+		}
 		return tf.ErrorDiagF(err, "Deleting %s", id)
 	}
 
