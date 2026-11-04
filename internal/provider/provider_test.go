@@ -558,6 +558,71 @@ func TestAccProvider_adoOidcAuth(t *testing.T) {
 	}
 }
 
+func TestAccProvider_aksWorkloadIdentityAuth(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("TF_ACC not set")
+	}
+	if os.Getenv("AZURE_CLIENT_ID") == "" {
+		t.Skip("AZURE_CLIENT_ID not set")
+	}
+	if os.Getenv("AZURE_TENANT_ID") == "" {
+		t.Skip("AZURE_TENANT_ID not set")
+	}
+	if os.Getenv("AZURE_FEDERATED_TOKEN_FILE") == "" {
+		t.Skip("AZURE_FEDERATED_TOKEN_FILE not set")
+	}
+
+	provider := AzureADProvider()
+	ctx := context.Background()
+
+	// Support only AKS Workload Identity authentication
+	provider.ConfigureContextFunc = func(ctx context.Context, d *pluginsdk.ResourceData) (interface{}, pluginsdk.Diagnostics) {
+		envName := d.Get("environment").(string)
+		env, err := environments.FromName(envName)
+		if err != nil {
+			t.Fatalf("configuring environment %q: %v", envName, err)
+		}
+
+		idToken, err := getOidcToken(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		clientId, err := getClientId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		tenantId, err := getTenantId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		authConfig := &auth.Credentials{
+			Environment:                   *env,
+			TenantID:                      *tenantId,
+			ClientID:                      *clientId,
+			OIDCAssertionToken:            *idToken,
+			EnableAuthenticationUsingOIDC: true,
+		}
+
+		return buildClient(ctx, provider, authConfig, "")
+	}
+
+	// Ensure we enable AKS Workload Identity else the configuration will not be detected
+	conf := map[string]interface{}{"use_aks_workload_identity": true}
+	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(conf))
+	if d != nil && d.HasError() {
+		t.Fatalf("err: %+v", d)
+	}
+
+	if errs := testCheckProvider(provider); len(errs) > 0 {
+		for _, err := range errs {
+			t.Error(err)
+		}
+	}
+}
+
 func testCheckProvider(provider *schema.Provider) (errs []error) {
 	client := provider.Meta().(*clients.Client)
 
