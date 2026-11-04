@@ -274,6 +274,13 @@ func applicationResource() *pluginsdk.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
+			"disabled": {
+				Description: "Whether the application is disabled",
+				Type:        pluginsdk.TypeBool,
+				Optional:    true,
+				Default:     false,
+			},
+
 			"device_only_auth_enabled": {
 				Description: "Specifies whether this application supports device authentication without a user.",
 				Type:        pluginsdk.TypeBool,
@@ -939,12 +946,13 @@ func applicationDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool
 }
 
 func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationClient
-	clientBeta := meta.(*clients.Client).Applications.ApplicationClientBeta
-	appTemplateClient := meta.(*clients.Client).Applications.ApplicationTemplateClient
-	logoClient := meta.(*clients.Client).Applications.ApplicationLogoClient
-	ownerClient := meta.(*clients.Client).Applications.ApplicationOwnerClient
-	servicePrincipalsClient := meta.(*clients.Client).Applications.ServicePrincipalClient
+	applicationClients := meta.(*clients.Client).Applications
+	client := applicationClients.ApplicationClient
+	clientBeta := applicationClients.ApplicationClientBeta
+	appTemplateClient := applicationClients.ApplicationTemplateClient
+	logoClient := applicationClients.ApplicationLogoClient
+	ownerClient := applicationClients.ApplicationOwnerClient
+	servicePrincipalsClient := applicationClients.ServicePrincipalClient
 
 	displayName := d.Get("display_name").(string)
 
@@ -1271,6 +1279,12 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		}
 	}
 
+	if d.Get("disabled").(bool) {
+		if err := applicationClients.UpdateApplicationDisabled(ctx, betaId, true); err != nil {
+			return tf.ErrorDiagF(err, "Failed to set `disabled` for %s", id)
+		}
+	}
+
 	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
 	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
 	if !acceptMappedClaims.IsNull() && acceptMappedClaims.IsSet() {
@@ -1310,10 +1324,11 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 }
 
 func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationClient
-	clientBeta := meta.(*clients.Client).Applications.ApplicationClientBeta
-	logoClient := meta.(*clients.Client).Applications.ApplicationLogoClient
-	ownerClient := meta.(*clients.Client).Applications.ApplicationOwnerClient
+	applicationClients := meta.(*clients.Client).Applications
+	client := applicationClients.ApplicationClient
+	clientBeta := applicationClients.ApplicationClientBeta
+	logoClient := applicationClients.ApplicationLogoClient
+	ownerClient := applicationClients.ApplicationOwnerClient
 
 	id, err := stable.ParseApplicationID(d.Id())
 	if err != nil {
@@ -1551,6 +1566,12 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 		}
 	}
 
+	if d.HasChange("disabled") {
+		if err := applicationClients.UpdateApplicationDisabled(ctx, betaId, d.Get("disabled").(bool)); err != nil {
+			return tf.ErrorDiagF(err, "Failed to set `disabled` for %s", id)
+		}
+	}
+
 	if d.HasChange("owners") {
 		resp, err := ownerClient.ListOwners(ctx, *id, owner.DefaultListOwnersOperationOptions())
 		if err != nil {
@@ -1597,9 +1618,9 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 }
 
 func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationClient
-	clientBeta := meta.(*clients.Client).Applications.ApplicationClientBeta
-	ownerClient := meta.(*clients.Client).Applications.ApplicationOwnerClient
+	applicationClients := meta.(*clients.Client).Applications
+	client := applicationClients.ApplicationClient
+	ownerClient := applicationClients.ApplicationOwnerClient
 
 	id, err := stable.ParseApplicationID(d.Id())
 	if err != nil {
@@ -1683,21 +1704,18 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 		tf.Set(d, "password", passwordToSave)
 	}
 
-	// API bug: the v1.0 API does not return the `oauth2RequiredPostResponse` field, so retrieve it using the beta API
+	// The v1.0 API does not return these properties, so retrieve them using the beta API.
 	// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
-	respBeta, err := clientBeta.GetApplication(ctx, beta.ApplicationId(*id), applicationBeta.GetApplicationOperationOptions{
-		Select: pointer.To([]string{"oauth2RequirePostResponse"}),
-	})
+	additionalProperties, err := applicationClients.GetApplicationAdditionalProperties(ctx, beta.ApplicationId(*id))
 	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving additional properties for %s", id)
 	}
-
-	appBeta := respBeta.Model
-	if appBeta == nil {
+	if additionalProperties == nil {
 		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 	}
 
-	tf.Set(d, "oauth2_post_response_required", pointer.From(appBeta.OAuth2RequirePostResponse))
+	tf.Set(d, "disabled", pointer.From(additionalProperties.IsDisabled))
+	tf.Set(d, "oauth2_post_response_required", pointer.From(additionalProperties.OAuth2RequirePostResponse))
 
 	logoImage := ""
 	if v := d.Get("logo_image").(string); v != "" {
