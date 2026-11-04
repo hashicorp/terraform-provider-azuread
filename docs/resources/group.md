@@ -10,12 +10,11 @@ Manages a group within Azure Active Directory.
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, the least privileged permissions that are required are: `Group.Create` and `User.Read.All`, `Application.Read.All` or `Directory.Read.All` - [Microsoft Graph Permissions](https://learn.microsoft.com/en-us/graph/api/group-post-groups?view=graph-rest-1.0&tabs=http#permissions).
+When authenticated with a service principal, this resource requires the `Group.Create` application role to create groups - see [Microsoft Graph permissions](https://learn.microsoft.com/en-us/graph/api/group-post-groups?view=graph-rest-1.0&tabs=http#permissions). Terraform also needs either the `Group.Read.All` or `Directory.Read.All` application role to read the group, its owners and its members.
 
-
-- `User.Read.All` is required to create the group with users as owners or members.
-- `Application.Read.All` is required to create the group with other service principals as owners or members.
-- `Directory.Read.All` is required to create the group with either users or service principals as owners or members.
+- `User.Read.All` is additionally required to create the group with users as owners or members.
+- `Application.Read.All` is additionally required to create the group with other service principals as owners or members.
+- `Directory.Read.All` can be used instead of the object-specific read permissions above when creating the group with users or service principals as owners or members.
 
 If using the `assignable_to_role` property, this resource additionally requires the `RoleManagement.ReadWrite.Directory` application role.
 
