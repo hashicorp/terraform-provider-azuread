@@ -36,6 +36,31 @@ func TestAccAccessPackageResourcePackageAssociation_complete(t *testing.T) {
 	})
 }
 
+// Several associations in one access package, so refreshes read the package from the cache. The second step
+// removes one association and adds another to the cached package.
+func TestAccAccessPackageResourcePackageAssociation_multiple(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_access_package_resource_package_association", "test")
+	r := AccessPackageResourcePackageAssociationResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.multiple(data, "second", 1),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That("azuread_access_package_resource_package_association.second").ExistsInAzure(r),
+			),
+		},
+		{
+			Config: r.multiple(data, "third", 2),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That("azuread_access_package_resource_package_association.third").ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (AccessPackageResourcePackageAssociationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.AccessPackageClient
 
@@ -85,4 +110,46 @@ resource "azuread_access_package_resource_package_association" "test" {
   catalog_resource_association_id = azuread_access_package_resource_catalog_association.test.id
 }
 `, data.RandomInteger)
+}
+
+// multiple has the association "test" on group 0 and the association named by other on group index, in one access package.
+// It uses count, not for_each: the test framework cannot read for_each keys from state.
+func (AccessPackageResourcePackageAssociationResource) multiple(data acceptance.TestData, other string, index int) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_group" "test" {
+  count            = 3
+  display_name     = "acctest-access-package-resource-package-association-${count.index}-%[1]d"
+  security_enabled = true
+}
+
+resource "azuread_access_package_catalog" "test" {
+  display_name = "acctest-catalog-%[1]d"
+  description  = "Test catalog %[1]d"
+}
+
+resource "azuread_access_package_resource_catalog_association" "test" {
+  count                  = 3
+  catalog_id             = azuread_access_package_catalog.test.id
+  resource_origin_id     = azuread_group.test[count.index].object_id
+  resource_origin_system = "AadGroup"
+}
+
+resource "azuread_access_package" "test" {
+  display_name = "acctest-package-%[1]d"
+  description  = "Test Package %[1]d"
+  catalog_id   = azuread_access_package_catalog.test.id
+}
+
+resource "azuread_access_package_resource_package_association" "test" {
+  access_package_id               = azuread_access_package.test.id
+  catalog_resource_association_id = azuread_access_package_resource_catalog_association.test[0].id
+}
+
+resource "azuread_access_package_resource_package_association" "%[2]s" {
+  access_package_id               = azuread_access_package.test.id
+  catalog_resource_association_id = azuread_access_package_resource_catalog_association.test[%[3]d].id
+}
+`, data.RandomInteger, other, index)
 }
