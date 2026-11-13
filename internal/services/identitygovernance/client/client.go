@@ -22,6 +22,8 @@ import (
 )
 
 type Client struct {
+	AccessPackages AccessPackageCache
+
 	AccessPackageAssignmentPolicyClient  *entitlementmanagementaccesspackageassignmentpolicy.EntitlementManagementAccessPackageAssignmentPolicyClient
 	AccessPackageCatalogClient           *entitlementmanagementaccesspackagecatalog.EntitlementManagementAccessPackageCatalogClient
 	AccessPackageCatalogResourceClient   *entitlementmanagementaccesspackagecatalogaccesspackageresource.EntitlementManagementAccessPackageCatalogAccessPackageResourceClient
