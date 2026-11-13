@@ -36,8 +36,9 @@ func TestAccAccessPackageResourcePackageAssociation_complete(t *testing.T) {
 	})
 }
 
-// Several associations in one access package, so refreshes read the package from the cache. The second step
-// removes one association and adds another to the cached package.
+// Several associations in one access package, so refreshes read the package from the cache. In step 1 the second
+// association is created after the first has cached the package, so its Read fails if Create does not evict it.
+// Step 2 deletes one association and creates another. Each apply starts with an empty cache.
 func TestAccAccessPackageResourcePackageAssociation_multiple(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_resource_package_association", "test")
 	r := AccessPackageResourcePackageAssociationResource{}
@@ -113,7 +114,8 @@ resource "azuread_access_package_resource_package_association" "test" {
 }
 
 // multiple has the association "test" on group 0 and the association named by other on group index, in one access package.
-// It uses count, not for_each: the test framework cannot read for_each keys from state.
+// It uses count, not for_each: the test framework cannot read for_each keys from state. The association named by other
+// depends on "test", so Terraform creates it after the Read of "test" has cached the access package.
 func (AccessPackageResourcePackageAssociationResource) multiple(data acceptance.TestData, other string, index int) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
@@ -150,6 +152,8 @@ resource "azuread_access_package_resource_package_association" "test" {
 resource "azuread_access_package_resource_package_association" "%[2]s" {
   access_package_id               = azuread_access_package.test.id
   catalog_resource_association_id = azuread_access_package_resource_catalog_association.test[%[3]d].id
+
+  depends_on = [azuread_access_package_resource_package_association.test]
 }
 `, data.RandomInteger, other, index)
 }
