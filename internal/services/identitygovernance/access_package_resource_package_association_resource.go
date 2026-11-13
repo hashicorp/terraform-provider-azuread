@@ -159,10 +159,24 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 	}
 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
+	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(resourceId.AccessPackageId)
+	read := func() (*beta.AccessPackage, error) {
+		return getAccessPackageWithRoleScopes(ctx, accessPackageClient, accessPackageId)
+	}
 
-	roleScope, err := GetAccessPackageResourcesRoleScope(ctx, accessPackageClient, id)
+	accessPackage, err := accessPackages.get(resourceId.AccessPackageId, read)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving %s", id)
+	}
+
+	roleScope := findRoleScope(accessPackage, resourceId.ResourceRoleScopeId)
+	if roleScope == nil {
+		// The cached read can be older than a role scope created in this run, so check with a fresh read.
+		accessPackages.evict(resourceId.AccessPackageId)
+		if accessPackage, err = accessPackages.get(resourceId.AccessPackageId, read); err != nil {
+			return tf.ErrorDiagF(err, "Retrieving %s", id)
+		}
+		roleScope = findRoleScope(accessPackage, resourceId.ResourceRoleScopeId)
 	}
 
 	if roleScope == nil {
@@ -171,19 +185,19 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 		return nil
 	}
 
-	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(resourceId.AccessPackageId)
-
-	accessPackageResp, err := accessPackageClient.GetEntitlementManagementAccessPackage(ctx, accessPackageId, entitlementmanagementaccesspackage.DefaultGetEntitlementManagementAccessPackageOperationOptions())
-	if err != nil {
-		return tf.ErrorDiagF(err, "Retrieving %s", accessPackageId)
+	catalogId := accessPackage.CatalogId.GetOrZero()
+	if catalogId == "" {
+		accessPackageResp, err := accessPackageClient.GetEntitlementManagementAccessPackage(ctx, accessPackageId, entitlementmanagementaccesspackage.DefaultGetEntitlementManagementAccessPackageOperationOptions())
+		if err != nil {
+			return tf.ErrorDiagF(err, "Retrieving %s", accessPackageId)
+		}
+		if accessPackageResp.Model == nil {
+			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", accessPackageId)
+		}
+		catalogId = accessPackageResp.Model.CatalogId.GetOrZero()
 	}
 
-	accessPackage := accessPackageResp.Model
-	if accessPackage == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", accessPackageId)
-	}
-
-	catalogResourceAssociationId := parse.NewAccessPackageResourceCatalogAssociationID(accessPackage.CatalogId.GetOrZero(), resourceId.OriginId)
+	catalogResourceAssociationId := parse.NewAccessPackageResourceCatalogAssociationID(catalogId, resourceId.OriginId)
 
 	tf.Set(d, "access_package_id", resourceId.AccessPackageId)
 	tf.Set(d, "access_type", resourceId.AccessType)
@@ -205,6 +219,7 @@ func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, 
 	if _, err = client.DeleteEntitlementManagementAccessPackageResourceRoleScope(ctx, id, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultDeleteEntitlementManagementAccessPackageResourceRoleScopeOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
+	accessPackages.evict(resourceId.AccessPackageId)
 
 	return nil
 }

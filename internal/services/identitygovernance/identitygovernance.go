@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
@@ -17,8 +18,18 @@ import (
 	"golang.org/x/text/language"
 )
 
+// GetAccessPackageResourcesRoleScope reads the role scope from Graph, without the cache. It returns nil when the
+// access package has no role scope with that ID.
 func GetAccessPackageResourcesRoleScope(ctx context.Context, client *entitlementmanagementaccesspackage.EntitlementManagementAccessPackageClient, id beta.IdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeId) (*beta.AccessPackageResourceRoleScope, error) {
-	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(id.AccessPackageId)
+	accessPackage, err := getAccessPackageWithRoleScopes(ctx, client, beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(id.AccessPackageId))
+	if err != nil {
+		return nil, err
+	}
+
+	return findRoleScope(accessPackage, id.AccessPackageResourceRoleScopeId), nil
+}
+
+func getAccessPackageWithRoleScopes(ctx context.Context, client *entitlementmanagementaccesspackage.EntitlementManagementAccessPackageClient, accessPackageId beta.IdentityGovernanceEntitlementManagementAccessPackageId) (*beta.AccessPackage, error) {
 	options := entitlementmanagementaccesspackage.GetEntitlementManagementAccessPackageOperationOptions{
 		Expand: &odata.Expand{
 			Relationship: "accessPackageResourceRoleScopes($expand=accessPackageResourceRole,accessPackageResourceScope)",
@@ -37,14 +48,52 @@ func GetAccessPackageResourcesRoleScope(ctx context.Context, client *entitlement
 		return nil, fmt.Errorf("retrieving %s: AccessPackageResourceRoleScopes was nil", accessPackageId)
 	}
 
-	// There is only a select and expand method on this endpoint, we iterate the result to find the RoleScope
-	for _, roleScope := range *resp.Model.AccessPackageResourceRoleScopes {
-		if roleScope.Id != nil && *roleScope.Id == id.AccessPackageResourceRoleScopeId {
-			return &roleScope, nil
+	return resp.Model, nil
+}
+
+// There is only a select and expand method on this endpoint, we iterate the result to find the RoleScope
+func findRoleScope(accessPackage *beta.AccessPackage, roleScopeId string) *beta.AccessPackageResourceRoleScope {
+	for _, roleScope := range *accessPackage.AccessPackageResourceRoleScopes {
+		if roleScope.Id != nil && *roleScope.Id == roleScopeId {
+			return &roleScope
 		}
 	}
 
-	return nil, nil
+	return nil
+}
+
+// accessPackageCache keeps one read of each access package with its role scopes, so refreshing all the resource
+// package associations of an access package makes one Graph request instead of 2 for each association. It lives as
+// long as the provider process, which serves one plan or apply. It does not keep errors.
+type accessPackageCache struct {
+	entries sync.Map // access package ID: *accessPackageCacheEntry
+}
+
+type accessPackageCacheEntry struct {
+	once          sync.Once
+	accessPackage *beta.AccessPackage
+	err           error
+}
+
+var accessPackages accessPackageCache
+
+// get returns the cached access package, or calls read once for all callers that ask for it at the same time.
+func (c *accessPackageCache) get(accessPackageId string, read func() (*beta.AccessPackage, error)) (*beta.AccessPackage, error) {
+	v, _ := c.entries.LoadOrStore(accessPackageId, &accessPackageCacheEntry{})
+	entry := v.(*accessPackageCacheEntry)
+	entry.once.Do(func() {
+		entry.accessPackage, entry.err = read()
+	})
+	if entry.err != nil {
+		c.entries.CompareAndDelete(accessPackageId, entry)
+		return nil, entry.err
+	}
+
+	return entry.accessPackage, nil
+}
+
+func (c *accessPackageCache) evict(accessPackageId string) {
+	c.entries.Delete(accessPackageId)
 }
 
 func expandRequestorSettings(input []interface{}) (*beta.RequestorSettings, error) {
