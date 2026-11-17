@@ -27,7 +27,7 @@ output "object_id" {
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `client_id` - The client ID (application ID) linked to the authenticated principal, or the application used for delegated authentication.
 * `object_id` - The object ID of the authenticated principal.
 * `tenant_id` - The tenant ID of the authenticated principal.

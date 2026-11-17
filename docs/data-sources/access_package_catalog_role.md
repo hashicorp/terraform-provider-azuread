@@ -46,7 +46,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `description` - The description of the catalog role.
 * `template_id` - The object ID of the template associated with the catalog role.
 

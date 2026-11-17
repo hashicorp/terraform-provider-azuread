@@ -55,7 +55,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `account_enabled` - Whether or not the service principal account is enabled.
 * `alternative_names` - A list of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.
 * `app_role_assignment_required` - Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.

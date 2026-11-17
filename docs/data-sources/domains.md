@@ -42,7 +42,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `domains` - A list of tenant domains. (see [nested schema](#schema-6e6573746564-6f7574707574-646f6d61696e73))
 
 ---

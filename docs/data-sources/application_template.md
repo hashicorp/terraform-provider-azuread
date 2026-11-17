@@ -36,7 +36,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `categories` - List of categories for this templated application.
 * `homepage_url` - Home page URL of the templated application.
 * `logo_url` - URL to retrieve the logo for this templated application.

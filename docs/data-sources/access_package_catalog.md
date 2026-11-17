@@ -46,7 +46,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `description` - The description of the access package catalog.
 * `externally_visible` - Whether the access packages in this catalog can be requested by users outside the tenant.
 * `published` - Whether the access packages in this catalog are available for management.

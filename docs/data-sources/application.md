@@ -42,7 +42,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `api` - A list of `api` objects as defined below. (see [nested schema](#schema-6e6573746564-6f7574707574-617069))
 * `app_role_ids` - Mapping of app role names to UUIDs.
 * `app_roles` - List of app roles published by the application. (see [nested schema](#schema-6e6573746564-6f7574707574-6170705f726f6c6573))

@@ -68,7 +68,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `service_principals` - A list of service_principals. (see [nested schema](#schema-6e6573746564-6f7574707574-736572766963655f7072696e636970616c73))
 
 ---

@@ -60,7 +60,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `allowed_combinations` - The allowed MFA methods for this policy.
 * `combination_configurations` - The combination configurations which further constrain the allowed combinations for this policy. (see [nested schema](#schema-6e6573746564-6f7574707574-636f6d62696e6174696f6e5f636f6e66696775726174696f6e73))
 * `description` - The description for the authentication strength policy.

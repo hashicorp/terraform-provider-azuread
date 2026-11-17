@@ -35,7 +35,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `country` - A list of `country` objects as defined below. (see [nested schema](#schema-6e6573746564-6f7574707574-636f756e747279))
 * `ip` - A list of `ip` objects as defined below. (see [nested schema](#schema-6e6573746564-6f7574707574-6970))
 * `object_id` - The object ID of the named location.

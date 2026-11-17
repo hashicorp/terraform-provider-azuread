@@ -41,7 +41,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `type` - The OData type of the Directory Object.
 
 ## Timeouts

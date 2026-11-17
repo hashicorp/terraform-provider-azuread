@@ -31,7 +31,7 @@ output "roles" {
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `object_ids` - The object IDs of the roles.
 * `roles` - A list of roles. (see [nested schema](#schema-6e6573746564-6f7574707574-726f6c6573))
 * `template_ids` - The template IDs of the roles.

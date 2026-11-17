@@ -41,7 +41,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `assignable_to_role` - Indicates whether this group can be assigned to an Azure Active Directory role.
 * `auto_subscribe_new_members` - Indicates whether new members added to the group will be auto-subscribed to receive email notifications.
 * `behaviors` - The group behaviors for a Microsoft 365 group.

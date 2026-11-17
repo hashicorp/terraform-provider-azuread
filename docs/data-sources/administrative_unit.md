@@ -46,7 +46,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `description` - The description for the administrative unit.
 * `members` - A list of object IDs of members who are be present in this administrative unit.
 * `visibility` - Whether the administrative unit and its members are hidden or publicly viewable in the directory.

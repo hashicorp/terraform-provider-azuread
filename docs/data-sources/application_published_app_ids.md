@@ -54,7 +54,7 @@ resource "azuread_application" "example" {
 
 The following attributes are exported:
 
-* `id` - The ID of the Resource.
+* `id` - The ID of the Data Source.
 * `result` - A mapping of application names and application IDs.
 
 ## Timeouts
