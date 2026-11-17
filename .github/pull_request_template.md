@@ -46,6 +46,22 @@ This is a (please select all that apply):
 
 Fixes #0000
 
+## AI Assistance Disclosure
+
+<!-- 
+IMPORTANT!
+
+If you are using any kind of AI/LLM assistance to contribute to the AzureRM provider, this must be disclosed in the pull request.
+
+If this is the case, please check the box below, and include the extent to which AI was used. (e.g. documentation only, code generation, etc.)
+
+If responses to this pull request are/will be generated using AI, disclose this as well.
+-->
+
+- [ ] AI Assisted - This contribution was made by, or with the assistance of, AI/LLMs
+
+<!-- extent of AI usage must be described here if the box above is checked -->
+
 <!-- heimdall_github_prtemplate:grc-pci_dss-2024-01-05 -->
 
 ## Rollback Plan
