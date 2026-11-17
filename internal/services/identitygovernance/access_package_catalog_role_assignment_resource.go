@@ -25,6 +25,8 @@ import (
 
 func accessPackageCatalogRoleAssignmentResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a single catalog role assignment within Azure Active Directory.",
+
 		CreateContext: accessPackageCatalogRoleAssignmentResourceCreate,
 		ReadContext:   accessPackageCatalogRoleAssignmentResourceRead,
 		DeleteContext: accessPackageCatalogRoleAssignmentResourceDelete,

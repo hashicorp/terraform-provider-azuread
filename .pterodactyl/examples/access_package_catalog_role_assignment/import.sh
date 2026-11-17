@@ -1,0 +1,1 @@
+terraform import azuread_access_package_catalog_role_assignment.example 00000000-0000-0000-0000-000000000000

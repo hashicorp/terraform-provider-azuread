@@ -40,6 +40,10 @@ func (r ApplicationApiAccessResource) ResourceType() string {
 	return "azuread_application_api_access"
 }
 
+func (r ApplicationApiAccessResource) Description() string {
+	return "Manages the API permissions for an application registration.  This resource is analogous to the `required_resource_access` block in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationApiAccessResource) ModelObject() interface{} {
 	return &ApplicationApiAccessModel{}
 }

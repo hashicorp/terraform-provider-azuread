@@ -22,6 +22,8 @@ import (
 
 func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets information about an access package catalog role.",
+
 		ReadContext: accessPackageCatalogRoleDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

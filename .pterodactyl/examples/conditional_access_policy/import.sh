@@ -1,0 +1,1 @@
+terraform import azuread_conditional_access_policy.my_location /identity/conditionalAccess/policies/00000000-0000-0000-0000-000000000000

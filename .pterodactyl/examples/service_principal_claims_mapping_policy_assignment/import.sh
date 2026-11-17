@@ -1,0 +1,1 @@
+terraform import azuread_service_principal_claims_mapping_policy_assignment.app /servicePrincipals/00000000-0000-0000-0000-000000000000/claimsMappingPolicies/11111111-0000-0000-0000-000000000000

@@ -26,6 +26,8 @@ import (
 
 func userFlowAttributeResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages user flow attributes in an Azure Active Directory (Azure AD) tenant.",
+
 		CreateContext: userFlowAttributeResourceCreate,
 		ReadContext:   userFlowAttributeResourceRead,
 		UpdateContext: userFlowAttributeResourceUpdate,

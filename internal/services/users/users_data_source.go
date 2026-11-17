@@ -25,6 +25,8 @@ import (
 
 func usersData() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets basic information for multiple Azure Active Directory users.",
+
 		ReadContext: usersDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

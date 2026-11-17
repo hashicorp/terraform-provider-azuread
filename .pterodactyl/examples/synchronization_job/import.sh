@@ -1,0 +1,1 @@
+terraform import azuread_synchronization_job.example /servicePrincipals/00000000-0000-0000-0000-000000000000/synchronization/jobs/dataBricks.f5532fc709734b1a90e8a1fa9fd03a82.8442fd39-2183-419c-8732-74b6ce866bd5

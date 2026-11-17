@@ -24,6 +24,8 @@ import (
 
 func applicationCertificateResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a certificate associated with an application within Azure Active Directory. These are also referred to as client certificates during authentication.",
+
 		CreateContext: applicationCertificateResourceCreate,
 		ReadContext:   applicationCertificateResourceRead,
 		DeleteContext: applicationCertificateResourceDelete,

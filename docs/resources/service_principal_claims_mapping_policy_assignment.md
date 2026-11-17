@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_service_principal_claims_mapping_policy_assignment"
 subcategory: "Service Principals"
+description: |-
+  Manages a Claims Mapping Policy Assignment within Azure Active Directory.
 ---
 
 # Resource: azuread_service_principal_claims_mapping_policy_assignment
@@ -23,22 +26,22 @@ resource "azuread_service_principal_claims_mapping_policy_assignment" "app" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `claims_mapping_policy_id` - (Required) The ID of the claims mapping policy to assign.
-* `service_principal_id` - (Required) The ID of the service principal for the policy assignment.
+* `claims_mapping_policy_id` - (Required) ID of the claims mapping policy to assign. Changing this value forces a new resource to be created.
+* `service_principal_id` - (Required) ID of the service principal for which to assign the policy. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of the Claims Mapping Policy Assignment.
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -46,7 +49,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Claims Mapping Policy Assignments can be imported using the `id`, in the form `/servicePrincipals/{servicePrincipalId}/claimsMappingPolicies/{claimsMappingPolicyId}`, e.g:
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_service_principal_claims_mapping_policy_assignment.app /servicePrincipals/00000000-0000-0000-0000-000000000000/claimsMappingPolicies/11111111-0000-0000-0000-000000000000

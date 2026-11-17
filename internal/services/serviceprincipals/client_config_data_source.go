@@ -40,6 +40,10 @@ func (r ClientConfigDataSource) ResourceType() string {
 	return "azuread_client_config"
 }
 
+func (r ClientConfigDataSource) Description() string {
+	return "Use this data source to access the configuration of the AzureAD provider."
+}
+
 func (r ClientConfigDataSource) ModelObject() interface{} {
 	return &ClientConfigDataSourceModel{}
 }

@@ -28,6 +28,8 @@ import (
 
 func invitationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages an invitation of a guest user within Azure Active Directory.",
+
 		CreateContext: invitationResourceCreate,
 		ReadContext:   invitationResourceRead,
 		DeleteContext: invitationResourceDelete,

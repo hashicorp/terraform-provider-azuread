@@ -23,6 +23,8 @@ import (
 
 func claimsMappingPolicyResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a Claims Mapping Policy within Azure Active Directory.",
+
 		CreateContext: claimsMappingPolicyResourceCreate,
 		ReadContext:   claimsMappingPolicyResourceRead,
 		UpdateContext: claimsMappingPolicyResourceUpdate,

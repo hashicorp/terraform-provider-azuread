@@ -42,6 +42,10 @@ func (r GroupLicenseResource) ResourceType() string {
 	return "azuread_group_license"
 }
 
+func (r GroupLicenseResource) Description() string {
+	return "Manages a single license assignment for a group (group-based licensing).  ~> **License availability** The SKU being assigned must be available in your tenant. You can find the available SKUs and their service plans in the [Microsoft 365 admin center](https://learn.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference), or by inspecting the `subscribedSkus` in Microsoft Graph.  -> **Group-based licensing** Licenses assigned to a group are inherited by all members of that group. Assignment to individual members happens asynchronously after the license is assigned to the group, and is managed by Microsoft Entra ID rather than by this resource. This resource only manages the license assignment on the group object itself."
+}
+
 func (r GroupLicenseResource) ModelObject() interface{} {
 	return &GroupLicenseResourceModel{}
 }

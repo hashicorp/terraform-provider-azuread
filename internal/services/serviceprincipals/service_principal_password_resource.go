@@ -26,6 +26,8 @@ import (
 
 func servicePrincipalPasswordResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a password credential associated with a service principal within Azure Active Directory. See also the [azuread_application_password resource](application_password.html).",
+
 		CreateContext: servicePrincipalPasswordResourceCreate,
 		ReadContext:   servicePrincipalPasswordResourceRead,
 		DeleteContext: servicePrincipalPasswordResourceDelete,

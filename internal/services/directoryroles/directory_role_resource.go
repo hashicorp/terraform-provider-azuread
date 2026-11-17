@@ -45,6 +45,10 @@ func (r DirectoryRoleResource) ResourceType() string {
 	return "azuread_directory_role"
 }
 
+func (r DirectoryRoleResource) Description() string {
+	return "Manages a Directory Role within Azure Active Directory. Directory Roles are also known as Administrator Roles."
+}
+
 func (r DirectoryRoleResource) ModelObject() interface{} {
 	return &DirectoryRoleModel{}
 }

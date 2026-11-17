@@ -35,6 +35,10 @@ func (r ApplicationFallbackPublicClientResource) ResourceType() string {
 	return "azuread_application_fallback_public_client"
 }
 
+func (r ApplicationFallbackPublicClientResource) Description() string {
+	return "Manages the Fallback Public Client setting for an application registration.  ~> This resource is incompatible with the `azuread_application` resource, instead use this with the `azuread_application_registration` resource."
+}
+
 func (r ApplicationFallbackPublicClientResource) ModelObject() interface{} {
 	return &ApplicationFallbackPublicClientModel{}
 }

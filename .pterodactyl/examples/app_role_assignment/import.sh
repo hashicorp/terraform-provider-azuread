@@ -1,0 +1,1 @@
+terraform import azuread_app_role_assignment.example /servicePrincipals/00000000-0000-0000-0000-000000000000/appRoleAssignedTo/aaBBcDDeFG6h5JKLMN2PQrrssTTUUvWWxxxxxyyyzzz

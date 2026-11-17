@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_privileged_access_group_eligibility_schedule"
 subcategory: "Identity Governance"
+description: |-
+  Manages an eligible assignment to a privileged access group.
 ---
 
 # Resource: azuread_privileged_access_group_eligibility_schedule
@@ -38,32 +41,34 @@ resource "azuread_privileged_access_group_eligibility_schedule" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
-* `group_id` (Required) The Object ID of the Azure AD group to which the principal will be assigned.
-* `principal_id` (Required) The Object ID of the principal to be assigned to the above group. Can be either a user or a group.
-* `assignment_type` (Required) The type of assignment to the group. Can be either `member` or `owner`.
-* `justification` (Optional) The justification for this assignment. May be required by the role policy.
-* `ticket_number` (Optional) The ticket number in the ticket system approving this assignment. May be required by the role policy.
-* `ticket_system` (Optional) The ticket system containing the ticket number approving this assignment. May be required by the role policy.
-* `start_date` (Optional) The date from which this assignment is valid, formatted as an RFC3339 date string (e.g. 2018-01-01T01:02:03Z). If not provided, the assignment is immediately valid.
-* `expiration_date` (Optional) The date that this assignment expires, formatted as an RFC3339 date string (e.g. 2018-01-01T01:02:03Z).
-* `duration` (Optional) The duration that this assignment is valid for, formatted as an ISO8601 duration (e.g. P30D for 30 days, PT3H for three hours).
-* `permanent_assignment` (Optional) Is this assignment permanently valid.
+The following arguments are supported:
 
-At least one of `expiration_date`, `duration`, or `permanent_assignment` must be supplied. The role policy may limit the maximum duration which can be supplied.
+* `assignment_type` - (Required) The ID of the assignment to the group. Changing this value forces a new resource to be created.
+* `group_id` - (Required) The ID of the Group representing the scope of the assignment. Changing this value forces a new resource to be created.
+* `principal_id` - (Required) The ID of the Principal assigned to the schedule. Changing this value forces a new resource to be created.
+
+---
+
+* `duration` - (Optional) The duration of the assignment, formatted as an ISO8601 duration string (e.g. P3D for 3 days). Conflicts with `expiration_date`.
+* `expiration_date` - (Optional) The date that this assignment expires, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z). Conflicts with `duration`.
+* `justification` - (Optional) The justification for the assignment.
+* `permanent_assignment` - (Optional) Is the assignment permanent.
+* `start_date` - (Optional) The date that this assignment starts, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z).
+* `ticket_number` - (Optional) The ticket number authorising the assignment. Required when using `ticket_system`.
+* `ticket_system` - (Optional) The ticket system authorising the assignment. Required when using `ticket_number`.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - (String) The ID of this request.
-* `status` - (String) The provisioning status of this request.
-* `target_schedule_id` - (String) The ID of this schedule created by this request.
+* `id` - The ID of the Resource.
+* `status` - The status of the schedule.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -72,7 +77,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-An assignment schedule can be imported using the schedule ID, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_privileged_access_group_eligibility_schedule.example 00000000-0000-0000-0000-000000000000_member_00000000-0000-0000-0000-000000000000

@@ -1,0 +1,1 @@
+terraform import azuread_directory_role_eligibility_schedule_request.example 822ec710-4c9f-4f71-a27a-451759cc7522

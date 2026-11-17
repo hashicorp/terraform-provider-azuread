@@ -55,6 +55,10 @@ func (r ApplicationRegistrationResource) ResourceType() string {
 	return "azuread_application_registration"
 }
 
+func (r ApplicationRegistrationResource) Description() string {
+	return "Manages an application registration within Azure Active Directory.  For a more comprehensive alternative, please see the [azuread_application](application.html) resource. Please note that this resource should not be used together with the `azuread_application` resource when managing the same application."
+}
+
 func (r ApplicationRegistrationResource) ModelObject() interface{} {
 	return &ApplicationRegistrationModel{}
 }

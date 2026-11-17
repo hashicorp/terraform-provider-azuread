@@ -49,6 +49,9 @@ type DataSource interface {
 
 	// Read is a ResourceFunc which looks up and sets field values into the Terraform State
 	Read() ResourceFunc
+
+	// Description returns a description of this resource
+	Description() string
 }
 
 // DataSourceWithDeprecationReplacedBy is an optional interface
@@ -83,6 +86,9 @@ type Resource interface {
 
 	// Delete will remove an existing resource using the information available in Terraform's State
 	Delete() ResourceFunc
+
+	// Description returns a description of this resource
+	Description() string
 
 	// IDValidationFunc returns the SchemaValidateFunc used to validate the ID is valid during
 	// `terraform import` - ensuring users don't inadvertently specify the incorrect Resource ID

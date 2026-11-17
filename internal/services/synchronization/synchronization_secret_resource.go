@@ -24,6 +24,8 @@ import (
 
 func synchronizationSecretResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages synchronization secrets associated with a service principal (enterprise application) within Azure Active Directory.",
+
 		CreateContext: synchronizationSecretResourceCreate,
 		ReadContext:   synchronizationSecretResourceRead,
 		UpdateContext: synchronizationSecretResourceUpdate,

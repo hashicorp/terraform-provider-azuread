@@ -49,7 +49,8 @@ func (rw *ResourceWrapper) Resource() (*schema.Resource, error) {
 	}
 
 	resource := schema.Resource{
-		Schema: *resourceSchema,
+		Description: rw.resource.Description(),
+		Schema:      *resourceSchema,
 
 		CreateContext: rw.diagnosticsWrapper(func(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
 			metaData := runArgs(d, meta, rw.logger)

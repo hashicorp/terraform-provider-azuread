@@ -27,6 +27,8 @@ import (
 
 func appRoleAssignmentResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages an app role assignment for a group, user or service principal. Can be used to grant admin consent for application permissions.",
+
 		CreateContext: appRoleAssignmentResourceCreate,
 		ReadContext:   appRoleAssignmentResourceRead,
 		DeleteContext: appRoleAssignmentResourceDelete,

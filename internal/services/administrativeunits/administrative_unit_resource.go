@@ -34,6 +34,8 @@ const administrativeUnitResourceName = "azuread_administrative_unit"
 
 func administrativeUnitResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages an Administrative Unit within Azure Active Directory.",
+
 		CreateContext: administrativeUnitResourceCreate,
 		ReadContext:   administrativeUnitResourceRead,
 		UpdateContext: administrativeUnitResourceUpdate,

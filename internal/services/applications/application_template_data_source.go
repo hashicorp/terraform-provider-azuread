@@ -22,6 +22,8 @@ import (
 
 func applicationTemplateDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this data source to access information about an Application Template from the [Azure AD App Gallery](https://azuremarketplace.microsoft.com/en-US/marketplace/apps/category/azure-active-directory-apps).",
+
 		ReadContext: applicationTemplateDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

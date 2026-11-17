@@ -134,3 +134,7 @@ func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 func (r GroupRoleManagementPolicyDataSource) ResourceType() string {
 	return "azuread_group_role_management_policy"
 }
+
+func (r GroupRoleManagementPolicyDataSource) Description() string {
+	return "Use this data source to retrieve a role policy for an Azure AD group."
+}

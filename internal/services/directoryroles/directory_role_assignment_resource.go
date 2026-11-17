@@ -24,6 +24,8 @@ import (
 
 func directoryRoleAssignmentResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a single directory role assignment within Azure Active Directory.",
+
 		CreateContext: directoryRoleAssignmentResourceCreate,
 		ReadContext:   directoryRoleAssignmentResourceRead,
 		DeleteContext: directoryRoleAssignmentResourceDelete,

@@ -26,6 +26,8 @@ import (
 
 func applicationDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this data source to access information about an existing Application within Azure Active Directory.",
+
 		ReadContext: applicationDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

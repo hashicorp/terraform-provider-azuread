@@ -24,6 +24,8 @@ import (
 
 func applicationPreAuthorizedResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages client applications that are pre-authorized with the specified permissions to access an application's APIs without requiring user consent.",
+
 		CreateContext: applicationPreAuthorizedResourceCreate,
 		ReadContext:   applicationPreAuthorizedResourceRead,
 		UpdateContext: applicationPreAuthorizedResourceUpdate,

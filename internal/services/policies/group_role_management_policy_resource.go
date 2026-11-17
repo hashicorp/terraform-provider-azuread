@@ -93,6 +93,10 @@ func (r GroupRoleManagementPolicyResource) ResourceType() string {
 	return "azuread_group_role_management_policy"
 }
 
+func (r GroupRoleManagementPolicyResource) Description() string {
+	return "Manage a role policy for an Azure AD group."
+}
+
 func (r GroupRoleManagementPolicyResource) ModelObject() interface{} {
 	return &GroupRoleManagementPolicyModel{}
 }

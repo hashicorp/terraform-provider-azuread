@@ -28,6 +28,8 @@ const accessPackageResourceName = "azuread_access_package"
 
 func accessPackageResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages an Access Package within Identity Governance in Azure Active Directory.",
+
 		CreateContext: accessPackageResourceCreate,
 		ReadContext:   accessPackageResourceRead,
 		UpdateContext: accessPackageResourceUpdate,

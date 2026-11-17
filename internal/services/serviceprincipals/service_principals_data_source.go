@@ -28,6 +28,8 @@ import (
 
 func servicePrincipalsDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets basic information for multiple Azure Active Directory service principals.",
+
 		ReadContext: servicePrincipalsDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

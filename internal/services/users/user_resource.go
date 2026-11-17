@@ -31,6 +31,8 @@ import (
 
 func userResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a user within Azure Active Directory.",
+
 		CreateContext: userResourceCreate,
 		ReadContext:   userResourceRead,
 		UpdateContext: userResourceUpdate,

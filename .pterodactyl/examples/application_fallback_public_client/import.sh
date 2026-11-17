@@ -1,0 +1,1 @@
+terraform import azuread_application_fallback_public_client.example /applications/00000000-0000-0000-0000-000000000000/fallbackPublicClient

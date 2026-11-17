@@ -1,0 +1,1 @@
+terraform import azuread_authentication_strength_policy.my_policy /policies/authenticationStrengthPolicies/00000000-0000-0000-0000-000000000000

@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_group_role_management_policy"
 subcategory: "Policies"
+description: |-
+  Manage a role policy for an Azure AD group.
 ---
 
 # Resource: azuread_group_role_management_policy
@@ -56,100 +59,188 @@ resource "azuread_group_role_management_policy" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
-* `activation_rules` - (Optional) An `activation_rules` block as defined below.
-* `active_assignment_rules` - (Optional) An `active_assignment_rules` block as defined below.
-* `eligible_assignment_rules` - (Optional) An `eligible_assignment_rules` block as defined below.
-* `group_id` - (Required) The ID of the Azure AD group for which the policy applies.
-* `notification_rules` - (Optional) A `notification_rules` block as defined below.
-* `role_id` - (Required) The type of assignment this policy covers. Can be either `member` or `owner`.
+The following arguments are supported:
+
+* `group_id` - (Required) ID of the group to which this policy is assigned. Changing this value forces a new resource to be created.
+* `role_id` - (Required) The ID of the role of this policy to the group. Possible values include `member` and `owner`. Changing this value forces a new resource to be created.
 
 ---
 
-An `activation_rules` block supports the following:
-
-* `approval_stage` - (Optional) An `approval_stage` block as defined below.
-* `maximum_duration` - (Optional) The maximum length of time an activated role can be valid, in an ISO8601 Duration format (e.g. `PT8H`). Valid range is `PT30M` to `PT23H30M`, in 30 minute increments, or `PT1D`.
-* `require_approval` - (Optional) Is approval required for activation. If `true` an `approval_stage` block must be provided.
-* `require_justification` - (Optional) Is a justification required during activation of the role.
-* `require_multifactor_authentication` - (Optional) Is multi-factor authentication required to activate the role. Conflicts with `required_conditional_access_authentication_context`.
-* `require_ticket_info` - (Optional) Is ticket information required during activation of the role.
-* `required_conditional_access_authentication_context` - (Optional) The Entra ID Conditional Access context that must be present for activation (e.g `c1`). Conflicts with `require_multifactor_authentication`.
+* `activation_rules` - (Optional) The activation rules of the policy. (see [nested schema](#schema-6e6573746564-696e707574-61637469766174696f6e5f72756c6573))
+* `active_assignment_rules` - (Optional) The rules for active assignment of the policy. (see [nested schema](#schema-6e6573746564-696e707574-6163746976655f61737369676e6d656e745f72756c6573))
+* `eligible_assignment_rules` - (Optional) The rules for eligible assignment of the policy. (see [nested schema](#schema-6e6573746564-696e707574-656c696769626c655f61737369676e6d656e745f72756c6573))
+* `notification_rules` - (Optional) The notification rules of the policy. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573))
 
 ---
 
-An `active_assignment_rules` block supports the following:
+<a id="schema-6e6573746564-696e707574-61637469766174696f6e5f72756c6573"></a>
+The `activation_rules` block supports the following:
 
-* `expiration_required` - (Optional) Must an assignment have an expiry date. `false` allows permanent assignment.
-* `expire_after` - (Optional) The maximum length of time an assignment can be valid, as an ISO8601 duration. Permitted values: `P15D`, `P30D`, `P90D`, `P180D`, or `P365D`.
-* `require_justification` - (Optional) Is a justification required to create new assignments.
-* `require_multifactor_authentication` - (Optional) Is multi-factor authentication required to create new assignments.
-* `require_ticket_info` - (Optional) Is ticket information required to create new assignments.
-
-One of `expiration_required` or `expire_after` must be provided.
-
+* `approval_stage` - (Optional) The approval stages for the activation. (see [nested schema](#schema-6e6573746564-696e707574-61637469766174696f6e5f72756c6573-617070726f76616c5f7374616765))
+* `maximum_duration` - (Optional) The time after which the an activation can be valid for. Possible values include `PT30M`, `PT1H`, `PT1H30M`, `PT2H`, `PT2H30M`, `PT3H`, `PT3H30M`, `PT4H`, `PT4H30M`, `PT5H`, `PT5H30M`, `PT6H`, `PT6H30M`, `PT7H`, `PT7H30M`, `PT8H`, `PT8H30M`, `PT9H`, `PT9H30M`, `PT10H`, `PT10H30M`, `PT11H`, `PT11H30M`, `PT12H`, `PT12H30M`, `PT13H`, `PT13H30M`, `PT14H`, `PT14H30M`, `PT15H`, `PT15H30M`, `PT16H`, `PT16H30M`, `PT17H`, `PT17H30M`, `PT18H`, `PT18H30M`, `PT19H`, `PT19H30M`, `PT20H`, `PT20H30M`, `PT21H`, `PT21H30M`, `PT22H`, `PT22H30M`, `PT23H`, `PT23H30M`, and `P1D`.
+* `require_approval` - (Optional) Whether an approval is required for activation.
+* `require_justification` - (Optional) Whether a justification is required during activation.
+* `require_multifactor_authentication` - (Optional) Whether multi-factor authentication is required during activation. Conflicts with `activation_rules.0.required_conditional_access_authentication_context`.
+* `require_ticket_info` - (Optional) Whether ticket information is required during activation.
+* `required_conditional_access_authentication_context` - (Optional) Whether a conditional access context is required during activation. Conflicts with `activation_rules.0.require_multifactor_authentication`.
 ---
 
-An `approval_stage` block supports the following:
+<a id="schema-6e6573746564-696e707574-61637469766174696f6e5f72756c6573-617070726f76616c5f7374616765"></a>
+The `activation_rules.approval_stage` block supports the following:
 
-* One or more `primary_approver` blocks as defined below.
-
+* `primary_approver` - (Required) The IDs of the users or groups who can approve the activation. (see [nested schema](#schema-6e6573746564-696e707574-61637469766174696f6e5f72756c6573-617070726f76616c5f7374616765-7072696d6172795f617070726f766572))
 ---
 
-An `eligible_assignment_rules` block supports the following:
+<a id="schema-6e6573746564-696e707574-61637469766174696f6e5f72756c6573-617070726f76616c5f7374616765-7072696d6172795f617070726f766572"></a>
+The `activation_rules.approval_stage.primary_approver` block supports the following:
 
-* `expiration_required`- Must an assignment have an expiry date. `false` allows permanent assignment.
-* `expire_after` - The maximum length of time an assignment can be valid, as an ISO8601 duration. Permitted values: `P15D`, `P30D`, `P90D`, `P180D`, or `P365D`.
+* `object_id` - (Required) The ID of the object to act as an approver.
 
-One of `expiration_required` or `expire_after` must be provided.
-
+* `type` - (Optional) The type of object acting as an approver. Possible values include `singleUser` and `groupMembers`.
 ---
 
-A `notification_rules` block supports the following:
+<a id="schema-6e6573746564-696e707574-6163746976655f61737369676e6d656e745f72756c6573"></a>
+The `active_assignment_rules` block supports the following:
 
-* `active_assignments` - (Optional) A `notification_target` block as defined below to configure notifications on active role assignments.
-* `eligible_activations` - (Optional) A `notification_target` block as defined below for configuring notifications on activation of eligible role.
-* `eligible_assignments` - (Optional) A `notification_target` block as defined below to configure notification on eligible role assignments.
-
-At least one `notification_target` block must be provided.
-
+* `expiration_required` - (Optional) Must the assignment have an expiry date.
+* `expire_after` - (Optional) The duration after which assignments expire. Possible values include `P15D`, `P30D`, `P90D`, `P180D`, and `P365D`.
+* `require_justification` - (Optional) Whether a justification is required to make an assignment.
+* `require_multifactor_authentication` - (Optional) Whether multi-factor authentication is required to make an assignment.
+* `require_ticket_info` - (Optional) Whether ticket information is required to make an assignment.
 ---
 
-A `notification_settings` block supports the following:
+<a id="schema-6e6573746564-696e707574-656c696769626c655f61737369676e6d656e745f72756c6573"></a>
+The `eligible_assignment_rules` block supports the following:
 
-* `additional_recipients` - (Optional) A list of additional email addresses that will receive these notifications.
-* `default_recipients` - (Required) Should the default recipients receive these notifications.
-* `notification_level` - (Required) What level of notifications should be sent. Options are `All` or `Critical`.
-
+* `expiration_required` - (Optional) Must the assignment have an expiry date.
+* `expire_after` - (Optional) The duration after which assignments expire. Possible values include `P15D`, `P30D`, `P90D`, `P180D`, and `P365D`.
 ---
 
-A `notification_target` block supports the following:
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573"></a>
+The `notification_rules` block supports the following:
 
-* `admin_notifications` - (Optional) A `notification_settings` block as defined above.
-* `approver_notifications` - (Optional) A `notification_settings` block as defined above.
-* `assignee_notifications` - (Optional) A `notification_settings` block as defined above.
-
-At least one `notification_settings` block must be provided.
-
+* `active_assignments` - (Optional) Notifications about active assignments. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-6163746976655f61737369676e6d656e7473))
+* `eligible_activations` - (Optional) Notifications about activations of eligible assignments. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61637469766174696f6e73))
+* `eligible_assignments` - (Optional) Notifications about eligible assignments. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61737369676e6d656e7473))
 ---
 
-A `primary_approver` block supports the following:
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-6163746976655f61737369676e6d656e7473"></a>
+The `notification_rules.active_assignments` block supports the following:
 
-* `object_id` - (Required) The ID of the object which will act as an approver.
-* `type` - (Required) The type of object acting as an approver. Possible options are `singleUser` and `groupMembers`.
+* `admin_notifications` - (Optional) Admin notification settings. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-6163746976655f61737369676e6d656e7473-61646d696e5f6e6f74696669636174696f6e73))
+* `approver_notifications` - (Optional) Approver notification settings. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-6163746976655f61737369676e6d656e7473-617070726f7665725f6e6f74696669636174696f6e73))
+* `assignee_notifications` - (Optional) Assignee notification settings. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-6163746976655f61737369676e6d656e7473-61737369676e65655f6e6f74696669636174696f6e73))
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-6163746976655f61737369676e6d656e7473-61646d696e5f6e6f74696669636174696f6e73"></a>
+The `notification_rules.active_assignments.admin_notifications` block supports the following:
+
+* `default_recipients` - (Required) Whether the default recipients are notified.
+* `notification_level` - (Required) What level of notifications are sent. Possible values include `All` and `Critical`.
+
+* `additional_recipients` - (Optional) The additional recipients to notify.
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-6163746976655f61737369676e6d656e7473-617070726f7665725f6e6f74696669636174696f6e73"></a>
+The `notification_rules.active_assignments.approver_notifications` block supports the following:
+
+* `default_recipients` - (Required) Whether the default recipients are notified.
+* `notification_level` - (Required) What level of notifications are sent. Possible values include `All` and `Critical`.
+
+* `additional_recipients` - (Optional) The additional recipients to notify.
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-6163746976655f61737369676e6d656e7473-61737369676e65655f6e6f74696669636174696f6e73"></a>
+The `notification_rules.active_assignments.assignee_notifications` block supports the following:
+
+* `default_recipients` - (Required) Whether the default recipients are notified.
+* `notification_level` - (Required) What level of notifications are sent. Possible values include `All` and `Critical`.
+
+* `additional_recipients` - (Optional) The additional recipients to notify.
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61637469766174696f6e73"></a>
+The `notification_rules.eligible_activations` block supports the following:
+
+* `admin_notifications` - (Optional) Admin notification settings. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61637469766174696f6e73-61646d696e5f6e6f74696669636174696f6e73))
+* `approver_notifications` - (Optional) Approver notification settings. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61637469766174696f6e73-617070726f7665725f6e6f74696669636174696f6e73))
+* `assignee_notifications` - (Optional) Assignee notification settings. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61637469766174696f6e73-61737369676e65655f6e6f74696669636174696f6e73))
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61637469766174696f6e73-61646d696e5f6e6f74696669636174696f6e73"></a>
+The `notification_rules.eligible_activations.admin_notifications` block supports the following:
+
+* `default_recipients` - (Required) Whether the default recipients are notified.
+* `notification_level` - (Required) What level of notifications are sent. Possible values include `All` and `Critical`.
+
+* `additional_recipients` - (Optional) The additional recipients to notify.
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61637469766174696f6e73-617070726f7665725f6e6f74696669636174696f6e73"></a>
+The `notification_rules.eligible_activations.approver_notifications` block supports the following:
+
+* `default_recipients` - (Required) Whether the default recipients are notified.
+* `notification_level` - (Required) What level of notifications are sent. Possible values include `All` and `Critical`.
+
+* `additional_recipients` - (Optional) The additional recipients to notify.
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61637469766174696f6e73-61737369676e65655f6e6f74696669636174696f6e73"></a>
+The `notification_rules.eligible_activations.assignee_notifications` block supports the following:
+
+* `default_recipients` - (Required) Whether the default recipients are notified.
+* `notification_level` - (Required) What level of notifications are sent. Possible values include `All` and `Critical`.
+
+* `additional_recipients` - (Optional) The additional recipients to notify.
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61737369676e6d656e7473"></a>
+The `notification_rules.eligible_assignments` block supports the following:
+
+* `admin_notifications` - (Optional) Admin notification settings. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61737369676e6d656e7473-61646d696e5f6e6f74696669636174696f6e73))
+* `approver_notifications` - (Optional) Approver notification settings. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61737369676e6d656e7473-617070726f7665725f6e6f74696669636174696f6e73))
+* `assignee_notifications` - (Optional) Assignee notification settings. (see [nested schema](#schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61737369676e6d656e7473-61737369676e65655f6e6f74696669636174696f6e73))
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61737369676e6d656e7473-61646d696e5f6e6f74696669636174696f6e73"></a>
+The `notification_rules.eligible_assignments.admin_notifications` block supports the following:
+
+* `default_recipients` - (Required) Whether the default recipients are notified.
+* `notification_level` - (Required) What level of notifications are sent. Possible values include `All` and `Critical`.
+
+* `additional_recipients` - (Optional) The additional recipients to notify.
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61737369676e6d656e7473-617070726f7665725f6e6f74696669636174696f6e73"></a>
+The `notification_rules.eligible_assignments.approver_notifications` block supports the following:
+
+* `default_recipients` - (Required) Whether the default recipients are notified.
+* `notification_level` - (Required) What level of notifications are sent. Possible values include `All` and `Critical`.
+
+* `additional_recipients` - (Optional) The additional recipients to notify.
+---
+
+<a id="schema-6e6573746564-696e707574-6e6f74696669636174696f6e5f72756c6573-656c696769626c655f61737369676e6d656e7473-61737369676e65655f6e6f74696669636174696f6e73"></a>
+The `notification_rules.eligible_assignments.assignee_notifications` block supports the following:
+
+* `default_recipients` - (Required) Whether the default recipients are notified.
+* `notification_level` - (Required) What level of notifications are sent. Possible values include `All` and `Critical`.
+
+* `additional_recipients` - (Optional) The additional recipients to notify.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `description` - (String) The description of this policy.
-* `display_name` - (String) The display name of this policy.
-* `id` - (String) The ID of this policy.
+* `id` - The ID of the Resource.
+* `description` - Description of the policy.
+* `display_name` - The display name of the policy.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -158,4 +249,8 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Because these policies are created automatically by Entra ID, they will auto-import on first use.
+This resource can be imported using its resource ID, e.g.
+
+```shell
+terraform import azuread_group_role_management_policy.example "<resource-id>"
+```

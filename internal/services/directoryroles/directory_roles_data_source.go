@@ -20,6 +20,8 @@ import (
 
 func directoryRolesDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this data source to access information about activated directory roles within Azure Active Directory.",
+
 		ReadContext: directoryRolesDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

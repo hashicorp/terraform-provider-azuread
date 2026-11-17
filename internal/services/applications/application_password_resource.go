@@ -27,6 +27,8 @@ import (
 
 func applicationPasswordResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a password credential associated with an application within Azure Active Directory. These are also referred to as client secrets during authentication.",
+
 		CreateContext: applicationPasswordResourceCreate,
 		ReadContext:   applicationPasswordResourceRead,
 		DeleteContext: applicationPasswordResourceDelete,

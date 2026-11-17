@@ -37,6 +37,10 @@ func (r ApplicationIdentifierUriResource) ResourceType() string {
 	return "azuread_application_identifier_uri"
 }
 
+func (r ApplicationIdentifierUriResource) Description() string {
+	return "Manages a single Identifier URI for an application registration.  This resource is analogous to the `identifier_uris` property in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationIdentifierUriResource) ModelObject() interface{} {
 	return &ApplicationIdentifierUriModel{}
 }

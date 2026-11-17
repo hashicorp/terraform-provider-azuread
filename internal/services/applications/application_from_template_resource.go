@@ -44,6 +44,10 @@ func (r ApplicationFromTemplateResource) ResourceType() string {
 	return "azuread_application_from_template"
 }
 
+func (r ApplicationFromTemplateResource) Description() string {
+	return "Creates an application registration and associated service principal from a gallery template.  -> The [azuread_application](application.html) resource can also be used to instantiate a gallery application, however unlike the `azuread_application` resource, this resource does not attempt to manage any properties of the resulting application."
+}
+
 func (r ApplicationFromTemplateResource) ModelObject() interface{} {
 	return &ApplicationFromTemplateModel{}
 }

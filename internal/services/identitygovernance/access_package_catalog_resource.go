@@ -28,6 +28,8 @@ const accessPackageCatalogResourceName = "azuread_access_package_catalog"
 
 func accessPackageCatalogResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages an access package catalog within Identity Governance in Azure Active Directory.",
+
 		CreateContext: accessPackageCatalogResourceCreate,
 		ReadContext:   accessPackageCatalogResourceRead,
 		UpdateContext: accessPackageCatalogResourceUpdate,

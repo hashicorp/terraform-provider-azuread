@@ -22,6 +22,8 @@ import (
 
 func accessPackageDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this data source to retrieve information for an existing access package within Identity Governance in Azure Active Directory.",
+
 		ReadContext: accessPackageDataRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

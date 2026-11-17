@@ -20,6 +20,8 @@ import (
 
 func directoryRoleTemplatesDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this data source to access information about directory role templates within Azure Active Directory.",
+
 		ReadContext: directoryRoleTemplatesDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

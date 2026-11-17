@@ -237,9 +237,7 @@ func StringDoesNotContainAny(chars string) func(interface{}, string) ([]string, 
 // is of type string and matches the value of an element in the valid slice
 // will test with in lower case if ignoreCase is true
 func StringInSlice(valid []string, ignoreCase bool) func(interface{}, string) ([]string, []error) {
-	return func(i interface{}, k string) ([]string, []error) {
-		return validation.StringInSlice(valid, ignoreCase)(i, k)
-	}
+	return validation.StringInSlice(valid, ignoreCase)
 }
 
 // StringIsBase64 is a ValidateFunc that ensures a string can be parsed as Base64

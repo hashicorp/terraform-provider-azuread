@@ -37,6 +37,10 @@ func (r ApplicationRedirectUrisResource) ResourceType() string {
 	return "azuread_application_redirect_uris"
 }
 
+func (r ApplicationRedirectUrisResource) Description() string {
+	return "Manages the redirect URIs for an application registration.  ~> This resource is incompatible with the `azuread_application` resource, instead use this with the `azuread_application_registration` resource."
+}
+
 func (r ApplicationRedirectUrisResource) ModelObject() interface{} {
 	return &ApplicationRedirectUrisModel{}
 }

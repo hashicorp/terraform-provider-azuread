@@ -26,6 +26,8 @@ import (
 
 func administrativeUnitMemberResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a single administrative unit membership within Azure Active Directory.  ~> **Warning** Do not use this resource at the same time as the `members` property of the `azuread_administrative_unit` resource for the same administrative unit. Doing so will cause a conflict and administrative unit members will be removed.",
+
 		CreateContext: administrativeUnitMemberResourceCreate,
 		ReadContext:   administrativeUnitMemberResourceRead,
 		DeleteContext: administrativeUnitMemberResourceDelete,

@@ -36,6 +36,10 @@ func (r ApplicationKnownClientsResource) ResourceType() string {
 	return "azuread_application_known_clients"
 }
 
+func (r ApplicationKnownClientsResource) Description() string {
+	return "Manages the known client applications for an application registration.  ~> This resource is incompatible with the `azuread_application` resource, instead use this with the `azuread_application_registration` resource."
+}
+
 func (r ApplicationKnownClientsResource) ModelObject() interface{} {
 	return &ApplicationKnownClientsModel{}
 }

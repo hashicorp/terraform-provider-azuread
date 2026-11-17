@@ -24,6 +24,8 @@ import (
 
 func administrativeUnitRoleMemberResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a single directory role assignment scoped to an administrative unit within Azure Active Directory.",
+
 		CreateContext: administrativeUnitRoleMemberResourceCreate,
 		ReadContext:   administrativeUnitRoleMemberResourceRead,
 		DeleteContext: administrativeUnitRoleMemberResourceDelete,

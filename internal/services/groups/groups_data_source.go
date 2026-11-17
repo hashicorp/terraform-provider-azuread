@@ -25,6 +25,8 @@ import (
 
 func groupsDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets Object IDs or Display Names for multiple Azure Active Directory groups.",
+
 		ReadContext: groupsDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

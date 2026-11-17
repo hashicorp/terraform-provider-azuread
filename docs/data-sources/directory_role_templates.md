@@ -1,8 +1,11 @@
 ---
+page_title: "Data Source: azuread_directory_role_templates"
 subcategory: "Directory Role Templates"
+description: |-
+  Use this data source to access information about directory role templates within Azure Active Directory.
 ---
 
-# Resource: azuread_directory_role_templates
+# Data Source: azuread_directory_role_templates
 
 Use this data source to access information about directory role templates within Azure Active Directory.
 
@@ -24,20 +27,18 @@ output "roles" {
 }
 ```
 
-## Argument Reference
-
-This data source does not have any arguments.
-
 ## Attributes Reference
 
 The following attributes are exported:
 
+* `id` - The ID of the Resource.
 * `object_ids` - The object IDs of the role templates.
-* `role_templates` - A list of role templates. Each `role_template` object provides the attributes documented below.
+* `role_templates` - A list of role templates. (see [nested schema](#schema-6e6573746564-6f7574707574-726f6c655f74656d706c61746573))
 
 ---
 
-`role_template` object exports the following:
+<a id="schema-6e6573746564-6f7574707574-726f6c655f74656d706c61746573"></a>
+The `role_templates` object exports the following:
 
 * `description` - The description of the directory role template.
 * `display_name` - The display name of the directory role template.
@@ -45,6 +46,6 @@ The following attributes are exported:
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the data-source.

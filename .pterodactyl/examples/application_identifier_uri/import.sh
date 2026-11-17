@@ -1,0 +1,1 @@
+terraform import azuread_application_identifier_uri.example /applications/00000000-0000-0000-0000-000000000000/identifierUris/aHR0cHM6Ly9leGFtcGxlLm5ldC8=

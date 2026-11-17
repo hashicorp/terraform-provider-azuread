@@ -1,0 +1,1 @@
+terraform import azuread_administrative_unit.example /directory/administrativeUnits/00000000-0000-0000-0000-000000000000
