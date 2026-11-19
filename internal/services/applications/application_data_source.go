@@ -163,7 +163,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"app_roles": {
-				Description: "For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
+				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{
@@ -414,7 +414,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"sign_in_audience": {
-				Description: "The Microsoft account types that are supported for the current application. One of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.",
+				Description: "The Microsoft account types that are supported for the current application.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

@@ -112,7 +112,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 		},
 
 		"role_id": {
-			Description:  "The type of assignment this policy covers. Can be either `member` or `owner`.",
+			Description:  "The type of assignment this policy covers.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -135,7 +135,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"expire_after": {
-						Description:  "The maximum length of time an assignment can be valid, as an ISO8601 duration. Permitted values: `P15D`, `P30D`, `P90D`, `P180D`, or `P365D`.",
+						Description:  "The maximum length of time an assignment can be valid, as an ISO8601 duration.",
 						Type:         pluginsdk.TypeString,
 						Optional:     true,
 						Computed:     true,
@@ -161,7 +161,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"expire_after": {
-						Description:  "The maximum length of time an assignment can be valid, as an ISO8601 duration. Permitted values: `P15D`, `P30D`, `P90D`, `P180D`, or `P365D`.",
+						Description:  "The maximum length of time an assignment can be valid, as an ISO8601 duration.",
 						Type:         pluginsdk.TypeString,
 						Optional:     true,
 						Computed:     true,
@@ -201,7 +201,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"maximum_duration": {
-						Description: "The maximum length of time an activated role can be valid, in an ISO8601 Duration format (e.g. `PT8H`). Valid range is `PT30M` to `PT23H30M`, in 30 minute increments, or `PT1D`.",
+						Description: "The maximum length of time an activated role can be valid, in an ISO8601 Duration format (e.g. `PT8H`).",
 						Type:        pluginsdk.TypeString,
 						Optional:    true,
 						Computed:    true,
@@ -1006,7 +1006,7 @@ func notificationRuleSchema() map[string]*pluginsdk.Schema {
 func notificationSettingsSchema() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"notification_level": {
-			Description:  "What level of notifications should be sent. Options are `All` or `Critical`.",
+			Description:  "What level of notifications should be sent.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringInSlice([]string{"All", "Critical"}, false),

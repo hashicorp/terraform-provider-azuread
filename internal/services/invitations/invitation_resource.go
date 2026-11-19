@@ -65,7 +65,7 @@ func invitationResource() *pluginsdk.Resource {
 			},
 
 			"message": {
-				Description: "If this block is omitted, no message will be sent.",
+				Description: "A `message` block as documented below, which configures the message being sent to the invited user. If this block is omitted, no message will be sent.",
 				Type:        pluginsdk.TypeList,
 				Optional:    true,
 				ForceNew:    true,
@@ -84,7 +84,7 @@ func invitationResource() *pluginsdk.Resource {
 						},
 
 						"body": {
-							Description:   "Customized message body you want to send if you don't want to send the default message. Cannot be specified with `language`.",
+							Description:   "Customized message body you want to send if you don't want to send the default message.",
 							Type:          pluginsdk.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"message.0.language"},
@@ -92,7 +92,7 @@ func invitationResource() *pluginsdk.Resource {
 						},
 
 						"language": {
-							Description:   "The language you want to send the default message in. The value specified must be in ISO 639 format. Cannot be specified with `body`.",
+							Description:   "The language you want to send the default message in. The value specified must be in ISO 639 format.",
 							Type:          pluginsdk.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"message.0.body"},

@@ -91,7 +91,7 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			},
 
 			"version": {
-				Description:  "- The version of the role definition. This can be any arbitrary string between 1-128 characters.",
+				Description:  "The version of the role definition. This can be any arbitrary string between 1-128 characters.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),

@@ -62,7 +62,7 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"claim_values": {
-				Description: "- A set of claim values for delegated permission scopes which should be included in access tokens for the resource.",
+				Description: "A set of claim values for delegated permission scopes which should be included in access tokens for the resource.",
 				Type:        pluginsdk.TypeSet,
 				Required:    true,
 				MinItems:    1,
@@ -89,7 +89,7 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 			},
 
 			"user_object_id": {
-				Description:  "- The object ID of the user on behalf of whom the service principal is authorized to access the resource. When omitted, the delegated permission grant will be consented for all users.",
+				Description:  "The object ID of the user on behalf of whom the service principal is authorized to access the resource. When omitted, the delegated permission grant will be consented for all users.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ForceNew:     true,

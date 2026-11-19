@@ -94,7 +94,7 @@ func usersData() *pluginsdk.Resource {
 			},
 
 			"ignore_missing": {
-				Description:   "Ignore missing users and return users that were found. The data source will still fail if no users are found. Cannot be specified with `return_all`.",
+				Description:   "Ignore missing users and return users that were found. The data source will still fail if no users are found.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,

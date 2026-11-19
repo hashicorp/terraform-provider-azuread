@@ -65,7 +65,7 @@ func administrativeUnitDataSource() *pluginsdk.Resource {
 			},
 
 			"visibility": {
-				Description: "Whether the administrative unit _and_ its members are hidden or publicly viewable in the directory. One of: `Hiddenmembership` or `Public`.",
+				Description: "Whether the administrative unit _and_ its members are hidden or publicly viewable in the directory.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

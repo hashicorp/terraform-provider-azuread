@@ -82,7 +82,7 @@ func userFlowAttributeResource() *pluginsdk.Resource {
 			},
 
 			"attribute_type": {
-				Description: "The type of the user flow attribute. Values include `builtIn`, `custom` or `required`.",
+				Description: "The type of the user flow attribute.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

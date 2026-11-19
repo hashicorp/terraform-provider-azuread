@@ -47,7 +47,7 @@ func directoryRolesDataSource() *pluginsdk.Resource {
 			},
 
 			"roles": {
-				Description: "A list of users.",
+				Description: "A list of roles.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{

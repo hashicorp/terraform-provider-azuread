@@ -88,7 +88,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_applications": {
-										Description:  "A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`, `None` or `Office365`. Cannot be specified with `included_user_actions`. One of `included_applications` or `included_user_actions` must be specified.",
+										Description:  "A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`, `None` or `Office365`.",
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
@@ -109,7 +109,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"included_user_actions": {
-										Description:  "A list of user actions to include. Cannot be specified with `included_applications`. One of `included_applications` or `included_user_actions` must be specified.",
+										Description:  "A list of user actions to include.",
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
@@ -354,7 +354,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						// See https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network
 						// TODO: consider renaming this block to `network` in v4.0 to align with the portal terminology.
 						"locations": {
-							Description: "In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network) for more information.",
+							Description: "A `locations` block as documented below, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network) for more information.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							MaxItems:    1,
@@ -384,9 +384,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"platforms": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Description: "A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_platforms": {

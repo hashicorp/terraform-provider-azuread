@@ -72,7 +72,7 @@ func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Argume
 		},
 
 		"allowed_issuer_skis": {
-			Description:  "A set of allowed certificate issuer subject key identifier (SKI) values. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.",
+			Description:  "A set of allowed certificate issuer subject key identifier (SKI) values.",
 			Type:         pluginsdk.TypeSet,
 			Optional:     true,
 			AtLeastOneOf: []string{"allowed_issuer_skis", "allowed_policy_oids"},
@@ -83,7 +83,7 @@ func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Argume
 		},
 
 		"allowed_policy_oids": {
-			Description:  "A set of allowed certificate policy OIDs. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.",
+			Description:  "A set of allowed certificate policy OIDs.",
 			Type:         pluginsdk.TypeSet,
 			Optional:     true,
 			AtLeastOneOf: []string{"allowed_issuer_skis", "allowed_policy_oids"},

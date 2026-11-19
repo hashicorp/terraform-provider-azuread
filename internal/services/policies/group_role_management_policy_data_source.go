@@ -39,7 +39,7 @@ func (r GroupRoleManagementPolicyDataSource) Arguments() map[string]*schema.Sche
 		},
 
 		"role_id": {
-			Description:  "The type of assignment this policy covers. Can be either `member` or `owner`.",
+			Description:  "The type of assignment this policy covers.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringInSlice(possibleValuesForRoleDefinitionId, false),

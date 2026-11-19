@@ -100,7 +100,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"ignore_missing": {
-				Description:   "Ignore missing groups and return groups that were found. The data source will still fail if no groups are found. Cannot be specified with `return_all`.",
+				Description:   "Ignore missing groups and return groups that were found. The data source will still fail if no groups are found.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
@@ -108,7 +108,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"return_all": {
-				Description:   "A flag to denote if all groups should be fetched and returned. Cannot be specified with `ignore_missing`.",
+				Description:   "A flag to denote if all groups should be fetched and returned.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				ConflictsWith: []string{"ignore_missing"},
@@ -116,7 +116,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"mail_enabled": {
-				Description:   "Whether the returned groups should be mail-enabled. By itself this does not exclude security-enabled groups. Setting this to `true` ensures all groups are mail-enabled, and setting to `false` ensures that all groups are _not_ mail-enabled. To ignore this filter, omit the property or set it to null. Cannot be specified together with `object_ids`.",
+				Description:   "Whether the returned groups should be mail-enabled. By itself this does not exclude security-enabled groups. Setting this to `true` ensures all groups are mail-enabled, and setting to `false` ensures that all groups are _not_ mail-enabled. To ignore this filter, omit the property or set it to null.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,
@@ -124,7 +124,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"security_enabled": {
-				Description:   "Whether the returned groups should be security-enabled. By itself this does not exclude mail-enabled groups. Setting this to `true` ensures all groups are security-enabled, and setting to `false` ensures that all groups are _not_ security-enabled. To ignore this filter, omit the property or set it to null. Cannot be specified together with `object_ids`.",
+				Description:   "Whether the returned groups should be security-enabled. By itself this does not exclude mail-enabled groups. Setting this to `true` ensures all groups are security-enabled, and setting to `false` ensures that all groups are _not_ security-enabled. To ignore this filter, omit the property or set it to null.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,
