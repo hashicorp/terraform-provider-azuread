@@ -36,6 +36,8 @@ import (
 
 func groupWithoutMembersResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a group within Azure Active Directory. Does not directly manage or expose members of the group.",
+
 		CreateContext: groupWithoutMembersResourceCreate,
 		ReadContext:   groupWithoutMembersResourceReadFunc(false),
 		UpdateContext: groupWithoutMembersResourceUpdate,

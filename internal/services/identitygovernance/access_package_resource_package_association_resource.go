@@ -27,6 +27,8 @@ import (
 
 func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages the resources added to access packages within Identity Governance in Azure Active Directory.",
+
 		CreateContext: accessPackageResourcePackageAssociationResourceCreate,
 		ReadContext:   accessPackageResourcePackageAssociationResourceRead,
 		DeleteContext: accessPackageResourcePackageAssociationResourceDelete,

@@ -25,6 +25,8 @@ import (
 
 func servicePrincipalCertificateResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a certificate associated with a service principal within Azure Active Directory.",
+
 		CreateContext: servicePrincipalCertificateResourceCreate,
 		ReadContext:   servicePrincipalCertificateResourceRead,
 		DeleteContext: servicePrincipalCertificateResourceDelete,

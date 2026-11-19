@@ -28,6 +28,8 @@ const accessPackageAssignmentPolicyResourceName = "azuread_access_package_assign
 
 func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages an assignment policy for an access package within Identity Governance in Azure Active Directory.",
+
 		CreateContext: accessPackageAssignmentPolicyResourceCreate,
 		ReadContext:   accessPackageAssignmentPolicyResourceRead,
 		UpdateContext: accessPackageAssignmentPolicyResourceUpdate,

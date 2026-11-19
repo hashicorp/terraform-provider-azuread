@@ -43,6 +43,10 @@ func (r ApplicationAppRoleResource) ResourceType() string {
 	return "azuread_application_app_role"
 }
 
+func (r ApplicationAppRoleResource) Description() string {
+	return "Manages an app role for an application registration.  This resource is analogous to the `app_role` block in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationAppRoleResource) ModelObject() interface{} {
 	return &ApplicationAppRoleModel{}
 }

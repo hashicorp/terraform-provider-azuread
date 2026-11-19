@@ -1,5 +1,8 @@
 ---
+page_title: "Data Source: azuread_access_package"
 subcategory: "Identity Governance"
+description: |-
+  Use this data source to retrieve information for an existing access package within Identity Governance in Azure Active Directory.
 ---
 
 # Data Source: azuread_access_package
@@ -33,27 +36,24 @@ data "azuread_access_package" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `catalog_id` - (Optional) The ID of the Catalog this access package is in.
-* `display_name` - (Optional) The display name of the access package.
-* `object_id` - (Optional) The ID of this access package.
-
-~> Either `object_id`, or both `catalog_id` and `display_name`, must be specified.
-
+* `catalog_id` - (Optional) The ID of the Catalog this access package is in. Conflicts with `object_id`. At least one of `object_id`, `display_name`, or `catalog_id` must be specified. Required when using `display_name`.
+* `display_name` - (Optional) The display name of the access package. Conflicts with `object_id`. At least one of `object_id`, `display_name`, or `catalog_id` must be specified. Required when using `catalog_id`.
+* `object_id` - (Optional) The ID of this access package. At least one of `object_id`, `display_name`, or `catalog_id` must be specified.
 
 ## Attributes Reference
 
-In addition to the above arguments, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of this resource.
+* `id` - The ID of the Data Source.
 * `description` - The description of the access package.
 * `hidden` - Whether the access package is hidden from the requestor.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the data-source.

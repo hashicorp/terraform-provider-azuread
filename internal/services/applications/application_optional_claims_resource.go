@@ -45,6 +45,10 @@ func (r ApplicationOptionalClaimsResource) ResourceType() string {
 	return "azuread_application_optional_claims"
 }
 
+func (r ApplicationOptionalClaimsResource) Description() string {
+	return "Manages optional claims for an application registration.  This resource is analogous to the `optional_claims` block in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationOptionalClaimsResource) ModelObject() interface{} {
 	return &ApplicationOptionalClaimsModel{}
 }

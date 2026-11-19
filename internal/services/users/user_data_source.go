@@ -23,6 +23,8 @@ import (
 
 func userDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets information about an Azure Active Directory user.",
+
 		ReadContext: userDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

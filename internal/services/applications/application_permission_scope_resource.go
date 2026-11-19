@@ -45,6 +45,10 @@ func (r ApplicationPermissionScopeResource) ResourceType() string {
 	return "azuread_application_permission_scope"
 }
 
+func (r ApplicationPermissionScopeResource) Description() string {
+	return "Manages a permission scope for an application registration.  This resource is analogous to the `oauth2_permission_scope` block in the `api` block of the  `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationPermissionScopeResource) ModelObject() interface{} {
 	return &ApplicationPermissionScopeModel{}
 }

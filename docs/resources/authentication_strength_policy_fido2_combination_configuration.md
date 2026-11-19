@@ -1,12 +1,13 @@
 ---
+page_title: "Resource: azuread_authentication_strength_policy_fido2_combination_configuration"
 subcategory: "Policies"
+description: |-
+  Manages a FIDO2 combination configuration for an authentication strength policy within Azure Active Directory.
 ---
 
 # Resource: azuread_authentication_strength_policy_fido2_combination_configuration
 
 Manages a FIDO2 combination configuration for an authentication strength policy within Azure Active Directory.
-
-A FIDO2 combination configuration restricts which security keys, identified by their Authenticator Attestation GUID (AAGUID), satisfy the `fido2` authentication method combination. A policy supports at most one FIDO2 combination configuration.
 
 ## API Permissions
 
@@ -35,24 +36,22 @@ resource "azuread_authentication_strength_policy_fido2_combination_configuration
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `allowed_aaguids` - (Required) A set of Authenticator Attestation GUIDs (AAGUIDs) allowed to satisfy the `fido2` combination.
-* `authentication_strength_policy_id` - (Required) The object ID of the authentication strength policy to which this combination configuration applies. Changing this field forces a new resource to be created.
-
--> The associated authentication strength policy must specify `fido2` in its `allowed_combinations`, otherwise the API rejects the combination configuration.
+* `allowed_aaguids` - (Required) A set of AAGUIDs allowed to be used as part of the `fido2` combination.
+* `authentication_strength_policy_id` - (Required) The object ID of the authentication strength policy to which this combination configuration applies. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of the combination configuration.
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -61,7 +60,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-FIDO2 combination configurations can be imported using the `id`, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_authentication_strength_policy_fido2_combination_configuration.example /policies/authenticationStrengthPolicies/00000000-0000-0000-0000-000000000000/combinationConfigurations/11111111-1111-1111-1111-111111111111

@@ -20,6 +20,8 @@ import (
 
 func directoryObjectDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Retrieves the OData type for a generic directory object having the provided object ID.",
+
 		ReadContext: directoryObjectDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

@@ -27,6 +27,8 @@ import (
 
 func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a token signing certificate associated with a service principal within Azure Active Directory.",
+
 		CreateContext: servicePrincipalTokenSigningCertificateResourceCreate,
 		ReadContext:   servicePrincipalTokenSigningCertificateResourceRead,
 		DeleteContext: servicePrincipalTokenSigningCertificateResourceDelete,

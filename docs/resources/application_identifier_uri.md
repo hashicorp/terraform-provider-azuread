@@ -1,12 +1,13 @@
 ---
+page_title: "Resource: azuread_application_identifier_uri"
 subcategory: "Applications"
+description: |-
+  Manages a single Identifier URI for an application registration. This resource is analogous to the identifier_uris property in the azuread_application resource. When using these resources together, you should use the ignore_changes lifecycle meta-argument https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle (see example below).
 ---
 
 # Resource: azuread_application_identifier_uri
 
-Manages a single Identifier URI for an application registration.
-
-This resource is analogous to the `identifier_uris` property in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below).
+Manages a single Identifier URI for an application registration.  This resource is analogous to the `identifier_uris` property in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below).
 
 ## API Permissions
 
@@ -36,7 +37,6 @@ resource "azuread_application_identifier_uri" "example" {
 *Usage with azuread_application resource*
 
 ```terraform
-
 resource "azuread_application" "example" {
   display_name = "example"
 
@@ -53,20 +53,22 @@ resource "azuread_application_identifier_uri" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
-* `identifier_uri` - (Required) The user-defined URI that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant. Changing this forces a new resource to be created.
+* `application_id` - (Required) The resource ID of the application to which the identifier URI should be added. Changing this value forces a new resource to be created.
+* `identifier_uri` - (Required) The user-defined URI or URI-like string that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -74,7 +76,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Application Identifier URIs can be imported using the object ID of the application and the base64-encoded identifier URI, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_identifier_uri.example /applications/00000000-0000-0000-0000-000000000000/identifierUris/aHR0cHM6Ly9leGFtcGxlLm5ldC8=

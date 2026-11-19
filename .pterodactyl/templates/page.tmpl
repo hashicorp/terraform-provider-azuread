@@ -1,0 +1,10 @@
+{{ paragraphs
+    (render "front-matter" .)
+    (render "heading" .)
+    (render "description" .)
+    (renderOptional "api-permissions" .)
+    (render "example" .)
+    (render "schema" .)
+    (render "timeouts" .)
+    (render "import" .)
+}}

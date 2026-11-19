@@ -1,12 +1,13 @@
 ---
+page_title: "Resource: azuread_application_owner"
 subcategory: "Applications"
+description: |-
+  Manages a single owner of an application registration. ~> This resource is incompatible with the azuread_application resource, instead use this with the azuread_application_registration resource.
 ---
 
 # Resource: azuread_application_owner
 
-Manages a single owner of an application registration.
-
-~> This resource is incompatible with the `azuread_application` resource, instead use this with the `azuread_application_registration` resource.
+Manages a single owner of an application registration.  ~> This resource is incompatible with the `azuread_application` resource, instead use this with the `azuread_application_registration` resource.
 
 ## API Permissions
 
@@ -37,22 +38,22 @@ resource "azuread_application_owner" "example_jane" {
 }
 ```
 
--> **Tip** For managing more application owners, create additional instances of this resource
-
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
-* `owner_object_id` - (Required) The object ID of the owner to assign to the application, typically a user or service principal. Changing this forces a new resource to be created.
+* `application_id` - (Required) The resource ID of the application to which the owner should be added. Changing this value forces a new resource to be created.
+* `owner_object_id` - (Required) Object ID of the principal that will be granted ownership of the application. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -60,7 +61,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Application Owners can be imported using the object ID of the application and the object ID of the owner, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_owner.example /applications/00000000-0000-0000-0000-000000000000/owners/11111111-1111-1111-1111-111111111111

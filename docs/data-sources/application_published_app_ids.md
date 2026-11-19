@@ -1,14 +1,13 @@
 ---
+page_title: "Data Source: azuread_application_published_app_ids"
 subcategory: "Applications"
+description: |-
+  Use this data source to discover application IDs for APIs published by Microsoft. This data source uses an unofficial source of application IDs https://github.com/hashicorp/go-azure-sdk/blob/main/sdk/environments/application_ids.go, as there is currently no available official indexed source for applications or APIs published by Microsoft. The app IDs returned by this data source are sourced from the Azure Global (Public) Cloud, however some of them are known to work in government and national clouds.
 ---
 
 # Data Source: azuread_application_published_app_ids
 
-Use this data source to discover application IDs for APIs published by Microsoft.
-
-This data source uses an [unofficial source of application IDs](https://github.com/hashicorp/go-azure-sdk/blob/main/sdk/environments/application_ids.go), as there is currently no available official indexed source for applications or APIs published by Microsoft.
-
-The app IDs returned by this data source are sourced from the Azure Global (Public) Cloud, however some of them are known to work in government and national clouds.
+Use this data source to discover application IDs for APIs published by Microsoft.  This data source uses an [unofficial source of application IDs](https://github.com/hashicorp/go-azure-sdk/blob/main/sdk/environments/application_ids.go), as there is currently no available official indexed source for applications or APIs published by Microsoft.  The app IDs returned by this data source are sourced from the Azure Global (Public) Cloud, however some of them are known to work in government and national clouds.
 
 ## Example Usage
 
@@ -51,18 +50,15 @@ resource "azuread_application" "example" {
 }
 ```
 
-## Argument Reference
-
-This data source does not have any arguments.
-
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `result` - A map of application names to application IDs.
+* `id` - The ID of the Data Source.
+* `result` - A mapping of application names and application IDs.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the data-source.

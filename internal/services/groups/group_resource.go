@@ -38,6 +38,8 @@ import (
 
 func groupResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a group within Azure Active Directory.",
+
 		CreateContext: groupResourceCreate,
 		ReadContext:   groupResourceReadFunc(false),
 		UpdateContext: groupResourceUpdate,

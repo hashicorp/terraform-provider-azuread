@@ -26,6 +26,8 @@ import (
 
 func servicePrincipalData() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets information about an existing service principal associated with an application within Azure Active Directory.",
+
 		ReadContext: servicePrincipalDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

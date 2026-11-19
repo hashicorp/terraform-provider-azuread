@@ -1,0 +1,1 @@
+terraform import azuread_privileged_access_group_assignment_schedule.example 00000000-0000-0000-0000-000000000000_member_00000000-0000-0000-0000-000000000000

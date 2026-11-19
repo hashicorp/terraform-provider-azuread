@@ -26,6 +26,8 @@ import (
 
 func synchronizationJobResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a synchronization job associated with a service principal (enterprise application) within Azure Active Directory.",
+
 		CreateContext: synchronizationJobResourceCreate,
 		ReadContext:   synchronizationJobResourceRead,
 		UpdateContext: synchronizationJobResourceUpdate,

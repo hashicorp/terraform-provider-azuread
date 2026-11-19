@@ -1,5 +1,8 @@
 ---
+page_title: "Data Source: azuread_group_role_management_policy"
 subcategory: "Policies"
+description: |-
+  Use this data source to retrieve a role policy for an Azure AD group.
 ---
 
 # Data Source: azuread_group_role_management_policy
@@ -28,21 +31,23 @@ data "azuread_group_role_management_policy" "owners_policy" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
-* `group_id` - (Required) The ID of the Azure AD group for which the policy applies.
-* `role_id` - (Required) The type of assignment this policy covers. Can be either `member` or `owner`.
+The following arguments are supported:
+
+* `group_id` - (Required) ID of the group to which this policy is assigned.
+* `role_id` - (Required) The ID of the role of this policy to the group. Possible values include `member` and `owner`.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `description` - (String) The description of this policy.
-* `display_name` - (String) The display name of this policy.
-* `id` - (String) The ID of this policy.
+* `id` - The ID of the Data Source.
+* `description` - Description of the policy.
+* `display_name` - The display name of the policy.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 0s) Used when retrieving the data-source.

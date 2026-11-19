@@ -151,6 +151,10 @@ func (r AuthenticationStrengthPolicyDataSource) ResourceType() string {
 	return "azuread_authentication_strength_policy"
 }
 
+func (r AuthenticationStrengthPolicyDataSource) Description() string {
+	return "Use this data source to retrieve information about an authentication strength policy within Azure Active Directory. This can be used to read either the built-in policies supplied by Microsoft, or custom policies created in the tenant."
+}
+
 func (r AuthenticationStrengthPolicyDataSource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {

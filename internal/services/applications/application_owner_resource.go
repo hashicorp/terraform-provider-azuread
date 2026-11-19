@@ -38,6 +38,10 @@ func (r ApplicationOwnerResource) ResourceType() string {
 	return "azuread_application_owner"
 }
 
+func (r ApplicationOwnerResource) Description() string {
+	return "Manages a single owner of an application registration.  ~> This resource is incompatible with the `azuread_application` resource, instead use this with the `azuread_application_registration` resource."
+}
+
 func (r ApplicationOwnerResource) ModelObject() interface{} {
 	return &ApplicationOwnerModel{}
 }

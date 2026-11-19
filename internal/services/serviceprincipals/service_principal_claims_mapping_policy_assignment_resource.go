@@ -22,6 +22,8 @@ import (
 
 func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a Claims Mapping Policy Assignment within Azure Active Directory.",
+
 		CreateContext: servicePrincipalClaimsMappingPolicyAssignmentResourceCreate,
 		ReadContext:   servicePrincipalClaimsMappingPolicyAssignmentResourceRead,
 		DeleteContext: servicePrincipalClaimsMappingPolicyAssignmentResourceDelete,

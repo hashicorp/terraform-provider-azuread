@@ -26,6 +26,8 @@ import (
 
 func directoryRoleMemberResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a single directory role membership (assignment) within Azure Active Directory.  -> **Deprecation Warning:** This resource has been superseded by the [azuread_directory_role_assignment](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/directory_role_assignment) resource and will be removed in version 3.0 of the AzureAD provider",
+
 		CreateContext: directoryRoleMemberResourceCreate,
 		ReadContext:   directoryRoleMemberResourceRead,
 		DeleteContext: directoryRoleMemberResourceDelete,

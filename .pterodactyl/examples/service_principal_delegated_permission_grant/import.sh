@@ -1,0 +1,1 @@
+terraform import azuread_service_principal_delegated_permission_grant.example /oauth2PermissionGrants/aaBBcDDeFG6h5JKLMN2PQrrssTTUUvWWxxxxxyyyzzz

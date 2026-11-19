@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_directory_role_assignment"
 subcategory: "Directory Roles"
+description: |-
+  Manages a single directory role assignment within Azure Active Directory.
 ---
 
 # Resource: azuread_directory_role_assignment
@@ -83,26 +86,27 @@ resource "azuread_directory_role_assignment" "example" {
 }
 ```
 
-~> Note the use of the `template_id` attribute when referencing built-in roles.
-
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `app_scope_id` - (Optional) Identifier of the app-specific scope when the assignment scope is app-specific. Cannot be used with `directory_scope_id`. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage. Changing this forces a new resource to be created.
-* `directory_scope_id` - (Optional) Identifier of the directory object representing the scope of the assignment. Cannot be used with `app_scope_id`. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage. Changing this forces a new resource to be created.
-* `principal_object_id` - (Required) The object ID of the principal for you want to create a role assignment. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
-* `role_id` - (Required) The template ID (in the case of built-in roles) or object ID (in the case of custom roles) of the directory role you want to assign. Changing this forces a new resource to be created.
+* `principal_object_id` - (Required) The object ID of the member principal. Changing this value forces a new resource to be created.
+* `role_id` - (Required) The object ID of the directory role for this assignment. Changing this value forces a new resource to be created.
+
+---
+
+* `app_scope_id` - (Optional) Identifier of the app-specific scope when the assignment scope is app-specific. Conflicts with `directory_scope_id`. Changing this value forces a new resource to be created.
+* `directory_scope_id` - (Optional) Identifier of the directory object representing the scope of the assignment. Conflicts with `app_scope_id`. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-*No additional attributes are exported*
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -110,7 +114,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Directory role assignments can be imported using the ID of the assignment, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_directory_role_assignment.example ePROZI_iKE653D_d6aoLHyr-lKgHI8ZGiIdz8CLVcng-1

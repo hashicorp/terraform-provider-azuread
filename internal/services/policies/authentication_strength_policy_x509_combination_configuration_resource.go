@@ -41,6 +41,10 @@ func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Resour
 	return "azuread_authentication_strength_policy_x509_combination_configuration"
 }
 
+func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Description() string {
+	return "Manages an x509 certificate combination configuration for an authentication strength policy within Azure Active Directory."
+}
+
 func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) ModelObject() interface{} {
 	return &AuthenticationStrengthPolicyX509CombinationConfigurationResourceModel{}
 }

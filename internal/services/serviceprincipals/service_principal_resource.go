@@ -35,6 +35,8 @@ const servicePrincipalResourceName = "azuread_service_principal"
 
 func servicePrincipalResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a service principal associated with an application within Azure Active Directory.",
+
 		CreateContext: servicePrincipalResourceCreate,
 		ReadContext:   servicePrincipalResourceRead,
 		UpdateContext: servicePrincipalResourceUpdate,

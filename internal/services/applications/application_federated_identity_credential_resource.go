@@ -25,6 +25,8 @@ import (
 
 func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a federated identity credential associated with an application within Azure Active Directory.",
+
 		CreateContext: applicationFederatedIdentityCredentialResourceCreate,
 		UpdateContext: applicationFederatedIdentityCredentialResourceUpdate,
 		ReadContext:   applicationFederatedIdentityCredentialResourceRead,

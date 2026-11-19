@@ -1,5 +1,8 @@
 ---
+page_title: "Data Source: azuread_named_location"
 subcategory: "Conditional Access"
+description: |-
+  Gets information about a Named Location within Azure Active Directory.
 ---
 
 # Data Source: azuread_named_location
@@ -22,37 +25,39 @@ data "azuread_named_location" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `display_name` - (Required) Specifies the display named of the named location to look up.
+* `display_name` - (Required) No description provided.
 
-## Attributes Reference 
+## Attributes Reference
 
 The following attributes are exported:
 
-* `country` - A `country` block as documented below, which describes a country-based named location.
-* `id` - The ID of the named location.
-* `ip` - An `ip` block as documented below, which describes an IP-based named location.
+* `id` - The ID of the Data Source.
+* `country` - A list of `country` objects as defined below. (see [nested schema](#schema-6e6573746564-6f7574707574-636f756e747279))
+* `ip` - A list of `ip` objects as defined below. (see [nested schema](#schema-6e6573746564-6f7574707574-6970))
 * `object_id` - The object ID of the named location.
 
 ---
 
-`country` block exports the following:
+<a id="schema-6e6573746564-6f7574707574-636f756e747279"></a>
+The `country` object exports the following:
 
-* `countries_and_regions` - List of countries and/or regions in two-letter format specified by ISO 3166-2.
-* `include_unknown_countries_and_regions` - Whether IP addresses that don't map to a country or region are included in the named location.
-
+* `countries_and_regions` - No description provided.
+* `country_lookup_method` - No description provided.
+* `include_unknown_countries_and_regions` - No description provided.
 ---
 
-`ip` block exports the following:
+<a id="schema-6e6573746564-6f7574707574-6970"></a>
+The `ip` object exports the following:
 
-* `ip_ranges` - List of IP address ranges in IPv4 CIDR format (e.g. `1.2.3.4/32`) or any allowable IPv6 format from IETF RFC596.
-* `trusted` - Whether the named location is trusted.
+* `ip_ranges` - No description provided.
+* `trusted` - No description provided.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the data-source.

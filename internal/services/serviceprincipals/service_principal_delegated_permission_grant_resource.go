@@ -27,6 +27,8 @@ import (
 
 func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a delegated permission grant for a service principal, on behalf of a single user, or all users.",
+
 		CreateContext: servicePrincipalDelegatedPermissionGrantResourceCreate,
 		UpdateContext: servicePrincipalDelegatedPermissionGrantResourceUpdate,
 		ReadContext:   servicePrincipalDelegatedPermissionGrantResourceRead,

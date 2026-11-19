@@ -39,6 +39,9 @@ import (
 
 func applicationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages an application registration within Azure Active Directory.\n\n" +
+			"For a more lightweight alternative, please see the [azuread_application_registration](application_registration.html) resource. Please note that this resource should not be used together with the `azuread_application_registration` resource when managing the same application.",
+
 		CreateContext: applicationResourceCreate,
 		ReadContext:   applicationResourceRead,
 		UpdateContext: applicationResourceUpdate,

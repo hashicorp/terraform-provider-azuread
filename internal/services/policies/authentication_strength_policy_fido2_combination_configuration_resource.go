@@ -38,6 +38,10 @@ func (r AuthenticationStrengthPolicyFido2CombinationConfigurationResource) Resou
 	return "azuread_authentication_strength_policy_fido2_combination_configuration"
 }
 
+func (r AuthenticationStrengthPolicyFido2CombinationConfigurationResource) Description() string {
+	return "Manages a FIDO2 combination configuration for an authentication strength policy within Azure Active Directory."
+}
+
 func (r AuthenticationStrengthPolicyFido2CombinationConfigurationResource) ModelObject() interface{} {
 	return &AuthenticationStrengthPolicyFido2CombinationConfigurationResourceModel{}
 }

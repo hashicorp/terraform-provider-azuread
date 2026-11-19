@@ -22,6 +22,8 @@ import (
 
 func namedLocationDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets information about a Named Location within Azure Active Directory.",
+
 		ReadContext: namedLocationDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{

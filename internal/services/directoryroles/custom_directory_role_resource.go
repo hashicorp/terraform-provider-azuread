@@ -23,6 +23,8 @@ import (
 
 func customDirectoryRoleResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a Custom Directory Role within Azure Active Directory.  This resource is for managing custom directory roles. For management of built-in roles, see the [azuread_directory_role](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/directory_role) resource.",
+
 		CreateContext: customDirectoryRoleResourceCreate,
 		UpdateContext: customDirectoryRoleResourceUpdate,
 		ReadContext:   customDirectoryRoleResourceRead,

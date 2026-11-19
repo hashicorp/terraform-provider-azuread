@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_application_federated_identity_credential"
 subcategory: "Applications"
+description: |-
+  Manages a federated identity credential associated with an application within Azure Active Directory.
 ---
 
 # Resource: azuread_application_federated_identity_credential
@@ -33,26 +36,30 @@ resource "azuread_application_federated_identity_credential" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `application_id` - (Required) The resource ID of the application for which this federated identity credential should be created. Changing this field forces a new resource to be created.
+* `application_id` - (Required) The resource ID of the application for which this federated identity credential should be created. Changing this value forces a new resource to be created.
 * `audiences` - (Required) List of audiences that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.
-* `description` - (Optional) A description for the federated identity credential.
-* `display_name` - (Required) A unique display name for the federated identity credential. Changing this forces a new resource to be created.
+* `display_name` - (Required) A unique display name for the federated identity credential. String length must be between `1` and `120` characters inclusive. Changing this value forces a new resource to be created.
 * `issuer` - (Required) The URL of the external identity provider, which must match the issuer claim of the external token being exchanged. The combination of the values of issuer and subject must be unique on the app.
 * `subject` - (Required) The identifier of the external software workload within the external identity provider. The combination of issuer and subject must be unique on the app.
 
+---
+
+* `description` - (Optional) A description for the federated identity credential.
+
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
+* `id` - The ID of the Resource.
 * `credential_id` - A UUID used to uniquely identify this federated identity credential.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 15 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -61,10 +68,8 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Federated Identity Credentials can be imported using the object ID of the associated application and the ID of the federated identity credential, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_federated_identity_credential.example 00000000-0000-0000-0000-000000000000/federatedIdentityCredential/11111111-1111-1111-1111-111111111111
 ```
-
--> This ID format is unique to Terraform and is composed of the application's object ID, the string "federatedIdentityCredential" and the credential ID in the format `{ObjectId}/federatedIdentityCredential/{CredentialId}`.

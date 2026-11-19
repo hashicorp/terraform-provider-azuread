@@ -28,6 +28,8 @@ import (
 
 func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a single directory role eligibility schedule request within Azure Active Directory.",
+
 		CreateContext: directoryRoleEligibilityScheduleRequestResourceCreate,
 		ReadContext:   directoryRoleEligibilityScheduleRequestResourceRead,
 		DeleteContext: directoryRoleEligibilityScheduleRequestResourceDelete,

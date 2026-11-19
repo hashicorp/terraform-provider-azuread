@@ -42,6 +42,10 @@ func (r UserLicenseResource) ResourceType() string {
 	return "azuread_user_license"
 }
 
+func (r UserLicenseResource) Description() string {
+	return "Manages a single license assignment for a user.  ~> **License availability** The SKU being assigned must be available in your tenant. You can find the available SKUs and their service plans in the [Microsoft 365 admin center](https://learn.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference), or by inspecting the `subscribedSkus` in Microsoft Graph.  -> **Usage location required** Microsoft Graph rejects license assignment for users that do not have a usage location set, due to legal requirements to check for the availability of services in a given country. Ensure `usage_location` is set on the `azuread_user` resource (or the user object) before assigning licenses."
+}
+
 func (r UserLicenseResource) ModelObject() interface{} {
 	return &UserLicenseResourceModel{}
 }

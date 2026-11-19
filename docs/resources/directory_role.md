@@ -1,14 +1,13 @@
 ---
+page_title: "Resource: azuread_directory_role"
 subcategory: "Directory Roles"
+description: |-
+  Manages a Directory Role within Azure Active Directory. Directory Roles are also known as Administrator Roles.
 ---
 
 # Resource: azuread_directory_role
 
 Manages a Directory Role within Azure Active Directory. Directory Roles are also known as Administrator Roles.
-
-Directory Roles are built-in to Azure Active Directory and are immutable. However, by default they are not activated in a tenant (except for the Global Administrator role). This resource ensures a directory role is activated from its associated role template, and exports the object ID of the role, so that role assignments can be made for it.
-
-Once activated, directory roles cannot be deactivated and so this resource does not perform any actions on destroy.
 
 ## API Permissions
 
@@ -36,25 +35,24 @@ resource "azuread_directory_role" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `display_name` - (Optional) The display name of the directory role to activate. Changing this forces a new resource to be created.
-* `template_id` - (Optional) The object ID of the role template from which to activate the directory role. Changing this forces a new resource to be created.
-
-~> Either `display_name` or `template_id` must be specified.
+* `display_name` - (Optional) The display name of the directory role. Exactly one of `display_name` or `template_id` must be specified. Changing this value forces a new resource to be created.
+* `template_id` - (Optional) The object ID of the template associated with the directory role. Exactly one of `display_name` or `template_id` must be specified. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
+* `id` - The ID of the Resource.
 * `description` - The description of the directory role.
 * `object_id` - The object ID of the directory role.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -62,4 +60,8 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-This resource does not support importing.
+This resource can be imported using its resource ID, e.g.
+
+```shell
+terraform import azuread_directory_role.example "<resource-id>"
+```

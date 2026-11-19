@@ -56,6 +56,10 @@ func (r DomainsDataSource) ResourceType() string {
 	return "azuread_domains"
 }
 
+func (r DomainsDataSource) Description() string {
+	return "Use this data source to access information about existing Domains within Azure Active Directory."
+}
+
 func (r DomainsDataSource) ModelObject() interface{} {
 	return &DomainsDataSourceModel{}
 }

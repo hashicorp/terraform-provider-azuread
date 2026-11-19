@@ -104,6 +104,10 @@ func (f flexibleFederatedIdentityCredentialResource) ResourceType() string {
 	return "azuread_application_flexible_federated_identity_credential"
 }
 
+func (r flexibleFederatedIdentityCredentialResource) Description() string {
+	return "Manages a flexible federated identity credential associated with an application within Azure Active Directory."
+}
+
 func (f flexibleFederatedIdentityCredentialResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 15 * time.Minute,
