@@ -37,6 +37,10 @@ func (r ApplicationRedirectUrisResource) ResourceType() string {
 	return "azuread_application_redirect_uris"
 }
 
+func (r ApplicationRedirectUrisResource) Description() string {
+	return "Manages the redirect URIs for an application registration."
+}
+
 func (r ApplicationRedirectUrisResource) ModelObject() interface{} {
 	return &ApplicationRedirectUrisModel{}
 }
@@ -44,7 +48,7 @@ func (r ApplicationRedirectUrisResource) ModelObject() interface{} {
 func (r ApplicationRedirectUrisResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which these redirect URIs belong",
+			Description:  "The resource ID of the application registration.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -52,7 +56,7 @@ func (r ApplicationRedirectUrisResource) Arguments() map[string]*pluginsdk.Schem
 		},
 
 		"type": {
-			Description:  "The type of redirect URIs to assign to the application",
+			Description:  "The type of redirect URIs to manage.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -60,7 +64,7 @@ func (r ApplicationRedirectUrisResource) Arguments() map[string]*pluginsdk.Schem
 		},
 
 		"redirect_uris": {
-			Description: "A set of redirect URIs",
+			Description: "A set of redirect URIs to assign to the application.",
 			Type:        pluginsdk.TypeSet,
 			Required:    true,
 			Elem: &pluginsdk.Schema{

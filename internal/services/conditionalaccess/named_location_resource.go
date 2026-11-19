@@ -25,6 +25,7 @@ import (
 
 func namedLocationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a Named Location within Azure Active Directory.",
 		CreateContext: namedLocationResourceCreate,
 		ReadContext:   namedLocationResourceRead,
 		UpdateContext: namedLocationResourceUpdate,
@@ -59,6 +60,7 @@ func namedLocationResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
+				Description:  "The friendly name for this named location.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
@@ -73,8 +75,9 @@ func namedLocationResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"ip_ranges": {
-							Type:     pluginsdk.TypeList,
-							Required: true,
+							Description: "List of IP address ranges in IPv4 CIDR format (e.g. `1.2.3.4/32`) or any allowable IPv6 format from IETF RFC596. Each CIDR prefix must be `/8` or larger.",
+							Type:        pluginsdk.TypeList,
+							Required:    true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
 								ValidateFunc: validation.PrefixLengthAtLeast(8),
@@ -82,8 +85,9 @@ func namedLocationResource() *pluginsdk.Resource {
 						},
 
 						"trusted": {
-							Type:     pluginsdk.TypeBool,
-							Optional: true,
+							Description: "Whether the named location is trusted.",
+							Type:        pluginsdk.TypeBool,
+							Optional:    true,
 						},
 					},
 				},
@@ -98,8 +102,9 @@ func namedLocationResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"countries_and_regions": {
-							Type:     pluginsdk.TypeList,
-							Required: true,
+							Description: "List of countries and/or regions in two-letter format specified by ISO 3166-2.",
+							Type:        pluginsdk.TypeList,
+							Required:    true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
 								ValidateFunc: validation.StringIsNotEmpty,
@@ -107,11 +112,13 @@ func namedLocationResource() *pluginsdk.Resource {
 						},
 
 						"include_unknown_countries_and_regions": {
-							Type:     pluginsdk.TypeBool,
-							Optional: true,
+							Description: "Whether IP addresses that don't map to a country or region should be included in the named location.",
+							Type:        pluginsdk.TypeBool,
+							Optional:    true,
 						},
 
 						"country_lookup_method": {
+							Description:  "Method of detecting country the user is located in.",
 							Type:         pluginsdk.TypeString,
 							Default:      stable.CountryLookupMethodType_ClientIPAddress,
 							ValidateFunc: validation.StringInSlice(stable.PossibleValuesForCountryLookupMethodType(), false),
@@ -122,7 +129,7 @@ func namedLocationResource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description: "The object ID of the named location",
+				Description: "The object ID of the named location.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

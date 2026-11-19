@@ -41,7 +41,7 @@ type flexibleFederatedIdentityCredentialModel struct {
 func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application for which this flexible federated identity credential should be created",
+			Description:  "The resource ID of the application for which this federated identity credential should be created.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -59,11 +59,11 @@ func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*plu
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotWhiteSpace,
-			Description:  "The expression to match for claims.",
+			Description:  "The expression to match for claims. See the [Preview Documentation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-flexible-federated-identity-credentials?tabs=terraformcloud#flexible-federated-identity-credential-expression-language-functionality) for more information.",
 		},
 
 		"display_name": {
-			Description:  "A unique display name for the flexible federated identity credential",
+			Description:  "A unique display name for the federated identity credential.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -71,14 +71,14 @@ func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*plu
 		},
 
 		"issuer": {
-			Description:  "The URL of the external identity provider, which must match the issuer claim of the external token being exchanged. The combination of the values of issuer and subject must be unique on the app.",
+			Description:  "The URL of the external identity provider, which must match the issuer claim of the external token being exchanged.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotWhiteSpace,
 		},
 
 		"description": {
-			Description:  "A description for the flexible federated identity credential",
+			Description:  "A description for the federated identity credential.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringLenBetween(0, 600),
@@ -89,7 +89,7 @@ func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*plu
 func (f flexibleFederatedIdentityCredentialResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"credential_id": {
-			Description: "A UUID used to uniquely identify this flexible federated identity credential",
+			Description: "A UUID used to uniquely identify this federated identity credential.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
@@ -102,6 +102,10 @@ func (f flexibleFederatedIdentityCredentialResource) ModelObject() interface{} {
 
 func (f flexibleFederatedIdentityCredentialResource) ResourceType() string {
 	return "azuread_application_flexible_federated_identity_credential"
+}
+
+func (f flexibleFederatedIdentityCredentialResource) Description() string {
+	return "Manages a flexible federated identity credential associated with an application within Azure Active Directory."
 }
 
 func (f flexibleFederatedIdentityCredentialResource) Create() sdk.ResourceFunc {

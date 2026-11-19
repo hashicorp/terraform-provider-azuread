@@ -40,6 +40,10 @@ func (r ClientConfigDataSource) ResourceType() string {
 	return "azuread_client_config"
 }
 
+func (r ClientConfigDataSource) Description() string {
+	return "Use this data source to access the configuration of the AzureAD provider."
+}
+
 func (r ClientConfigDataSource) ModelObject() interface{} {
 	return &ClientConfigDataSourceModel{}
 }
@@ -51,19 +55,19 @@ func (r ClientConfigDataSource) Arguments() map[string]*pluginsdk.Schema {
 func (r ClientConfigDataSource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"client_id": {
-			Description: "The client ID (application ID) linked to the authenticated principal, or the application used for delegated authentication",
+			Description: "The client ID (application ID) linked to the authenticated principal, or the application used for delegated authentication.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"tenant_id": {
-			Description: "The tenant ID of the authenticated principal",
+			Description: "The tenant ID of the authenticated principal.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"object_id": {
-			Description: "The object ID of the authenticated principal",
+			Description: "The object ID of the authenticated principal.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},

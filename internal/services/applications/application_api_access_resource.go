@@ -40,6 +40,11 @@ func (r ApplicationApiAccessResource) ResourceType() string {
 	return "azuread_application_api_access"
 }
 
+func (r ApplicationApiAccessResource) Description() string {
+	return "Manages the API permissions for an application registration.\n\n" +
+		"This resource is analogous to the `required_resource_access` block in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationApiAccessResource) ModelObject() interface{} {
 	return &ApplicationApiAccessModel{}
 }
@@ -47,7 +52,7 @@ func (r ApplicationApiAccessResource) ModelObject() interface{} {
 func (r ApplicationApiAccessResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which this API access is granted",
+			Description:  "The resource ID of the application registration.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -55,7 +60,7 @@ func (r ApplicationApiAccessResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"api_client_id": {
-			Description:  "The client ID of the API to which access is being granted",
+			Description:  "The client ID of the API to which access is being granted.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -63,7 +68,7 @@ func (r ApplicationApiAccessResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"role_ids": {
-			Description:  "A set of role IDs to be granted to the application, as published by the API",
+			Description:  "A set of role IDs to be granted to the application, as published by the API.",
 			Type:         pluginsdk.TypeSet,
 			Optional:     true,
 			AtLeastOneOf: []string{"role_ids", "scope_ids"},
@@ -74,7 +79,7 @@ func (r ApplicationApiAccessResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"scope_ids": {
-			Description:  "A set of scope IDs to be granted to the application, as published by the API",
+			Description:  "A set of scope IDs to be granted to the application, as published by the API.",
 			Type:         pluginsdk.TypeSet,
 			Optional:     true,
 			AtLeastOneOf: []string{"role_ids", "scope_ids"},

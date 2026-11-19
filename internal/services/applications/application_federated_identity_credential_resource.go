@@ -25,6 +25,7 @@ import (
 
 func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a federated identity credential associated with an application within Azure Active Directory.",
 		CreateContext: applicationFederatedIdentityCredentialResourceCreate,
 		UpdateContext: applicationFederatedIdentityCredentialResourceUpdate,
 		ReadContext:   applicationFederatedIdentityCredentialResourceRead,
@@ -44,7 +45,7 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"application_id": {
-				Description:  "The resource ID of the application for which this federated identity credential should be created",
+				Description:  "The resource ID of the application for which this federated identity credential should be created.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -64,7 +65,7 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description:  "A unique display name for the federated identity credential",
+				Description:  "A unique display name for the federated identity credential.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -84,13 +85,13 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description: "A description for the federated identity credential",
+				Description: "A description for the federated identity credential.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"credential_id": {
-				Description: "A UUID used to uniquely identify this federated identity credential",
+				Description: "A UUID used to uniquely identify this federated identity credential.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

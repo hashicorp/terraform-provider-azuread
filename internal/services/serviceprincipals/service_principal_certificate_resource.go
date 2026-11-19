@@ -25,6 +25,7 @@ import (
 
 func servicePrincipalCertificateResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a certificate associated with a service principal within Azure Active Directory.",
 		CreateContext: servicePrincipalCertificateResourceCreate,
 		ReadContext:   servicePrincipalCertificateResourceRead,
 		DeleteContext: servicePrincipalCertificateResourceDelete,
@@ -42,7 +43,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:  "The object ID of the service principal for which this certificate should be created",
+				Description:  "The ID of the service principal for which this certificate should be created.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -50,7 +51,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"key_id": {
-				Description:  "A UUID used to uniquely identify this certificate. If not specified a UUID will be automatically generated",
+				Description:  "A UUID used to uniquely identify this certificate. If not specified a UUID will be automatically generated.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -59,7 +60,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"encoding": {
-				Description: "Specifies the encoding used for the supplied certificate data",
+				Description: "Specifies the encoding used for the supplied certificate data.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ForceNew:    true,
@@ -72,7 +73,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"start_date": {
-				Description:  "The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date is used",
+				Description:  "The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the value is determined by Azure Active Directory and is usually the start date of the certificate for asymmetric keys, or the current timestamp for symmetric keys.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -81,7 +82,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"end_date": {
-				Description:   "The end date until which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`)",
+				Description:   "The end date until which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -91,7 +92,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"end_date_relative": {
-				Description:   "A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`. Valid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\"",
+				Description:   "A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`. Valid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\".",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				ForceNew:      true,
@@ -101,7 +102,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"type": {
-				Description:  "The type of key/certificate",
+				Description:  "The type of key/certificate.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -109,7 +110,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"value": {
-				Description: "The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER",
+				Description: "The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER. See also the `encoding` argument.",
 				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,

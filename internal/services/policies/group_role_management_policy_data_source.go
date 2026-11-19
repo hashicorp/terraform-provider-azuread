@@ -32,14 +32,14 @@ type GroupRoleManagementPolicyDataSource struct{}
 func (r GroupRoleManagementPolicyDataSource) Arguments() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"group_id": {
-			Description:  "ID of the group to which this policy is assigned",
+			Description:  "The ID of the Azure AD group for which the policy applies.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.IsUUID,
 		},
 
 		"role_id": {
-			Description:  "The ID of the role of this policy to the group",
+			Description:  "The type of assignment this policy covers. Can be either `member` or `owner`.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringInSlice(possibleValuesForRoleDefinitionId, false),
@@ -50,13 +50,13 @@ func (r GroupRoleManagementPolicyDataSource) Arguments() map[string]*schema.Sche
 func (r GroupRoleManagementPolicyDataSource) Attributes() map[string]*schema.Schema {
 	return map[string]*pluginsdk.Schema{
 		"display_name": {
-			Description: "The display name of the policy",
+			Description: "(String) The display name of this policy.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"description": {
-			Description: "Description of the policy",
+			Description: "(String) The description of this policy.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
@@ -133,4 +133,8 @@ func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 
 func (r GroupRoleManagementPolicyDataSource) ResourceType() string {
 	return "azuread_group_role_management_policy"
+}
+
+func (r GroupRoleManagementPolicyDataSource) Description() string {
+	return "Use this data source to retrieve a role policy for an Azure AD group."
 }

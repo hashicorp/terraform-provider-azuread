@@ -23,6 +23,7 @@ import (
 
 func userDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets information about an Azure Active Directory user.",
 		ReadContext: userDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -31,7 +32,7 @@ func userDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"employee_id": {
-				Description:  "The employee identifier assigned to the user by the organisation",
+				Description:  "The employee identifier assigned to the user by the organisation.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
@@ -40,7 +41,7 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"mail": {
-				Description:  "The SMTP address for the user",
+				Description:  "The SMTP address for the user.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
@@ -49,7 +50,7 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"mail_nickname": {
-				Description:  "The email alias of the user",
+				Description:  "The email alias of the user.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
@@ -58,7 +59,7 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description:  "The object ID of the user",
+				Description:  "The object ID of the user.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -67,7 +68,7 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"user_principal_name": {
-				Description:  "The user principal name (UPN) of the user",
+				Description:  "The user principal name (UPN) of the user.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -76,19 +77,19 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"account_enabled": {
-				Description: "Whether or not the account is enabled",
+				Description: "Whether or not the account is enabled.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"age_group": {
-				Description: "The age group of the user",
+				Description: "The age group of the user.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"business_phones": {
-				Description: "The telephone numbers for the user",
+				Description: "A list of telephone numbers for the user.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -97,19 +98,19 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"city": {
-				Description: "The city in which the user is located",
+				Description: "The city in which the user is located.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"company_name": {
-				Description: "The company name which the user is associated. This property can be useful for describing the company that an external user comes from",
+				Description: "The company name which the user is associated. This property can be useful for describing the company that an external user comes from.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"consent_provided_for_minor": {
-				Description: "Whether consent has been obtained for minors",
+				Description: "Whether consent has been obtained for minors.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -121,25 +122,25 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"country": {
-				Description: "The country/region in which the user is located, e.g. `US` or `UK`",
+				Description: "The country/region in which the user is located, e.g. `US` or `UK`.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"creation_type": {
-				Description: "Indicates whether the user account was created as a regular school or work account (`null`), an external account (`Invitation`), a local account for an Azure Active Directory B2C tenant (`LocalAccount`) or self-service sign-up using email verification (`EmailVerified`)",
+				Description: "Indicates whether the user account was created as a regular school or work account (`null`), an external account (`Invitation`), a local account for an Azure Active Directory B2C tenant (`LocalAccount`) or self-service sign-up using email verification (`EmailVerified`).",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"department": {
-				Description: "The name for the department in which the user works",
+				Description: "The name for the department in which the user works.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"display_name": {
-				Description: "The display name of the user",
+				Description: "The display name of the user.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -163,25 +164,25 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"external_user_state": {
-				Description: "For an external user invited to the tenant, this property represents the invited user's invitation status",
+				Description: "For an external user invited to the tenant, this property represents the invited user's invitation status.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"fax_number": {
-				Description: "The fax number of the user",
+				Description: "The fax number of the user.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"given_name": {
-				Description: "The given name (first name) of the user",
+				Description: "The given name (first name) of the user.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"im_addresses": {
-				Description: "The instant message voice over IP (VOIP) session initiation protocol (SIP) addresses for the user",
+				Description: "A list of instant message voice over IP (VOIP) session initiation protocol (SIP) addresses for the user.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -190,73 +191,73 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"job_title": {
-				Description: "The user’s job title",
+				Description: "The user’s job title.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"manager_id": {
-				Description: "The object ID of the user's manager",
+				Description: "The object ID of the user's manager.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"mobile_phone": {
-				Description: "The primary cellular telephone number for the user",
+				Description: "The primary cellular telephone number for the user.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"office_location": {
-				Description: "The office location in the user's place of business",
+				Description: "The office location in the user's place of business.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_distinguished_name": {
-				Description: "The on-premise Active Directory distinguished name (DN) of the user",
+				Description: "The on-premises distinguished name (DN) of the user, synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_domain_name": {
-				Description: "The on-premise FQDN (i.e. dnsDomainName) of the user",
+				Description: "The on-premises FQDN, also called dnsDomainName, synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_immutable_id": {
-				Description: "The value used to associate an on-premise Active Directory user account with their Azure AD user object",
+				Description: "The value used to associate an on-premise Active Directory user account with their Azure AD user object.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sam_account_name": {
-				Description: "The on-premise SAM account name of the user",
+				Description: "The on-premise SAM account name of the user.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_security_identifier": {
-				Description: "The on-premise security identifier (SID) of the user",
+				Description: "The on-premises security identifier (SID), synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sync_enabled": {
-				Description: "Whether this user is synchronized from an on-premises directory (true), no longer synchronized (false), or has never been synchronized (null)",
+				Description: "Whether this user is synchronised from an on-premises directory (`true`), no longer synchronised (`false`), or has never been synchronised (`null`).",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"onpremises_user_principal_name": {
-				Description: "The on-premise user principal name of the user",
+				Description: "The on-premise user principal name of the user.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"other_mails": {
-				Description: "Additional email addresses for the user",
+				Description: "A list of additional email addresses for the user.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -265,19 +266,19 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"postal_code": {
-				Description: "The postal code for the user's postal address. The postal code is specific to the user's country/region. In the United States of America, this attribute contains the ZIP code",
+				Description: "The postal code for the user's postal address. The postal code is specific to the user's country/region. In the United States of America, this attribute contains the ZIP code.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"preferred_language": {
-				Description: "The user's preferred language, in ISO 639-1 notation",
+				Description: "The user's preferred language, in ISO 639-1 notation.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"proxy_addresses": {
-				Description: "Email addresses for the user that direct to the same mailbox",
+				Description: "List of email addresses for the user that direct to the same mailbox.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -286,37 +287,37 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"show_in_address_list": {
-				Description: "Whether or not the Outlook global address list should include this user",
+				Description: "Whether or not the Outlook global address list should include this user.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"state": {
-				Description: "The state or province in the user's address",
+				Description: "The state or province in the user's address.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"street_address": {
-				Description: "The street address of the user's place of business",
+				Description: "The street address of the user's place of business.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"surname": {
-				Description: "The user's surname (family name or last name)",
+				Description: "The user's surname (family name or last name).",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"usage_location": {
-				Description: "The usage location of the user",
+				Description: "The usage location of the user.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"user_type": {
-				Description: "The user type in the directory. Possible values are `Guest` or `Member`",
+				Description: "The user type in the directory.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

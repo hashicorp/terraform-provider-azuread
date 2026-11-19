@@ -44,6 +44,10 @@ func (r ApplicationFromTemplateResource) ResourceType() string {
 	return "azuread_application_from_template"
 }
 
+func (r ApplicationFromTemplateResource) Description() string {
+	return "Creates an application registration and associated service principal from a gallery template."
+}
+
 func (r ApplicationFromTemplateResource) ModelObject() interface{} {
 	return &ApplicationFromTemplateModel{}
 }
@@ -51,14 +55,14 @@ func (r ApplicationFromTemplateResource) ModelObject() interface{} {
 func (r ApplicationFromTemplateResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"display_name": {
-			Description:  "The display name for the application",
+			Description:  "The display name for the application.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"template_id": {
-			Description:  "The UUID of the template to instantiate for this application",
+			Description:  "Unique ID for a templated application in the Azure AD App Gallery, from which to create the application.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -70,25 +74,25 @@ func (r ApplicationFromTemplateResource) Arguments() map[string]*pluginsdk.Schem
 func (r ApplicationFromTemplateResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description: "The resource ID for this application",
+			Description: "The resource ID for the application.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"application_object_id": {
-			Description: "The object ID for this application",
+			Description: "The object ID for the application.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"service_principal_id": {
-			Description: "The resource ID for this service principal",
+			Description: "The resource ID for the service principal.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"service_principal_object_id": {
-			Description: "The object ID for this service principal",
+			Description: "The object ID for the service principal.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},

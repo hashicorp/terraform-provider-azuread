@@ -24,6 +24,7 @@ import (
 
 func applicationPreAuthorizedResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages client applications that are pre-authorized with the specified permissions to access an application's APIs without requiring user consent.",
 		CreateContext: applicationPreAuthorizedResourceCreate,
 		ReadContext:   applicationPreAuthorizedResourceRead,
 		UpdateContext: applicationPreAuthorizedResourceUpdate,
@@ -43,7 +44,7 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"application_id": {
-				Description:  "The resource ID of the application to which this pre-authorized application should be added",
+				Description:  "The resource ID of the application for which permissions are being authorized.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -51,7 +52,7 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 			},
 
 			"authorized_client_id": {
-				Description:  "The client ID of the pre-authorized application",
+				Description:  "The client ID of the application being authorized.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -59,7 +60,7 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 			},
 
 			"permission_ids": {
-				Description: "The IDs of the permission scopes required by the pre-authorized application",
+				Description: "A set of permission scope IDs required by the authorized application.",
 				Type:        pluginsdk.TypeSet,
 				Required:    true,
 				Elem: &pluginsdk.Schema{

@@ -42,6 +42,10 @@ func (r UserLicenseResource) ResourceType() string {
 	return "azuread_user_license"
 }
 
+func (r UserLicenseResource) Description() string {
+	return "Manages a single license assignment for a user."
+}
+
 func (r UserLicenseResource) ModelObject() interface{} {
 	return &UserLicenseResourceModel{}
 }
@@ -49,7 +53,7 @@ func (r UserLicenseResource) ModelObject() interface{} {
 func (r UserLicenseResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"user_object_id": {
-			Description:  "The object ID of the user to which the license should be assigned",
+			Description:  "The object ID of the user to which the license should be assigned.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -57,7 +61,7 @@ func (r UserLicenseResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"sku_id": {
-			Description:  "The unique identifier (GUID) for the SKU (license) to assign to the user",
+			Description:  "The unique identifier (GUID) for the SKU (license) to assign to the user.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -65,7 +69,7 @@ func (r UserLicenseResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"disabled_plans": {
-			Description: "A set of unique identifiers (GUIDs) for the service plans to disable for this license",
+			Description: "A set of unique identifiers (GUIDs) for the service plans to disable for this license.",
 			Type:        pluginsdk.TypeSet,
 			Optional:    true,
 			ForceNew:    true,

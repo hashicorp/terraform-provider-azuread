@@ -22,6 +22,7 @@ import (
 
 func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Manages synchronization job on demand provisioning associated with a service principal (enterprise application) within Azure Active Directory.",
 		CreateContext: synchronizationProvisionOnDemandResourceCreate,
 		ReadContext:   synchronizationProvisionOnDemandResourceRead,
 		DeleteContext: synchronizationProvisionOnDemandResourceDelete,

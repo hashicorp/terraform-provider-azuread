@@ -27,6 +27,7 @@ import (
 
 func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages the resources added to access packages within Identity Governance in Azure Active Directory.",
 		CreateContext: accessPackageResourcePackageAssociationResourceCreate,
 		ReadContext:   accessPackageResourcePackageAssociationResourceRead,
 		DeleteContext: accessPackageResourcePackageAssociationResourceDelete,
@@ -41,7 +42,7 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"access_package_id": {
-				Description:  "The ID of access package this resource association is configured to",
+				Description:  "The ID of access package this resource association is configured to.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -49,7 +50,7 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 			},
 
 			"catalog_resource_association_id": {
-				Description:  "The ID of the access package catalog association",
+				Description:  "The ID of the catalog association from the `azuread_access_package_resource_catalog_association` resource.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -57,7 +58,7 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 			},
 
 			"access_type": {
-				Description: "The role of access type to the specified resource, valid values are `Member` and `Owner`",
+				Description: "The role of access type to the specified resource.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ForceNew:    true,

@@ -35,6 +35,10 @@ func (r ApplicationFallbackPublicClientResource) ResourceType() string {
 	return "azuread_application_fallback_public_client"
 }
 
+func (r ApplicationFallbackPublicClientResource) Description() string {
+	return "Manages the Fallback Public Client setting for an application registration."
+}
+
 func (r ApplicationFallbackPublicClientResource) ModelObject() interface{} {
 	return &ApplicationFallbackPublicClientModel{}
 }
@@ -42,7 +46,7 @@ func (r ApplicationFallbackPublicClientResource) ModelObject() interface{} {
 func (r ApplicationFallbackPublicClientResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which the fallback public client setting should be applied",
+			Description:  "The resource ID of the application registration.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -50,7 +54,7 @@ func (r ApplicationFallbackPublicClientResource) Arguments() map[string]*plugins
 		},
 
 		"enabled": {
-			Description: "Specifies explicitly whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI",
+			Description: "Whether to enable the application as a fallback public client.",
 			Type:        pluginsdk.TypeBool,
 			Optional:    true,
 			Default:     false,

@@ -22,6 +22,7 @@ import (
 
 func applicationTemplateDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this data source to access information about an Application Template from the [Azure AD App Gallery](https://azuremarketplace.microsoft.com/en-US/marketplace/apps/category/azure-active-directory-apps).",
 		ReadContext: applicationTemplateDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -30,7 +31,7 @@ func applicationTemplateDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"template_id": {
-				Description:      "The application template's ID",
+				Description:      "Specifies the ID of the templated application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -39,7 +40,7 @@ func applicationTemplateDataSource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description:      "The display name for the application template",
+				Description:      "Specifies the display name of the templated application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -48,7 +49,7 @@ func applicationTemplateDataSource() *pluginsdk.Resource {
 			},
 
 			"categories": {
-				Description: "List of categories for this templated application",
+				Description: "List of categories for this templated application.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -57,25 +58,25 @@ func applicationTemplateDataSource() *pluginsdk.Resource {
 			},
 
 			"homepage_url": {
-				Description: "Home page URL of the templated application",
+				Description: "Home page URL of the templated application.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"logo_url": {
-				Description: "URL to retrieve the logo for this templated application",
+				Description: "URL to retrieve the logo for this templated application.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"publisher": {
-				Description: "Name of the publisher for this templated application",
+				Description: "Name of the publisher for this templated application.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"supported_provisioning_types": {
-				Description: "The provisioning modes supported by this templated application",
+				Description: "List of provisioning modes supported by this templated application.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -84,7 +85,7 @@ func applicationTemplateDataSource() *pluginsdk.Resource {
 			},
 
 			"supported_single_sign_on_modes": {
-				Description: "The single sign on modes supported by this templated application",
+				Description: "List of single sign on modes supported by this templated application.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{

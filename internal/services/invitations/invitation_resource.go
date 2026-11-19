@@ -28,6 +28,7 @@ import (
 
 func invitationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages an invitation of a guest user within Azure Active Directory.",
 		CreateContext: invitationResourceCreate,
 		ReadContext:   invitationResourceRead,
 		DeleteContext: invitationResourceDelete,
@@ -40,7 +41,7 @@ func invitationResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"redirect_url": {
-				Description:  "The URL that the user should be redirected to once the invitation is redeemed",
+				Description:  "The URL that the user should be redirected to once the invitation is redeemed.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -48,7 +49,7 @@ func invitationResource() *pluginsdk.Resource {
 			},
 
 			"user_email_address": {
-				Description:  "The email address of the user being invited",
+				Description:  "The email address of the user being invited.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -56,7 +57,7 @@ func invitationResource() *pluginsdk.Resource {
 			},
 
 			"user_display_name": {
-				Description:  "The display name of the user being invited",
+				Description:  "The display name of the user being invited.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -64,7 +65,7 @@ func invitationResource() *pluginsdk.Resource {
 			},
 
 			"message": {
-				Description: "Customize the message sent to the invited user",
+				Description: "If this block is omitted, no message will be sent.",
 				Type:        pluginsdk.TypeList,
 				Optional:    true,
 				ForceNew:    true,
@@ -72,7 +73,7 @@ func invitationResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"additional_recipients": {
-							Description: "Email addresses of additional recipients the invitation message should be sent to",
+							Description: "Email addresses of additional recipients the invitation message should be sent to. Only 1 additional recipient is currently supported by Azure.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							MaxItems:    1,
@@ -83,7 +84,7 @@ func invitationResource() *pluginsdk.Resource {
 						},
 
 						"body": {
-							Description:   "Customized message body you want to send if you don't want to send the default message",
+							Description:   "Customized message body you want to send if you don't want to send the default message. Cannot be specified with `language`.",
 							Type:          pluginsdk.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"message.0.language"},
@@ -91,7 +92,7 @@ func invitationResource() *pluginsdk.Resource {
 						},
 
 						"language": {
-							Description:   "The language you want to send the default message in",
+							Description:   "The language you want to send the default message in. The value specified must be in ISO 639 format. Cannot be specified with `body`.",
 							Type:          pluginsdk.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"message.0.body"},
@@ -102,7 +103,7 @@ func invitationResource() *pluginsdk.Resource {
 			},
 
 			"user_type": {
-				Description:  "The user type of the user being invited",
+				Description:  "The user type of the user being invited. Only Global Administrators can invite users as members.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -111,13 +112,13 @@ func invitationResource() *pluginsdk.Resource {
 			},
 
 			"redeem_url": {
-				Description: "The URL the user can use to redeem their invitation",
+				Description: "The URL the user can use to redeem their invitation.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"user_id": {
-				Description: "Object ID of the invited user",
+				Description: "Object ID of the invited user.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

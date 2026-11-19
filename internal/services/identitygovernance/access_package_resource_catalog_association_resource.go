@@ -27,6 +27,7 @@ import (
 
 func accessPackageResourceCatalogAssociationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages the resources added to access package catalogs within Identity Governance in Azure Active Directory.",
 		CreateContext: accessPackageResourceCatalogAssociationResourceCreate,
 		ReadContext:   accessPackageResourceCatalogAssociationResourceRead,
 		DeleteContext: accessPackageResourceCatalogAssociationResourceDelete,
@@ -41,7 +42,7 @@ func accessPackageResourceCatalogAssociationResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"resource_origin_id": {
-				Description:  "The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group",
+				Description:  "The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -49,7 +50,7 @@ func accessPackageResourceCatalogAssociationResource() *pluginsdk.Resource {
 			},
 
 			"resource_origin_system": {
-				Description:  "The type of the resource in the origin system, such as SharePointOnline, AadApplication or AadGroup",
+				Description:  "The type of the resource in the origin system, such as `SharePointOnline`, `AadApplication` or `AadGroup`.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -57,7 +58,7 @@ func accessPackageResourceCatalogAssociationResource() *pluginsdk.Resource {
 			},
 
 			"catalog_id": {
-				Description:  "The unique ID of the access package catalog",
+				Description:  "The unique ID of the access package catalog.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,

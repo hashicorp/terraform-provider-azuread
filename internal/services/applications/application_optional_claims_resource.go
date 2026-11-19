@@ -45,14 +45,19 @@ func (r ApplicationOptionalClaimsResource) ResourceType() string {
 	return "azuread_application_optional_claims"
 }
 
+func (r ApplicationOptionalClaimsResource) Description() string {
+	return "Manages optional claims for an application registration.\n\n" +
+		"This resource is analogous to the `optional_claims` block in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationOptionalClaimsResource) ModelObject() interface{} {
 	return &ApplicationOptionalClaimsModel{}
 }
 
-func (r ApplicationOptionalClaimsResource) Arguments() (ret map[string]*pluginsdk.Schema) {
-	ret = map[string]*pluginsdk.Schema{
+func (r ApplicationOptionalClaimsResource) Arguments() map[string]*pluginsdk.Schema {
+	s := map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which these optional claims belong",
+			Description:  "The resource ID of the application registration.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -65,11 +70,11 @@ func (r ApplicationOptionalClaimsResource) Arguments() (ret map[string]*pluginsd
 	}
 
 	atLeastOneOf := []string{"access_token", "id_token", "saml2_token"}
-	ret["access_token"].AtLeastOneOf = atLeastOneOf
-	ret["id_token"].AtLeastOneOf = atLeastOneOf
-	ret["saml2_token"].AtLeastOneOf = atLeastOneOf
+	s["access_token"].AtLeastOneOf = atLeastOneOf
+	s["id_token"].AtLeastOneOf = atLeastOneOf
+	s["saml2_token"].AtLeastOneOf = atLeastOneOf
 
-	return
+	return s
 }
 
 func (r ApplicationOptionalClaimsResource) Attributes() map[string]*pluginsdk.Schema {

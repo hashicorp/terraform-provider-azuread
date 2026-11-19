@@ -38,6 +38,11 @@ func (r AuthenticationStrengthPolicyFido2CombinationConfigurationResource) Resou
 	return "azuread_authentication_strength_policy_fido2_combination_configuration"
 }
 
+func (r AuthenticationStrengthPolicyFido2CombinationConfigurationResource) Description() string {
+	return "Manages a FIDO2 combination configuration for an authentication strength policy within Azure Active Directory.\n\n" +
+		"A FIDO2 combination configuration restricts which security keys, identified by their Authenticator Attestation GUID (AAGUID), satisfy the `fido2` authentication method combination. A policy supports at most one FIDO2 combination configuration."
+}
+
 func (r AuthenticationStrengthPolicyFido2CombinationConfigurationResource) ModelObject() interface{} {
 	return &AuthenticationStrengthPolicyFido2CombinationConfigurationResourceModel{}
 }
@@ -45,7 +50,7 @@ func (r AuthenticationStrengthPolicyFido2CombinationConfigurationResource) Model
 func (r AuthenticationStrengthPolicyFido2CombinationConfigurationResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"authentication_strength_policy_id": {
-			Description:  "The object ID of the authentication strength policy to which this combination configuration applies",
+			Description:  "The object ID of the authentication strength policy to which this combination configuration applies.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -53,7 +58,7 @@ func (r AuthenticationStrengthPolicyFido2CombinationConfigurationResource) Argum
 		},
 
 		"allowed_aaguids": {
-			Description: "A set of AAGUIDs allowed to be used as part of the `fido2` combination",
+			Description: "A set of Authenticator Attestation GUIDs (AAGUIDs) allowed to satisfy the `fido2` combination.",
 			Type:        pluginsdk.TypeSet,
 			Required:    true,
 			MinItems:    1,
