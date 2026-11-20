@@ -25,6 +25,7 @@ import (
 
 func usersData() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets basic information for multiple Azure Active Directory users.",
 		ReadContext: usersDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -33,7 +34,7 @@ func usersData() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"employee_ids": {
-				Description:  "The employee identifier assigned to the user by the organisation",
+				Description:  "The employee identifiers assigned to the users by the organisation.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -45,7 +46,7 @@ func usersData() *pluginsdk.Resource {
 			},
 
 			"mail_nicknames": {
-				Description:  "The email aliases of the users",
+				Description:  "The email aliases of the users.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -57,7 +58,7 @@ func usersData() *pluginsdk.Resource {
 			},
 
 			"mails": {
-				Description:  "The SMTP address of the users",
+				Description:  "The SMTP email addresses of the users.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -69,7 +70,7 @@ func usersData() *pluginsdk.Resource {
 			},
 
 			"object_ids": {
-				Description:  "The object IDs of the users",
+				Description:  "The object IDs of the users.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -81,7 +82,7 @@ func usersData() *pluginsdk.Resource {
 			},
 
 			"user_principal_names": {
-				Description:  "The user principal names (UPNs) of the users",
+				Description:  "The user principal names (UPNs) of the users.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -93,7 +94,7 @@ func usersData() *pluginsdk.Resource {
 			},
 
 			"ignore_missing": {
-				Description:   "Ignore missing users and return users that were found. The data source will still fail if no users are found",
+				Description:   "Ignore missing users and return users that were found. The data source will still fail if no users are found.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
@@ -101,7 +102,7 @@ func usersData() *pluginsdk.Resource {
 			},
 
 			"return_all": {
-				Description:   "Fetch all users with no filter and return all that were found. The data source will still fail if no users are found.",
+				Description:   "When `true`, the data source will return all users.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
@@ -110,7 +111,7 @@ func usersData() *pluginsdk.Resource {
 			},
 
 			"users": {
-				Description: "A list of users",
+				Description: "A list of users.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{

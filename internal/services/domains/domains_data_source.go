@@ -56,6 +56,10 @@ func (r DomainsDataSource) ResourceType() string {
 	return "azuread_domains"
 }
 
+func (r DomainsDataSource) Description() string {
+	return "Use this data source to access information about existing Domains within Azure Active Directory."
+}
+
 func (r DomainsDataSource) ModelObject() interface{} {
 	return &DomainsDataSourceModel{}
 }
@@ -63,41 +67,41 @@ func (r DomainsDataSource) ModelObject() interface{} {
 func (r DomainsDataSource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"admin_managed": {
-			Description: "Set to `true` to only return domains whose DNS is managed by Microsoft 365",
+			Description: "Set to `true` to only return domains whose DNS is managed by Microsoft 365.",
 			Type:        pluginsdk.TypeBool,
 			Optional:    true,
 		},
 
 		"include_unverified": {
-			Description:   "Set to `true` if unverified Azure AD domains should be included",
+			Description:   "Set to `true` if unverified Azure AD domains should be included.",
 			Type:          pluginsdk.TypeBool,
 			Optional:      true,
 			ConflictsWith: []string{"only_default", "only_initial"}, // default or initial domains have to be verified
 		},
 
 		"only_default": {
-			Description:   "Set to `true` to only return the default domain",
+			Description:   "Set to `true` to only return the default domain.",
 			Type:          pluginsdk.TypeBool,
 			Optional:      true,
 			ConflictsWith: []string{"only_initial", "only_root"},
 		},
 
 		"only_initial": {
-			Description:   "Set to `true` to only return the initial domain, which is your primary Azure Active Directory tenant domain",
+			Description:   "Set to `true` to only return the initial domain, which is your primary Azure Active Directory tenant domain.",
 			Type:          pluginsdk.TypeBool,
 			Optional:      true,
 			ConflictsWith: []string{"only_default", "only_root"},
 		},
 
 		"only_root": {
-			Description:   "Set to `true` to only return verified root domains. Excludes subdomains and unverified domains",
+			Description:   "Set to `true` to only return verified root domains. Excludes subdomains and unverified domains.",
 			Type:          pluginsdk.TypeBool,
 			Optional:      true,
 			ConflictsWith: []string{"only_default", "only_initial"},
 		},
 
 		"supports_services": {
-			Description: "A list of supported services that must be supported by a domain",
+			Description: "A list of supported services that must be supported by a domain.",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Elem: &pluginsdk.Schema{
@@ -110,7 +114,7 @@ func (r DomainsDataSource) Arguments() map[string]*pluginsdk.Schema {
 func (r DomainsDataSource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"domains": {
-			Description: "A list of tenant domains",
+			Description: "A list of tenant domains.",
 			Type:        pluginsdk.TypeList,
 			Computed:    true,
 			Elem: &pluginsdk.Resource{

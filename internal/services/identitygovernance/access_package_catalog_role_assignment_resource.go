@@ -25,6 +25,7 @@ import (
 
 func accessPackageCatalogRoleAssignmentResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a single catalog role assignment within Azure Active Directory.",
 		CreateContext: accessPackageCatalogRoleAssignmentResourceCreate,
 		ReadContext:   accessPackageCatalogRoleAssignmentResourceRead,
 		DeleteContext: accessPackageCatalogRoleAssignmentResourceDelete,
@@ -45,7 +46,7 @@ func accessPackageCatalogRoleAssignmentResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"role_id": {
-				Description:  "The object ID of the catalog role for this assignment",
+				Description:  "The object ID of the catalog role you want to assign.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -53,7 +54,7 @@ func accessPackageCatalogRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"principal_object_id": {
-				Description:  "The object ID of the member principal",
+				Description:  "The object ID of the principal for you want to create a role assignment. Supported object types are Users, Groups or Service Principals.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -61,7 +62,7 @@ func accessPackageCatalogRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"catalog_id": {
-				Description:  "The unique ID of the access package catalog.",
+				Description:  "The ID of the Catalog this role assignment will be scoped to.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,

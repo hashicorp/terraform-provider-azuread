@@ -22,6 +22,7 @@ import (
 
 func administrativeUnitDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets information about an adminisrative unit in Azure Active Directory.",
 		ReadContext: administrativeUnitDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -33,7 +34,7 @@ func administrativeUnitDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:      "The object ID of the administrative unit",
+				Description:      "Specifies the object ID of the administrative unit.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -41,7 +42,7 @@ func administrativeUnitDataSource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description:      "The display name for the administrative unit",
+				Description:      "Specifies the display name of the administrative unit.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -49,13 +50,13 @@ func administrativeUnitDataSource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description: "The description for the administrative unit",
+				Description: "The description of the administrative unit.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"members": {
-				Description: "A list of object IDs of members who are be present in this administrative unit.",
+				Description: "A list of object IDs of members who are present in this administrative unit.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -64,7 +65,7 @@ func administrativeUnitDataSource() *pluginsdk.Resource {
 			},
 
 			"visibility": {
-				Description: "Whether the administrative unit and its members are hidden or publicly viewable in the directory",
+				Description: "Whether the administrative unit _and_ its members are hidden or publicly viewable in the directory.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

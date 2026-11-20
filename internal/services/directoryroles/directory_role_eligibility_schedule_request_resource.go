@@ -28,6 +28,7 @@ import (
 
 func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a single directory role eligibility schedule request within Azure Active Directory.",
 		CreateContext: directoryRoleEligibilityScheduleRequestResourceCreate,
 		ReadContext:   directoryRoleEligibilityScheduleRequestResourceRead,
 		DeleteContext: directoryRoleEligibilityScheduleRequestResourceDelete,
@@ -47,7 +48,7 @@ func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"role_definition_id": {
-				Description:  "The object ID of the directory role for this role eligibility schedule request",
+				Description:  "The template ID (in the case of built-in roles) or object ID (in the case of custom roles) of the directory role you want to assign.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -55,7 +56,7 @@ func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 			},
 
 			"principal_id": {
-				Description:  "The object ID of the member principal",
+				Description:  "The object ID of the principal to granted the role eligibility.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -63,7 +64,7 @@ func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 			},
 
 			"directory_scope_id": {
-				Description:  "Identifier of the directory object representing the scope of the role eligibility schedule request",
+				Description:  "Identifier of the directory object representing the scope of the role eligibility.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -71,7 +72,7 @@ func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 			},
 
 			"justification": {
-				Description:  "Justification for why the role is assigned",
+				Description:  "Justification for why the principal is granted the role eligibility.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,

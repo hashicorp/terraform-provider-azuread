@@ -22,6 +22,7 @@ import (
 
 func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a Claims Mapping Policy Assignment within Azure Active Directory.",
 		CreateContext: servicePrincipalClaimsMappingPolicyAssignmentResourceCreate,
 		ReadContext:   servicePrincipalClaimsMappingPolicyAssignmentResourceRead,
 		DeleteContext: servicePrincipalClaimsMappingPolicyAssignmentResourceDelete,
@@ -54,7 +55,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource
 
 		Schema: map[string]*pluginsdk.Schema{
 			"claims_mapping_policy_id": {
-				Description:  "ID of the claims mapping policy to assign",
+				Description:  "The ID of the claims mapping policy to assign.",
 				Type:         pluginsdk.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -62,7 +63,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource
 			},
 
 			"service_principal_id": {
-				Description:  "ID of the service principal for which to assign the policy",
+				Description:  "The ID of the service principal for the policy assignment.",
 				Type:         pluginsdk.TypeString,
 				ForceNew:     true,
 				Required:     true,

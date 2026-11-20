@@ -22,12 +22,14 @@ func schemaConditionalAccessFilter() *pluginsdk.Schema {
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"mode": {
+					Description:  "Whether to include in, or exclude from, matching items from the policy.",
 					Type:         pluginsdk.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(stable.PossibleValuesForFilterMode(), false),
 				},
 
 				"rule": {
+					Description:  "Condition filter to match items.",
 					Type:         pluginsdk.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringIsNotEmpty,

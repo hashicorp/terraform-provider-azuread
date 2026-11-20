@@ -28,6 +28,7 @@ import (
 
 func servicePrincipalsDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets basic information for multiple Azure Active Directory service principals.",
 		ReadContext: servicePrincipalsDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -36,7 +37,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"client_ids": {
-				Description:  "The client IDs of the applications associated with the service principals",
+				Description:  "A list of client IDs of the applications associated with the service principals.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -48,7 +49,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"display_names": {
-				Description:  "The display names of the applications associated with the service principals",
+				Description:  "A list of display names of the applications associated with the service principals.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -60,7 +61,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"object_ids": {
-				Description:  "The object IDs of the service principals",
+				Description:  "The object IDs of the service principals.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -72,7 +73,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"ignore_missing": {
-				Description:   "Ignore missing service principals and return the service principals that were found. The data source will still fail if no service principals are found",
+				Description:   "Ignore missing service principals and return all service principals that are found. The data source will still fail if no service principals are found.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
@@ -80,7 +81,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"return_all": {
-				Description:   "Fetch all service principals with no filter and return all that were found. The data source will still fail if no service principals are found.",
+				Description:   "When `true`, the data source will return all service principals.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
@@ -89,7 +90,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"service_principals": {
-				Description: "A list of service_principals",
+				Description: "A list of service principals.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{

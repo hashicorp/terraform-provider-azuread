@@ -23,6 +23,8 @@ import (
 
 func customDirectoryRoleResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Manages a Custom Directory Role within Azure Active Directory.\n\n" +
+			"This resource is for managing custom directory roles. For management of built-in roles, see the [azuread_directory_role](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/directory_role) resource.",
 		CreateContext: customDirectoryRoleResourceCreate,
 		UpdateContext: customDirectoryRoleResourceUpdate,
 		ReadContext:   customDirectoryRoleResourceRead,
@@ -57,14 +59,14 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "The display name of the custom directory role",
+				Description:  "The display name of the custom directory role.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"enabled": {
-				Description: "Indicates whether the role is enabled for assignment",
+				Description: "Indicates whether the role is enabled for assignment.",
 				Type:        pluginsdk.TypeBool,
 				Required:    true,
 			},
@@ -76,7 +78,7 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"allowed_resource_actions": {
-							Description: "Set of tasks that can be performed on a resource",
+							Description: "A set of tasks that can be performed on a resource. For more information, see the [Permissions Reference](https://docs.microsoft.com/en-us/azure/active-directory/roles/permissions-reference) documentation.",
 							Type:        pluginsdk.TypeSet,
 							Required:    true,
 							Elem: &pluginsdk.Schema{
@@ -89,14 +91,14 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			},
 
 			"version": {
-				Description:  "The version of the role definition.",
+				Description:  "The version of the role definition. This can be any arbitrary string between 1-128 characters.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 
 			"description": {
-				Description: "The description of the custom directory role",
+				Description: "The description of the custom directory role.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
@@ -114,7 +116,7 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description: "The object ID of the directory role",
+				Description: "The object ID of the custom directory role.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

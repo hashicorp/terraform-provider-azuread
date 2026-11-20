@@ -43,6 +43,11 @@ func (r ApplicationAppRoleResource) ResourceType() string {
 	return "azuread_application_app_role"
 }
 
+func (r ApplicationAppRoleResource) Description() string {
+	return "Manages an app role for an application registration.\n\n" +
+		"This resource is analogous to the `app_role` block in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationAppRoleResource) ModelObject() interface{} {
 	return &ApplicationAppRoleModel{}
 }
@@ -50,7 +55,7 @@ func (r ApplicationAppRoleResource) ModelObject() interface{} {
 func (r ApplicationAppRoleResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which this app role should be applied",
+			Description:  "The resource ID of the application registration.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -58,7 +63,7 @@ func (r ApplicationAppRoleResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"role_id": {
-			Description:  "The unique identifier of the app role",
+			Description:  "The unique identifier of the app role.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -66,7 +71,7 @@ func (r ApplicationAppRoleResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"allowed_member_types": {
-			Description: "Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both",
+			Description: "A set of values to specify whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications by setting to `Application`, or to both.",
 			Type:        pluginsdk.TypeSet,
 			Required:    true,
 			MinItems:    1,
@@ -77,21 +82,21 @@ func (r ApplicationAppRoleResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"description": {
-			Description:  "Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences",
+			Description:  "Description of the app role that appears when the role is being assigned, and if the role functions as an application permissions, during the consent experiences.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"display_name": {
-			Description:  "Display name for the app role that appears during app role assignment and in consent experiences",
+			Description:  "Display name for the app role that appears during app role assignment and in consent experiences.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"value": {
-			Description:      "The value that is used for the `roles` claim in ID tokens and OAuth access tokens that are authenticating an assigned service or user principal",
+			Description:      "The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,

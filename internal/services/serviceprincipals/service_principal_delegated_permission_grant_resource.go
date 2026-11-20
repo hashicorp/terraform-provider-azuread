@@ -27,6 +27,7 @@ import (
 
 func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a delegated permission grant for a service principal, on behalf of a single user, or all users.",
 		CreateContext: servicePrincipalDelegatedPermissionGrantResourceCreate,
 		UpdateContext: servicePrincipalDelegatedPermissionGrantResourceUpdate,
 		ReadContext:   servicePrincipalDelegatedPermissionGrantResourceRead,
@@ -61,7 +62,7 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"claim_values": {
-				Description: "A set of claim values for delegated permission scopes which should be included in access tokens for the resource",
+				Description: "A set of claim values for delegated permission scopes which should be included in access tokens for the resource.",
 				Type:        pluginsdk.TypeSet,
 				Required:    true,
 				MinItems:    1,
@@ -72,7 +73,7 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 			},
 
 			"resource_service_principal_object_id": {
-				Description:  "The object ID of the service principal representing the resource to be accessed",
+				Description:  "The object ID of the service principal representing the resource to be accessed.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -80,7 +81,7 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 			},
 
 			"service_principal_object_id": {
-				Description:  "The object ID of the service principal for which this delegated permission grant should be created",
+				Description:  "The object ID of the service principal for which this delegated permission grant should be created.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -88,7 +89,7 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 			},
 
 			"user_object_id": {
-				Description:  "The object ID of the user on behalf of whom the service principal is authorized to access the resource",
+				Description:  "The object ID of the user on behalf of whom the service principal is authorized to access the resource. When omitted, the delegated permission grant will be consented for all users.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ForceNew:     true,

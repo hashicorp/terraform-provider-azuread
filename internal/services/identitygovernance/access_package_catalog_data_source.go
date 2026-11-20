@@ -22,6 +22,7 @@ import (
 
 func accessPackageCatalogDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this resource to retrieve information for an existing access package catalog within Identity Governance in Azure Active Directory.",
 		ReadContext: accessPackageCatalogDataRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -30,7 +31,7 @@ func accessPackageCatalogDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:  "The ID of this access package catalog",
+				Description:  "The ID of this access package catalog.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -39,7 +40,7 @@ func accessPackageCatalogDataSource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description:  "The display name of the access package catalog",
+				Description:  "The display name of the access package catalog.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -47,19 +48,19 @@ func accessPackageCatalogDataSource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description: "The description of the access package catalog",
+				Description: "The description of the access package catalog.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"externally_visible": {
-				Description: "Whether the access packages in this catalog can be requested by users outside the tenant",
+				Description: "Whether the access packages in this catalog can be requested by users outside the tenant.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"published": {
-				Description: "Whether the access packages in this catalog are available for management",
+				Description: "Whether the access packages in this catalog are available for management.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},

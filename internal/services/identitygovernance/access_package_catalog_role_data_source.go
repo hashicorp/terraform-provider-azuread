@@ -22,6 +22,7 @@ import (
 
 func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets information about an access package catalog role.",
 		ReadContext: accessPackageCatalogRoleDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -30,7 +31,7 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "The display name of the catalog role",
+				Description:  "Specifies the display name of the role.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -39,7 +40,7 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description:  "The object ID of the catalog role",
+				Description:  "Specifies the object ID of the role.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -48,13 +49,13 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description: "The description of the catalog role",
+				Description: "The description of the role.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"template_id": {
-				Description: "The object ID of the template associated with the catalog role",
+				Description: "The object ID of the role.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

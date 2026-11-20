@@ -38,6 +38,10 @@ func (r ApplicationOwnerResource) ResourceType() string {
 	return "azuread_application_owner"
 }
 
+func (r ApplicationOwnerResource) Description() string {
+	return "Manages a single owner of an application registration."
+}
+
 func (r ApplicationOwnerResource) ModelObject() interface{} {
 	return &ApplicationOwnerModel{}
 }
@@ -45,7 +49,7 @@ func (r ApplicationOwnerResource) ModelObject() interface{} {
 func (r ApplicationOwnerResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which the owner should be added",
+			Description:  "The resource ID of the application registration.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -53,7 +57,7 @@ func (r ApplicationOwnerResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"owner_object_id": {
-			Description:  "Object ID of the principal that will be granted ownership of the application",
+			Description:  "The object ID of the owner to assign to the application, typically a user or service principal.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,

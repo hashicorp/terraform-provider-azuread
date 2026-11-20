@@ -48,7 +48,7 @@ type AuthenticationStrengthPolicyDataSource struct{}
 func (r AuthenticationStrengthPolicyDataSource) Arguments() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"object_id": {
-			Description:  "The object ID of the authentication strength policy",
+			Description:  "The object ID of the authentication strength policy.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			Computed:     true,
@@ -57,7 +57,7 @@ func (r AuthenticationStrengthPolicyDataSource) Arguments() map[string]*schema.S
 		},
 
 		"display_name": {
-			Description:  "The display name for the authentication strength policy",
+			Description:  "The display name of the authentication strength policy.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			Computed:     true,
@@ -70,13 +70,13 @@ func (r AuthenticationStrengthPolicyDataSource) Arguments() map[string]*schema.S
 func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"description": {
-			Description: "The description for the authentication strength policy",
+			Description: "The description of this authentication strength policy.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"allowed_combinations": {
-			Description: "The allowed MFA methods for this policy",
+			Description: "A list of allowed authentication methods combinations for this authentication strength policy.",
 			Type:        pluginsdk.TypeList,
 			Computed:    true,
 			Elem: &pluginsdk.Schema{
@@ -91,19 +91,19 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"object_id": {
-						Description: "The object ID of the combination configuration",
+						Description: "The object ID of this combination configuration.",
 						Type:        pluginsdk.TypeString,
 						Computed:    true,
 					},
 
 					"type": {
-						Description: "The type of the combination configuration",
+						Description: "The type of this combination configuration, either `fido2CombinationConfiguration` or `x509CertificateCombinationConfiguration`.",
 						Type:        pluginsdk.TypeString,
 						Computed:    true,
 					},
 
 					"applies_to_combinations": {
-						Description: "The authentication method combinations this configuration applies to",
+						Description: "A list of authentication method combinations this configuration applies to, for example `fido2` or `x509CertificateSingleFactor`. This is distinct from `type`, which identifies the kind of combination configuration.",
 						Type:        pluginsdk.TypeList,
 						Computed:    true,
 						Elem: &pluginsdk.Schema{
@@ -112,7 +112,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 					},
 
 					"allowed_aaguids": {
-						Description: "The AAGUIDs allowed by this configuration, for the `fido2CombinationConfiguration` type",
+						Description: "A list of AAGUIDs allowed by this combination configuration. Only populated when `type` is `fido2CombinationConfiguration`.",
 						Type:        pluginsdk.TypeList,
 						Computed:    true,
 						Elem: &pluginsdk.Schema{
@@ -121,7 +121,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 					},
 
 					"allowed_issuer_skis": {
-						Description: "The certificate issuer subject key identifiers allowed by this configuration, for the `x509CertificateCombinationConfiguration` type",
+						Description: "A list of allowed certificate issuer subject key identifier values. Only populated when `type` is `x509CertificateCombinationConfiguration`.",
 						Type:        pluginsdk.TypeList,
 						Computed:    true,
 						Elem: &pluginsdk.Schema{
@@ -130,7 +130,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 					},
 
 					"allowed_policy_oids": {
-						Description: "The certificate policy OIDs allowed by this configuration, for the `x509CertificateCombinationConfiguration` type",
+						Description: "A list of allowed certificate policy OIDs. Only populated when `type` is `x509CertificateCombinationConfiguration`.",
 						Type:        pluginsdk.TypeList,
 						Computed:    true,
 						Elem: &pluginsdk.Schema{
@@ -149,6 +149,10 @@ func (r AuthenticationStrengthPolicyDataSource) ModelObject() interface{} {
 
 func (r AuthenticationStrengthPolicyDataSource) ResourceType() string {
 	return "azuread_authentication_strength_policy"
+}
+
+func (r AuthenticationStrengthPolicyDataSource) Description() string {
+	return "Use this data source to retrieve information about an authentication strength policy within Azure Active Directory. This can be used to read either the built-in policies supplied by Microsoft, or custom policies created in the tenant."
 }
 
 func (r AuthenticationStrengthPolicyDataSource) Read() sdk.ResourceFunc {

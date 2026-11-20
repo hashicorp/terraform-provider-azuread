@@ -24,6 +24,7 @@ import (
 
 func applicationCertificateResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a certificate associated with an application within Azure Active Directory. These are also referred to as client certificates during authentication.",
 		CreateContext: applicationCertificateResourceCreate,
 		ReadContext:   applicationCertificateResourceRead,
 		DeleteContext: applicationCertificateResourceDelete,
@@ -42,7 +43,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"application_id": {
-				Description:  "The resource ID of the application for which this certificate should be created",
+				Description:  "The resource ID of the application for which this certificate should be created.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -50,7 +51,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"encoding": {
-				Description: "Specifies the encoding used for the supplied certificate data",
+				Description: "Specifies the encoding used for the supplied certificate data.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ForceNew:    true,
@@ -63,7 +64,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"key_id": {
-				Description:  "A UUID used to uniquely identify this certificate. If omitted, a random UUID will be automatically generated",
+				Description:  "A UUID used to uniquely identify this certificate. If omitted, a random UUID will be automatically generated.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -72,7 +73,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"start_date": {
-				Description:  "The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date and time are use",
+				Description:  "The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the value is determined by Azure Active Directory and is usually the start date of the certificate for asymmetric keys, or the current timestamp for symmetric keys.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -81,7 +82,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"end_date": {
-				Description:   "The end date until which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If omitted, the API will decide a suitable expiry date, which is typically around 2 years from the start date",
+				Description:   "The end date until which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If omitted, the API will decide a suitable expiry date, which is typically around 2 years from the start date.",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -91,7 +92,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"end_date_relative": {
-				Description:   "A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`",
+				Description:   "A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`.",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				ForceNew:      true,
@@ -101,7 +102,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"type": {
-				Description: "The type of key/certificate",
+				Description: "The type of key/certificate.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ForceNew:    true,
@@ -112,7 +113,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"value": {
-				Description: "The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER. See also the `encoding` argument",
+				Description: "The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER. See also the `encoding` argument.",
 				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,

@@ -37,6 +37,11 @@ func (r ApplicationIdentifierUriResource) ResourceType() string {
 	return "azuread_application_identifier_uri"
 }
 
+func (r ApplicationIdentifierUriResource) Description() string {
+	return "Manages a single Identifier URI for an application registration.\n\n" +
+		"This resource is analogous to the `identifier_uris` property in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationIdentifierUriResource) ModelObject() interface{} {
 	return &ApplicationIdentifierUriModel{}
 }
@@ -44,7 +49,7 @@ func (r ApplicationIdentifierUriResource) ModelObject() interface{} {
 func (r ApplicationIdentifierUriResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which the identifier URI should be added",
+			Description:  "The resource ID of the application registration.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -52,7 +57,7 @@ func (r ApplicationIdentifierUriResource) Arguments() map[string]*pluginsdk.Sche
 		},
 
 		"identifier_uri": {
-			Description: "The user-defined URI or URI-like string that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
+			Description: "The user-defined URI that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.",
 			Type:        pluginsdk.TypeString,
 			Required:    true,
 			ForceNew:    true,
