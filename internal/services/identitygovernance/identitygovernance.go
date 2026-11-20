@@ -17,8 +17,18 @@ import (
 	"golang.org/x/text/language"
 )
 
+// GetAccessPackageResourcesRoleScope reads the role scope from Graph, without the cache. It returns nil when the
+// access package has no role scope with that ID.
 func GetAccessPackageResourcesRoleScope(ctx context.Context, client *entitlementmanagementaccesspackage.EntitlementManagementAccessPackageClient, id beta.IdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeId) (*beta.AccessPackageResourceRoleScope, error) {
-	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(id.AccessPackageId)
+	accessPackage, err := getAccessPackageWithRoleScopes(ctx, client, beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(id.AccessPackageId))
+	if err != nil {
+		return nil, err
+	}
+
+	return findRoleScope(accessPackage, id.AccessPackageResourceRoleScopeId), nil
+}
+
+func getAccessPackageWithRoleScopes(ctx context.Context, client *entitlementmanagementaccesspackage.EntitlementManagementAccessPackageClient, accessPackageId beta.IdentityGovernanceEntitlementManagementAccessPackageId) (*beta.AccessPackage, error) {
 	options := entitlementmanagementaccesspackage.GetEntitlementManagementAccessPackageOperationOptions{
 		Expand: &odata.Expand{
 			Relationship: "accessPackageResourceRoleScopes($expand=accessPackageResourceRole,accessPackageResourceScope)",
@@ -37,14 +47,18 @@ func GetAccessPackageResourcesRoleScope(ctx context.Context, client *entitlement
 		return nil, fmt.Errorf("retrieving %s: AccessPackageResourceRoleScopes was nil", accessPackageId)
 	}
 
-	// There is only a select and expand method on this endpoint, we iterate the result to find the RoleScope
-	for _, roleScope := range *resp.Model.AccessPackageResourceRoleScopes {
-		if roleScope.Id != nil && *roleScope.Id == id.AccessPackageResourceRoleScopeId {
-			return &roleScope, nil
+	return resp.Model, nil
+}
+
+// There is only a select and expand method on this endpoint, we iterate the result to find the RoleScope
+func findRoleScope(accessPackage *beta.AccessPackage, roleScopeId string) *beta.AccessPackageResourceRoleScope {
+	for _, roleScope := range *accessPackage.AccessPackageResourceRoleScopes {
+		if roleScope.Id != nil && *roleScope.Id == roleScopeId {
+			return &roleScope
 		}
 	}
 
-	return nil, nil
+	return nil
 }
 
 func expandRequestorSettings(input []interface{}) (*beta.RequestorSettings, error) {
