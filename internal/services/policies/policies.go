@@ -106,7 +106,7 @@ func waitForCombinationConfigurationDeletion(ctx context.Context, client *authen
 // getPolicyId reliably fetches the policy ID, waiting for eventual consistency
 func getPolicyId(ctx context.Context, metadata sdk.ResourceMetaData, scopeId, roleDefinitionId string) (*parse.RoleManagementPolicyId, error) {
 	var policyId *parse.RoleManagementPolicyId
-	err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
 		id, exists, err := tryGetPolicyId(ctx, metadata, scopeId, roleDefinitionId)
 		if err != nil {
 			return nil, err
@@ -115,8 +115,7 @@ func getPolicyId(ctx context.Context, metadata sdk.ResourceMetaData, scopeId, ro
 			policyId = id
 		}
 		return &exists, nil
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, fmt.Errorf("waiting for policy assignment to become available: %v", err)
 	}
 

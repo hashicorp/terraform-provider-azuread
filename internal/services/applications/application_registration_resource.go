@@ -36,7 +36,7 @@ type ApplicationRegistrationModel struct {
 	ObjectId                           string   `tfschema:"object_id"`
 	PrivacyStatementUrl                string   `tfschema:"privacy_statement_url"`
 	PublisherDomain                    string   `tfschema:"publisher_domain"`
-	RequestedAccessTokenVersion        int      `tfschema:"requested_access_token_version"`
+	RequestedAccessTokenVersion        int64    `tfschema:"requested_access_token_version"`
 	ServiceManagementReference         string   `tfschema:"service_management_reference"`
 	SignInAudience                     string   `tfschema:"sign_in_audience"`
 	SupportUrl                         string   `tfschema:"support_url"`
@@ -219,7 +219,7 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 				SignInAudience:             nullable.Value(model.SignInAudience),
 
 				Api: &stable.ApiApplication{
-					RequestedAccessTokenVersion: nullable.Value(int64(model.RequestedAccessTokenVersion)),
+					RequestedAccessTokenVersion: nullable.Value(model.RequestedAccessTokenVersion),
 				},
 
 				Info: &stable.InformationalUrl{
@@ -246,12 +246,11 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 			}
 
 			app := resp.Model
-			if app == nil || pointer.From(app.Id) == "" {
+			if app == nil || app.Id == nil || *app.Id == "" {
 				return errors.New("creating application: object ID returned for application is nil/empty")
 			}
 
-			id := stable.NewApplicationID(*app.Id)
-			metadata.SetID(id)
+			metadata.SetID(stable.NewApplicationID(*app.Id))
 
 			return nil
 		},
@@ -295,7 +294,7 @@ func (r ApplicationRegistrationResource) Read() sdk.ResourceFunc {
 			}
 
 			if api := app.Api; api != nil {
-				state.RequestedAccessTokenVersion = int(api.RequestedAccessTokenVersion.GetOrZero())
+				state.RequestedAccessTokenVersion = api.RequestedAccessTokenVersion.GetOrZero()
 			}
 
 			if info := app.Info; info != nil {
@@ -364,7 +363,7 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 
 			if rd.HasChange("requested_access_token_version") {
 				properties.Api = &stable.ApiApplication{
-					RequestedAccessTokenVersion: nullable.Value(int64(model.RequestedAccessTokenVersion)),
+					RequestedAccessTokenVersion: nullable.Value(model.RequestedAccessTokenVersion),
 				}
 			}
 

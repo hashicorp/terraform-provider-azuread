@@ -52,7 +52,6 @@ func administrativeUnitMemberResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceAdministrativeUnitMemberInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceAdministrativeUnitMemberInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

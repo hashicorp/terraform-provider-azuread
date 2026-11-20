@@ -54,7 +54,6 @@ func userFlowAttributeResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceUserFlowAttributeInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceUserFlowAttributeInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -109,7 +108,7 @@ func userFlowAttributeResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 	}
 
 	attr := stable.BaseIdentityUserFlowAttributeImpl{
-		DataType:    pointer.To(stable.IdentityUserFlowAttributeDataType(d.Get("data_type").(string))),
+		DataType:    pointer.ToEnum[stable.IdentityUserFlowAttributeDataType](d.Get("data_type").(string)),
 		Description: nullable.NoZero(d.Get("description").(string)),
 		DisplayName: nullable.NoZero(displayName),
 	}

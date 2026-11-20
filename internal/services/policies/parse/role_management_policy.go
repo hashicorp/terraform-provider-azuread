@@ -60,8 +60,7 @@ func ValidateRoleManagementPolicyID(input interface{}, key string) (warnings []s
 		return
 	}
 
-	_, err := ParseRoleManagementPolicyID(v)
-	if err != nil {
+	if _, err := ParseRoleManagementPolicyID(v); err != nil {
 		errors = append(errors, err)
 	}
 

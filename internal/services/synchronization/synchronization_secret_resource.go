@@ -52,7 +52,6 @@ func synchronizationSecretResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceSynchronizationSecretInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceSynchronizationSecretInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
