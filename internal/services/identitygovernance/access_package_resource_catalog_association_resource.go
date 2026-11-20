@@ -117,7 +117,7 @@ func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, 
 	// Poll for processed request
 	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
 		options := entitlementmanagementaccesspackagecatalogaccesspackageresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
-			Filter: pointer.To(fmt.Sprintf("startswith(originId, '%s')", resourceOriginId)),
+			Filter: pointer.To(fmt.Sprintf("originId eq '%s'", resourceOriginId)),
 		}
 		resp, err := resourceClient.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
 		if err != nil {
