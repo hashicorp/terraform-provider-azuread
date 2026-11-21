@@ -125,6 +125,40 @@ func TestAccInvitation_messageWithLanguage(t *testing.T) {
 	})
 }
 
+func TestAccInvitation_userProperties(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_invitation", "test")
+	r := InvitationResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.userProperties(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("user_id").Exists(),
+				check.That(data.ResourceName).Key("company_name").HasValue("Acme Inc."),
+				check.That(data.ResourceName).Key("department").HasValue("Engineering"),
+				check.That(data.ResourceName).Key("given_name").HasValue("Bob"),
+				check.That(data.ResourceName).Key("job_title").HasValue("Consultant"),
+				check.That(data.ResourceName).Key("surname").HasValue("Bobson"),
+				check.That(data.ResourceName).Key("usage_location").HasValue("GB"),
+			),
+		},
+		{
+			Config: r.userPropertiesUpdated(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("user_id").Exists(),
+				check.That(data.ResourceName).Key("company_name").HasValue("Globex Corp."),
+				check.That(data.ResourceName).Key("department").HasValue("Research"),
+				check.That(data.ResourceName).Key("given_name").HasValue("Robert"),
+				check.That(data.ResourceName).Key("job_title").HasValue("Principal Consultant"),
+				check.That(data.ResourceName).Key("surname").HasValue("Bobson"),
+				check.That(data.ResourceName).Key("usage_location").HasValue("US"),
+			),
+		},
+	})
+}
+
 func TestAccInvitation_withGroupMembership(t *testing.T) {
 	count := 10
 	data := acceptance.BuildTestData(t, "azuread_invitation", fmt.Sprintf("test.%d", count-1))
@@ -170,6 +204,40 @@ resource "azuread_invitation" "test" {
   redirect_url       = "https://portal.azure.com"
   user_email_address = "acctest-user-%[1]s@test.com"
   user_type          = "Member"
+}
+`, data.RandomString)
+}
+
+func (InvitationResource) userProperties(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_invitation" "test" {
+  redirect_url       = "https://portal.azure.com"
+  user_email_address = "acctest-user-%[1]s@test.com"
+  user_display_name  = "Test user"
+
+  company_name   = "Acme Inc."
+  department     = "Engineering"
+  given_name     = "Bob"
+  job_title      = "Consultant"
+  surname        = "Bobson"
+  usage_location = "GB"
+}
+`, data.RandomString)
+}
+
+func (InvitationResource) userPropertiesUpdated(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_invitation" "test" {
+  redirect_url       = "https://portal.azure.com"
+  user_email_address = "acctest-user-%[1]s@test.com"
+  user_display_name  = "Test user"
+
+  company_name   = "Globex Corp."
+  department     = "Research"
+  given_name     = "Robert"
+  job_title      = "Principal Consultant"
+  surname        = "Bobson"
+  usage_location = "US"
 }
 `, data.RandomString)
 }
