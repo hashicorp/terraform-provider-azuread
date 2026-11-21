@@ -312,7 +312,7 @@ func (r ApplicationPermissionScopeResource) Update() sdk.ResourceFunc {
 			}
 
 			// Disable the existing scope prior to update
-			if err = applicationDisableOauth2PermissionScopes(ctx, client, applicationId, &newScopes); err != nil {
+			if err = applicationDisableChangedPermissions(ctx, client, applicationId, nil, &newScopes); err != nil {
 				return fmt.Errorf("disabling %s in preparation for update: %+v", id, err)
 			}
 
@@ -377,7 +377,7 @@ func (r ApplicationPermissionScopeResource) Delete() sdk.ResourceFunc {
 			}
 
 			// Disable the existing scope prior to update
-			if err = applicationDisableOauth2PermissionScopes(ctx, client, applicationId, &newScopes); err != nil {
+			if err = applicationDisableChangedPermissions(ctx, client, applicationId, nil, &newScopes); err != nil {
 				return fmt.Errorf("disabling %s in preparation for deletion: %+v", id, err)
 			}
 

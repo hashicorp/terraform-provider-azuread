@@ -294,7 +294,7 @@ func (r ApplicationAppRoleResource) Update() sdk.ResourceFunc {
 			}
 
 			// Disable the existing role prior to update
-			if err = applicationDisableAppRoles(ctx, client, applicationId, &newRoles); err != nil {
+			if err = applicationDisableChangedPermissions(ctx, client, applicationId, &newRoles, nil); err != nil {
 				return fmt.Errorf("disabling %s in preparation for update: %+v", id, err)
 			}
 
@@ -359,7 +359,7 @@ func (r ApplicationAppRoleResource) Delete() sdk.ResourceFunc {
 			}
 
 			// Disable the existing role prior to update
-			if err = applicationDisableAppRoles(ctx, client, applicationId, &newRoles); err != nil {
+			if err = applicationDisableChangedPermissions(ctx, client, applicationId, &newRoles, nil); err != nil {
 				return fmt.Errorf("disabling %s in preparation for deletion: %+v", id, err)
 			}
 
