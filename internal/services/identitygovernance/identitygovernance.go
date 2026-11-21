@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
@@ -26,6 +27,10 @@ func GetAccessPackageResourcesRoleScope(ctx context.Context, client *entitlement
 	}
 	resp, err := client.GetEntitlementManagementAccessPackage(ctx, accessPackageId, options)
 	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			// The parent access package is gone, so the role scope cannot exist
+			return nil, nil
+		}
 		return nil, fmt.Errorf("retrieving %s: %v", accessPackageId, err)
 	}
 
