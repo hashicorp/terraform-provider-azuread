@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_synchronization_job_provision_on_demand"
 subcategory: "Synchronization"
+description: |-
+  Manages synchronization job on demand provisioning associated with a service principal (enterprise application) within Azure Active Directory.
 ---
 
 # Resource: azuread_synchronization_job_provision_on_demand
@@ -69,43 +72,48 @@ resource "azuread_synchronization_job_provision_on_demand" "example" {
     }
   }
 }
-
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-
-* `synchronization_job_id` (Required) The ID of the synchronization job.
-* `parameter` (Required) One or more `parameter` blocks as documented below.
-* `service_principal_id` (Required) The ID of the service principal for the synchronization job.
-* `triggers` (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html). 
-
----
-
-`parameter` block supports the following:
-
-* `rule_id` (Required) The identifier of the synchronization rule to be applied. This rule ID is defined in the schema for a given synchronization job or template.
-* `subject` (Required) One or more `subject` blocks as documented below.
+* `parameter` - (Required) Represents the objects that will be provisioned and the synchronization rules executed. The resource is primarily used for on-demand provisioning. Changing this value forces a new resource to be created.
+   (see [nested schema](#schema-6e6573746564-696e707574-706172616d65746572))
+* `service_principal_id` - (Required) The object ID of the service principal for which this synchronization job should be provisioned. Changing this value forces a new resource to be created.
+* `synchronization_job_id` - (Required) The identifier for the synchronization jop. Changing this value forces a new resource to be created.
 
 ---
 
-`subject` block supports the following:
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. Changing this value forces a new resource to be created.
 
-* `object_id` (String) The identifier of an object to which a synchronization job is to be applied. Can be one of the following: (1) An onPremisesDistinguishedName for synchronization from Active Directory to Azure AD. (2) The user ID for synchronization from Azure AD to a third-party. (3) The Worker ID of the Workday worker for synchronization from Workday to either Active Directory or Azure AD.
-* `object_type_name` (String) The type of the object to which a synchronization job is to be applied. Can be one of the following: `user` for synchronizing between Active Directory and Azure AD, `User` for synchronizing a user between Azure AD and a third-party application, `Worker` for synchronization a user between Workday and either Active Directory or Azure AD, `Group` for synchronizing a group between Azure AD and a third-party application.
+---
 
-## Timeouts
+<a id="schema-6e6573746564-696e707574-706172616d65746572"></a>
+The `parameter` block supports the following:
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+* `rule_id` - (Required) The identifier of the synchronization rule to be applied. This rule ID is defined in the schema for a given synchronization job or template. Changing this value forces a new resource to be created.
+* `subject` - (Required) The identifiers of one or more objects to which a synchronizationJob is to be applied. Changing this value forces a new resource to be created.
+   (see [nested schema](#schema-6e6573746564-696e707574-706172616d65746572-7375626a656374))
 
-* `create` - (Defaults to 15 minutes) Used when creating the resource.
+---
+
+<a id="schema-6e6573746564-696e707574-706172616d65746572-7375626a656374"></a>
+The `parameter.subject` block supports the following:
+
+* `object_id` - (Required) The identifier of an object to which a synchronization job is to be applied. Can be one of the following: (1) An onPremisesDistinguishedName for synchronization from Active Directory to Azure AD. (2) The user ID for synchronization from Azure AD to a third-party. (3) The Worker ID of the Workday worker for synchronization from Workday to either Active Directory or Azure AD.
+* `object_type_name` - (Required) The type of the object to which a synchronization job is to be applied. Can be one of the following: `user` for synchronizing between Active Directory and Azure AD, `User` for synchronizing a user between Azure AD and a third-party application, `Worker` for synchronization a user between Workday and either Active Directory or Azure AD, `Group` for synchronizing a group between Azure AD and a third-party application. Possible values include `Group`, `user`, `User`, and `Worker`.
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
 
-## Import
+* `id` - The ID of the Resource.
 
-This resource does not support importing.
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 15 minutes) Used when creating the resource.
+* `read` - (Defaults to 1 minute) Used when retrieving the resource.
+* `delete` - (Defaults to 1 minute) Used when deleting the resource.

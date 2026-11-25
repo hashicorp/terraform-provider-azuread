@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_access_package_catalog_role_assignment"
 subcategory: "Identity Governance"
+description: |-
+  Manages a single catalog role assignment within Azure Active Directory.
 ---
 
 # Resource: azuread_access_package_catalog_role_assignment
@@ -37,24 +40,23 @@ resource "azuread_access_package_catalog_role_assignment" "example" {
 }
 ```
 
-
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `catalog_id` - (Required) The ID of the Catalog this role assignment will be scoped to. Changing this forces a new resource to be created.
-* `principal_object_id` - (Required) The object ID of the principal for you want to create a role assignment. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
-* `role_id` - (Required) The object ID of the catalog role you want to assign. Changing this forces a new resource to be created.
+* `catalog_id` - (Required) The ID of the Catalog this role assignment will be scoped to. Changing this value forces a new resource to be created.
+* `principal_object_id` - (Required) The object ID of the principal for you want to create a role assignment. Supported object types are Users, Groups or Service Principals. Changing this value forces a new resource to be created.
+* `role_id` - (Required) The object ID of the catalog role you want to assign. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-*No additional attributes are exported*
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -63,7 +65,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Catalog role assignments can be imported using the ID of the assignment, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_access_package_catalog_role_assignment.example 00000000-0000-0000-0000-000000000000

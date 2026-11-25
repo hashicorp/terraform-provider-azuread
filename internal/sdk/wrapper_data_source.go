@@ -45,7 +45,8 @@ func (dw *DataSourceWrapper) DataSource() (*schema.Resource, error) {
 	}
 
 	resource := schema.Resource{
-		Schema: *resourceSchema,
+		Description: dw.dataSource.Description(),
+		Schema:      *resourceSchema,
 		ReadContext: dw.diagnosticsWrapper(func(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
 			metaData := runArgs(d, meta, dw.logger)
 			return dw.dataSource.Read().Func(ctx, metaData)

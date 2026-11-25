@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_user_flow_attribute"
 subcategory: "User Flows"
+description: |-
+  Manages user flow attributes in an Azure Active Directory (Azure AD) tenant.
 ---
 
 # Resource: azuread_user_flow_attribute
@@ -24,34 +27,33 @@ resource "azuread_user_flow_attribute" "example" {
 }
 ```
 
-
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `data_type` - (Required) The data type of the user flow attribute. Possible values are `boolean`, `dateTime`, `int64`, `string` or `stringCollection`. Changing this forces a new resource to be created.
+* `data_type` - (Required) The data type of the user flow attribute. Possible values include `boolean`, `dateTime`, `int64`, `string`, and `stringCollection`. Changing this value forces a new resource to be created.
 * `description` - (Required) The description of the user flow attribute that is shown to the user at the time of sign-up.
-* `display_name` - (Required) The display name of the user flow attribute. Changing this forces a new resource to be created.
+* `display_name` - (Required) The display name of the user flow attribute. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `attribute_type` - The type of the user flow attribute. Values include `builtIn`, `custom` or `required`.
-* `id` - An ID used to uniquely identify this user flow attribute.
+* `id` - The ID of the Resource.
+* `attribute_type` - The type of the user flow attribute.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
 * `update` - (Defaults to 5 minutes) Used when updating the resource.
 * `delete` - (Defaults to 5 minutes) Used when deleting the resource.
 
 ## Import
 
-User flow attributes can be imported using the `id`, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_user_flow_attribute.example extension_ecc9f88db2924942b8a96f44873616fe_Hobbyjkorv

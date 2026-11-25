@@ -37,6 +37,9 @@ type resourceBase interface {
 
 	// ResourceType is the exposed name of this resource (e.g. `azurerm_example`)
 	ResourceType() string
+
+	// Description is used as the top-level resource description for documentation.
+	Description() string
 }
 
 // A Data Source is an object which looks up information about an existing resource and returns

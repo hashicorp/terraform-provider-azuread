@@ -1,0 +1,3 @@
+{{ render "builtin/flat/entry" . }}
+
+!> **Warning** Do not use the `members` property at the same time as the [azuread_group_member](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/group_member) resource for the same group. Doing so will cause a conflict and group members will be removed.

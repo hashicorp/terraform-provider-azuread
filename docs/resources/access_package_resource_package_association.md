@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_access_package_resource_package_association"
 subcategory: "Identity Governance"
+description: |-
+  Manages the resources added to access packages within Identity Governance in Azure Active Directory.
 ---
 
 # Resource: azuread_access_package_resource_package_association
@@ -45,21 +48,26 @@ resource "azuread_access_package_resource_package_association" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
-* `access_package_id` - (Required) The ID of access package this resource association is configured to. Changing this forces a new resource to be created.
-* `access_type` - (Optional) The role of access type to the specified resource. Valid values are `Member`, or `Owner` The default is `Member`. Changing this forces a new resource to be created.
-* `catalog_resource_association_id` - (Required) The ID of the catalog association from the `azuread_access_package_resource_catalog_association` resource. Changing this forces a new resource to be created.
+The following arguments are supported:
+
+* `access_package_id` - (Required) The ID of access package this resource association is configured to. Changing this value forces a new resource to be created.
+* `catalog_resource_association_id` - (Required) The ID of the catalog association from the `azuread_access_package_resource_catalog_association` resource. Changing this value forces a new resource to be created.
+
+---
+
+* `access_type` - (Optional) The role of access type to the specified resource. Possible values include `Member` and `Owner`. Defaults to `Member`. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of this resource. The ID is combined by four fields with colon in between, the four fields are `access_package_id`, this package association id, `resource_origin_id` and `access_type`.
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -67,9 +75,9 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-The resource and catalog association can be imported using the access package ID, the access package ResourceRoleScope, the resource origin ID, and the access type, e.g.
+This resource can be imported using its resource ID, e.g.
 
-```
+```shell
 terraform import azuread_access_package_resource_package_association.example 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111_22222222-2222-2222-2222-22222222/33333333-3333-3333-3333-33333333/Member
 ```
 

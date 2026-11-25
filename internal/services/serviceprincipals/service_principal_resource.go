@@ -78,7 +78,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"account_enabled": {
-				Description: "Whether or not the service principal account is enabled.",
+				Description: "Whether the service principal account is enabled.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     true,

@@ -1,0 +1,1 @@
+terraform import azuread_access_package.example_package 00000000-0000-0000-0000-000000000000

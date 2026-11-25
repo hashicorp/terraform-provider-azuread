@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_application_pre_authorized"
 subcategory: "Applications"
+description: |-
+  Manages client applications that are pre-authorized with the specified permissions to access an application's APIs without requiring user consent.
 ---
 
 # Resource: azuread_application_pre_authorized
@@ -60,21 +63,23 @@ resource "azuread_application_pre_authorized" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `application_id` - (Required) The resource ID of the application for which permissions are being authorized. Changing this field forces a new resource to be created.
-* `authorized_client_id` - (Required) The client ID of the application being authorized. Changing this field forces a new resource to be created.
+* `application_id` - (Required) The resource ID of the application for which permissions are being authorized. Changing this value forces a new resource to be created.
+* `authorized_client_id` - (Required) The client ID of the application being authorized. Changing this value forces a new resource to be created.
 * `permission_ids` - (Required) A set of permission scope IDs required by the authorized application.
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -83,7 +88,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Pre-authorized applications can be imported using the object ID of the authorizing application and the application ID of the application being authorized, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_pre_authorized.example 00000000-0000-0000-0000-000000000000/preAuthorizedApplication/11111111-1111-1111-1111-111111111111

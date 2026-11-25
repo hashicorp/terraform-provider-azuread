@@ -1,0 +1,1 @@
+terraform import azuread_claims_mapping_policy.my_policy /policies/claimsMappingPolicies/00000000-0000-0000-0000-000000000000

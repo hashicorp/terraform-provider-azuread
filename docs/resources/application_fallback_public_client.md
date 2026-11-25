@@ -1,5 +1,9 @@
 ---
+page_title: "Resource: azuread_application_fallback_public_client"
 subcategory: "Applications"
+description: |-
+  Manages the Fallback Public Client setting for an application registration.
+  ~> This resource is incompatible with the azuread_application resource, instead use this with the azuread_application_registration resource.
 ---
 
 # Resource: azuread_application_fallback_public_client
@@ -31,22 +35,27 @@ resource "azuread_application_fallback_public_client" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
-* `enabled` - (Required) Whether to enable the application as a fallback public client.
+* `application_id` - (Required) The resource ID of the application registration. Changing this value forces a new resource to be created.
+
+---
+
+* `enabled` - (Optional) Whether to enable the application as a fallback public client. Defaults to `false`. Changing this value forces a new resource to be created.
 
 -> Some configurations may require the Fallback Public Client setting to be `null`, for this case simply destroy this resource (or don't use it)
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -54,7 +63,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-The Application Fallback Public Client setting can be imported using the object ID of the application, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_fallback_public_client.example /applications/00000000-0000-0000-0000-000000000000/fallbackPublicClient

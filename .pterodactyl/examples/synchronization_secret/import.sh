@@ -1,0 +1,1 @@
+terraform import azuread_synchronization_secret.example "/servicePrincipals/00000000-0000-0000-0000-000000000000"

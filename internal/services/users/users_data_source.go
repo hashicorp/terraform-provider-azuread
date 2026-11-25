@@ -117,7 +117,7 @@ func usersData() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"account_enabled": {
-							Description: "Whether or not the account is enabled",
+							Description: "Whether the account is enabled",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -135,7 +135,7 @@ func usersData() *pluginsdk.Resource {
 						},
 
 						"mail": {
-							Description: "The primary email address of the user",
+							Description: "The SMTP email address of the user",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},

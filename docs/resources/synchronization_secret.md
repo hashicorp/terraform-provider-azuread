@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_synchronization_secret"
 subcategory: "Synchronization"
+description: |-
+  Manages synchronization secrets associated with a service principal (enterprise application) within Azure Active Directory.
 ---
 
 # Resource: azuread_synchronization_secret
@@ -44,30 +47,33 @@ resource "azuread_synchronization_secret" "example" {
 }
 ```
 
-
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `credential` - (Optional) One or more `credential` blocks as documented below.
-* `service_principal_id` - (Required) The ID of the service principal for which this synchronization secrets should be stored. Changing this field forces a new resource to be created.
+* `service_principal_id` - (Required) The ID of the service principal for which this synchronization secrets should be stored. Changing this value forces a new resource to be created.
 
 ---
 
-`credential` block supports the following:
+* `credential` - (Optional) The `credential` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-63726564656e7469616c))
+
+---
+
+<a id="schema-6e6573746564-696e707574-63726564656e7469616c"></a>
+The `credential` block supports the following:
 
 * `key` - (Required) The key of the secret.
-* `value` - (Required) The value of the secret.
+* `value` - (Required, Sensitive) The value of the secret.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - An ID used to uniquely identify this synchronization sec.
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -76,4 +82,8 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-This resource does not support importing.
+This resource can be imported using its resource ID, e.g.
+
+```shell
+terraform import azuread_synchronization_secret.example "/servicePrincipals/00000000-0000-0000-0000-000000000000"
+```

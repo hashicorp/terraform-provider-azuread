@@ -1,9 +1,12 @@
 ---
+page_title: "Data Source: azuread_access_package_catalog"
 subcategory: "Identity Governance"
+description: |-
+  Use this resource to retrieve information for an existing access package catalog within Identity Governance in Azure Active Directory.
 ---
 
 # Data Source: azuread_access_package_catalog
-i
+
 Use this resource to retrieve information for an existing access package catalog within Identity Governance in Azure Active Directory.
 
 ## API Permissions
@@ -32,26 +35,24 @@ data "azuread_access_package_catalog" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `display_name` - (Optional) The display name of the access package catalog.
-* `object_id` - (Optional) The ID of this access package catalog.
-
-~> One of `display_name` or `object_id` must be specified.
+* `display_name` - (Optional) The display name of the access package catalog. Exactly one of `object_id` or `display_name` must be specified.
+* `object_id` - (Optional) The ID of this access package catalog. Exactly one of `object_id` or `display_name` must be specified.
 
 ## Attributes Reference
 
-In additional to the arguments, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of this resource.
+* `id` - The ID of the Data Source.
 * `description` - The description of the access package catalog.
 * `externally_visible` - Whether the access packages in this catalog can be requested by users outside the tenant.
 * `published` - Whether the access packages in this catalog are available for management.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the data source.

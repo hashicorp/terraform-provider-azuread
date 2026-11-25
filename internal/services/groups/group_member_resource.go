@@ -24,7 +24,9 @@ import (
 
 func groupMemberResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages a single group membership within Azure Active Directory.",
+		// TODO: Once an SDKv2 documentation metadata object exists, add notes to that instead of this description
+		Description: "Manages a single group membership within Azure Active Directory.\n\n" +
+			"~> **Warning** Do not use this resource at the same time as the `members` property of the `azuread_group` resource for the same group. Doing so will cause a conflict and group members will be removed.",
 		CreateContext: groupMemberResourceCreate,
 		ReadContext:   groupMemberResourceRead,
 		DeleteContext: groupMemberResourceDelete,

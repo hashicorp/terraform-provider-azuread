@@ -25,7 +25,9 @@ import (
 
 func namedLocationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages a Named Location within Azure Active Directory.",
+		// TODO: Once an SDKv2 documentation metadata object exists, add notes to that instead of this description
+		Description: "Manages a Named Location within Azure Active Directory.\n\n" +
+			"-> **API Limits** This resource is subject to a restrictive API request limit of 1 request/second. Whilst Terraform will automatically back-off and retry throttled requests, if you have a large number of resource changes to make, you may wish to [reduce parallelism](https://developer.hashicorp.com/terraform/cli/commands/apply#apply-options) or specify extended [custom resource timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts).",
 		CreateContext: namedLocationResourceCreate,
 		ReadContext:   namedLocationResourceRead,
 		UpdateContext: namedLocationResourceUpdate,

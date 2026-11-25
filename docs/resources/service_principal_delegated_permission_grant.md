@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_service_principal_delegated_permission_grant"
 subcategory: "Delegated Permission Grants"
+description: |-
+  Manages a delegated permission grant for a service principal, on behalf of a single user, or all users.
 ---
 
 # Resource: azuread_service_principal_delegated_permission_grant
@@ -102,26 +105,29 @@ resource "azuread_service_principal_delegated_permission_grant" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `claim_values` - (Required) - A set of claim values for delegated permission scopes which should be included in access tokens for the resource.
-* `resource_service_principal_object_id` - (Required) The object ID of the service principal representing the resource to be accessed. Changing this forces a new resource to be created.
-* `service_principal_object_id` - (Required) The object ID of the service principal for which this delegated permission grant should be created. Changing this forces a new resource to be created.
-* `user_object_id` - (Optional) - The object ID of the user on behalf of whom the service principal is authorized to access the resource. When omitted, the delegated permission grant will be consented for all users. Changing this forces a new resource to be created.
+* `claim_values` - (Required) A set of claim values for delegated permission scopes which should be included in access tokens for the resource.
+* `resource_service_principal_object_id` - (Required) The object ID of the service principal representing the resource to be accessed. Changing this value forces a new resource to be created.
+* `service_principal_object_id` - (Required) The object ID of the service principal for which this delegated permission grant should be created. Changing this value forces a new resource to be created.
+
+---
+
+* `user_object_id` - (Optional) The object ID of the user on behalf of whom the service principal is authorized to access the resource. When omitted, the delegated permission grant will be consented for all users. Changing this value forces a new resource to be created.
 
 -> **Granting Admin Consent** To grant admin consent for the service principal to impersonate all users, just omit the `user_object_id` property.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of the delegated permission grant.
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -130,7 +136,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Delegated permission grants can be imported using their ID, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_service_principal_delegated_permission_grant.example /oauth2PermissionGrants/aaBBcDDeFG6h5JKLMN2PQrrssTTUUvWWxxxxxyyyzzz

@@ -1,0 +1,1 @@
+terraform import azuread_named_location.my_location /identity/conditionalAccess/namedLocations/00000000-0000-0000-0000-000000000000

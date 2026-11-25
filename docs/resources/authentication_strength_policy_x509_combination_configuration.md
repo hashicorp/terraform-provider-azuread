@@ -1,5 +1,9 @@
 ---
+page_title: "Resource: azuread_authentication_strength_policy_x509_combination_configuration"
 subcategory: "Policies"
+description: |-
+  Manages an x509 certificate combination configuration for an authentication strength policy within Azure Active Directory.
+  An x509 certificate combination configuration restricts which certificates, identified by their issuer subject key identifier (SKI) or certificate policy OID, satisfy the x509 certificate authentication method combinations. A policy may carry a separate configuration for each combination, but a given combination may be configured only once.
 ---
 
 # Resource: azuread_authentication_strength_policy_x509_combination_configuration
@@ -41,26 +45,29 @@ resource "azuread_authentication_strength_policy_x509_combination_configuration"
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `allowed_issuer_skis` - (Optional) A set of allowed certificate issuer subject key identifier (SKI) values. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
-* `allowed_policy_oids` - (Optional) A set of allowed certificate policy OIDs. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
-* `applies_to_combinations` - (Required) A set of x509 certificate authentication method combinations this configuration applies to. Possible values are `x509CertificateSingleFactor` and `x509CertificateMultiFactor`.
-* `authentication_strength_policy_id` - (Required) The object ID of the authentication strength policy to which this combination configuration applies. Changing this field forces a new resource to be created.
+* `applies_to_combinations` - (Required) A set of x509 certificate authentication method combinations this configuration applies to. For each element: Possible values include `x509CertificateMultiFactor` and `x509CertificateSingleFactor`.
+* `authentication_strength_policy_id` - (Required) The object ID of the authentication strength policy to which this combination configuration applies. Changing this value forces a new resource to be created.
 
 -> Each combination specified in `applies_to_combinations` must also be specified in the `allowed_combinations` of the associated authentication strength policy, otherwise the API rejects the combination configuration.
 
+---
+
+* `allowed_issuer_skis` - (Optional) A set of allowed certificate issuer subject key identifier (SKI) values. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
+* `allowed_policy_oids` - (Optional) A set of allowed certificate policy OIDs. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
+
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of the combination configuration.
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -69,7 +76,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-x509 certificate combination configurations can be imported using the `id`, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_authentication_strength_policy_x509_combination_configuration.example /policies/authenticationStrengthPolicies/00000000-0000-0000-0000-000000000000/combinationConfigurations/11111111-1111-1111-1111-111111111111

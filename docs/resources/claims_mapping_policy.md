@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_claims_mapping_policy"
 subcategory: "Policies"
+description: |-
+  Manages a Claims Mapping Policy within Azure Active Directory.
 ---
 
 # Resource: azuread_claims_mapping_policy
@@ -46,7 +49,7 @@ resource "azuread_claims_mapping_policy" "my_policy" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
@@ -55,13 +58,13 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of the Claims Mapping Policy.
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -70,9 +73,8 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Claims Mapping Policies can be imported using the `id`, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_claims_mapping_policy.my_policy /policies/claimsMappingPolicies/00000000-0000-0000-0000-000000000000
 ```
-

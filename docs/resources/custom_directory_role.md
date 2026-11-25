@@ -1,5 +1,9 @@
 ---
+page_title: "Resource: azuread_custom_directory_role"
 subcategory: "Directory Roles"
+description: |-
+  Manages a Custom Directory Role within Azure Active Directory.
+  This resource is for managing custom directory roles. For management of built-in roles, see the azuread_directory_role https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/directory_role resource.
 ---
 
 # Resource: azuread_custom_directory_role
@@ -45,32 +49,37 @@ resource "azuread_custom_directory_role" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `description` - (Optional) The description of the custom directory role.
 * `display_name` - (Required) The display name of the custom directory role.
 * `enabled` - (Required) Indicates whether the role is enabled for assignment.
-* `permissions` - (Required) A collection of `permissions` blocks as documented below.
-* `template_id` - (Optional) Custom template identifier that is typically used if one needs an identifier to be the same across different directories. Changing this forces a new resource to be created.
-* `version` - (Required) - The version of the role definition. This can be any arbitrary string between 1-128 characters.
+* `permissions` - (Required) List of permissions that are included in the custom directory role. (see [nested schema](#schema-6e6573746564-696e707574-7065726d697373696f6e73))
+* `version` - (Required) The version of the role definition. This can be any arbitrary string between 1-128 characters. String length must be between `1` and `128` characters inclusive.
 
 ---
 
-`permissions` blocks support the following:
+* `description` - (Optional) The description of the custom directory role.
+* `template_id` - (Optional) Custom template identifier that is typically used if one needs an identifier to be the same across different directories. Changing this value forces a new resource to be created.
+
+---
+
+<a id="schema-6e6573746564-696e707574-7065726d697373696f6e73"></a>
+The `permissions` block supports the following:
 
 * `allowed_resource_actions` - (Required) A set of tasks that can be performed on a resource. For more information, see the [Permissions Reference](https://docs.microsoft.com/en-us/azure/active-directory/roles/permissions-reference) documentation.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
+* `id` - The ID of the Resource.
 * `object_id` - The object ID of the custom directory role.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -79,4 +88,8 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-This resource does not support importing.
+This resource can be imported using its resource ID, e.g.
+
+```shell
+terraform import azuread_custom_directory_role.example "<resource-id>"
+```

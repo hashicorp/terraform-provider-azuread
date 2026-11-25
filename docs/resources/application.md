@@ -1,5 +1,9 @@
 ---
+page_title: "Resource: azuread_application"
 subcategory: "Applications"
+description: |-
+  Manages an application registration within Azure Active Directory.
+  For a more lightweight alternative, please see the azuread_application_registration application_registration.html resource. Please note that this resource should not be used together with the azuread_application_registration resource when managing the same application.
 ---
 
 # Resource: azuread_application
@@ -168,7 +172,6 @@ output "example_password" {
   sensitive = true
   value     = tolist(azuread_application.example.password).0.value
 }
-
 ```
 
 *Create application from a gallery template*
@@ -189,80 +192,79 @@ resource "azuread_service_principal" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `api` - (Optional) An `api` block as documented below, which configures API related settings for this application.
-* `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
-* `description` - (Optional) A description of the application, as shown to end users.
-* `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
-* `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
-* `feature_tags` - (Optional) A `feature_tags` block as described below. Cannot be used together with the `tags` property.
-
--> **Features and Tags** Features are configured for an application using tags, and are provided as a shortcut to set the corresponding magic tag value for each feature. You cannot configure `feature_tags` and `tags` for an application at the same time, so if you need to assign additional custom tags it's recommended to use the `tags` property instead. Tag values also propagate to any linked service principals.
-
-* `group_membership_claims` - (Optional) A set of strings containing membership claims issued in a user or OAuth 2.0 access token that the app expects. Possible values are `None`, `SecurityGroup`, `DirectoryRole`, `ApplicationGroup` or `All`.
-* `identifier_uris` - (Optional) A set of user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
-* `logo_image` - (Optional) A logo image to upload for the application, as a raw base64-encoded string. The image should be in gif, jpeg or png format. Note that once an image has been uploaded, it is not possible to remove it without replacing it with another image.
-* `marketing_url` - (Optional) URL of the application's marketing page.
-* `notes` - (Optional) User-specified notes relevant for the management of the application.
-* `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. Defaults to `false`, which specifies that only GET requests are allowed.
-* `optional_claims` - (Optional) An `optional_claims` block as documented below.
-* `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.
-
--> **Ownership of Applications** It's recommended to always specify one or more application owners, including the principal being used to execute Terraform, such as in the example above.
-
-* `password` - (Optional) A single `password` block as documented below. The password is generated during creation. By default, no password is generated.
-
--> **Creating a Password** The `password` block supports a single password for the application, and is provided so that a password can be generated when a new application is created. This helps to make new applications available for authentication more quickly. To add additional passwords to an application, see the [azuread_application_password](application_password.html) resource.
-
-* `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
-* `privacy_statement_url` - (Optional) URL of the application's privacy statement.
-* `public_client` - (Optional) A `public_client` block as documented below, which configures non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.
-* `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below.
-* `service_management_reference` - (Optional) References application context information from a Service or Asset Management database.
-* `sign_in_audience` - (Optional) The Microsoft account types that are supported for the current application. Must be one of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`. Defaults to `AzureADMyOrg`.
-
-~> **Changing `sign_in_audience` for existing applications** When updating an existing application to use a `sign_in_audience` value of `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`, your configuration may no longer be valid. Refer to [official documentation](https://docs.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation) to understand the differences in supported configurations. Where possible, the provider will attempt to validate your configuration and try to avoid applying unsupported settings to your application.
-
-* `single_page_application` - (Optional) A `single_page_application` block as documented below, which configures single-page application (SPA) related settings for this application.
-* `support_url` - (Optional) URL of the application's support page.
-* `tags` - (Optional) A set of tags to apply to the application for configuring specific behaviours of the application and linked service principals. Note that these are not provided for use by practitioners. Cannot be used together with the `feature_tags` block.
-
--> **Tags and Features** Azure Active Directory uses special tag values to configure the behaviour of applications. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values also propagate to any linked service principals.
-
-* `template_id` - (Optional) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this forces a new resource to be created.
-
--> **Tip for Gallery Applications** This resource can  be used to instantiate a gallery application, however it will also attempt to manage the properties of the resulting application. If this is not desired, consider using the [azuread_application_registration](application_registration.html) resource instead.
-
-* `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
-* `web` - (Optional) A `web` block as documented below, which configures web related settings for this application.
 
 -> **Application Name Uniqueness** Application names are not unique within Azure Active Directory. Use the `prevent_duplicate_names` argument to check for existing applications if you want to avoid name collisions.
 
 ---
 
-`api` block supports the following:
+* `api` - (Optional) The `api` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-617069))
+* `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles). (see [nested schema](#schema-6e6573746564-696e707574-6170705f726f6c65))
+* `description` - (Optional) A description of the application, as shown to end users.
+* `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user.
+* `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI.
+* `feature_tags` - (Optional) Block of features to configure for this application using tags. Conflicts with `tags`.
+   (see [nested schema](#schema-6e6573746564-696e707574-666561747572655f74616773))
 
-* `known_client_applications` - (Optional) A set of client IDs, used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app.
-* `mapped_claims_enabled` - (Optional) Allows an application to use claims mapping without specifying a custom signing key. Defaults to `false`.
-* `oauth2_permission_scope` - (Optional) One or more `oauth2_permission_scope` blocks as documented below, to describe delegated permissions exposed by the web API represented by this application.
-* `requested_access_token_version` - (Optional) The access token version expected by this resource. Must be one of `1` or `2`, and must be `2` when `sign_in_audience` is either `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount` Defaults to `1`.
+-> **Features and Tags** Features are configured for an application using tags, and are provided as a shortcut to set the corresponding magic tag value for each feature. You cannot configure `feature_tags` and `tags` for an application at the same time, so if you need to assign additional custom tags it's recommended to use the `tags` property instead. Tag values also propagate to any linked service principals.
+* `group_membership_claims` - (Optional) A set of strings containing membership claims issued in a user or OAuth 2.0 access token that the app expects. For each element: Possible values include `All`, `None`, `ApplicationGroup`, `DirectoryRole`, and `SecurityGroup`.
+* `identifier_uris` - (Optional) A set of user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
+* `logo_image` - (Optional) A logo image to upload for the application, as a raw base64-encoded string. The image should be in gif, jpeg or png format. Note that once an image has been uploaded, it is not possible to remove it without replacing it with another image.
+* `marketing_url` - (Optional) URL of the application's marketing page.
+* `notes` - (Optional) User-specified notes relevant for the management of the application.
+* `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests.
+* `optional_claims` - (Optional) The `optional_claims` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-6f7074696f6e616c5f636c61696d73))
+* `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.
+
+-> **Ownership of Applications** It's recommended to always specify one or more application owners, including the principal being used to execute Terraform, such as in the example above.
+* `password` - (Optional) The password is generated during creation. By default, no password is generated. (see [nested schema](#schema-6e6573746564-696e707574-70617373776f7264))
+
+-> **Creating a Password** The `password` block supports a single password for the application, and is provided so that a password can be generated when a new application is created. This helps to make new applications available for authentication more quickly. To add additional passwords to an application, see the [azuread_application_password](application_password.html) resource.
+* `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
+* `privacy_statement_url` - (Optional) URL of the application's privacy statement.
+* `public_client` - (Optional) The `public_client` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-7075626c69635f636c69656e74))
+* `required_resource_access` - (Optional) The `required_resource_access` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-72657175697265645f7265736f757263655f616363657373))
+* `service_management_reference` - (Optional) References application context information from a Service or Asset Management database.
+* `sign_in_audience` - (Optional) The Microsoft account types that are supported for the current application. Possible values include `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount`, and `PersonalMicrosoftAccount`. Defaults to `AzureADMyOrg`.
+
+~> **Changing `sign_in_audience` for existing applications** When updating an existing application to use a `sign_in_audience` value of `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`, your configuration may no longer be valid. Refer to [official documentation](https://docs.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation) to understand the differences in supported configurations. Where possible, the provider will attempt to validate your configuration and try to avoid applying unsupported settings to your application.
+* `single_page_application` - (Optional) The `single_page_application` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-73696e676c655f706167655f6170706c69636174696f6e))
+* `support_url` - (Optional) URL of the application's support page.
+* `tags` - (Optional) A set of tags to apply to the application for configuring specific behaviours of the application and linked service principals. Note that these are not provided for use by practitioners. Conflicts with `feature_tags`.
+
+-> **Tags and Features** Azure Active Directory uses special tag values to configure the behaviour of applications. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values also propagate to any linked service principals.
+* `template_id` - (Optional) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this value forces a new resource to be created.
+
+-> **Tip for Gallery Applications** This resource can  be used to instantiate a gallery application, however it will also attempt to manage the properties of the resulting application. If this is not desired, consider using the [azuread_application_registration](application_registration.html) resource instead.
+* `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
+* `web` - (Optional) The `web` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-776562))
 
 ---
 
-`oauth2_permission_scope` blocks support the following:
+<a id="schema-6e6573746564-696e707574-617069"></a>
+The `api` block supports the following:
 
-* `admin_consent_description` - (Required) Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.
-* `admin_consent_display_name` - (Required) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.
-* `enabled` - (Optional) Determines if the permission scope is enabled. Defaults to `true`.
-* `id` - (Required) The unique identifier of the delegated permission. Must be a valid UUID.
+* `known_client_applications` - (Optional) A set of client IDs, used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app.
+* `mapped_claims_enabled` - (Optional) Allows an application to use claims mapping without specifying a custom signing key.
+* `oauth2_permission_scope` - (Optional) One or more `oauth2_permission_scope` blocks to describe delegated permissions exposed by the web API represented by this application. (see [nested schema](#schema-6e6573746564-696e707574-617069-6f61757468325f7065726d697373696f6e5f73636f7065))
+* `requested_access_token_version` - (Optional) The access token version expected by this resource. Defaults to `1`.
+
+---
+
+<a id="schema-6e6573746564-696e707574-617069-6f61757468325f7065726d697373696f6e5f73636f7065"></a>
+The `api.oauth2_permission_scope` block supports the following:
+
+* `id` - (Required) The unique identifier of the delegated permission.
 
 -> **Tip: Generating a UUID for the `id` field** To generate a value for the `id` field in cases where the actual UUID is not important, you can use the `random_uuid` resource. See the [application example](https://github.com/hashicorp/terraform-provider-azuread/tree/main/examples/application) in the provider repository.
-
-* `type` - (Optional) Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions. Defaults to `User`. Possible values are `User` or `Admin`.
+* `admin_consent_description` - (Optional) Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.
+* `admin_consent_display_name` - (Optional) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.
+* `enabled` - (Optional) Determines if the permission scope is enabled. Defaults to `true`.
+* `type` - (Optional) Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions. Possible values include `Admin` and `User`. Defaults to `User`.
 * `user_consent_description` - (Optional) Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.
 * `user_consent_display_name` - (Optional) Display name for the delegated permission that appears in the end user consent experience.
 * `value` - (Optional) The value that is used for the `scp` claim in OAuth 2.0 access tokens.
@@ -273,124 +275,153 @@ The following arguments are supported:
 
 ---
 
-`app_role` block supports the following:
+<a id="schema-6e6573746564-696e707574-6170705f726f6c65"></a>
+The `app_role` block supports the following:
 
-* `allowed_member_types` - (Required) Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both.
+* `allowed_member_types` - (Required) Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both. For each element: Possible values include `Application` and `User`.
 * `description` - (Required) Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences.
 * `display_name` - (Required) Display name for the app role that appears during app role assignment and in consent experiences.
-* `enabled` - (Optional) Determines if the app role is enabled. Defaults to `true`.
-* `id` - (Required) The unique identifier of the app role. Must be a valid UUID.
+* `id` - (Required) The unique identifier of the app role.
 
 -> **Tip: Generating a UUID for the `id` field** To generate a value for the `id` field in cases where the actual UUID is not important, you can use the `random_uuid` resource. See the [application example](https://github.com/hashicorp/terraform-provider-azuread/tree/main/examples/application) in the provider repository.
-
+* `enabled` - (Optional) Determines if the app role is enabled. Defaults to `true`.
 * `value` - (Optional) The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.
 
 -> **Roles and Permission Scopes** In Azure Active Directory, application roles (`app_role`) and permission scopes (`oauth2_permission_scope`) exported by an application share the same namespace and cannot contain duplicate `value`s. Terraform will attempt to detect this during a plan or apply operation.
 
 ---
 
-`feature_tags` block supports the following:
+<a id="schema-6e6573746564-696e707574-666561747572655f74616773"></a>
+The `feature_tags` block supports the following:
 
-* `custom_single_sign_on` - (Optional) Whether this application represents a custom SAML application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag. Defaults to `false`.
-* `enterprise` - (Optional) Whether this application represents an Enterprise Application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag. Defaults to `false`.
-* `gallery` - (Optional) Whether this application represents a gallery application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag. Defaults to `false`.
-* `hide` - (Optional) Whether this app is invisible to users in My Apps and Office 365 Launcher. Enabling this will assign the `HideApp` tag. Defaults to `false`.
-
----
-
-`optional_claims` block supports the following:
-
-* `access_token` - (Optional) One or more `access_token` blocks as documented below.
-* `id_token` - (Optional) One or more `id_token` blocks as documented below.
-* `saml2_token` - (Optional) One or more `saml2_token` blocks as documented below.
+* `custom_single_sign_on` - (Optional) Whether this application represents a custom SAML application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag.
+* `enterprise` - (Optional) Whether this application represents an Enterprise Application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag.
+* `gallery` - (Optional) Whether this application represents a gallery application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag.
+* `hide` - (Optional) Whether this app is invisible to users in My Apps and Office 365 Launcher. Enabling this will assign the `HideApp` tag.
 
 ---
 
-`access_token`, `id_token` and `saml2_token` blocks support the following:
+<a id="schema-6e6573746564-696e707574-6f7074696f6e616c5f636c61696d73"></a>
+The `optional_claims` block supports the following:
 
-* `additional_properties` - List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. Possible values are: `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
-* `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
-* `name` - The name of the optional claim.
-* `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
-
----
-
-`password` block supports the following:
-
-* `display_name` - (Required) A display name for the password. Changing this field forces a new resource to be created.
-* `end_date` - (Optional) The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
-* `start_date` - (Optional) The start date from which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date is used.  Changing this field forces a new resource to be created.
+* `access_token` - (Optional) The `access_token` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-6f7074696f6e616c5f636c61696d73-6163636573735f746f6b656e))
+* `id_token` - (Optional) The `id_token` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-6f7074696f6e616c5f636c61696d73-69645f746f6b656e))
+* `saml2_token` - (Optional) The `saml2_token` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-6f7074696f6e616c5f636c61696d73-73616d6c325f746f6b656e))
 
 ---
 
-`public_client` block supports the following:
+<a id="schema-6e6573746564-696e707574-6f7074696f6e616c5f636c61696d73-6163636573735f746f6b656e"></a>
+The `optional_claims.access_token` block supports the following:
 
-* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent. Must be a valid `https` or `ms-appx-web` URL.
+* `name` - (Required) The name of the optional claim.
+* `additional_properties` - (Optional) List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. For each element: Possible values include `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - (Optional) Whether the claim specified by the client is necessary to ensure a smooth authorization experience. Defaults to `false`.
+* `source` - (Optional) The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object. The only possible value is `user`.
 
 ---
 
-`required_resource_access` block supports the following:
+<a id="schema-6e6573746564-696e707574-6f7074696f6e616c5f636c61696d73-69645f746f6b656e"></a>
+The `optional_claims.id_token` block supports the following:
 
-* `resource_access` - (Required) A collection of `resource_access` blocks as documented below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
+* `name` - (Required) The name of the optional claim.
+* `additional_properties` - (Optional) List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. For each element: Possible values include `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - (Optional) Whether the claim specified by the client is necessary to ensure a smooth authorization experience. Defaults to `false`.
+* `source` - (Optional) The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object. The only possible value is `user`.
+
+---
+
+<a id="schema-6e6573746564-696e707574-6f7074696f6e616c5f636c61696d73-73616d6c325f746f6b656e"></a>
+The `optional_claims.saml2_token` block supports the following:
+
+* `name` - (Required) The name of the optional claim.
+* `additional_properties` - (Optional) List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. For each element: Possible values include `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - (Optional) Whether the claim specified by the client is necessary to ensure a smooth authorization experience. Defaults to `false`.
+* `source` - (Optional) The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object. The only possible value is `user`.
+
+---
+
+<a id="schema-6e6573746564-696e707574-70617373776f7264"></a>
+The `password` block supports the following:
+
+* `display_name` - (Required) A display name for the password.
+* `end_date` - (Optional) The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).
+* `start_date` - (Optional) The start date from which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date is used.
+
+---
+
+<a id="schema-6e6573746564-696e707574-7075626c69635f636c69656e74"></a>
+The `public_client` block supports the following:
+
+* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
+
+---
+
+<a id="schema-6e6573746564-696e707574-72657175697265645f7265736f757263655f616363657373"></a>
+The `required_resource_access` block supports the following:
+
+* `resource_access` - (Required) The `resource_access` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-72657175697265645f7265736f757263655f616363657373-7265736f757263655f616363657373))
 * `resource_app_id` - (Required) The unique identifier for the resource that the application requires access to. This should be the Application ID of the target application.
 
 -> **Note:** Documentation on `resource_app_id` values for Microsoft APIs can be difficult to find, but you can use the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az_ad_sp_list) to find them. (e.g. `az ad sp list --display-name "Microsoft Graph" --query '[].{appDisplayName:appDisplayName, appId:appId}'`)
 
 ---
 
-`resource_access` block supports the following:
+<a id="schema-6e6573746564-696e707574-72657175697265645f7265736f757263655f616363657373-7265736f757263655f616363657373"></a>
+The `required_resource_access.resource_access` block supports the following:
 
 * `id` - (Required) The unique identifier for an app role or OAuth2 permission scope published by the resource application.
-* `type` - (Required) Specifies whether the `id` property references an app role or an OAuth2 permission scope. Possible values are `Role` or `Scope`.
+* `type` - (Required) Specifies whether the `id` property references an app role or an OAuth2 permission scope. Possible values include `Role` and `Scope`.
 
 ---
 
-`single_page_application` block supports the following:
+<a id="schema-6e6573746564-696e707574-73696e676c655f706167655f6170706c69636174696f6e"></a>
+The `single_page_application` block supports the following:
 
-* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent. Must be a valid `https` URL.
+* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
 
 ---
 
-`web` block supports the following:
+<a id="schema-6e6573746564-696e707574-776562"></a>
+The `web` block supports the following:
 
 * `homepage_url` - (Optional) Home page or landing page of the application.
-* `implicit_grant` - (Optional) An `implicit_grant` block as documented above.
+* `implicit_grant` - (Optional) The `implicit_grant` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-776562-696d706c696369745f6772616e74))
 * `logout_url` - (Optional) The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols.
-* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent. Must be a valid `http` URL or a URN.
+* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
 
 ---
 
-`implicit_grant` block supports the following:
+<a id="schema-6e6573746564-696e707574-776562-696d706c696369745f6772616e74"></a>
+The `web.implicit_grant` block supports the following:
 
 * `access_token_issuance_enabled` - (Optional) Whether this web application can request an access token using OAuth 2.0 implicit flow.
 * `id_token_issuance_enabled` - (Optional) Whether this web application can request an ID token using OAuth 2.0 implicit flow.
 
----
-
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
+* `id` - The ID of the Resource.
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
 * `client_id` - The Client ID for the application.
-* `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
-* `id` - The Terraform resource ID for the application, for use when referencing this resource in your Terraform configuration.
+* `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`.
 * `logo_url` - CDN URL to the application's logo, as uploaded with the `logo_image` property.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `object_id` - The application's object ID.
-* `password` - A `password` block as documented below. Note that this block is a set rather than a list, and you will need to convert or iterate it to address its attributes (see the usage example above).
+* `password` - The password is generated during creation. By default, no password is generated. (see [nested schema](#schema-6e6573746564-6f7574707574-70617373776f7264))
 * `publisher_domain` - The verified publisher domain for the application.
 
 ---
 
-`password` block exports the following:
+<a id="schema-6e6573746564-6f7574707574-70617373776f7264"></a>
+The `password` block exports the following:
 
-* `key_id` - (Required) The unique key ID for the generated password.
-* `value` - (Required) The generated password for the application.
+* `key_id` - The unique key ID for the generated password.
+* `value` - (Sensitive) The generated password for the application.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -399,7 +430,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Applications can be imported using the object ID of the application, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application.example /applications/00000000-0000-0000-0000-000000000000

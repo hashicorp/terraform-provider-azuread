@@ -81,8 +81,9 @@ func namedLocationDataSource() *pluginsdk.Resource {
 						},
 
 						"country_lookup_method": {
-							Type:     pluginsdk.TypeString,
-							Computed: true,
+							Description: "Method of detecting country the user is located in.",
+							Type:        pluginsdk.TypeString,
+							Computed:    true,
 						},
 					},
 				},

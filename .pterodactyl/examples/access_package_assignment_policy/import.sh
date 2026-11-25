@@ -1,0 +1,1 @@
+terraform import azuread_access_package_assignment_policy.example 00000000-0000-0000-0000-000000000000

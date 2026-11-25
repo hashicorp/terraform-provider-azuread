@@ -36,7 +36,9 @@ func (r ApplicationFallbackPublicClientResource) ResourceType() string {
 }
 
 func (r ApplicationFallbackPublicClientResource) Description() string {
-	return "Manages the Fallback Public Client setting for an application registration."
+	// TODO: Once an SDKv2 documentation metadata object exists, add notes to that instead of this description
+	return "Manages the Fallback Public Client setting for an application registration.\n\n" +
+		"~> This resource is incompatible with the `azuread_application` resource, instead use this with the `azuread_application_registration` resource."
 }
 
 func (r ApplicationFallbackPublicClientResource) ModelObject() interface{} {

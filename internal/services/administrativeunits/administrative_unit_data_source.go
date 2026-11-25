@@ -22,14 +22,11 @@ import (
 
 func administrativeUnitDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description: "Gets information about an adminisrative unit in Azure Active Directory.",
+		Description: "Gets information about an administrative unit in Azure Active Directory.",
 		ReadContext: administrativeUnitDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
-			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
-			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
-			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
-			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*pluginsdk.Schema{
