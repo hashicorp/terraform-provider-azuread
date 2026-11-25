@@ -26,7 +26,7 @@ import (
 
 func synchronizationJobResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages a synchronization job associated with a service principal (enterprise application) within Azure Active Directory.",
+		Description:   "Manages a synchronization job associated with a Service Principal (enterprise application) within Azure Active Directory.",
 		CreateContext: synchronizationJobResourceCreate,
 		ReadContext:   synchronizationJobResourceRead,
 		UpdateContext: synchronizationJobResourceUpdate,
@@ -61,7 +61,7 @@ func synchronizationJobResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:  "The ID of the service principal for which this synchronization job should be created.",
+				Description:  "The ID of the Service Principal for which this synchronization job should be created.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,

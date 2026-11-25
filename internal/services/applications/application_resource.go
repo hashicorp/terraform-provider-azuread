@@ -112,7 +112,7 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"oauth2_permission_scope": {
-							Description: "One or more `oauth2_permission_scope` blocks to describe delegated permissions exposed by the web API represented by this application",
+							Description: "One or more `oauth2_permission_scope` blocks to describe delegated permissions exposed by the web API represented by this application.",
 							Type:        pluginsdk.TypeSet,
 							Optional:    true,
 							Elem: &pluginsdk.Resource{
@@ -139,7 +139,7 @@ func applicationResource() *pluginsdk.Resource {
 									},
 
 									"enabled": {
-										Description: "Determines if the permission scope is enabled.",
+										Description: "Whether the permission scope is enabled.",
 										Type:        pluginsdk.TypeBool,
 										Optional:    true,
 										Default:     true,
@@ -207,7 +207,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"app_role": {
-				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
+				Description: "A collection of `app_role` blocks. For more information see [official documentation on Application Roles](https://learn.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Resource{
@@ -220,7 +220,7 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"allowed_member_types": {
-							Description: "Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both.",
+							Description: "Whether this app Role Definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both.",
 							Type:        pluginsdk.TypeSet,
 							Required:    true,
 							MinItems:    1,
@@ -238,14 +238,14 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"display_name": {
-							Description:  "Display name for the app role that appears during app role assignment and in consent experiences.",
+							Description:  "Display name for the app role that appears during app Role Assignment and in consent experiences.",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringIsNotEmpty,
 						},
 
 						"enabled": {
-							Description: "Determines if the app role is enabled.",
+							Description: "Whether the app role is enabled.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 							Default:     true,
@@ -278,19 +278,19 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"device_only_auth_enabled": {
-				Description: "Specifies whether this application supports device authentication without a user.",
+				Description: "Whether this application supports device authentication without a user.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"fallback_public_client_enabled": {
-				Description: "Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI.",
+				Description: "Whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"feature_tags": {
-				Description:   "Block of features to configure for this application using tags",
+				Description:   "Block of features to configure for this application using tags.",
 				Type:          pluginsdk.TypeList,
 				Optional:      true,
 				Computed:      true,
@@ -298,19 +298,19 @@ func applicationResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"custom_single_sign_on": {
-							Description: "Whether this application represents a custom SAML application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag.",
+							Description: "Whether this application represents a custom SAML application for linked Service Principals. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"enterprise": {
-							Description: "Whether this application represents an Enterprise Application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag.",
+							Description: "Whether this application represents an Enterprise Application for linked Service Principals. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"gallery": {
-							Description: "Whether this application represents a gallery application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag.",
+							Description: "Whether this application represents a Gallery Application for linked Service Principals. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -377,7 +377,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"oauth2_post_response_required": {
-				Description: "Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests.",
+				Description: "Whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
@@ -397,7 +397,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"owners": {
-				Description: "A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.",
+				Description: "A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or Service Principals. By default, no owners are assigned.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Set:         pluginsdk.HashString,
@@ -506,7 +506,7 @@ func applicationResource() *pluginsdk.Resource {
 									},
 
 									"type": {
-										Description:  "Specifies whether the `id` property references an app role or an OAuth2 permission scope.",
+										Description:  "Whether the `id` property references an app role or an OAuth2 permission scope.",
 										Type:         pluginsdk.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(possibleValuesForResourceAccessType, false),
@@ -560,7 +560,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"tags": {
-				Description:   "A set of tags to apply to the application for configuring specific behaviours of the application and linked service principals. Note that these are not provided for use by practitioners.",
+				Description:   "A set of tags to apply to the application for configuring specific behaviours of the application and linked Service Principals. Note that these are not provided for use by practitioners.",
 				Type:          pluginsdk.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -675,7 +675,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"disabled_by_microsoft": {
-				Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`",
+				Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -727,7 +727,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.Resou
 		diff.SetNewComputed("logo_url")
 	}
 
-	// The following validation is taken from https://docs.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation
+	// The following validation is taken from https://learn.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation
 	// These apply only when personal account sign-ins are enabled for an application, and are enforced at plan time to avoid breaking existing
 	// applications that change from AAD (corporate) account sign-ins to personal account sign-ins
 	if s := diff.Get("sign_in_audience").(string); s == SignInAudienceAzureADandPersonalMicrosoftAccount || s == SignInAudiencePersonalMicrosoftAccount {

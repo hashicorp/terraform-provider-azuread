@@ -120,7 +120,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 		},
 
 		"eligible_assignment_rules": {
-			Description: "The rules for eligible assignment of the policy",
+			Description: "The rules for eligible assignment of the policy.",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
@@ -128,7 +128,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"expiration_required": {
-						Description: "Must an assignment have an expiry date. `false` allows permanent assignment.",
+						Description: "Must an assignment have an expiry date? `false` allows permanent assignment.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
@@ -146,7 +146,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 		},
 
 		"active_assignment_rules": {
-			Description: "The rules for active assignment of the policy",
+			Description: "The rules for active assignment of the policy.",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
@@ -154,7 +154,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"expiration_required": {
-						Description: "Must an assignment have an expiry date. `false` allows permanent assignment.",
+						Description: "Must an assignment have an expiry date? `false` allows permanent assignment.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
@@ -169,21 +169,21 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"require_multifactor_authentication": {
-						Description: "Is multi-factor authentication required to create new assignments.",
+						Description: "Is multi-factor authentication required to create new assignments?",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
 					},
 
 					"require_justification": {
-						Description: "Is a justification required to create new assignments.",
+						Description: "Is a justification required to create new assignments?",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
 					},
 
 					"require_ticket_info": {
-						Description: "Is ticket information required to create new assignments.",
+						Description: "Is ticket information required to create new assignments?",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
@@ -193,7 +193,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 		},
 
 		"activation_rules": {
-			Description: "The activation rules of the policy",
+			Description: "The activation rules of the policy.",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
@@ -214,14 +214,14 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"require_approval": {
-						Description: "Is approval required for activation. If `true` an `approval_stage` block must be provided.",
+						Description: "Is approval required for activation? If `true` an `approval_stage` block must be provided.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
 					},
 
 					"approval_stage": {
-						Description: "The approval stages for the activation",
+						Description: "The approval stages for the activation.",
 						Type:        pluginsdk.TypeList,
 						Optional:    true,
 						Computed:    true,
@@ -229,7 +229,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						Elem: &pluginsdk.Resource{
 							Schema: map[string]*pluginsdk.Schema{
 								"primary_approver": {
-									Description: "The IDs of the users or groups who can approve the activation",
+									Description: "The IDs of the users or groups who can approve the activation.",
 									Type:        pluginsdk.TypeSet,
 									Required:    true,
 									MinItems:    1,
@@ -256,7 +256,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"required_conditional_access_authentication_context": {
-						Description:   "The Entra ID Conditional Access context that must be present for activation (e.g `c1`).",
+						Description:   "The Entra ID Conditional Access context that must be present for activation (e.g. `c1`).",
 						Type:          pluginsdk.TypeString,
 						Optional:      true,
 						Computed:      true,
@@ -265,7 +265,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"require_multifactor_authentication": {
-						Description:   "Is multi-factor authentication required to activate the role.",
+						Description:   "Is multi-factor authentication required to activate the role?",
 						Type:          pluginsdk.TypeBool,
 						Optional:      true,
 						Computed:      true,
@@ -273,14 +273,14 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"require_justification": {
-						Description: "Is a justification required during activation of the role.",
+						Description: "Is a justification required during activation of the role?",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
 					},
 
 					"require_ticket_info": {
-						Description: "Is ticket information required during activation of the role.",
+						Description: "Is ticket information required during activation of the role?",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
@@ -290,7 +290,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 		},
 
 		"notification_rules": {
-			Description: "The notification rules of the policy",
+			Description: "The notification rules of the policy.",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
@@ -298,7 +298,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"active_assignments": {
-						Description: "Notifications about active assignments",
+						Description: "Notifications about active assignments.",
 						Type:        pluginsdk.TypeList,
 						Optional:    true,
 						Computed:    true,
@@ -308,7 +308,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						},
 					},
 					"eligible_activations": {
-						Description: "Notifications about activations of eligible assignments",
+						Description: "Notifications about activations of eligible assignments.",
 						Type:        pluginsdk.TypeList,
 						Optional:    true,
 						Computed:    true,
@@ -318,7 +318,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						},
 					},
 					"eligible_assignments": {
-						Description: "Notifications about eligible assignments",
+						Description: "Notifications about eligible assignments.",
 						Type:        pluginsdk.TypeList,
 						Optional:    true,
 						Computed:    true,
@@ -336,13 +336,13 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 func (r GroupRoleManagementPolicyResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"display_name": {
-			Description: "(String) The display name of this policy.",
+			Description: "The display name of this policy.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"description": {
-			Description: "(String) The description of this policy.",
+			Description: "The description of this policy.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
@@ -971,7 +971,7 @@ func flattenNotificationSettings(rule stable.UnifiedRoleManagementPolicyNotifica
 func notificationRuleSchema() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"admin_notifications": {
-			Description: "Admin notification settings",
+			Description: "Admin notification settings.",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
@@ -981,7 +981,7 @@ func notificationRuleSchema() map[string]*pluginsdk.Schema {
 			},
 		},
 		"approver_notifications": {
-			Description: "Approver notification settings",
+			Description: "Approver notification settings.",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
@@ -991,7 +991,7 @@ func notificationRuleSchema() map[string]*pluginsdk.Schema {
 			},
 		},
 		"assignee_notifications": {
-			Description: "Assignee notification settings",
+			Description: "Assignee notification settings.",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
@@ -1012,7 +1012,7 @@ func notificationSettingsSchema() map[string]*pluginsdk.Schema {
 			ValidateFunc: validation.StringInSlice([]string{"All", "Critical"}, false),
 		},
 		"default_recipients": {
-			Description: "Should the default recipients receive these notifications.",
+			Description: "Should the default recipients receive these notifications?",
 			Type:        pluginsdk.TypeBool,
 			Required:    true,
 		},

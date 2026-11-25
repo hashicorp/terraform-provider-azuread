@@ -128,7 +128,7 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"creation_type": {
-				Description: "Indicates whether the user account was created as a regular school or work account (`null`), an external account (`Invitation`), a local account for an Azure Active Directory B2C tenant (`LocalAccount`) or self-service sign-up using email verification (`EmailVerified`).",
+				Description: "Whether the user account was created as a regular school or work account (`null`), an external account (`Invitation`), a local account for an Azure Active Directory B2C tenant (`LocalAccount`) or self-service sign-up using email verification (`EmailVerified`).",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -191,7 +191,7 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"job_title": {
-				Description: "The user’s job title.",
+				Description: "The user's job title.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

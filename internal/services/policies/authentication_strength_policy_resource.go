@@ -28,7 +28,7 @@ import (
 
 func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages a Authentication Strength Policy within Azure Active Directory.",
+		Description:   "Manages an Authentication Strength Policy within Azure Active Directory.",
 		CreateContext: authenticationStrengthPolicyCreate,
 		ReadContext:   authenticationStrengthPolicyRead,
 		UpdateContext: authenticationStrengthPolicyUpdate,

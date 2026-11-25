@@ -31,7 +31,7 @@ func namedLocationDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "Specifies the display named of the named location to look up.",
+				Description:  "The display named of the named location to look up.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,

@@ -22,7 +22,7 @@ import (
 
 func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manages synchronization job on demand provisioning associated with a service principal (enterprise application) within Azure Active Directory.",
+		Description:   "Manages synchronization job on demand provisioning associated with a Service Principal (enterprise application) within Azure Active Directory.",
 		CreateContext: synchronizationProvisionOnDemandResourceCreate,
 		ReadContext:   synchronizationProvisionOnDemandResourceRead,
 		DeleteContext: synchronizationProvisionOnDemandResourceDelete,
@@ -36,7 +36,7 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"service_principal_id": {
-				Description:  "The object ID of the service principal for which this synchronization job should be provisioned",
+				Description:  "The object ID of the Service Principal for which this synchronization job should be provisioned.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -79,7 +79,7 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 									},
 
 									"object_type_name": {
-										Description:  "The type of the object to which a synchronization job is to be applied. Can be one of the following: `user` for synchronizing between Active Directory and Azure AD, `User` for synchronizing a user between Azure AD and a third-party application, `Worker` for synchronization a user between Workday and either Active Directory or Azure AD, `Group` for synchronizing a group between Azure AD and a third-party application.",
+										Description:  "The type of the object to which a synchronization job is to be applied.",
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"Group", "user", "User", "Worker"}, false),
@@ -92,7 +92,7 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 			},
 
 			"triggers": {
-				Description: "Map of arbitrary keys and values that, when changed, will trigger a re-invocation",
+				Description: "Map of arbitrary keys and values that, when changed, will trigger a re-invocation.",
 				Type:        schema.TypeMap,
 				Optional:    true,
 				ForceNew:    true,

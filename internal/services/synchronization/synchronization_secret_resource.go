@@ -24,7 +24,7 @@ import (
 
 func synchronizationSecretResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages synchronization secrets associated with a service principal (enterprise application) within Azure Active Directory.",
+		Description:   "Manages synchronization secrets associated with a Service Principal (enterprise application) within Azure Active Directory.",
 		CreateContext: synchronizationSecretResourceCreate,
 		ReadContext:   synchronizationSecretResourceRead,
 		UpdateContext: synchronizationSecretResourceUpdate,
@@ -59,7 +59,7 @@ func synchronizationSecretResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:  "The ID of the service principal for which this synchronization secrets should be stored.",
+				Description:  "The ID of the Service Principal for which this synchronization secrets should be stored.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,

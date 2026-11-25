@@ -25,7 +25,7 @@ import (
 
 func servicePrincipalCertificateResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages a certificate associated with a service principal within Azure Active Directory.",
+		Description:   "Manages a certificate associated with a Service Principal within Azure Active Directory.",
 		CreateContext: servicePrincipalCertificateResourceCreate,
 		ReadContext:   servicePrincipalCertificateResourceRead,
 		DeleteContext: servicePrincipalCertificateResourceDelete,
@@ -43,7 +43,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:  "The ID of the service principal for which this certificate should be created.",
+				Description:  "The ID of the Service Principal for which this certificate should be created.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -60,7 +60,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"encoding": {
-				Description: "Specifies the encoding used for the supplied certificate data.",
+				Description: "The encoding used for the supplied certificate data.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ForceNew:    true,

@@ -65,7 +65,7 @@ func invitationResource() *pluginsdk.Resource {
 			},
 
 			"message": {
-				Description: "A `message` block as documented below, which configures the message being sent to the invited user. If this block is omitted, no message will be sent.",
+				Description: "A `message` block, which configures the message being sent to the invited user. If this block is omitted, no message will be sent.",
 				Type:        pluginsdk.TypeList,
 				Optional:    true,
 				ForceNew:    true,

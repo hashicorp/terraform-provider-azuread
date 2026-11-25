@@ -185,7 +185,7 @@ func (r ApplicationRegistrationResource) Attributes() map[string]*pluginsdk.Sche
 		},
 
 		"disabled_by_microsoft": {
-			Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`",
+			Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},

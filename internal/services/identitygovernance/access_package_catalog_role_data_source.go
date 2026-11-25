@@ -31,7 +31,7 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "Specifies the display name of the role.",
+				Description:  "The display name of the role.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -40,7 +40,7 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description:  "Specifies the object ID of the role.",
+				Description:  "The object ID of the role.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,

@@ -51,7 +51,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"encoding": {
-				Description: "Specifies the encoding used for the supplied certificate data.",
+				Description: "The encoding used for the supplied certificate data.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ForceNew:    true,

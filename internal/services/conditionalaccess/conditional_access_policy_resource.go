@@ -69,7 +69,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"state": {
-				Description:  "Specifies the state of the policy object.",
+				Description:  "The state of the policy object.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessPolicyState(), false),
@@ -144,7 +144,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_service_principals": {
-										Description: "A list of service principal IDs explicitly included in the policy. Can be set to `ServicePrincipalsInMyTenant` to include all service principals. This is mandatory value when at least one `excluded_service_principals` is set.",
+										Description: "A list of Service Principal IDs explicitly included in the policy. Can be set to `ServicePrincipalsInMyTenant` to include all Service Principals. This is mandatory value when at least one `excluded_service_principals` is set.",
 										Type:        pluginsdk.TypeList,
 										Optional:    true,
 										Elem: &pluginsdk.Schema{
@@ -154,7 +154,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_service_principals": {
-										Description: "A list of service principal IDs explicitly excluded in the policy.",
+										Description: "A list of Service Principal IDs explicitly excluded in the policy.",
 										Type:        pluginsdk.TypeList,
 										Optional:    true,
 										Elem: &pluginsdk.Schema{
@@ -354,7 +354,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						// See https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network
 						// TODO: consider renaming this block to `network` in v4.0 to align with the portal terminology.
 						"locations": {
-							Description: "A `locations` block as documented below, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network) for more information.",
+							Description: "A `locations` block, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network) for more information.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							MaxItems:    1,
@@ -384,7 +384,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"platforms": {
-							Description: "A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.",
+							Description: "A `platforms` block, which specifies platforms included in and excluded from the policy.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							MaxItems:    1,
@@ -414,7 +414,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"service_principal_risk_levels": {
-							Description: "A list of service principal sign-in risk levels included in the policy.",
+							Description: "A list of Service Principal sign-in risk levels included in the policy.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							Elem: &pluginsdk.Schema{
@@ -462,7 +462,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"operator": {
-							Description:  "Defines the relationship of the grant controls.",
+							Description:  "The relationship of the grant controls.",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"AND", "OR"}, false),
@@ -581,7 +581,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description: "The object ID of the policy",
+				Description: "The object ID of the policy.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

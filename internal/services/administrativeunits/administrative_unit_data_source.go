@@ -34,7 +34,7 @@ func administrativeUnitDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:      "Specifies the object ID of the administrative unit.",
+				Description:      "The object ID of the administrative unit.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -42,7 +42,7 @@ func administrativeUnitDataSource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description:      "Specifies the display name of the administrative unit.",
+				Description:      "The display name of the administrative unit.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,

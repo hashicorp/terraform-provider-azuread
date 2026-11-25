@@ -71,7 +71,7 @@ func (r ApplicationAppRoleResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"allowed_member_types": {
-			Description: "A set of values to specify whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications by setting to `Application`, or to both.",
+			Description: "A set of values to specify whether this app Role Definition can be assigned to users and groups by setting to `User`, or to other applications by setting to `Application`, or to both.",
 			Type:        pluginsdk.TypeSet,
 			Required:    true,
 			MinItems:    1,
@@ -89,7 +89,7 @@ func (r ApplicationAppRoleResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"display_name": {
-			Description:  "Display name for the app role that appears during app role assignment and in consent experiences.",
+			Description:  "Display name for the app role that appears during app Role Assignment and in consent experiences.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotEmpty,

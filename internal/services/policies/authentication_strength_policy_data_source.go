@@ -85,7 +85,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 		},
 
 		"combination_configurations": {
-			Description: "The combination configurations which further constrain the allowed combinations for this policy",
+			Description: "The combination configurations which further constrain the allowed combinations for this policy.",
 			Type:        pluginsdk.TypeList,
 			Computed:    true,
 			Elem: &pluginsdk.Resource{

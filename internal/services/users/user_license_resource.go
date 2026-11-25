@@ -69,7 +69,7 @@ func (r UserLicenseResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"disabled_plans": {
-			Description: "A set of unique identifiers (GUIDs) for the service plans to disable for this license.",
+			Description: "A set of unique identifiers (GUIDs) for the Service Plans to disable for this license.",
 			Type:        pluginsdk.TypeSet,
 			Optional:    true,
 			ForceNew:    true,

@@ -92,21 +92,21 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"assignable_to_role": {
-				Description: "Indicates whether this group can be assigned to an Azure Active Directory role. Can only be set to `true` for security-enabled groups.",
+				Description: "Whether this group can be assigned to an Azure Active Directory role. Can only be set to `true` for security-enabled groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 			},
 
 			"auto_subscribe_new_members": {
-				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Can only be set for Unified groups.",
+				Description: "Whether new members added to the group will be auto-subscribed to receive email notifications. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"behaviors": {
-				Description: "A set of behaviors for a Microsoft 365 group. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for more details.",
+				Description: "A set of behaviors for a Microsoft 365 group. See [official documentation](https://learn.microsoft.com/en-us/graph/group-set-options) for more details.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
@@ -123,7 +123,7 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"dynamic_membership": {
-				Description:   "An optional block to configure dynamic membership for the group. Cannot be used with `members`",
+				Description:   "An optional block to configure dynamic membership for the group.",
 				Type:          pluginsdk.TypeList,
 				Optional:      true,
 				MaxItems:      1,
@@ -137,7 +137,7 @@ func groupResource() *pluginsdk.Resource {
 						},
 
 						"rule": {
-							Description:  "The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://docs.microsoft.com/en-gb/azure/active-directory/enterprise-users/groups-dynamic-membership).",
+							Description:  "The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://learn.microsoft.com/en-gb/azure/active-directory/enterprise-users/groups-dynamic-membership).",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 3072),
@@ -147,28 +147,28 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"external_senders_allowed": {
-				Description: "Indicates whether people external to the organization can send messages to the group. Can only be set for Unified groups.",
+				Description: "Whether people external to the organization can send messages to the group. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"hide_from_address_lists": {
-				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups. Can only be set for Unified groups.",
+				Description: "Whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"hide_from_outlook_clients": {
-				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Can only be set for Unified groups.",
+				Description: "Whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"mail_enabled": {
-				Description:  "Whether the group is a mail enabled, with a shared group mailbox. At least one of `mail_enabled` or `security_enabled` must be specified. Only Microsoft 365 groups can be mail enabled (see the `types` property).",
+				Description:  "Whether the group is a mail enabled, with a shared group mailbox. Only Microsoft 365 groups can be mail enabled (see the `types` property).",
 				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},
@@ -205,7 +205,7 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"owners": {
-				Description: "A set of object IDs of principals that will be granted ownership of the group. Supported object types are users or service principals. By default, the principal being used to execute Terraform is assigned as the sole owner. Groups cannot be created with no owners or have all their owners removed.",
+				Description: "A set of object IDs of principals that will be granted ownership of the group. Supported object types are users or Service Principals. By default, the principal being used to execute Terraform is assigned as the sole owner. Groups cannot be created with no owners or have all their owners removed.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Computed:    true,
@@ -226,7 +226,7 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"provisioning_options": {
-				Description: "A set of provisioning options for a Microsoft 365 group. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for details.",
+				Description: "A set of provisioning options for a Microsoft 365 group. See [official documentation](https://learn.microsoft.com/en-us/graph/group-set-options) for details.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
@@ -237,7 +237,7 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"security_enabled": {
-				Description:  "Whether the group is a security group for controlling access to in-app resources. At least one of `security_enabled` or `mail_enabled` must be specified. A Microsoft 365 group can be security enabled _and_ mail enabled (see the `types` property).",
+				Description:  "Whether the group is a security group for controlling access to in-app resources. A Microsoft 365 group can be security enabled _and_ mail enabled (see the `types` property).",
 				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},
@@ -804,7 +804,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		// The following unified group properties in this block only support delegated authentication.
 		// Application-authenticated requests will return a 4xx error, so we only
 		// set these when explicitly configured, as they each default to false anyway
-		// See https://docs.microsoft.com/en-us/graph/known-issues#groups
+		// See https://learn.microsoft.com/en-us/graph/known-issues#groups
 
 		// AllowExternalSenders can only be set in its own PATCH request; including other properties returns a 400
 		if allowExternalSenders, ok := d.GetOkExists("external_senders_allowed"); ok { //nolint:staticcheck
@@ -1003,7 +1003,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		// The unified group properties in this block only support delegated auth
 		// Application-authenticated requests will return a 403 or 404 error, so we
 		// only set these when explicitly configured, and when the value differs.
-		// See https://docs.microsoft.com/en-us/graph/known-issues#groups
+		// See https://learn.microsoft.com/en-us/graph/known-issues#groups
 		extra, err := groupGetAdditional(ctx, client, *id)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Retrieving extra fields for %s", id)
