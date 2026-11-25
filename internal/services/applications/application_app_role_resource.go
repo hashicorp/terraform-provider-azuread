@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 )
 
 type ApplicationAppRoleModel struct {
@@ -99,7 +99,7 @@ func (r ApplicationAppRoleResource) Arguments() map[string]*pluginsdk.Schema {
 			Description:      "The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
-			ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
+			ValidateDiagFunc: validate.RoleScopeClaimValue,
 		},
 	}
 }

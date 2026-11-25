@@ -120,7 +120,7 @@ func flattenSynchronizationSecretKeyStringValuePair(in *[]stable.Synchronization
 					continue
 				}
 				currentItem := raw.(map[string]interface{})
-				if currentItem["key"].(string) == string(pointer.From(item.Key)) {
+				if currentItem["key"].(string) == pointer.FromEnum(item.Key) {
 					value = currentItem["value"].(string)
 				}
 			}

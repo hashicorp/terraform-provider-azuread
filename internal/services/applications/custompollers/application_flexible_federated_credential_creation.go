@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/response"
-	flexibleFederatedIdentityCredential "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/federatedidentitycredential"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/federatedidentitycredential"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/sdk/client/pollers"
 )
@@ -16,11 +16,11 @@ import (
 var _ pollers.PollerType = &applicationFlexibleFederatedCredentialCreationPoller{}
 
 type applicationFlexibleFederatedCredentialCreationPoller struct {
-	client *flexibleFederatedIdentityCredential.FederatedIdentityCredentialClient
+	client *federatedidentitycredential.FederatedIdentityCredentialClient
 	id     beta.ApplicationIdFederatedIdentityCredentialId
 }
 
-func NewApplicationFlexibleFederatedCredentialCreationPoller(client *flexibleFederatedIdentityCredential.FederatedIdentityCredentialClient, id beta.ApplicationIdFederatedIdentityCredentialId) *applicationFlexibleFederatedCredentialCreationPoller {
+func NewApplicationFlexibleFederatedCredentialCreationPoller(client *federatedidentitycredential.FederatedIdentityCredentialClient, id beta.ApplicationIdFederatedIdentityCredentialId) *applicationFlexibleFederatedCredentialCreationPoller {
 	return &applicationFlexibleFederatedCredentialCreationPoller{
 		client: client,
 		id:     id,
@@ -28,7 +28,7 @@ func NewApplicationFlexibleFederatedCredentialCreationPoller(client *flexibleFed
 }
 
 func (a applicationFlexibleFederatedCredentialCreationPoller) Poll(ctx context.Context) (*pollers.PollResult, error) {
-	resp, err := a.client.GetFederatedIdentityCredential(ctx, a.id, flexibleFederatedIdentityCredential.DefaultGetFederatedIdentityCredentialOperationOptions())
+	resp, err := a.client.GetFederatedIdentityCredential(ctx, a.id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return &pollers.PollResult{

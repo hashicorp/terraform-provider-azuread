@@ -123,7 +123,7 @@ func administrativeUnitDataSourceRead(ctx context.Context, d *pluginsdk.Resource
 		return tf.ErrorDiagF(fmt.Errorf("API returned administrative unit with nil object ID"), "Bad API response")
 	}
 
-	d.SetId(*administrativeUnit.Id) //nolint:azproviderlint // AZR001: the data source ID is the bare object ID and is relied upon by users
+	d.SetId(*administrativeUnit.Id) // azignore:AZR001 - the data source ID is the bare object ID and is relied upon by users
 
 	tf.Set(d, "description", administrativeUnit.Description.GetOrZero())
 	tf.Set(d, "display_name", administrativeUnit.DisplayName.GetOrZero())

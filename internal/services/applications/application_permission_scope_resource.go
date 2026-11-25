@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 )
 
 type ApplicationPermissionScopeModel struct {
@@ -90,7 +90,7 @@ func (r ApplicationPermissionScopeResource) Arguments() map[string]*pluginsdk.Sc
 			Description:      "The value that is used for the `scp` claim in OAuth access tokens.",
 			Type:             pluginsdk.TypeString,
 			Required:         true,
-			ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
+			ValidateDiagFunc: validate.RoleScopeClaimValue,
 		},
 
 		"type": {

@@ -66,7 +66,7 @@ func flattenConditionalAccessConditionSet(in *stable.ConditionalAccessConditionS
 
 	insiderRiskLevels := ""
 	if in.InsiderRiskLevels != nil {
-		insiderRiskLevels = string(pointer.From(in.InsiderRiskLevels))
+		insiderRiskLevels = pointer.FromEnum(in.InsiderRiskLevels)
 	}
 
 	return []interface{}{
@@ -217,7 +217,7 @@ func flattenConditionalAccessSessionControls(in *stable.ConditionalAccessSession
 
 	cloudAppSecurity := ""
 	if in.CloudAppSecurity != nil {
-		cloudAppSecurity = string(pointer.From(in.CloudAppSecurity.CloudAppSecurityType))
+		cloudAppSecurity = pointer.FromEnum(in.CloudAppSecurity.CloudAppSecurityType)
 	}
 
 	disableResilienceDefaults := false
@@ -235,13 +235,13 @@ func flattenConditionalAccessSessionControls(in *stable.ConditionalAccessSession
 			signInFrequencyPeriod = string(*in.SignInFrequency.Type)
 		}
 
-		signInFrequencyAuthenticationType = string(pointer.From(in.SignInFrequency.AuthenticationType))
-		signInFrequencyInterval = string(pointer.From(in.SignInFrequency.FrequencyInterval))
+		signInFrequencyAuthenticationType = pointer.FromEnum(in.SignInFrequency.AuthenticationType)
+		signInFrequencyInterval = pointer.FromEnum(in.SignInFrequency.FrequencyInterval)
 	}
 
 	persistentBrowserMode := ""
 	if in.PersistentBrowser != nil {
-		persistentBrowserMode = string(pointer.From(in.PersistentBrowser.Mode))
+		persistentBrowserMode = pointer.FromEnum(in.PersistentBrowser.Mode)
 	}
 
 	return []interface{}{
@@ -277,7 +277,7 @@ func flattenGuestsOrExternalUsers(in *stable.ConditionalAccessGuestsOrExternalUs
 	}
 
 	guestOrExternalUserTypes := make([]string, 0)
-	for v := range strings.SplitSeq(string(pointer.From(in.GuestOrExternalUserTypes)), ",") {
+	for v := range strings.SplitSeq(pointer.FromEnum(in.GuestOrExternalUserTypes), ",") {
 		guestOrExternalUserTypes = append(guestOrExternalUserTypes, strings.TrimSpace(v))
 	}
 
