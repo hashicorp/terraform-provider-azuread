@@ -756,7 +756,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 	// in a timeout loop, instead we're hoping that this allows enough time/activity for the update to be reflected.
 	log.Printf("[DEBUG] Waiting for conditional access policy %q to be updated", d.Id())
 	timeout, _ := ctx.Deadline()
-	stateConf := &pluginsdk.StateChangeConf{ //nolint:staticcheck
+	stateConf := &pluginsdk.StateChangeConf{
 		Pending:                   []string{"Pending"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),

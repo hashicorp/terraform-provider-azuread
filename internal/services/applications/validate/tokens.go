@@ -48,5 +48,5 @@ func RoleScopeClaimValue(i interface{}, path cty.Path) (ret pluginsdk.Diagnostic
 		})
 	}
 
-	return // nolint:nakedret
+	return //nolint:nakedret
 }

@@ -1033,7 +1033,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 		// Since the API response can't be trusted, because we might have received a 404, or the response model might be missing,
 		// we'll proceed to poll for an application and service principal by listing them and looking for a match.
-		pollingResult, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+		pollingResult, err := (&pluginsdk.StateChangeConf{
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Found"},
 			Timeout:    time.Until(deadline),
@@ -1436,7 +1436,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 			// Wait for the credential to appear in the application manifest, this can take several minutes
 			timeout, _ := ctx.Deadline()
-			polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+			polledForCredential, err := (&pluginsdk.StateChangeConf{
 				Pending:                   []string{"Waiting"},
 				Target:                    []string{"Done"},
 				Timeout:                   time.Until(timeout),

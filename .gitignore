@@ -48,3 +48,6 @@ terraform-provider-azuread
 .tools/bin/
 .tools/npm/
 .tools/venv/
+
+# lychee link-checker cache (make linkcheck-external)
+.lycheecache

@@ -5,27 +5,17 @@
 
 echo "==> Checking acceptance test terraform blocks are formatted..."
 
-files=$(find ./internal -type f -name "*_test.go")
-error=false
-
-for f in $files; do
-  terrafmt diff -c -q -f "$f" || error=true
-done
-
-if ${error}; then
+if ! terrafmt diff -c -q -f -p "*_test.go" ./internal; then
   echo "------------------------------------------------"
   echo ""
   echo "The preceding files contain terraform blocks that are not correctly formatted or contain errors."
   echo "You can fix this by running 'make terrafmt', or the pinned .tools/bin/terrafmt on them directly:"
   echo ""
-  echo "format a single file:"
-  echo "$ terrafmt fmt -f ./path/to/source.go"
+  echo "format only acceptance test config blocks:"
+  echo "$ terrafmt fmt -f -p \"*_test.go\" ./internal"
   echo ""
-  echo "format all website files:"
-  echo "$ find ./docs | egrep \"_test.go\" | sort | while read f; do terrafmt fmt -f \$f; done"
-  echo ""
-  echo "on windows:"
-  echo "$ Get-ChildItem -Path . -Recurse -Filter \"*_test.go\" | foreach {terrafmt fmt -f $_.fullName}"
+  echo "format a single test file:"
+  echo "$ terrafmt fmt -f ./internal/services/service/resource_test.go"
   echo ""
   exit 1
 fi

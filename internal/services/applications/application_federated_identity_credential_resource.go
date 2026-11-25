@@ -99,7 +99,7 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 	}
 }
 
-func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationClient
 	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFederatedIdentityCredential
 
@@ -146,7 +146,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 
 	// Wait for the credential to replicate
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+	polledForCredential, err := (&pluginsdk.StateChangeConf{
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -182,7 +182,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 	return applicationFederatedIdentityCredentialResourceRead(ctx, d, meta)
 }
 
-func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFederatedIdentityCredential
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
@@ -213,7 +213,7 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 	return applicationFederatedIdentityCredentialResourceRead(ctx, d, meta)
 }
 
-func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFederatedIdentityCredential
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
@@ -251,7 +251,7 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 	return nil
 }
 
-func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFederatedIdentityCredential
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
