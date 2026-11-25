@@ -25,6 +25,7 @@ import (
 
 func groupsDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets Object IDs or Display Names for multiple Azure Active Directory groups.",
 		ReadContext: groupsDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -33,7 +34,7 @@ func groupsDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_ids": {
-				Description:  "The object IDs of the groups",
+				Description:  "The object IDs of the groups.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -45,7 +46,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"display_names": {
-				Description:  "The display names of the groups",
+				Description:  "The display names of the groups.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -57,7 +58,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"display_name_prefix": {
-				Description:  "Common display name prefix of the groups",
+				Description:  "A common display name prefix to match when returning groups.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -66,7 +67,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"groups": {
-				Description: "A list of groups",
+				Description: "A list of groups.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{
@@ -99,7 +100,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"ignore_missing": {
-				Description:   "Ignore missing groups and return groups that were found. The data source will still fail if no groups are found",
+				Description:   "Ignore missing groups and return groups that were found. The data source will still fail if no groups are found.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
@@ -107,7 +108,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"return_all": {
-				Description:   "Retrieve all groups with no filter",
+				Description:   "A flag to denote if all groups should be fetched and returned.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				ConflictsWith: []string{"ignore_missing"},
@@ -115,7 +116,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"mail_enabled": {
-				Description:   "Whether the groups are mail-enabled",
+				Description:   "Whether the returned groups should be mail-enabled. By itself this does not exclude security-enabled groups. Setting this to `true` ensures all groups are mail-enabled, and setting to `false` ensures that all groups are _not_ mail-enabled. To ignore this filter, omit the property or set it to null.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,
@@ -123,7 +124,7 @@ func groupsDataSource() *pluginsdk.Resource {
 			},
 
 			"security_enabled": {
-				Description:   "Whether the groups are security-enabled",
+				Description:   "Whether the returned groups should be security-enabled. By itself this does not exclude mail-enabled groups. Setting this to `true` ensures all groups are security-enabled, and setting to `false` ensures that all groups are _not_ security-enabled. To ignore this filter, omit the property or set it to null.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,

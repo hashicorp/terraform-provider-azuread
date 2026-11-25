@@ -55,6 +55,11 @@ func (r ApplicationRegistrationResource) ResourceType() string {
 	return "azuread_application_registration"
 }
 
+func (r ApplicationRegistrationResource) Description() string {
+	return "Manages an application registration within Azure Active Directory.\n\n" +
+		"For a more comprehensive alternative, please see the [azuread_application](application.html) resource. Please note that this resource should not be used together with the `azuread_application` resource when managing the same application."
+}
+
 func (r ApplicationRegistrationResource) ModelObject() interface{} {
 	return &ApplicationRegistrationModel{}
 }
@@ -62,21 +67,21 @@ func (r ApplicationRegistrationResource) ModelObject() interface{} {
 func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"display_name": {
-			Description:  "The display name for the application",
+			Description:  "The display name for the application.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"description": {
-			Description:  "Description of the application as shown to end users",
+			Description:  "A description of the application, as shown to end users.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringLenBetween(0, 1024),
 		},
 
 		"group_membership_claims": {
-			Description: "Configures the `groups` claim that the app expects issued in a user or OAuth access token",
+			Description: "Configures the `groups` claim issued in a user or OAuth access token that the app expects.",
 			Type:        pluginsdk.TypeSet,
 			Optional:    true,
 			Elem: &pluginsdk.Schema{
@@ -86,54 +91,54 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 		},
 
 		"homepage_url": {
-			Description:  "URL of the home page for the application",
+			Description:  "Home page or landing page of the application.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.IsHttpOrHttpsUrl,
 		},
 
 		"implicit_access_token_issuance_enabled": {
-			Description: "Whether this application can request an access token using OAuth implicit flow",
+			Description: "Whether this web application can request an access token using OAuth implicit flow.",
 			Type:        pluginsdk.TypeBool,
 			Optional:    true,
 		},
 
 		"implicit_id_token_issuance_enabled": {
-			Description: "Whether this application can request an ID token using OAuth implicit flow",
+			Description: "Whether this web application can request an ID token using OAuth implicit flow.",
 			Type:        pluginsdk.TypeBool,
 			Optional:    true,
 		},
 
 		"logout_url": {
-			Description:  "URL of the logout page for the application, where the session is cleared for single sign-out",
+			Description:  "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.IsLogoutUrl,
 		},
 
 		"marketing_url": {
-			Description:  "URL of the marketing page for the application",
+			Description:  "URL of the marketing page for the application.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.IsHttpOrHttpsUrl,
 		},
 
 		"notes": {
-			Description:  "User-specified notes relevant for the management of the application",
+			Description:  "User-specified notes relevant for the management of the application.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"privacy_statement_url": {
-			Description:  "URL of the privacy statement for the application",
+			Description:  "URL of the privacy statement for the application.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.IsHttpOrHttpsUrl,
 		},
 
 		"requested_access_token_version": {
-			Description:  "The access token version expected by this resource",
+			Description:  "The access token version expected by this resource.",
 			Type:         pluginsdk.TypeInt,
 			Optional:     true,
 			Default:      2,
@@ -141,14 +146,14 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 		},
 
 		"service_management_reference": {
-			Description:  "References application or contact information from a service or asset management database",
+			Description:  "References application context information from a Service or Asset Management database.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"sign_in_audience": {
-			Description:  "The Microsoft account types that are supported for the current application",
+			Description:  "The Microsoft account types that are supported for the current application.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			Default:      SignInAudienceAzureADMyOrg,
@@ -156,14 +161,14 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 		},
 
 		"support_url": {
-			Description:  "URL of the support page for the application",
+			Description:  "URL of the support page for the application.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.IsHttpOrHttpsUrl,
 		},
 
 		"terms_of_service_url": {
-			Description:  "URL of the terms of service statement for the application",
+			Description:  "URL of the terms of service statement for the application.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.IsHttpOrHttpsUrl,
@@ -174,25 +179,25 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 func (r ApplicationRegistrationResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"client_id": {
-			Description: "The Client ID (also called Application ID)",
+			Description: "The Client ID for the application, which is globally unique.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"disabled_by_microsoft": {
-			Description: "If the application has been disabled by Microsoft, this shows the status or reason",
+			Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"object_id": {
-			Description: "The object ID of the application within the tenant",
+			Description: "The object ID of the application within the tenant.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"publisher_domain": {
-			Description: "The verified publisher domain for the application",
+			Description: "The verified publisher domain for the application.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},

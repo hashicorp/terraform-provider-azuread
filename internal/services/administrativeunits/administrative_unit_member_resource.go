@@ -26,6 +26,7 @@ import (
 
 func administrativeUnitMemberResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a single administrative unit membership within Azure Active Directory.",
 		CreateContext: administrativeUnitMemberResourceCreate,
 		ReadContext:   administrativeUnitMemberResourceRead,
 		DeleteContext: administrativeUnitMemberResourceDelete,
@@ -57,7 +58,7 @@ func administrativeUnitMemberResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"administrative_unit_object_id": {
-				Description:      "The object ID of the administrative unit",
+				Description:      "The object ID of the administrative unit you want to add the member to.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				ForceNew:         true,
@@ -65,7 +66,7 @@ func administrativeUnitMemberResource() *pluginsdk.Resource {
 			},
 
 			"member_object_id": {
-				Description:      "The object ID of the member",
+				Description:      "The object ID of the user or group you want to add as a member of the administrative unit.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				ForceNew:         true,

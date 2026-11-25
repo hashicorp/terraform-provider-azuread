@@ -26,6 +26,7 @@ import (
 
 func userFlowAttributeResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages user flow attributes in an Azure Active Directory (Azure AD) tenant.",
 		CreateContext: userFlowAttributeResourceCreate,
 		ReadContext:   userFlowAttributeResourceRead,
 		UpdateContext: userFlowAttributeResourceUpdate,
@@ -66,7 +67,7 @@ func userFlowAttributeResource() *pluginsdk.Resource {
 			},
 
 			"data_type": {
-				Description:  "The data type of the user flow attribute",
+				Description:  "The data type of the user flow attribute.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -74,13 +75,13 @@ func userFlowAttributeResource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description: "The description of the user flow attribute that is shown to the user at the time of sign-up",
+				Description: "The description of the user flow attribute that is shown to the user at the time of sign-up.",
 				Type:        pluginsdk.TypeString,
 				Required:    true,
 			},
 
 			"attribute_type": {
-				Description: "The type of the user flow attribute",
+				Description: "The type of the user flow attribute.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

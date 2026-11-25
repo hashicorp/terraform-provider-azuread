@@ -45,6 +45,12 @@ func (r DirectoryRoleResource) ResourceType() string {
 	return "azuread_directory_role"
 }
 
+func (r DirectoryRoleResource) Description() string {
+	return "Manages a Directory Role within Azure Active Directory. Directory Roles are also known as Administrator Roles.\n\n" +
+		"Directory Roles are built-in to Azure Active Directory and are immutable. However, by default they are not activated in a tenant (except for the Global Administrator role). This resource ensures a directory role is activated from its associated role template, and exports the object ID of the role, so that role assignments can be made for it.\n\n" +
+		"Once activated, directory roles cannot be deactivated and so this resource does not perform any actions on destroy."
+}
+
 func (r DirectoryRoleResource) ModelObject() interface{} {
 	return &DirectoryRoleModel{}
 }
@@ -61,7 +67,7 @@ func (r DirectoryRoleResource) StateUpgraders() sdk.StateUpgradeData {
 func (r DirectoryRoleResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"display_name": {
-			Description:      "The display name of the directory role",
+			Description:      "The display name of the directory role to activate.",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
 			Computed:         true,
@@ -72,7 +78,7 @@ func (r DirectoryRoleResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"template_id": {
-			Description:  "The object ID of the template associated with the directory role",
+			Description:  "The object ID of the role template from which to activate the directory role.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			Computed:     true,
@@ -86,13 +92,13 @@ func (r DirectoryRoleResource) Arguments() map[string]*pluginsdk.Schema {
 func (r DirectoryRoleResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"description": {
-			Description: "The description of the directory role",
+			Description: "The description of the directory role.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"object_id": {
-			Description: "The object ID of the directory role",
+			Description: "The object ID of the directory role.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},

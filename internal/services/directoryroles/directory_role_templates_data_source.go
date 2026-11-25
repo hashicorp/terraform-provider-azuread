@@ -20,6 +20,7 @@ import (
 
 func directoryRoleTemplatesDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this data source to access information about directory role templates within Azure Active Directory.",
 		ReadContext: directoryRoleTemplatesDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -28,7 +29,7 @@ func directoryRoleTemplatesDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_ids": {
-				Description: "The object IDs of the role templates",
+				Description: "The object IDs of the role templates.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -37,7 +38,7 @@ func directoryRoleTemplatesDataSource() *pluginsdk.Resource {
 			},
 
 			"role_templates": {
-				Description: "A list of role templates",
+				Description: "A list of role templates.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{

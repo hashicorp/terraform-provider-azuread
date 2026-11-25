@@ -23,6 +23,7 @@ import (
 
 func claimsMappingPolicyResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a Claims Mapping Policy within Azure Active Directory.",
 		CreateContext: claimsMappingPolicyResourceCreate,
 		ReadContext:   claimsMappingPolicyResourceRead,
 		UpdateContext: claimsMappingPolicyResourceUpdate,
@@ -56,7 +57,7 @@ func claimsMappingPolicyResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"definition": {
-				Description: "A string collection containing a JSON string that defines the rules and settings for this policy",
+				Description: "The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://www.terraform.io/language/functions/jsonencode) function can be used.",
 				Type:        pluginsdk.TypeList,
 				Required:    true,
 				Elem: &pluginsdk.Schema{
@@ -66,7 +67,7 @@ func claimsMappingPolicyResource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description:  "Display name for this policy",
+				Description:  "The display name for this Claims Mapping Policy.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,

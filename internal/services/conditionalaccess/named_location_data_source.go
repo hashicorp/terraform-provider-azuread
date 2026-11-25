@@ -22,6 +22,7 @@ import (
 
 func namedLocationDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets information about a Named Location within Azure Active Directory.",
 		ReadContext: namedLocationDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -30,6 +31,7 @@ func namedLocationDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
+				Description:  "Specifies the display named of the named location to look up.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
@@ -41,16 +43,18 @@ func namedLocationDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"ip_ranges": {
-							Type:     pluginsdk.TypeList,
-							Computed: true,
+							Description: "List of IP address ranges in IPv4 CIDR format (e.g. `1.2.3.4/32`) or any allowable IPv6 format from IETF RFC596.",
+							Type:        pluginsdk.TypeList,
+							Computed:    true,
 							Elem: &pluginsdk.Schema{
 								Type: pluginsdk.TypeString,
 							},
 						},
 
 						"trusted": {
-							Type:     pluginsdk.TypeBool,
-							Computed: true,
+							Description: "Whether the named location is trusted.",
+							Type:        pluginsdk.TypeBool,
+							Computed:    true,
 						},
 					},
 				},
@@ -62,16 +66,18 @@ func namedLocationDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"countries_and_regions": {
-							Type:     pluginsdk.TypeList,
-							Computed: true,
+							Description: "List of countries and/or regions in two-letter format specified by ISO 3166-2.",
+							Type:        pluginsdk.TypeList,
+							Computed:    true,
 							Elem: &pluginsdk.Schema{
 								Type: pluginsdk.TypeString,
 							},
 						},
 
 						"include_unknown_countries_and_regions": {
-							Type:     pluginsdk.TypeBool,
-							Computed: true,
+							Description: "Whether IP addresses that don't map to a country or region are included in the named location.",
+							Type:        pluginsdk.TypeBool,
+							Computed:    true,
 						},
 
 						"country_lookup_method": {
@@ -83,7 +89,7 @@ func namedLocationDataSource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description: "The object ID of the named location",
+				Description: "The object ID of the named location.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

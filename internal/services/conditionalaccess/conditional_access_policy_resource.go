@@ -25,6 +25,7 @@ import (
 
 func conditionalAccessPolicyResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a Conditional Access Policy within Azure Active Directory.",
 		CreateContext: conditionalAccessPolicyResourceCreate,
 		ReadContext:   conditionalAccessPolicyResourceRead,
 		UpdateContext: conditionalAccessPolicyResourceUpdate,
@@ -60,12 +61,14 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
+				Description:  "The friendly name for this Conditional Access Policy.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"state": {
+				Description:  "Specifies the state of the policy object.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessPolicyState(), false),
@@ -84,6 +87,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_applications": {
+										Description:  "A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`, `None` or `Office365`.",
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
@@ -94,8 +98,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_applications": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "A list of application IDs explicitly excluded from the policy. Can also be set to `Office365`.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -103,6 +108,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"included_user_actions": {
+										Description:  "A list of user actions to include.",
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
@@ -118,8 +124,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"authentication_flow_transfer_methods": {
-							Type:     pluginsdk.TypeSet,
-							Optional: true,
+							Description: "A list of authentication flow transfer methods included in the policy.",
+							Type:        pluginsdk.TypeSet,
+							Optional:    true,
 							Elem: &pluginsdk.Schema{
 								Type: pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
@@ -136,8 +143,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_service_principals": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "A list of service principal IDs explicitly included in the policy. Can be set to `ServicePrincipalsInMyTenant` to include all service principals. This is mandatory value when at least one `excluded_service_principals` is set.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -145,8 +153,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_service_principals": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "A list of service principal IDs explicitly excluded in the policy.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -165,6 +174,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_users": {
+										Description:  "A list of user IDs in scope of policy unless explicitly excluded, or `None` or `All` or `GuestsOrExternalUsers`.",
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
@@ -175,8 +185,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_users": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "A list of user IDs excluded from scope of policy and/or `GuestsOrExternalUsers`.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -184,6 +195,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"included_groups": {
+										Description:  "A list of group IDs in scope of policy unless explicitly excluded.",
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
@@ -194,8 +206,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_groups": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "A list of group IDs excluded from scope of policy.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -203,6 +216,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"included_roles": {
+										Description:  "A list of role template IDs in scope of policy unless explicitly excluded.",
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
@@ -213,8 +227,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_roles": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "A list of role template IDs excluded from scope of policy.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -228,8 +243,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Elem: &pluginsdk.Resource{
 											Schema: map[string]*pluginsdk.Schema{
 												"guest_or_external_user_types": {
-													Type:     pluginsdk.TypeList,
-													Required: true,
+													Description: "A list of guest or external user types.",
+													Type:        pluginsdk.TypeList,
+													Required:    true,
 													Elem: &pluginsdk.Schema{
 														Type:         pluginsdk.TypeString,
 														ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessGuestOrExternalUserTypes(), false),
@@ -242,14 +258,16 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 													Elem: &pluginsdk.Resource{
 														Schema: map[string]*pluginsdk.Schema{
 															"membership_kind": {
+																Description:  "The external tenant membership kind.",
 																Type:         pluginsdk.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessExternalTenantsMembershipKind(), false),
 															},
 
 															"members": {
-																Type:     pluginsdk.TypeList,
-																Optional: true,
+																Description: "A list tenant IDs. Can only be specified if `membership_kind` is `enumerated`.",
+																Type:        pluginsdk.TypeList,
+																Optional:    true,
 																Elem: &pluginsdk.Schema{
 																	Type:         pluginsdk.TypeString,
 																	ValidateFunc: validation.StringIsNotEmpty,
@@ -268,8 +286,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Elem: &pluginsdk.Resource{
 											Schema: map[string]*pluginsdk.Schema{
 												"guest_or_external_user_types": {
-													Type:     pluginsdk.TypeList,
-													Required: true,
+													Description: "A list of guest or external user types.",
+													Type:        pluginsdk.TypeList,
+													Required:    true,
 													Elem: &pluginsdk.Schema{
 														Type:         pluginsdk.TypeString,
 														ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessGuestOrExternalUserTypes(), false),
@@ -282,14 +301,16 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 													Elem: &pluginsdk.Resource{
 														Schema: map[string]*pluginsdk.Schema{
 															"membership_kind": {
+																Description:  "The external tenant membership kind.",
 																Type:         pluginsdk.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessExternalTenantsMembershipKind(), false),
 															},
 
 															"members": {
-																Type:     pluginsdk.TypeList,
-																Optional: true,
+																Description: "A list tenant IDs. Can only be specified if `membership_kind` is `enumerated`.",
+																Type:        pluginsdk.TypeList,
+																Optional:    true,
 																Elem: &pluginsdk.Schema{
 																	Type:         pluginsdk.TypeString,
 																	ValidateFunc: validation.StringIsNotEmpty,
@@ -306,8 +327,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"client_app_types": {
-							Type:     pluginsdk.TypeList,
-							Required: true,
+							Description: "A list of client application types included in the policy.",
+							Type:        pluginsdk.TypeList,
+							Required:    true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessClientApp(), false),
@@ -315,9 +337,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"devices": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Description: "A `devices` block can be added to an existing policy, but removing the `devices` block forces a new resource to be created.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"filter": schemaConditionalAccessFilter(),
@@ -330,14 +353,16 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						// See https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network
 						// TODO: consider renaming this block to `network` in v4.0 to align with the portal terminology.
 						"locations": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Description: "A `locations` block as documented below, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network) for more information.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_locations": {
-										Type:     pluginsdk.TypeList,
-										Required: true,
+										Description: "A list of location IDs in scope of policy unless explicitly excluded. Can also be set to `All`, or `AllTrusted`.",
+										Type:        pluginsdk.TypeList,
+										Required:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -345,8 +370,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_locations": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "A list of location IDs excluded from scope of policy. Can also be set to `AllTrusted`.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -357,14 +383,16 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"platforms": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Description: "A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_platforms": {
-										Type:     pluginsdk.TypeList,
-										Required: true,
+										Description: "A list of platforms the policy applies to, unless explicitly excluded.",
+										Type:        pluginsdk.TypeList,
+										Required:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessDevicePlatform(), false),
@@ -372,8 +400,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_platforms": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "A list of platforms explicitly excluded from the policy.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessDevicePlatform(), false),
@@ -384,8 +413,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"service_principal_risk_levels": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
+							Description: "A list of service principal sign-in risk levels included in the policy.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice(stable.PossibleValuesForRiskLevel(), false),
@@ -393,8 +423,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"sign_in_risk_levels": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
+							Description: "A list of user sign-in risk levels included in the policy.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice(stable.PossibleValuesForRiskLevel(), false),
@@ -402,8 +433,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"user_risk_levels": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
+							Description: "A list of user risk levels included in the policy.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice(stable.PossibleValuesForRiskLevel(), false),
@@ -411,6 +443,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"insider_risk_levels": {
+							Description:  "The insider risk level in the policy.",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -428,12 +461,14 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"operator": {
+							Description:  "Defines the relationship of the grant controls.",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"AND", "OR"}, false),
 						},
 
 						"built_in_controls": {
+							Description:  "List of built-in controls required by the policy.",
 							Type:         pluginsdk.TypeList,
 							Optional:     true,
 							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
@@ -444,6 +479,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"authentication_strength_policy_id": {
+							Description:  "ID of an Authentication Strength Policy to use in this policy. When using a hard-coded ID, the UUID value should be prefixed with: `/policies/authenticationStrengthPolicies/`.",
 							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
@@ -451,8 +487,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"custom_authentication_factors": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
+							Description: "List of custom controls IDs required by the policy.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
 								ValidateFunc: validation.StringIsNotEmpty,
@@ -460,6 +497,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"terms_of_use": {
+							Description:  "List of terms of use IDs required by the policy.",
 							Type:         pluginsdk.TypeList,
 							Optional:     true,
 							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
@@ -481,28 +519,33 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"application_enforced_restrictions_enabled": {
-							Type:     pluginsdk.TypeBool,
-							Optional: true,
+							Description: "Whether application enforced restrictions are enabled.",
+							Type:        pluginsdk.TypeBool,
+							Optional:    true,
 						},
 
 						"cloud_app_security_policy": {
+							Description:  "Enables cloud app security and specifies the cloud app security policy to use.",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(stable.PossibleValuesForCloudAppSecuritySessionControlType(), false),
 						},
 
 						"disable_resilience_defaults": {
-							Type:     pluginsdk.TypeBool,
-							Optional: true,
+							Description: "Disables [resilience defaults](https://learn.microsoft.com/en-us/azure/active-directory/conditional-access/resilience-defaults).",
+							Type:        pluginsdk.TypeBool,
+							Optional:    true,
 						},
 
 						"persistent_browser_mode": {
+							Description:  "Session control to define whether to persist cookies.",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(stable.PossibleValuesForPersistentBrowserSessionMode(), false),
 						},
 
 						"sign_in_frequency": {
+							Description:  "Number of days or hours to enforce sign-in frequency.",
 							Type:         pluginsdk.TypeInt,
 							Optional:     true,
 							RequiredWith: []string{"session_controls.0.sign_in_frequency_period"},
@@ -510,6 +553,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"sign_in_frequency_authentication_type": {
+							Description:  "Authentication type for enforcing sign-in frequency.",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -517,6 +561,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"sign_in_frequency_interval": {
+							Description:  "The interval to apply to sign-in frequency control.",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -524,6 +569,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"sign_in_frequency_period": {
+							Description:  "The time period to enforce sign-in frequency.",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							RequiredWith: []string{"session_controls.0.sign_in_frequency"},
@@ -709,7 +755,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 	// in a timeout loop, instead we're hoping that this allows enough time/activity for the update to be reflected.
 	log.Printf("[DEBUG] Waiting for conditional access policy %q to be updated", d.Id())
 	timeout, _ := ctx.Deadline()
-	stateConf := &pluginsdk.StateChangeConf{ //nolint:staticcheck
+	stateConf := &pluginsdk.StateChangeConf{
 		Pending:                   []string{"Pending"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),

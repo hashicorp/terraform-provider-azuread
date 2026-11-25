@@ -10,6 +10,7 @@
 [files]
 ignore-hidden = false # the default skips dotfiles, which would leave .github/ workflows unchecked
 extend-exclude = [
+  ".changeloggy.hcl",
   ".git/",
   ".idea/",
   "**/vendor/",

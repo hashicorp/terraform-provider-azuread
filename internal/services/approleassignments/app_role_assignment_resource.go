@@ -27,6 +27,7 @@ import (
 
 func appRoleAssignmentResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages an app role assignment for a group, user or service principal. Can be used to grant admin consent for application permissions.",
 		CreateContext: appRoleAssignmentResourceCreate,
 		ReadContext:   appRoleAssignmentResourceRead,
 		DeleteContext: appRoleAssignmentResourceDelete,
@@ -58,7 +59,7 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"app_role_id": {
-				Description:  "The ID of the app role to be assigned",
+				Description:  "The ID of the app role to be assigned, or the default role ID `00000000-0000-0000-0000-000000000000`.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -66,7 +67,7 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"principal_object_id": {
-				Description:  "The object ID of the user, group or service principal to be assigned this app role",
+				Description:  "The object ID of the user, group or service principal to be assigned this app role. Supported object types are Users, Groups or Service Principals.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -74,7 +75,7 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"resource_object_id": {
-				Description:  "The object ID of the service principal representing the resource",
+				Description:  "The object ID of the service principal representing the resource.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -82,19 +83,19 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"principal_display_name": {
-				Description: "The display name of the principal to which the app role is assigned",
+				Description: "The display name of the principal to which the app role is assigned.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"principal_type": {
-				Description: "The object type of the principal to which the app role is assigned",
+				Description: "The object type of the principal to which the app role is assigned.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"resource_display_name": {
-				Description: "The display name of the application representing the resource",
+				Description: "The display name of the application representing the resource.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

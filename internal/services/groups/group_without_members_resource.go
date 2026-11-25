@@ -36,6 +36,7 @@ import (
 
 func groupWithoutMembersResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a group within Azure Active Directory. Does not directly manage or expose members of the group.",
 		CreateContext: groupWithoutMembersResourceCreate,
 		ReadContext:   groupWithoutMembersResourceReadFunc(false),
 		UpdateContext: groupWithoutMembersResourceUpdate,
@@ -63,14 +64,14 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "The display name for the group",
+				Description:  "The display name for the group.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"administrative_unit_ids": {
-				Description: "The administrative unit IDs in which the group should be. If empty, the group will be created at the tenant level.",
+				Description: "The object IDs of administrative units in which the group is a member. If specified, new groups will be created in the scope of the first administrative unit and added to the others. If empty, new groups will be created at the tenant level.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Schema{
@@ -80,21 +81,21 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"assignable_to_role": {
-				Description: "Indicates whether this group can be assigned to an Azure Active Directory role. This property can only be `true` for security-enabled groups.",
+				Description: "Indicates whether this group can be assigned to an Azure Active Directory role. Can only be set to `true` for security-enabled groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 			},
 
 			"auto_subscribe_new_members": {
-				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications.",
+				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"behaviors": {
-				Description: "The group behaviours for a Microsoft 365 group",
+				Description: "A set of behaviors for a Microsoft 365 group. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for more details.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
@@ -105,7 +106,7 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description: "The description for the group",
+				Description: "The description for the group.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
@@ -118,12 +119,13 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
-							Type:     pluginsdk.TypeBool,
-							Required: true,
+							Description: "Whether rule processing is \"On\" (true) or \"Paused\" (false).",
+							Type:        pluginsdk.TypeBool,
+							Required:    true,
 						},
 
 						"rule": {
-							Description:  "Rule to determine members for a dynamic group. Required when `group_types` contains 'DynamicMembership'",
+							Description:  "The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://docs.microsoft.com/en-gb/azure/active-directory/enterprise-users/groups-dynamic-membership).",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 3072),
@@ -133,35 +135,35 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"external_senders_allowed": {
-				Description: "Indicates whether people external to the organization can send messages to the group.",
+				Description: "Indicates whether people external to the organization can send messages to the group. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"hide_from_address_lists": {
-				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups.",
+				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"hide_from_outlook_clients": {
-				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web.",
+				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"mail_enabled": {
-				Description:  "Whether the group is a mail enabled, with a shared group mailbox. At least one of `mail_enabled` or `security_enabled` must be specified. A group can be mail enabled _and_ security enabled",
+				Description:  "Whether the group is a mail enabled, with a shared group mailbox. At least one of `mail_enabled` or `security_enabled` must be specified. Only Microsoft 365 groups can be mail enabled (see the `types` property).",
 				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},
 			},
 
 			"mail_nickname": {
-				Description:      "The mail alias for the group, unique in the organisation",
+				Description:      "The mail alias for the group, unique in the organisation. Required for mail-enabled groups.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -170,7 +172,7 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"onpremises_group_type": {
-				Description:  "Indicates the target on-premise group type the group will be written back as",
+				Description:  "The on-premises group type that the AAD group will be written as, when writeback is enabled.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -178,7 +180,7 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"owners": {
-				Description: "A set of owners who own this group. Supported object types are Users or Service Principals",
+				Description: "A set of object IDs of principals that will be granted ownership of the group. Supported object types are users or service principals. By default, the principal being used to execute Terraform is assigned as the sole owner. Groups cannot be created with no owners or have all their owners removed.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Computed:    true,
@@ -192,14 +194,14 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"prevent_duplicate_names": {
-				Description: "If `true`, will return an error if an existing group is found with the same name",
+				Description: "If `true`, will return an error if an existing group is found with the same name.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     false,
 			},
 
 			"provisioning_options": {
-				Description: "The group provisioning options for a Microsoft 365 group",
+				Description: "A set of provisioning options for a Microsoft 365 group. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for details.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
@@ -210,21 +212,21 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"security_enabled": {
-				Description:  "Whether the group is a security group for controlling access to in-app resources. At least one of `security_enabled` or `mail_enabled` must be specified. A group can be security enabled _and_ mail enabled",
+				Description:  "Whether the group is a security group for controlling access to in-app resources. At least one of `security_enabled` or `mail_enabled` must be specified. A Microsoft 365 group can be security enabled _and_ mail enabled (see the `types` property).",
 				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},
 			},
 
 			"theme": {
-				Description:  "The colour theme for a Microsoft 365 group",
+				Description:  "The colour theme for a Microsoft 365 group. By default, no theme is set.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(possibleValuesForGroupTheme, false),
 			},
 
 			"types": {
-				Description: "A set of group types to configure for the group. `Unified` specifies a Microsoft 365 group. Required when `mail_enabled` is true",
+				Description: "A set of group types to configure for the group.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
@@ -235,7 +237,7 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"visibility": {
-				Description:  "Specifies the group join policy and group content visibility",
+				Description:  "The group join policy and group content visibility. Only Microsoft 365 groups can have `Hiddenmembership` visibility and this value must be set when the group is created. By default, security groups will receive `Private` visibility and Microsoft 365 groups will receive `Public` visibility.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -243,62 +245,62 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"writeback_enabled": {
-				Description: "Whether this group should be synced from Azure AD to the on-premises directory when Azure AD Connect is used",
+				Description: "Whether the group will be written back to the configured on-premises Active Directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     false,
 			},
 
 			"mail": {
-				Description: "The SMTP address for the group",
+				Description: "The SMTP address for the group.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"object_id": {
-				Description: "The object ID of the group",
+				Description: "The object ID of the group.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_domain_name": {
-				Description: "The on-premises FQDN, also called dnsDomainName, synchronized from the on-premises directory when Azure AD Connect is used",
+				Description: "The on-premises FQDN, also called dnsDomainName, synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_netbios_name": {
-				Description: "The on-premises NetBIOS name, synchronized from the on-premises directory when Azure AD Connect is used",
+				Description: "The on-premises NetBIOS name, synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sam_account_name": {
-				Description: "The on-premises SAM account name, synchronized from the on-premises directory when Azure AD Connect is used",
+				Description: "The on-premises SAM account name, synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_security_identifier": {
-				Description: "The on-premises security identifier (SID), synchronized from the on-premises directory when Azure AD Connect is used",
+				Description: "The on-premises security identifier (SID), synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sync_enabled": {
-				Description: "Whether this group is synchronized from an on-premises directory (true), no longer synchronized (false), or has never been synchronized (null)",
+				Description: "Whether this group is synchronised from an on-premises directory (`true`), no longer synchronised (`false`), or has never been synchronised (`null`).",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"preferred_language": {
-				Description: "The preferred language for a Microsoft 365 group, in ISO 639-1 notation",
+				Description: "The preferred language for a Microsoft 365 group, in ISO 639-1 notation.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true, // API always returns "preferredLanguage should not be set"
 			},
 
 			"proxy_addresses": {
-				Description: "Email addresses for the group that direct to the same group mailbox",
+				Description: "List of email addresses for the group that direct to the same group mailbox.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{

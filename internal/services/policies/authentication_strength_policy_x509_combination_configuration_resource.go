@@ -41,6 +41,11 @@ func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Resour
 	return "azuread_authentication_strength_policy_x509_combination_configuration"
 }
 
+func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Description() string {
+	return "Manages an x509 certificate combination configuration for an authentication strength policy within Azure Active Directory.\n\n" +
+		"An x509 certificate combination configuration restricts which certificates, identified by their issuer subject key identifier (SKI) or certificate policy OID, satisfy the x509 certificate authentication method combinations. A policy may carry a separate configuration for each combination, but a given combination may be configured only once."
+}
+
 func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) ModelObject() interface{} {
 	return &AuthenticationStrengthPolicyX509CombinationConfigurationResourceModel{}
 }
@@ -48,7 +53,7 @@ func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) ModelO
 func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"authentication_strength_policy_id": {
-			Description:  "The object ID of the authentication strength policy to which this combination configuration applies",
+			Description:  "The object ID of the authentication strength policy to which this combination configuration applies.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -56,7 +61,7 @@ func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Argume
 		},
 
 		"applies_to_combinations": {
-			Description: "The x509 certificate authentication method combinations this configuration applies to",
+			Description: "A set of x509 certificate authentication method combinations this configuration applies to.",
 			Type:        pluginsdk.TypeSet,
 			Required:    true,
 			MinItems:    1,
@@ -67,7 +72,7 @@ func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Argume
 		},
 
 		"allowed_issuer_skis": {
-			Description:  "A set of allowed certificate issuer subject key identifier values",
+			Description:  "A set of allowed certificate issuer subject key identifier (SKI) values.",
 			Type:         pluginsdk.TypeSet,
 			Optional:     true,
 			AtLeastOneOf: []string{"allowed_issuer_skis", "allowed_policy_oids"},
@@ -78,7 +83,7 @@ func (r AuthenticationStrengthPolicyX509CombinationConfigurationResource) Argume
 		},
 
 		"allowed_policy_oids": {
-			Description:  "A set of allowed certificate policy OIDs",
+			Description:  "A set of allowed certificate policy OIDs.",
 			Type:         pluginsdk.TypeSet,
 			Optional:     true,
 			AtLeastOneOf: []string{"allowed_issuer_skis", "allowed_policy_oids"},

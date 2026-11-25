@@ -26,6 +26,7 @@ import (
 
 func groupDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Gets information about an Azure Active Directory group.",
 		ReadContext: groupDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -34,7 +35,7 @@ func groupDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "The display name for the group",
+				Description:  "The display name for the group.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -43,7 +44,7 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"mail_nickname": {
-				Description:  "The mail alias for the group, unique in the organisation",
+				Description:  "The mail alias for the group, unique in the organisation.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -51,7 +52,7 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description:  "The object ID of the group",
+				Description:  "Specifies the object ID of the group.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -60,40 +61,40 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"mail_enabled": {
-				Description: "Whether the group is mail-enabled",
+				Description: "Whether the group is mail-enabled.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 				Optional:    true,
 			},
 
 			"security_enabled": {
-				Description: "Whether the group is a security group",
+				Description: "Whether the group is a security group.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"include_transitive_members": {
-				Description: "Specifies whether to include transitive members (a flat list of all nested members).",
+				Description: "Whether to include transitive members (a flat list of all nested members).",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     false,
 			},
 
 			"assignable_to_role": {
-				Description: "Indicates whether this group can be assigned to an Azure Active Directory role",
+				Description: "Indicates whether this group can be assigned to an Azure Active Directory role.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"auto_subscribe_new_members": {
-				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications.",
+				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Only set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"behaviors": {
-				Description: "The group behaviors for a Microsoft 365 group",
+				Description: "A list of behaviors for a Microsoft 365 group, such as `AllowOnlyMembersToPost`, `HideGroupInOutlook`, `SubscribeNewGroupMembers` and `WelcomeEmailDisabled`. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for more details.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -102,7 +103,7 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description: "The optional description of the group",
+				Description: "The optional description of the group.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -114,12 +115,13 @@ func groupDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
-							Type:     pluginsdk.TypeBool,
-							Computed: true,
+							Description: "Whether rule processing is \"On\" (true) or \"Paused\" (false).",
+							Type:        pluginsdk.TypeBool,
+							Computed:    true,
 						},
 
 						"rule": {
-							Description: "Rule to determine members for a dynamic group. Required when `group_types` contains 'DynamicMembership'",
+							Description: "The rule that determines membership of this group.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
@@ -128,31 +130,31 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"external_senders_allowed": {
-				Description: "Indicates whether people external to the organization can send messages to the group.",
+				Description: "Indicates whether people external to the organization can send messages to the group. Only set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"hide_from_address_lists": {
-				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups.",
+				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups. Only set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"hide_from_outlook_clients": {
-				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web.",
+				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Only set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"mail": {
-				Description: "The SMTP address for the group",
+				Description: "The SMTP address for the group.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"members": {
-				Description: "The object IDs of the group members",
+				Description: "List of object IDs of the group members. When `include_transitive_members` is `true`, contains a list of object IDs of all transitive group members.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -161,43 +163,43 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"onpremises_domain_name": {
-				Description: "The on-premises FQDN, also called dnsDomainName, synchronized from the on-premises directory when Azure AD Connect is used",
+				Description: "The on-premises FQDN, also called dnsDomainName, synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_group_type": {
-				Description: "Indicates the target on-premise group type the group will be written back as",
+				Description: "The on-premises group type that the AAD group will be written as, when writeback is enabled.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_netbios_name": {
-				Description: "The on-premises NetBIOS name, synchronized from the on-premises directory when Azure AD Connect is used",
+				Description: "The on-premises NetBIOS name, synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sam_account_name": {
-				Description: "The on-premises SAM account name, synchronized from the on-premises directory when Azure AD Connect is used",
+				Description: "The on-premises SAM account name, synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_security_identifier": {
-				Description: "The on-premises security identifier (SID), synchronized from the on-premises directory when Azure AD Connect is used",
+				Description: "The on-premises security identifier (SID), synchronised from the on-premises directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sync_enabled": {
-				Description: "Whether this group is synchronized from an on-premises directory (true), no longer synchronized (false), or has never been synchronized (null)",
+				Description: "Whether this group is synchronised from an on-premises directory (`true`), no longer synchronised (`false`), or has never been synchronised (`null`).",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"owners": {
-				Description: "The object IDs of the group owners",
+				Description: "List of object IDs of the group owners.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -206,13 +208,13 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"preferred_language": {
-				Description: "The preferred language for a Microsoft 365 group, in ISO 639-1 notation",
+				Description: "The preferred language for a Microsoft 365 group, in ISO 639-1 notation.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"provisioning_options": {
-				Description: "The group provisioning options for a Microsoft 365 group",
+				Description: "A list of provisioning options for a Microsoft 365 group, such as `Team`. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for details.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -221,7 +223,7 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"proxy_addresses": {
-				Description: "Email addresses for the group that direct to the same group mailbox",
+				Description: "List of email addresses for the group that direct to the same group mailbox.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -230,13 +232,13 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"theme": {
-				Description: "The colour theme for a Microsoft 365 group",
+				Description: "The colour theme for a Microsoft 365 group. When no theme is set, the value is `null`.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"types": {
-				Description: "A list of group types configured for the group. The only supported type is `Unified`, which specifies a Microsoft 365 group",
+				Description: "A list of group types configured for the group.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -245,13 +247,13 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"visibility": {
-				Description: "Specifies the group join policy and group content visibility",
+				Description: "The group join policy and group content visibility. Only Microsoft 365 groups can have `Hiddenmembership` visibility.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"writeback_enabled": {
-				Description: "Whether this group is synced from Azure AD to the on-premises directory when Azure AD Connect is used",
+				Description: "Whether the group will be written back to the configured on-premises Active Directory when Azure AD Connect is used.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},

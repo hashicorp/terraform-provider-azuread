@@ -28,6 +28,7 @@ const accessPackageCatalogResourceName = "azuread_access_package_catalog"
 
 func accessPackageCatalogResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages an access package catalog within Identity Governance in Azure Active Directory.",
 		CreateContext: accessPackageCatalogResourceCreate,
 		ReadContext:   accessPackageCatalogResourceRead,
 		UpdateContext: accessPackageCatalogResourceUpdate,
@@ -49,28 +50,28 @@ func accessPackageCatalogResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "The display name of the access package catalog",
+				Description:  "The display name of the access package catalog.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"description": {
-				Description:  "The description of the access package catalog",
+				Description:  "The description of the access package catalog.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"externally_visible": {
-				Description: "Whether the access packages in this catalog can be requested by users outside the tenant",
+				Description: "Whether the access packages in this catalog can be requested by users outside the tenant.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     true,
 			},
 
 			"published": {
-				Description: "Whether the access packages in this catalog are available for management",
+				Description: "Whether the access packages in this catalog are available for management.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     true,

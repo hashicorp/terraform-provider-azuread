@@ -10,10 +10,12 @@ Workflow files are grouped by prefix:
 | `pr-check-*` | Standalone PR checks that cannot live inside `pr-checks-combined.yaml` (special runners, OIDC auth, or their own path filters) |
 | `pr-waiting-response-*` | The `waiting-response` label machinery (see below) |
 | `issue-*` | Issue automation |
+| `changelog-*` | Changelog automation |
 | `milestone-*` | Milestone automation |
-| `workflow-*` | Linting of the workflow files themselves (actionlint, yamllint) |
+| `workflow-*` | Linting and security audit of the workflow files themselves (actionlint, yamllint, zizmor) |
 | `teamcity-*` | TeamCity (acceptance test infrastructure) configuration and triggers |
 | `main-checks.yaml` | Tree-state CI checks re-run on every push to `main`/`release/**` (catches semantic merge conflicts); failures surface as commit checks, no PR machinery |
+| `main-check-links.yaml`, `main-govulncheck.yaml` | Checks that only make sense on `main`: external link rot and known vulnerabilities in dependencies, neither of which a PR author can be held to |
 
 `build.yml` and `provider-release.yml` are HashiCorp Common Release Tooling (CRT)
 files referenced by external release pipelines — do not rename them.
@@ -81,7 +83,7 @@ arbitrary PR number.
   workflow's `name:` silently breaks its consumers (`pr-waiting-response-on-ci-fail.yaml`,
   `pr-waiting-response-on-review.yaml`, `pr-assign-reviewer.yaml`).
 - Reusable workflows (`pr-save-artifacts.yaml`, `pr-comment-failure*.yaml`,
-  `issue-remove-label.yaml`) are referenced by **file path** in `uses:` lines.
+  `issue-remove-label.yaml`) are referenced by **file path** in `uses:` lines (written `$/.github/workflows/...`, which always means this repository at the same commit).
 - `teamcity-test.yaml` has a self-referencing `paths:` trigger that must be
   updated when the file is renamed.
 
@@ -100,5 +102,5 @@ back as a PR comment (see `.teamcity/scripts/post_github_comment.sh`). Needs the
 `teamcity-remove-label-on-commit.yaml` swaps the `teamcity-passed` /
 `teamcity-failed` / `teamcity-new-failure` labels (applied by the TeamCity
 build's GitHub comment step, see `.teamcity/scripts/post_github_comment.sh`)
-for `teamcity-outdated` when new commits are pushed, so stale acceptance test
+for `teamcity-outdated` when new commits that can change test results are pushed, so stale acceptance test
 results are not trusted. The four labels must exist in the repository.

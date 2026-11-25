@@ -36,6 +36,10 @@ func (r ApplicationKnownClientsResource) ResourceType() string {
 	return "azuread_application_known_clients"
 }
 
+func (r ApplicationKnownClientsResource) Description() string {
+	return "Manages the known client applications for an application registration."
+}
+
 func (r ApplicationKnownClientsResource) ModelObject() interface{} {
 	return &ApplicationKnownClientsModel{}
 }
@@ -43,7 +47,7 @@ func (r ApplicationKnownClientsResource) ModelObject() interface{} {
 func (r ApplicationKnownClientsResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which this API access is granted",
+			Description:  "The resource ID of the application registration.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -51,7 +55,7 @@ func (r ApplicationKnownClientsResource) Arguments() map[string]*pluginsdk.Schem
 		},
 
 		"known_client_ids": {
-			Description: "A list of known client IDs, used for bundling consent if you have a solution that includes an API and a client application",
+			Description: "A set of client IDs for the known applications.",
 			Type:        pluginsdk.TypeSet,
 			Required:    true,
 			Elem: &pluginsdk.Schema{

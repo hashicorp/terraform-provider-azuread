@@ -22,6 +22,7 @@ import (
 
 func accessPackageDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this data source to retrieve information for an existing access package within Identity Governance in Azure Active Directory.",
 		ReadContext: accessPackageDataRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -30,7 +31,7 @@ func accessPackageDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:  "The ID of this access package",
+				Description:  "The ID of this access package.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -39,7 +40,7 @@ func accessPackageDataSource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description:   "The display name of the access package",
+				Description:   "The display name of the access package.",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -50,7 +51,7 @@ func accessPackageDataSource() *pluginsdk.Resource {
 			},
 
 			"catalog_id": {
-				Description:   "The ID of the Catalog this access package is in",
+				Description:   "The ID of the Catalog this access package is in.",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				ValidateFunc:  validation.IsUUID,
@@ -60,13 +61,13 @@ func accessPackageDataSource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description: "The description of the access package",
+				Description: "The description of the access package.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"hidden": {
-				Description: "Whether the access package is hidden from the requestor",
+				Description: "Whether the access package is hidden from the requestor.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},

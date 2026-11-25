@@ -28,6 +28,7 @@ import (
 
 func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a Authentication Strength Policy within Azure Active Directory.",
 		CreateContext: authenticationStrengthPolicyCreate,
 		ReadContext:   authenticationStrengthPolicyRead,
 		UpdateContext: authenticationStrengthPolicyUpdate,
@@ -61,20 +62,20 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "The display name for the authentication strength policy",
+				Description:  "The friendly name for this authentication strength policy.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"description": {
-				Description: "The description for the authentication strength policy",
+				Description: "The description for this authentication strength policy.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"allowed_combinations": {
-				Description: "The allowed MFA methods for this policy",
+				Description: "List of allowed authentication methods for this authentication strength policy.",
 				Type:        pluginsdk.TypeSet,
 				Required:    true,
 				Elem: &pluginsdk.Schema{
@@ -96,7 +97,7 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description: "The object ID of the authentication strength policy",
+				Description: "The object ID of the authentication strength policy.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

@@ -33,6 +33,10 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) ResourceType() string 
 	return "azuread_privileged_access_group_eligibility_schedule"
 }
 
+func (r PrivilegedAccessGroupEligibilityScheduleResource) Description() string {
+	return "Manages an eligible assignment to a privileged access group."
+}
+
 func (r PrivilegedAccessGroupEligibilityScheduleResource) ModelObject() interface{} {
 	return &PrivilegedAccessGroupScheduleModel{}
 }

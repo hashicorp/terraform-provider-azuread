@@ -26,6 +26,7 @@ import (
 
 func directoryRoleMemberResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages a single directory role membership (assignment) within Azure Active Directory.",
 		CreateContext: directoryRoleMemberResourceCreate,
 		ReadContext:   directoryRoleMemberResourceRead,
 		DeleteContext: directoryRoleMemberResourceDelete,
@@ -59,7 +60,7 @@ func directoryRoleMemberResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"role_object_id": {
-				Description:  "The object ID of the directory role",
+				Description:  "The object ID of the directory role you want to add the member to.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -67,7 +68,7 @@ func directoryRoleMemberResource() *pluginsdk.Resource {
 			},
 
 			"member_object_id": {
-				Description:  "The object ID of the member",
+				Description:  "The object ID of the principal you want to add as a member to the directory role. Supported object types are Users, Groups or Service Principals.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ForceNew:     true,

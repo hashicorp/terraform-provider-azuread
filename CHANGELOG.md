@@ -1,3 +1,35 @@
+## 3.10.0 (September 24, 2026)
+
+ENHANCEMENTS:
+
+* dependencies: update `github.com/hashicorp/go-azure-helpers` to version `v0.81.1` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `github.com/hashicorp/hc-install` to version `v0.9.4` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `github.com/hashicorp/terraform-exec` to version `v0.25.1` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `github.com/hashicorp/terraform-plugin-sdk/v2` to version `v2.40.1` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `github.com/hashicorp/terraform-plugin-testing` to version `v1.16.0` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `go` to version `1.26.6` ([#1939](https://github.com/hashicorp/terraform-provider-azuread/issues/1939))
+* dependencies: update `golang.org/x/crypto` to version `v0.56.0` ([#1961](https://github.com/hashicorp/terraform-provider-azuread/issues/1961))
+* dependencies: update `golang.org/x/mod` to version `v0.40.0` ([#1961](https://github.com/hashicorp/terraform-provider-azuread/issues/1961))
+* dependencies: update `golang.org/x/net` to version `v0.57.0` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `golang.org/x/oauth2` to version `v0.36.0` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `golang.org/x/sync` to version `v0.22.0` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `golang.org/x/sys` to version `v0.47.0` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `golang.org/x/text` to version `v0.40.0` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* dependencies: update `golang.org/x/tools` to version `v0.49.0` ([#1961](https://github.com/hashicorp/terraform-provider-azuread/issues/1961))
+* dependencies: update `golangci-lint` to version `v2.12.2` ([#1907](https://github.com/hashicorp/terraform-provider-azuread/issues/1907))
+* **New Data Source**: `azuread_authentication_strength_policy` ([#1887](https://github.com/hashicorp/terraform-provider-azuread/issues/1887))
+* Data Source: `azuread_groups` - Add `groups` output attribute ([#1770](https://github.com/hashicorp/terraform-provider-azuread/issues/1770))
+* `azuread_authentication_strength_policy` - add `object_id` output attribute ([#1954](https://github.com/hashicorp/terraform-provider-azuread/issues/1954))
+* **New Resource**: `azuread_authentication_strength_policy_fido2_combination_configuration` ([#1881](https://github.com/hashicorp/terraform-provider-azuread/issues/1881))
+* **New Resource**: `azuread_authentication_strength_policy_x509_combination_configuration` ([#1881](https://github.com/hashicorp/terraform-provider-azuread/issues/1881))
+* **New Resource**: `azuread_group_license` ([#1890](https://github.com/hashicorp/terraform-provider-azuread/issues/1890))
+* **New Resource**: `azuread_user_license` ([#1879](https://github.com/hashicorp/terraform-provider-azuread/issues/1879))
+
+BUG FIXES:
+
+* Data Source: `azuread_user` - fix mail lookup error messages so they report the actual mail value instead of an empty string ([#1926](https://github.com/hashicorp/terraform-provider-azuread/issues/1926))
+* `azuread_service_principal_token_signing_certificate` - fix delete operation removing the wrong resource ([#1905](https://github.com/hashicorp/terraform-provider-azuread/issues/1905))
+
 ## 3.9.0 (June 18, 2026)
 
 ENHANCEMENTS:
@@ -8,7 +40,7 @@ ENHANCEMENTS:
 * `azuread_privileged_access_group_assignment_schedule` - add additional checks for confirming resource existence ([#1856](https://github.com/hashicorp/terraform-provider-azuread/issues/1856))
 * `azuread_privileged_access_group_eligibility_schedule` - add additional checks for confirming resource existence ([#1856](https://github.com/hashicorp/terraform-provider-azuread/issues/1856))
 
-BUG:
+BUG FIXES:
 
 * `azuread_privileged_access_group_assignment_schedule` - fix update functionality preventing `RoleAssignmentExists` errors ([#1856](https://github.com/hashicorp/terraform-provider-azuread/issues/1856))
 * `azuread_privileged_access_group_eligibility_schedule` - fix update functionality preventing `RoleAssignmentExists` errors ([#1856](https://github.com/hashicorp/terraform-provider-azuread/issues/1856))

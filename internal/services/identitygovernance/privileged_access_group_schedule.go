@@ -130,7 +130,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 func privilegedAccessGroupScheduleAttributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"status": {
-			Description: "The status of the schedule",
+			Description: "(String) The provisioning status of this request.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},

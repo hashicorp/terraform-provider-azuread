@@ -20,6 +20,7 @@ import (
 
 func directoryObjectDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Retrieves the OData type for a generic directory object having the provided object ID.",
 		ReadContext: directoryObjectDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -28,14 +29,14 @@ func directoryObjectDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:  "The object ID of the Directory Object",
+				Description:  "Specifies the Object ID of the directory object to look up.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.IsUUID,
 			},
 
 			"type": {
-				Description: "The OData type of the Directory Object",
+				Description: "The shortened OData type of the directory object.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

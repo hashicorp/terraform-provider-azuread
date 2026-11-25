@@ -26,6 +26,7 @@ import (
 
 func applicationDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description: "Use this data source to access information about an existing Application within Azure Active Directory.",
 		ReadContext: applicationDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -34,7 +35,7 @@ func applicationDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:      "The application's object ID",
+				Description:      "Specifies the Object ID of the application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -43,7 +44,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"client_id": {
-				Description:      "The Client ID (also called Application ID)",
+				Description:      "Specifies the Client ID of the application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -52,7 +53,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"identifier_uri": {
-				Description:      "One of the application's identifier URIs",
+				Description:      "Specifies any identifier URI of the application. See also the `identifier_uris` attribute which contains a list of all identifier URIs for the application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -61,13 +62,13 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"disabled_by_microsoft": {
-				Description: "Whether Microsoft has disabled the registered application",
+				Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"display_name": {
-				Description:      "The display name for the application",
+				Description:      "Specifies the display name of the application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -81,7 +82,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"known_client_applications": {
-							Description: "Used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app",
+							Description: "A set of application IDs (client IDs), used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app.",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{
@@ -90,7 +91,7 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"mapped_claims_enabled": {
-							Description: "Allows an application to use claims mapping without specifying a custom signing key",
+							Description: "Allows an application to use claims mapping without specifying a custom signing key.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -102,49 +103,49 @@ func applicationDataSource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"id": {
-										Description: "The unique identifier of the delegated permission. Must be a valid UUID",
+										Description: "The unique identifier of the delegated permission.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
 
 									"admin_consent_description": {
-										Description: "Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users",
+										Description: "Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
 
 									"admin_consent_display_name": {
-										Description: "Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users",
+										Description: "Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
 
 									"enabled": {
-										Description: "Determines if the permission scope is enabled",
+										Description: "Determines if the permission scope is enabled.",
 										Type:        pluginsdk.TypeBool,
 										Computed:    true,
 									},
 
 									"type": {
-										Description: "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions. Possible values are `User` or `Admin`",
+										Description: "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
 
 									"user_consent_description": {
-										Description: "Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf",
+										Description: "Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
 
 									"user_consent_display_name": {
-										Description: "Display name for the delegated permission that appears in the end user consent experience",
+										Description: "Display name for the delegated permission that appears in the end user consent experience.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
 
 									"value": {
-										Description: "The value that is used for the `scp` claim in OAuth 2.0 access tokens",
+										Description: "The value that is used for the `scp` claim in OAuth 2.0 access tokens.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
@@ -153,7 +154,7 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"requested_access_token_version": {
-							Description: "Specifies the access token version expected by this resource",
+							Description: "The access token version expected by this resource.",
 							Type:        pluginsdk.TypeInt,
 							Computed:    true,
 						},
@@ -162,19 +163,19 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"app_roles": {
-				Description: "List of app roles published by the application",
+				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"id": {
-							Description: "The unique identifier of the app role",
+							Description: "The unique identifier of the app role.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"allowed_member_types": {
-							Description: "Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in a standalone scenario). Possible values are `User` or `Application`, or both",
+							Description: "Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in a standalone scenario).",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{
@@ -183,25 +184,25 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"description": {
-							Description: "Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences",
+							Description: "Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"display_name": {
-							Description: "Display name for the app role that appears during app role assignment and in consent experiences",
+							Description: "Display name for the app role that appears during app role assignment and in consent experiences.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"enabled": {
-							Description: "The unique identifier of the app role",
+							Description: "Determines if the app role is enabled.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"value": {
-							Description: "The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal",
+							Description: "The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
@@ -210,7 +211,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"app_role_ids": {
-				Description: "Mapping of app role names to UUIDs",
+				Description: "A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.",
 				Type:        pluginsdk.TypeMap,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -219,7 +220,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description: "Description of the application as shown to end users",
+				Description: "A description of the application, as shown to end users.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -231,7 +232,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"fallback_public_client_enabled": {
-				Description: "The fallback application type as public client, such as an installed application running on a mobile device",
+				Description: "The fallback application type as public client, such as an installed application running on a mobile device.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
@@ -243,25 +244,25 @@ func applicationDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"custom_single_sign_on": {
-							Description: "Whether this application principal represents a custom SAML application for linked service principals",
+							Description: "Whether this application represents a custom SAML application for linked service principals.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"enterprise": {
-							Description: "Whether this application represents an Enterprise Application for linked service principals",
+							Description: "Whether this application represents an Enterprise Application for linked service principals.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"gallery": {
-							Description: "Whether this application represents a gallery application for linked service principals",
+							Description: "Whether this application represents a gallery application for linked service principals.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"hide": {
-							Description: "Whether this app is invisible to users in My Apps and Office 365 Launcher",
+							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -270,7 +271,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"group_membership_claims": {
-				Description: "The `groups` claim issued in a user or OAuth 2.0 access token that the app expects",
+				Description: "The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -279,7 +280,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"identifier_uris": {
-				Description: "A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
+				Description: "A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -288,25 +289,25 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"logo_url": {
-				Description: "CDN URL to the application's logo",
+				Description: "CDN URL to the application's logo.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"notes": {
-				Description: "User-specified notes relevant for the management of the application",
+				Description: "User-specified notes relevant for the management of the application.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"marketing_url": {
-				Description: "URL of the application's marketing page",
+				Description: "URL of the application's marketing page.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"oauth2_permission_scope_ids": {
-				Description: "Mapping of OAuth2.0 permission scope names to UUIDs",
+				Description: "A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.",
 				Type:        pluginsdk.TypeMap,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -315,7 +316,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"oauth2_post_response_required": {
-				Description: "Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests.",
+				Description: "Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. When `false`, only GET requests are allowed.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
@@ -333,7 +334,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"owners": {
-				Description: "A list of object IDs of principals that are assigned ownership of the application",
+				Description: "A list of object IDs of principals that are assigned ownership of the application.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -342,7 +343,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"privacy_statement_url": {
-				Description: "URL of the application's privacy statement",
+				Description: "URL of the application's privacy statement.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -353,7 +354,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"redirect_uris": {
-							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
+							Description: "A list of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{
@@ -365,7 +366,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"publisher_domain": {
-				Description: "The verified publisher domain for the application",
+				Description: "The verified publisher domain for the application.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -376,7 +377,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"resource_app_id": {
-							Description: "The unique identifier for the resource that the application requires access to. This is the Client ID (also called Application ID) of the target application",
+							Description: "The unique identifier for the resource that the application requires access to. This is the Application ID of the target application.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
@@ -388,13 +389,13 @@ func applicationDataSource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"id": {
-										Description: "The unique identifier for an app role or OAuth2 permission scope published by the resource application",
+										Description: "The unique identifier for an app role or OAuth2 permission scope published by the resource application.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
 
 									"type": {
-										Description: "Specifies whether the `id` property references an app role or an OAuth2 permission scope. Possible values are `Role` or `Scope`",
+										Description: "Specifies whether the `id` property references an app role or an OAuth2 permission scope.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
@@ -406,13 +407,13 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"service_management_reference": {
-				Description: "References application or service contact information from a Service or Asset Management database",
+				Description: "References application context information from a Service or Asset Management database.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"sign_in_audience": {
-				Description: "The Microsoft account types that are supported for the current application",
+				Description: "The Microsoft account types that are supported for the current application.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -423,7 +424,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"redirect_uris": {
-							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
+							Description: "A list of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{
@@ -435,13 +436,13 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"support_url": {
-				Description: "URL of the application's support page",
+				Description: "URL of the application's support page.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"tags": {
-				Description: "A set of tags applied to the application",
+				Description: "A list of tags applied to the application.",
 				Type:        pluginsdk.TypeSet,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -450,7 +451,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"terms_of_service_url": {
-				Description: "URL of the application's terms of service statement",
+				Description: "URL of the application's terms of service statement.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -461,19 +462,19 @@ func applicationDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"homepage_url": {
-							Description: "Home page or landing page of the application",
+							Description: "Home page or landing page of the application.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"logout_url": {
-							Description: "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols",
+							Description: "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"redirect_uris": {
-							Description: "A list of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
+							Description: "A list of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{
@@ -487,13 +488,13 @@ func applicationDataSource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"access_token_issuance_enabled": {
-										Description: "Whether this web application can request an access token using OAuth 2.0 implicit flow",
+										Description: "Whether this web application can request an access token using OAuth 2.0 implicit flow.",
 										Type:        pluginsdk.TypeBool,
 										Computed:    true,
 									},
 
 									"id_token_issuance_enabled": {
-										Description: "Whether this web application can request an ID token using OAuth 2.0 implicit flow",
+										Description: "Whether this web application can request an ID token using OAuth 2.0 implicit flow.",
 										Type:        pluginsdk.TypeBool,
 										Computed:    true,
 									},

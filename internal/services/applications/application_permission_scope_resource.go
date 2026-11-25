@@ -45,6 +45,11 @@ func (r ApplicationPermissionScopeResource) ResourceType() string {
 	return "azuread_application_permission_scope"
 }
 
+func (r ApplicationPermissionScopeResource) Description() string {
+	return "Manages a permission scope for an application registration.\n\n" +
+		"This resource is analogous to the `oauth2_permission_scope` block in the `api` block of the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below)."
+}
+
 func (r ApplicationPermissionScopeResource) ModelObject() interface{} {
 	return &ApplicationPermissionScopeModel{}
 }
@@ -52,7 +57,7 @@ func (r ApplicationPermissionScopeResource) ModelObject() interface{} {
 func (r ApplicationPermissionScopeResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which this permission scope should be applied",
+			Description:  "The resource ID of the application registration.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -60,7 +65,7 @@ func (r ApplicationPermissionScopeResource) Arguments() map[string]*pluginsdk.Sc
 		},
 
 		"scope_id": {
-			Description:  "The unique identifier of the permission scope",
+			Description:  "The unique identifier of the permission scope.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -68,28 +73,28 @@ func (r ApplicationPermissionScopeResource) Arguments() map[string]*pluginsdk.Sc
 		},
 
 		"admin_consent_description": {
-			Description:  "Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users",
+			Description:  "Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"admin_consent_display_name": {
-			Description:  "Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users",
+			Description:  "Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"value": {
-			Description:      "The value that is used for the `scp` claim in OAuth access tokens",
+			Description:      "The value that is used for the `scp` claim in OAuth access tokens.",
 			Type:             pluginsdk.TypeString,
 			Required:         true,
 			ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
 		},
 
 		"type": {
-			Description:  "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions",
+			Description:  "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			Default:      PermissionScopeTypeUser,
@@ -97,14 +102,14 @@ func (r ApplicationPermissionScopeResource) Arguments() map[string]*pluginsdk.Sc
 		},
 
 		"user_consent_description": {
-			Description:  "Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf",
+			Description:  "Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"user_consent_display_name": {
-			Description:  "Display name for the delegated permission that appears in the end user consent experience",
+			Description:  "Display name for the delegated permission that appears in the end user consent experience.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringIsNotEmpty,

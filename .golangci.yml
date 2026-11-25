@@ -1,9 +1,10 @@
 # Copyright IBM Corp. 2019, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-# NOTE: this config enables the azproviderlint and tfproviderlint module plugins, which only exist in the
-# custom-built binary produced by 'make golangci-with-modules' (see .tools/.custom-gcl.yml)
-# — run lints via 'make lint' / '.tools/bin/golangci-with-modules run', not stock golangci-lint.
+# NOTE: this config enables the azproviderlint and tfproviderlint module plugins, which only
+# exist in the custom-built binary produced by 'make golangci-with-modules' (see
+# .tools/.custom-gcl.yml) — run lints via 'make lint' / '.tools/bin/golangci-with-modules run',
+# not stock golangci-lint.
 version: "2"
 run:
   modules-download-mode: vendor
@@ -12,7 +13,7 @@ linters:
   enable:
     - asasalint                 # check for pass []any as any in variadic func(...any)
     - asciicheck                # ensure code does not contain non-ASCII identifiers
-    - azproviderlint            # custom azure provider checks (AZG/AZR/AZS/AZT), module plugin - see .tools/.custom-gcl.yml
+    - azproviderlint            # custom azure provider checks (AZG/AZP/AZR/AZS/AZT), module plugin - see .tools/.custom-gcl.yml
     - bidichk                   # checks for dangerous unicode character sequences
     - copyloopvar               # detects redundant x := x copies of loop variables (unnecessary since Go 1.22)
     - decorder                  # check declaration order and count of types, constants, variables and functions
@@ -31,6 +32,7 @@ linters:
     - modernize                 # suggests modern Go idioms (range-over-int, slices/maps/strings helpers), autofixable - see settings below
     - nilerr                    # finds code that returns nil after it checks that the error is not nil
     - nilnesserr                # finds code that checks one error but mistakenly returns a different nil error
+    - nolintlint                # checks nolint comments are well formed, name a linter and still suppress something - see settings below
     - noctx                     # finds http requests and exec commands made without a context.Context
     - nosprintfhostport         # checks for misuse of Sprintf to construct host:port in a URL
     - predeclared               # find code that shadows one of Go's predeclared identifiers
@@ -58,6 +60,8 @@ linters:
       disable:
         - any # interface{} -> any: ~740 findings, to be flipped on in a dedicated mechanical pr
         - newexpr # flags pointer.To(x) -> new(x), azuread standardises on pointer.To
+    nolintlint:
+      require-specific: true # a nolint that names no linter switches off every linter for the code below it
     predeclared:
       ignore: # widely used as ordinary variable/parameter names across the provider (old/new in diffs, min/max in validation)
         - new
@@ -73,22 +77,37 @@ linters:
       azproviderlint:
         type: module
         settings:
-          disable:
-            - AZR002 # split create and update - no findings in azuread, kept in step with azurerm
-            - AZT002 # tests should not obtain credentials via os.Getenv - 3 findings, investigate in a later pr
-            - AZR004 # Resource IDs should not be compared with == or != - no findings in azuread, kept in step with azurerm
-            - AZR003 # d.Get should not be used within a Delete function as it does not work as expected during deletion - no findings in azuread, kept in step with azurerm
-            - AZR007 # StateChangeConf should be replaced with a custom poller implementing pollers.PollerType - 10 findings, to migrate over time
-            - AZS003 # TypeList blocks where every property is optional with no default allow empty blocks - 33 findings to fix later
-            - AZS005 # resources with no corresponding data source - 45 findings, to determine if to be fixed later
-            - AZS006 # data sources missing properties that exist on the resource - 6 findings, todo later
-            - AZS007 # Optional+Computed fields missing a '// Note: O+C because ...' comment - 121 findings to fix later
+          disable: # rules with findings left to fix, each to be switched on once they are
+            - AZP001 # Microsoft docs URLs with a locale in them - 25 findings
+            - AZP002 # resources with no data source - 48 findings, to decide if they should have one
+            - AZP003 # data sources missing their resource's properties - 6 findings
+            - AZP007 # URLs for pages that have moved - 1 finding
+            - AZR007 # StateChangeConf rather than a custom poller - 13 findings, to migrate over time
+            - AZS003 # blocks that can be empty - 33 findings, 17 of them in state migrations
+            - AZS007 # Optional+Computed fields with no '// Note: O+C because ...' comment - 123 findings
+            - AZS010 # properties and blocks with no description - 445 findings, 414 of them in state migrations the rule should skip
+            - AZS012 # a/an before a name - 3 findings
+            - AZS013 # acronym case - 2 findings
+            - AZS014 # descriptions repeating what the schema already says - 22 findings
+            - AZS015 # descriptions with no full stop - 178 findings
+            - AZS016 # product names without their capitals - 101 findings
+            - AZS017 # descriptions opening with "Specifies the" and similar - 53 findings
+            - AZS019 # descriptions that ask a question - 2 findings
+            - AZT002 # tests reading credentials with os.Getenv - 3 findings
           AZG002:
             use: pointer.To # rather than the go1.26 new(<expr>) builtin
           AZG006:
             # only inline temporaries into calls whose other arguments are all basic literals
             # (e.g. d.Set("key", x)) - among identifier/expression siblings the name adds context
             only-when-literals: true
+          AZG010:
+            allow: # aliases that mark an import as the beta Graph API, kept so its use shows at every call
+              - administrativeunitmemberBeta
+              - groupBeta
+              - memberBeta
+              - memberofBeta
+              - ownerBeta
+              - transitivememberBeta
           AZS004:
             # exact-match only: report hand-written lists that exactly match the enum (a pure
             # PossibleValuesFor<Enum>() swap); deliberate subsets/supersets are left alone

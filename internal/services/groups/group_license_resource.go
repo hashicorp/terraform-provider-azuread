@@ -42,6 +42,10 @@ func (r GroupLicenseResource) ResourceType() string {
 	return "azuread_group_license"
 }
 
+func (r GroupLicenseResource) Description() string {
+	return "Manages a single license assignment for a group (group-based licensing)."
+}
+
 func (r GroupLicenseResource) ModelObject() interface{} {
 	return &GroupLicenseResourceModel{}
 }
@@ -49,7 +53,7 @@ func (r GroupLicenseResource) ModelObject() interface{} {
 func (r GroupLicenseResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"group_object_id": {
-			Description:  "The object ID of the group to which the license should be assigned",
+			Description:  "The object ID of the group to which the license should be assigned.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -57,7 +61,7 @@ func (r GroupLicenseResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"sku_id": {
-			Description:  "The unique identifier (GUID) for the SKU (license) to assign to the group",
+			Description:  "The unique identifier (GUID) for the SKU (license) to assign to the group.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -65,7 +69,7 @@ func (r GroupLicenseResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"disabled_plans": {
-			Description: "A set of unique identifiers (GUIDs) for the service plans to disable for this license",
+			Description: "A set of unique identifiers (GUIDs) for the service plans to disable for this license.",
 			Type:        pluginsdk.TypeSet,
 			Optional:    true,
 			ForceNew:    true,

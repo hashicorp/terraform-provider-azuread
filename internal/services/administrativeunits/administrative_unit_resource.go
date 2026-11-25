@@ -34,6 +34,7 @@ const administrativeUnitResourceName = "azuread_administrative_unit"
 
 func administrativeUnitResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
+		Description:   "Manages an Administrative Unit within Azure Active Directory.",
 		CreateContext: administrativeUnitResourceCreate,
 		ReadContext:   administrativeUnitResourceRead,
 		UpdateContext: administrativeUnitResourceUpdate,
@@ -69,20 +70,20 @@ func administrativeUnitResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "The display name for the administrative unit",
+				Description:  "The display name of the administrative unit.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"description": {
-				Description: "The description for the administrative unit",
+				Description: "The description of the administrative unit.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"members": {
-				Description: "A set of object IDs of members who should be present in this administrative unit. Supported object types are Users or Groups",
+				Description: "A set of object IDs of members who should be present in this administrative unit. Supported object types are Users or Groups.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Computed:    true,
@@ -101,13 +102,13 @@ func administrativeUnitResource() *pluginsdk.Resource {
 			},
 
 			"hidden_membership_enabled": {
-				Description: "Whether the administrative unit and its members are hidden or publicly viewable in the directory",
+				Description: "Whether the administrative unit and its members are hidden or publicly viewable in the directory.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"object_id": {
-				Description: "The object ID of the administrative unit",
+				Description: "The object ID of the administrative unit.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

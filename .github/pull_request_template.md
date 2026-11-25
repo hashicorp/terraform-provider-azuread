@@ -20,7 +20,7 @@ If this is a breaking change for users please detail how it cannot be avoided an
 
 ## Testing
 
-- [ ] My submission includes Test coverage as described in the [Contribution Guide](../blob/main/contributing/topics/guide-new-resource.md) and the tests pass. (if this is not possible for any reason, please include details of why you did or could not add test coverage)
+- [ ] My submission includes Test coverage as described in the [Contribution Guide](https://github.com/hashicorp/terraform-provider-azurerm/blob/main/contributing/topics/guide-new-resource.md) and the tests pass. (if this is not possible for any reason, please include details of why you did or could not add test coverage)
 
 <!-- Please include testing logs or evidence here or an explanation on why no testing evidence can be provided. 
 
@@ -28,11 +28,11 @@ For state migrations please test the changes locally and provide details here, s
 
 ## Change Log
 
-Below please provide what should go into the changelog (if anything) conforming to the [Changelog Format documented here](../blob/main/contributing/topics/maintainer-changelog.md).
+Add user-facing changes to `.changelog/<PR number>.hcl` on your PR branch. Run `make changelog-types` to see the available types, then run `make changelog TYPE=<type> BODY='<body>' [PR=<PR number>]` and commit the resulting file. Omit `PR` before opening the PR and rename `0.hcl` to the PR number afterwards.
 
-<!-- Replace the changelog example below with your entry. One resource per line. -->
+For changes with no user-facing impact, such as documentation or internal tooling changes, check this box instead:
 
-* `azuread_resource` - support for the `thing1` property [GH-00000]
+- [ ] This change does not require a changelog entry
 
 <!-- What type of PR is this? -->
 This is a (please select all that apply):
@@ -45,6 +45,22 @@ This is a (please select all that apply):
 ## Related Issue(s)
 
 Fixes #0000
+
+## AI Assistance Disclosure
+
+<!-- 
+IMPORTANT!
+
+If you are using any kind of AI/LLM assistance to contribute to the AzureRM provider, this must be disclosed in the pull request.
+
+If this is the case, please check the box below, and include the extent to which AI was used. (e.g. documentation only, code generation, etc.)
+
+If responses to this pull request are/will be generated using AI, disclose this as well.
+-->
+
+- [ ] AI Assisted - This contribution was made by, or with the assistance of, AI/LLMs
+
+<!-- extent of AI usage must be described here if the box above is checked -->
 
 <!-- heimdall_github_prtemplate:grc-pci_dss-2024-01-05 -->
 
