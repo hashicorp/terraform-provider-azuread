@@ -20,7 +20,7 @@ If this is a breaking change for users please detail how it cannot be avoided an
 
 ## Testing
 
-- [ ] My submission includes Test coverage as described in the [Contribution Guide](../blob/main/contributing/topics/guide-new-resource.md) and the tests pass. (if this is not possible for any reason, please include details of why you did or could not add test coverage)
+- [ ] My submission includes Test coverage as described in the [Contribution Guide](https://github.com/hashicorp/terraform-provider-azurerm/blob/main/contributing/topics/guide-new-resource.md) and the tests pass. (if this is not possible for any reason, please include details of why you did or could not add test coverage)
 
 <!-- Please include testing logs or evidence here or an explanation on why no testing evidence can be provided. 
 

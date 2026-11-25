@@ -138,7 +138,7 @@ func applicationDisableAppRoles(ctx context.Context, client *application.Applica
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+		_, err = (&pluginsdk.StateChangeConf{
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,
@@ -254,7 +254,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *appli
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+		_, err = (&pluginsdk.StateChangeConf{
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,

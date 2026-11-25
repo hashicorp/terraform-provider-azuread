@@ -12,9 +12,10 @@ import (
 	_ "github.com/apache/skywalking-eyes/cmd/license-eye"
 	_ "github.com/bflad/tfproviderdocs"
 	_ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
+	_ "github.com/katbyte/actionlint/cmd/actionlint"
 	_ "github.com/katbyte/tctest"
 	_ "github.com/katbyte/terrafmt"
-	_ "github.com/rhysd/actionlint/cmd/actionlint"
 	_ "github.com/sreallymatt/changeloggy"
+	_ "gotest.tools/gotestsum"
 	_ "mvdan.cc/gofumpt"
 )

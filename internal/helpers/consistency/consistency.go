@@ -21,7 +21,7 @@ func WaitForDeletion(ctx context.Context, f ChangeFunc) error {
 	}
 
 	timeout := time.Until(deadline)
-	_, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+	_, err := (&pluginsdk.StateChangeConf{
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Deleted"},
 		Timeout:                   timeout,
@@ -56,7 +56,7 @@ func WaitForUpdate(ctx context.Context, f ChangeFunc) error {
 }
 
 func WaitForUpdateWithTimeout(ctx context.Context, timeout time.Duration, f ChangeFunc) (bool, error) {
-	res, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+	res, err := (&pluginsdk.StateChangeConf{
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
@@ -94,7 +94,7 @@ func WaitForUpdateDelayStart(ctx context.Context, delay time.Duration, f ChangeF
 }
 
 func WaitForUpdateWithTimeoutDelayStart(ctx context.Context, timeout, delay time.Duration, f ChangeFunc) (bool, error) {
-	res, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+	res, err := (&pluginsdk.StateChangeConf{
 		Delay:                     delay,
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
