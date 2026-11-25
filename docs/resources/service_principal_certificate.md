@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_service_principal_certificate"
 subcategory: "Service Principals"
+description: |-
+  Manages a certificate associated with a service principal within Azure Active Directory.
 ---
 
 # Resource: azuread_service_principal_certificate
@@ -57,32 +60,33 @@ resource "azuread_service_principal_certificate" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `encoding` - (Optional) Specifies the encoding used for the supplied certificate data. Must be one of `pem`, `base64` or `hex`. Defaults to `pem`.
+* `service_principal_id` - (Required) The ID of the service principal for which this certificate should be created. Changing this value forces a new resource to be created.
+* `value` - (Required, Sensitive) The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER. See also the `encoding` argument. Changing this value forces a new resource to be created.
+
+---
+
+* `encoding` - (Optional) Specifies the encoding used for the supplied certificate data. Possible values include `base64`, `hex`, and `pem`. Defaults to `pem`. Changing this value forces a new resource to be created.
 
 -> **Tip for Azure Key Vault** The `hex` encoding option is useful for consuming certificate data from the [azurerm_key_vault_certificate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) resource.
-
-* `end_date` - (Optional) The end date until which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
-* `end_date_relative` - (Optional) A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". Changing this field forces a new resource to be created.
-
-~> One of `end_date` or `end_date_relative` must be set. The maximum duration is determined by Azure AD.
-
-* `key_id` - (Optional) A UUID used to uniquely identify this certificate. If not specified a UUID will be automatically generated. Changing this field forces a new resource to be created.
-* `service_principal_id` - (Required) The ID of the service principal for which this certificate should be created. Changing this field forces a new resource to be created.
-* `start_date` - (Optional) The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the value is determined by Azure Active Directory and is usually the start date of the certificate for asymmetric keys, or the current timestamp for symmetric keys. Changing this field forces a new resource to be created.
-* `type` - (Required) The type of key/certificate. Must be one of `AsymmetricX509Cert` or `Symmetric`. Changing this fields forces a new resource to be created.
-* `value` - (Required) The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER. See also the `encoding` argument.
+* `end_date` - (Optional) The end date until which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Conflicts with `end_date_relative`. Changing this value forces a new resource to be created.
+* `end_date_relative` - (Optional) A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". Conflicts with `end_date`. Changing this value forces a new resource to be created.
+* `key_id` - (Optional) A UUID used to uniquely identify this certificate. If not specified a UUID will be automatically generated. Changing this value forces a new resource to be created.
+* `start_date` - (Optional) The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the value is determined by Azure Active Directory and is usually the start date of the certificate for asymmetric keys, or the current timestamp for symmetric keys. Changing this value forces a new resource to be created.
+* `type` - (Optional) The type of key/certificate. Possible values include `AsymmetricX509Cert` and `X509CertAndPassword`. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -90,7 +94,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Certificates can be imported using the object ID of the associated service principal and the key ID of the certificate credential, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_service_principal_certificate.example 00000000-0000-0000-0000-000000000000/certificate/11111111-1111-1111-1111-111111111111

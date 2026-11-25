@@ -1,5 +1,9 @@
 ---
+page_title: "Resource: azuread_application_redirect_uris"
 subcategory: "Applications"
+description: |-
+  Manages the redirect URIs for an application registration.
+  ~> This resource is incompatible with the azuread_application resource, instead use this with the azuread_application_registration resource.
 ---
 
 # Resource: azuread_application_redirect_uris
@@ -61,21 +65,23 @@ resource "azuread_application_redirect_uris" "example_web" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
+* `application_id` - (Required) The resource ID of the application registration. Changing this value forces a new resource to be created.
 * `redirect_uris` - (Required) A set of redirect URIs to assign to the application.
-* `type` - (Required) The type of redirect URIs to manage. Must be one of: `PublicClient`, `SPA`, or `Web`. Changing this forces a new resource to be created.
+* `type` - (Required) The type of redirect URIs to manage. Possible values include `PublicClient`, `SPA`, and `Web`. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -84,7 +90,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Application API Access can be imported using the object ID of the application and the URI type, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_redirect_uris.example /applications/00000000-0000-0000-0000-000000000000/redirectUris/Web

@@ -90,13 +90,13 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 			},
 
 			"extension_enabled": {
-				Description: "When enabled, users will be able to request extension of their access to this package before their access expires",
+				Description: "Whether users will be able to request extension of their access to this package before their access expires",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"requestor_settings": {
-				Description:      "This block configures the users who can request access",
+				Description:      "The users who can request access",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: assignmentPolicyDiffSuppress,
@@ -104,7 +104,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"requests_accepted": {
-							Description: "Whether to accept requests now, when disabled, no new requests can be made using this policy",
+							Description: "Whether to accept requests using this policy. When false, no new requests can be made using this policy.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -117,7 +117,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 						},
 
 						"requestor": {
-							Description: "The users who are allowed to request on this policy, which can be singleUser, groupMembers, and connectedOrganizationMembers",
+							Description: "The users who are allowed to request on this policy",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							Elem:        schemaUserSet(),
@@ -127,7 +127,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 			},
 
 			"approval_settings": {
-				Description:      "Settings of whether approvals are required and how they are obtained",
+				Description:      "Whether approvals are required and how they are obtained.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: assignmentPolicyDiffSuppress,
@@ -147,7 +147,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 						},
 
 						"requestor_justification_required": {
-							Description: "Whether requestor are required to provide a justification to request an access package. Justification is visible to other approvers and the requestor",
+							Description: "Whether a requestor is required to provide a justification to request an access package. Justification is visible to approvers and the requestor.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -159,38 +159,38 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"approval_timeout_in_days": {
-										Description: "Decision must be made in how many days? If a request is not approved within this time period after it is made, it will be automatically rejected",
+										Description: "Maximum number of days within which a request must be approved. If a request is not approved within this time period after it is made, it will be automatically rejected.",
 										Type:        pluginsdk.TypeInt,
 										Required:    true,
 									},
 
 									"approver_justification_required": {
-										Description: "Whether an approver must provide a justification for their decision. Justification is visible to other approvers and the requestor",
+										Description: "Whether an approver must provide a justification for their decision. Justification is visible to other approvers and the requestor.",
 										Type:        pluginsdk.TypeBool,
 										Optional:    true,
 									},
 
 									"alternative_approval_enabled": {
-										Description: "If no action taken, forward to alternate approvers?",
+										Description: "Whether alternative approvers are enabled.",
 										Type:        pluginsdk.TypeBool,
 										Optional:    true,
 									},
 
 									"enable_alternative_approval_in_days": {
-										Description: "Forward to alternate approver(s) after how many days?",
+										Description: "Number of days before the request is forwarded to alternative approvers.",
 										Type:        pluginsdk.TypeInt,
 										Optional:    true,
 									},
 
 									"primary_approver": {
-										Description: "The users who will be asked to approve requests. A collection of singleUser, groupMembers, requestorManager, internalSponsors and externalSponsors. When creating or updating a policy, include at least one userSet in this collection",
+										Description: "The users who will be asked to approve requests.",
 										Type:        pluginsdk.TypeList,
 										Optional:    true,
 										Elem:        schemaUserSet(),
 									},
 
 									"alternative_approver": {
-										Description: "If escalation is enabled and the primary approvers do not respond before the escalation time, the escalationApprovers are the users who will be asked to approve requests. This can be a collection of singleUser, groupMembers, requestorManager, internalSponsors and externalSponsors. When creating or updating a policy, if there are no escalation approvers, or escalation approvers are not required for the stage, the value of this property should be an empty collection",
+										Description: "The alternative approvers when escalation is enabled and the primary approvers do not respond before the escalation time.",
 										Type:        pluginsdk.TypeList,
 										Optional:    true,
 										Elem:        schemaUserSet(),
@@ -203,7 +203,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 			},
 
 			"assignment_review_settings": {
-				Description:      "The settings of whether assignment review is needed and how it's conducted",
+				Description:      "Whether assignment review is needed and how it is conducted.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: assignmentPolicyDiffSuppress,
@@ -244,14 +244,14 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 						},
 
 						"reviewer": {
-							Description: "If the reviewerType is Reviewers, this collection specifies the users who will be reviewers, either by ID or as members of a group, using a collection of singleUser and groupMembers",
+							Description: "the users who will be reviewers (when `review_type` is `Reviewers`)",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							Elem:        schemaUserSet(),
 						},
 
 						"access_recommendation_enabled": {
-							Description: "Whether to show Show reviewer decision helpers. If enabled, system recommendations based on users' access information will be shown to the reviewers. The reviewer will be recommended to approve the review if the user has signed-in at least once during the last 30 days. The reviewer will be recommended to deny the review if the user has not signed-in during the last 30 days",
+							Description: "Whether to show the reviewer decision helpers. If enabled, system recommendations based on users' access information will be shown to the reviewers. The reviewer will be recommended to approve the review if the user has signed-in at least once during the last 30 days. The reviewer will be recommended to deny the review if the user has not signed-in during the last 30 days.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -263,7 +263,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 						},
 
 						"access_review_timeout_behavior": {
-							Description:  "What actions the system takes if reviewers don't respond in time",
+							Description:  "Specifies the actions the system takes if reviewers don't respond in time.",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(beta.PossibleValuesForAccessReviewTimeoutBehavior(), false),
@@ -273,7 +273,6 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 			},
 
 			"question": {
-				Description:      "One or more questions to the requestor",
 				Type:             pluginsdk.TypeList,
 				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				Optional:         true,
@@ -292,7 +291,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 						},
 
 						"choice": {
-							Description: "Configuration of a choice to the question",
+							Description: "A choice to the question.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							Elem: &pluginsdk.Resource{

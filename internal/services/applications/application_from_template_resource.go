@@ -45,7 +45,9 @@ func (r ApplicationFromTemplateResource) ResourceType() string {
 }
 
 func (r ApplicationFromTemplateResource) Description() string {
-	return "Creates an application registration and associated service principal from a gallery template."
+	// TODO: Once an SDKv2 documentation metadata object exists, add notes to that instead of this description
+	return "Creates an application registration and associated service principal from a gallery template.\n\n" +
+		"-> The [azuread_application](application.html) resource can also be used to instantiate a gallery application, however unlike the `azuread_application` resource, this resource does not attempt to manage any properties of the resulting application."
 }
 
 func (r ApplicationFromTemplateResource) ModelObject() interface{} {

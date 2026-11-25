@@ -246,26 +246,25 @@ func applicationDataSource() *pluginsdk.Resource {
 						"custom_single_sign_on": {
 							Description: "Whether this application represents a custom SAML application for linked service principals.",
 							Type:        pluginsdk.TypeBool,
-							Optional:    true,
+							Computed:    true,
 						},
 
 						"enterprise": {
 							Description: "Whether this application represents an Enterprise Application for linked service principals.",
 							Type:        pluginsdk.TypeBool,
-							Optional:    true,
+							Computed:    true,
 						},
 
 						"gallery": {
 							Description: "Whether this application represents a gallery application for linked service principals.",
 							Type:        pluginsdk.TypeBool,
-							Optional:    true,
+							Computed:    true,
 						},
 
 						"hide": {
 							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher.",
 							Type:        pluginsdk.TypeBool,
-							Optional:    true,
-							Default:     true,
+							Computed:    true,
 						},
 					},
 				},
@@ -327,9 +326,9 @@ func applicationDataSource() *pluginsdk.Resource {
 				Computed: true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
-						"access_token": schemaOptionalClaims(),
-						"id_token":     schemaOptionalClaims(),
-						"saml2_token":  schemaOptionalClaims(),
+						"access_token": schemaOptionalClaimsDataSource(),
+						"id_token":     schemaOptionalClaimsDataSource(),
+						"saml2_token":  schemaOptionalClaimsDataSource(),
 					},
 				},
 			},

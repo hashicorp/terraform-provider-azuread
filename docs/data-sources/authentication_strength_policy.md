@@ -1,5 +1,8 @@
 ---
+page_title: "Data Source: azuread_authentication_strength_policy"
 subcategory: "Policies"
+description: |-
+  Use this data source to retrieve information about an authentication strength policy within Azure Active Directory. This can be used to read either the built-in policies supplied by Microsoft, or custom policies created in the tenant.
 ---
 
 # Data Source: azuread_authentication_strength_policy
@@ -46,31 +49,30 @@ data "azuread_authentication_strength_policy" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `display_name` - (Optional) The display name of the authentication strength policy.
-* `object_id` - (Optional) The object ID of the authentication strength policy.
-
-~> One of `display_name` or `object_id` must be specified.
+* `display_name` - (Optional) The display name of the authentication strength policy. Exactly one of `display_name` or `object_id` must be specified.
 
 ~> **Tip** Display names are expected to be unique within a tenant, however this is not guaranteed by the API. Specify `object_id` where you need to be certain of matching a specific policy.
+* `object_id` - (Optional) The object ID of the authentication strength policy. Exactly one of `display_name` or `object_id` must be specified.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
+* `id` - The ID of the Data Source.
 * `allowed_combinations` - A list of allowed authentication methods combinations for this authentication strength policy.
-* `combination_configurations` - A list of `combination_configurations` blocks as documented below, which further constrain the allowed combinations for this policy.
+* `combination_configurations` - The combination configurations which further constrain the allowed combinations for this policy. (see [nested schema](#schema-6e6573746564-6f7574707574-636f6d62696e6174696f6e5f636f6e66696775726174696f6e73))
+
+~> Combination configurations are managed using the `azuread_authentication_strength_policy_fido2_combination_configuration` and `azuread_authentication_strength_policy_x509_combination_configuration` resources.
 * `description` - The description of this authentication strength policy.
-* `display_name` - The display name of this authentication strength policy.
-* `id` - The ID of this authentication strength policy.
-* `object_id` - The object ID of this authentication strength policy.
 
 ---
 
-`combination_configurations` block exports the following:
+<a id="schema-6e6573746564-6f7574707574-636f6d62696e6174696f6e5f636f6e66696775726174696f6e73"></a>
+The `combination_configurations` object exports the following:
 
 * `allowed_aaguids` - A list of AAGUIDs allowed by this combination configuration. Only populated when `type` is `fido2CombinationConfiguration`.
 * `allowed_issuer_skis` - A list of allowed certificate issuer subject key identifier values. Only populated when `type` is `x509CertificateCombinationConfiguration`.
@@ -79,4 +81,8 @@ In addition to all arguments above, the following attributes are exported:
 * `object_id` - The object ID of this combination configuration.
 * `type` - The type of this combination configuration, either `fido2CombinationConfiguration` or `x509CertificateCombinationConfiguration`.
 
-~> Combination configurations are managed using the `azuread_authentication_strength_policy_fido2_combination_configuration` and `azuread_authentication_strength_policy_x509_combination_configuration` resources.
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
+
+* `read` - (Defaults to 5 minutes) Used when retrieving the data source.

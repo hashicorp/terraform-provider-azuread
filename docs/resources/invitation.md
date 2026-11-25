@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_invitation"
 subcategory: "Invitations"
+description: |-
+  Manages an invitation of a guest user within Azure Active Directory.
 ---
 
 # Resource: azuread_invitation
@@ -53,39 +56,41 @@ resource "azuread_invitation" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `message` - (Optional) A `message` block as documented below, which configures the message being sent to the invited user. If this block is omitted, no message will be sent.
-* `redirect_url` - (Required) The URL that the user should be redirected to once the invitation is redeemed.
-* `user_display_name` - (Optional) The display name of the user being invited.
-* `user_email_address` - (Required) The email address of the user being invited.
-* `user_type` - (Optional) The user type of the user being invited. Must be one of `Guest` or `Member`. Only Global Administrators can invite users as members. Defaults to `Guest`.
+* `redirect_url` - (Required) The URL that the user should be redirected to once the invitation is redeemed. Changing this value forces a new resource to be created.
+* `user_email_address` - (Required) The email address of the user being invited. Changing this value forces a new resource to be created.
 
 ---
 
-`message` block supports the following:
+* `message` - (Optional) A `message` block as documented below, which configures the message being sent to the invited user. If this block is omitted, no message will be sent. Changing this value forces a new resource to be created.
+   (see [nested schema](#schema-6e6573746564-696e707574-6d657373616765))
+* `user_display_name` - (Optional) The display name of the user being invited. Changing this value forces a new resource to be created.
+* `user_type` - (Optional) The user type of the user being invited. Only Global Administrators can invite users as members. Possible values include `Guest` and `Member`. Defaults to `Guest`. Changing this value forces a new resource to be created.
+
+---
+
+<a id="schema-6e6573746564-696e707574-6d657373616765"></a>
+The `message` block supports the following:
 
 * `additional_recipients` - (Optional) Email addresses of additional recipients the invitation message should be sent to. Only 1 additional recipient is currently supported by Azure.
-* `body` - (Optional) Customized message body you want to send if you don't want to send the default message. Cannot be specified with `language`.
-* `language` - (Optional) The language you want to send the default message in. The value specified must be in ISO 639 format. Defaults to `en-US`. Cannot be specified with `body`.
+* `body` - (Optional) Customized message body you want to send if you don't want to send the default message. Conflicts with `message.0.language`.
+* `language` - (Optional) The language you want to send the default message in. The value specified must be in ISO 639 format. Conflicts with `message.0.body`.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
+* `id` - The ID of the Resource.
 * `redeem_url` - The URL the user can use to redeem their invitation.
 * `user_id` - Object ID of the invited user.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
 * `delete` - (Defaults to 5 minutes) Used when deleting the resource.
-
-## Import
-
-This resource does not support importing.

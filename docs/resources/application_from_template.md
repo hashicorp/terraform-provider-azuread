@@ -1,5 +1,9 @@
 ---
+page_title: "Resource: azuread_application_from_template"
 subcategory: "Applications"
+description: |-
+  Creates an application registration and associated service principal from a gallery template.
+  -> The azuread_application application.html resource can also be used to instantiate a gallery application, however unlike the azuread_application resource, this resource does not attempt to manage any properties of the resulting application.
 ---
 
 # Resource: azuread_application_from_template
@@ -37,17 +41,18 @@ data "azuread_service_principal" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
 * `display_name` - (Required) The display name for the application.
-* `template_id` - (Required) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this forces a new resource to be created.
+* `template_id` - (Required) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
+* `id` - The ID of the Resource.
 * `application_id` - The resource ID for the application.
 * `application_object_id` - The object ID for the application.
 * `service_principal_id` - The resource ID for the service principal.
@@ -55,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -64,7 +69,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Templated Applications can be imported using the template ID, the object ID of the application, and the object ID of the service principal, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_from_template.example /applicationTemplates/00000000-0000-0000-0000-000000000000/instantiate/11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222

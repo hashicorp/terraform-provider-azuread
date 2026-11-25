@@ -1,12 +1,16 @@
 ---
+page_title: "Resource: azuread_application_permission_scope"
 subcategory: "Applications"
+description: |-
+  Manages a permission scope for an application registration.
+  This resource is analogous to the oauth2_permission_scope block in the api block of the azuread_application resource. When using these resources together, you should use the ignore_changes lifecycle meta-argument https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle (see example below).
 ---
 
 # Resource: azuread_application_permission_scope
 
 Manages a permission scope for an application registration.
 
-This resource is analogous to the `oauth2_permission_scope` block in the `api` block of the  `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below).
+This resource is analogous to the `oauth2_permission_scope` block in the `api` block of the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below).
 
 ## API Permissions
 
@@ -42,7 +46,6 @@ resource "azuread_application_permission_scope" "example" {
 *Usage with azuread_application resource*
 
 ```terraform
-
 resource "azuread_application" "example" {
   display_name = "example"
 
@@ -59,31 +62,35 @@ resource "azuread_application_permission_scope" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
 * `admin_consent_description` - (Required) Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.
 * `admin_consent_display_name` - (Required) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.
-* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
-* `scope_id` - (Required) The unique identifier of the permission scope. Must be a valid UUID. Changing this forces a new resource to be created.
-* `type` - (Required) Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions.
-* `user_consent_description` - (Required) Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.
-* `user_consent_display_name` - (Required) Display name for the delegated permission that appears in the end user consent experience.
+* `application_id` - (Required) The resource ID of the application registration. Changing this value forces a new resource to be created.
+* `scope_id` - (Required) The unique identifier of the permission scope. Changing this value forces a new resource to be created.
 
 -> **Tip** Use the `random_uuid` resource to generate UUIDs and save them to state for permission scopes within your Terraform configuration
-
-* `value` - (Optional) The value that is used for the `scp` claim in OAuth access tokens.
+* `value` - (Required) The value that is used for the `scp` claim in OAuth access tokens.
 
 -> **Roles and Permission Scopes** In Azure Active Directory, application roles and permission scopes exported by an application share the same namespace and cannot contain duplicate values.
 
+---
+
+* `type` - (Optional) Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions. Possible values include `Admin` and `User`. Defaults to `User`.
+* `user_consent_description` - (Optional) Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.
+* `user_consent_display_name` - (Optional) Display name for the delegated permission that appears in the end user consent experience.
+
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -92,7 +99,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Application App Roles can be imported using the object ID of the application and the ID of the permission scope, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_permission_scope.example /applications/00000000-0000-0000-0000-000000000000/permissionScopes/11111111-1111-1111-1111-111111111111

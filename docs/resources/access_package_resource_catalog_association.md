@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_access_package_resource_catalog_association"
 subcategory: "Identity Governance"
+description: |-
+  Manages the resources added to access package catalogs within Identity Governance in Azure Active Directory.
 ---
 
 # Resource: azuread_access_package_resource_catalog_association
@@ -13,7 +16,6 @@ The following API permissions are required in order to use this resource.
 When authenticated with a service principal, this resource requires the following application role: `EntitlementManagement.ReadWrite.All`.
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Catalog owner` or `Global Administrator`
-
 
 ## Example Usage
 
@@ -35,21 +37,23 @@ resource "azuread_access_package_resource_catalog_association" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
-* `catalog_id` - (Required) The unique ID of the access package catalog. Changing this forces a new resource to be created.
-* `resource_origin_id` - (Required) The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group. Changing this forces a new resource to be created.
-* `resource_origin_system` - (Required) The type of the resource in the origin system, such as `SharePointOnline`, `AadApplication` or `AadGroup`. Changing this forces a new resource to be created.
+The following arguments are supported:
+
+* `catalog_id` - (Required) The unique ID of the access package catalog. Changing this value forces a new resource to be created.
+* `resource_origin_id` - (Required) The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group. Changing this value forces a new resource to be created.
+* `resource_origin_system` - (Required) The type of the resource in the origin system, such as `SharePointOnline`, `AadApplication` or `AadGroup`. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of this resource, the ID is the concatenation of `catalog_id` and `resource_origin_id` with colon in between.
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -57,9 +61,9 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-The resource and catalog association can be imported using the catalog ID and the resource origin ID, e.g.
+This resource can be imported using its resource ID, e.g.
 
-```
+```shell
 terraform import azuread_access_package_resource_catalog_association.example 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111
 ```
 

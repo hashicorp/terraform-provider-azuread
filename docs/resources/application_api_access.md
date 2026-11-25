@@ -1,5 +1,9 @@
 ---
+page_title: "Resource: azuread_application_api_access"
 subcategory: "Applications"
+description: |-
+  Manages the API permissions for an application registration.
+  This resource is analogous to the required_resource_access block in the azuread_application resource. When using these resources together, you should use the ignore_changes lifecycle meta-argument https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle (see example below).
 ---
 
 # Resource: azuread_application_api_access
@@ -51,7 +55,6 @@ resource "azuread_application_api_access" "example_msgraph" {
 *Usage with azuread_application resource*
 
 ```terraform
-
 resource "azuread_application" "example" {
   display_name = "example"
 
@@ -68,24 +71,27 @@ resource "azuread_application_api_access" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `api_client_id` - (Required) The client ID of the API to which access is being granted. Changing this forces a new resource to be created.
-* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
-* `role_ids` - (Optional) A set of role IDs to be granted to the application, as published by the API.
-* `scope_ids` - (Optional) A set of scope IDs to be granted to the application, as published by the API.
+* `api_client_id` - (Required) The client ID of the API to which access is being granted. Changing this value forces a new resource to be created.
+* `application_id` - (Required) The resource ID of the application registration. Changing this value forces a new resource to be created.
 
--> At least one of `role_ids` or `scope_ids` must be specified.
+---
+
+* `role_ids` - (Optional) A set of role IDs to be granted to the application, as published by the API. At least one of `role_ids` or `scope_ids` must be specified.
+* `scope_ids` - (Optional) A set of scope IDs to be granted to the application, as published by the API. At least one of `role_ids` or `scope_ids` must be specified.
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -94,7 +100,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Application API Access can be imported using the object ID of the application and the client ID of the API, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_api_access.example /applications/00000000-0000-0000-0000-000000000000/apiAccess/11111111-1111-1111-1111-111111111111

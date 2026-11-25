@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_app_role_assignment"
 subcategory: "App Role Assignments"
+description: |-
+  Manages an app role assignment for a group, user or service principal. Can be used to grant admin consent for application permissions.
 ---
 
 # Resource: azuread_app_role_assignment
@@ -170,25 +173,26 @@ resource "azuread_app_role_assignment" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `app_role_id` - (Required) The ID of the app role to be assigned, or the default role ID `00000000-0000-0000-0000-000000000000`. Changing this forces a new resource to be created.
-* `principal_object_id` - (Required) The object ID of the user, group or service principal to be assigned this app role. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
-* `resource_object_id` - (Required) The object ID of the service principal representing the resource. Changing this forces a new resource to be created.
+* `app_role_id` - (Required) The ID of the app role to be assigned, or the default role ID `00000000-0000-0000-0000-000000000000`. Changing this value forces a new resource to be created.
+* `principal_object_id` - (Required) The object ID of the user, group or service principal to be assigned this app role. Supported object types are Users, Groups or Service Principals. Changing this value forces a new resource to be created.
+* `resource_object_id` - (Required) The object ID of the service principal representing the resource. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
+* `id` - The ID of the Resource.
 * `principal_display_name` - The display name of the principal to which the app role is assigned.
 * `principal_type` - The object type of the principal to which the app role is assigned.
 * `resource_display_name` - The display name of the application representing the resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -196,7 +200,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-App role assignments can be imported using the object ID of the service principal representing the resource and the ID of the app role assignment (note: _not_ the ID of the app role), e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_app_role_assignment.example /servicePrincipals/00000000-0000-0000-0000-000000000000/appRoleAssignedTo/aaBBcDDeFG6h5JKLMN2PQrrssTTUUvWWxxxxxyyyzzz

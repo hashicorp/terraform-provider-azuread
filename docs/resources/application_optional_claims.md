@@ -1,5 +1,9 @@
 ---
+page_title: "Resource: azuread_application_optional_claims"
 subcategory: "Applications"
+description: |-
+  Manages optional claims for an application registration.
+  This resource is analogous to the optional_claims block in the azuread_application resource. When using these resources together, you should use the ignore_changes lifecycle meta-argument https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle (see example below).
 ---
 
 # Resource: azuread_application_optional_claims
@@ -49,33 +53,60 @@ resource "azuread_application_optional_claims" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `access_token` - (Optional) One or more `access_token` blocks as documented below.
-* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
-* `id_token` - (Optional) One or more `id_token` blocks as documented below.
-* `saml2_token` - (Optional) One or more `saml2_token` blocks as documented below.
-
--> At least one of `access_token`, `id_token` or `saml2_token` must be specified
+* `application_id` - (Required) The resource ID of the application registration. Changing this value forces a new resource to be created.
 
 ---
 
-`access_token`, `id_token` and `saml2_token` blocks support the following:
+* `access_token` - (Optional) The `access_token` block as defined below. At least one of `access_token`, `id_token`, or `saml2_token` must be specified.
+   (see [nested schema](#schema-6e6573746564-696e707574-6163636573735f746f6b656e))
+* `id_token` - (Optional) The `id_token` block as defined below. At least one of `access_token`, `id_token`, or `saml2_token` must be specified.
+   (see [nested schema](#schema-6e6573746564-696e707574-69645f746f6b656e))
+* `saml2_token` - (Optional) The `saml2_token` block as defined below. At least one of `access_token`, `id_token`, or `saml2_token` must be specified.
+   (see [nested schema](#schema-6e6573746564-696e707574-73616d6c325f746f6b656e))
 
-* `additional_properties` - List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. Possible values are: `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
-* `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
-* `name` - The name of the optional claim.
-* `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
+---
+
+<a id="schema-6e6573746564-696e707574-6163636573735f746f6b656e"></a>
+The `access_token` block supports the following:
+
+* `name` - (Required) The name of the optional claim.
+* `additional_properties` - (Optional) List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. For each element: Possible values include `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - (Optional) Whether the claim specified by the client is necessary to ensure a smooth authorization experience. Defaults to `false`.
+* `source` - (Optional) The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object. The only possible value is `user`.
+
+---
+
+<a id="schema-6e6573746564-696e707574-69645f746f6b656e"></a>
+The `id_token` block supports the following:
+
+* `name` - (Required) The name of the optional claim.
+* `additional_properties` - (Optional) List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. For each element: Possible values include `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - (Optional) Whether the claim specified by the client is necessary to ensure a smooth authorization experience. Defaults to `false`.
+* `source` - (Optional) The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object. The only possible value is `user`.
+
+---
+
+<a id="schema-6e6573746564-696e707574-73616d6c325f746f6b656e"></a>
+The `saml2_token` block supports the following:
+
+* `name` - (Required) The name of the optional claim.
+* `additional_properties` - (Optional) List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim. For each element: Possible values include `cloud_displayname`, `dns_domain_and_sam_account_name`, `emit_as_roles`, `include_externally_authenticated_upn_without_hash`, `include_externally_authenticated_upn`, `max_size_limit`, `netbios_domain_and_sam_account_name`, `on_premise_security_identifier`, `sam_account_name`, and `use_guid`.
+* `essential` - (Optional) Whether the claim specified by the client is necessary to ensure a smooth authorization experience. Defaults to `false`.
+* `source` - (Optional) The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object. The only possible value is `user`.
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -84,7 +115,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Application Optional Claims can be imported using the object ID of the application, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_application_optional_claims.example /applications/00000000-0000-0000-0000-000000000000

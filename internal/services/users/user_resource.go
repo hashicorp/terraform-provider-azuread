@@ -82,7 +82,7 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"account_enabled": {
-				Description: "Whether or not the account should be enabled.",
+				Description: "Whether the account should be enabled.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     true,
@@ -278,7 +278,7 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"show_in_address_list": {
-				Description: "Whether or not the Outlook global address list should include this user.",
+				Description: "Whether the Outlook global address list should include this user.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     true,
@@ -309,7 +309,7 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"about_me": {
-				Description: "A freeform field for the user to describe themselves",
+				Description: "A free-form field for the user to describe themselves",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

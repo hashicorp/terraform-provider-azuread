@@ -1,0 +1,1 @@
+terraform import azuread_authentication_strength_policy_x509_combination_configuration.example /policies/authenticationStrengthPolicies/00000000-0000-0000-0000-000000000000/combinationConfigurations/11111111-1111-1111-1111-111111111111

@@ -25,14 +25,14 @@ func schemaLocalizedContent() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"language_code": {
-							Description:  "The language code of this question content",
+							Description:  "The ISO 639 language code for this question choice content",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.ISO639Language,
 						},
 
 						"content": {
-							Description: "The localized content of this question",
+							Description: "The localized content of this question choice",
 							Type:        pluginsdk.TypeString,
 							Required:    true,
 						},
@@ -47,7 +47,7 @@ func schemaUserSet() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
 		Schema: map[string]*pluginsdk.Schema{
 			"subject_type": {
-				Description:      "Type of users",
+				Description:      "Specifies the type of users",
 				Type:             pluginsdk.TypeString,
 				Required:         true,
 				DiffSuppressFunc: suppress.CaseDifference,

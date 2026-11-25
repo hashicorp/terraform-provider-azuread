@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_access_package_catalog"
 subcategory: "Identity Governance"
+description: |-
+  Manages an access package catalog within Identity Governance in Azure Active Directory.
 ---
 
 # Resource: azuread_access_package_catalog
@@ -14,7 +17,6 @@ When authenticated with a service principal, this resource requires the followin
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Catalog owner`, `Catalog creator` or `Global Administrator`
 
-
 ## Example Usage
 
 ```terraform
@@ -24,22 +26,27 @@ resource "azuread_access_package_catalog" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
+
+The following arguments are supported:
 
 * `description` - (Required) The description of the access package catalog.
 * `display_name` - (Required) The display name of the access package catalog.
-* `externally_visible` - (Optional) Whether the access packages in this catalog can be requested by users outside the tenant.
-* `published` - (Optional) Whether the access packages in this catalog are available for management.
+
+---
+
+* `externally_visible` - (Optional) Whether the access packages in this catalog can be requested by users outside the tenant. Defaults to `true`.
+* `published` - (Optional) Whether the access packages in this catalog are available for management. Defaults to `true`.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-* `id` - The ID of this resource.
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -48,10 +55,8 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-An Access Package Catalog can be imported using the `id`, e.g.
+This resource can be imported using its resource ID, e.g.
 
-```
+```shell
 terraform import azuread_access_package_catalog.example 00000000-0000-0000-0000-000000000000
 ```
-
-

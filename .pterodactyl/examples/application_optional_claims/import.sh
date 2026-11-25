@@ -1,0 +1,1 @@
+terraform import azuread_application_optional_claims.example /applications/00000000-0000-0000-0000-000000000000

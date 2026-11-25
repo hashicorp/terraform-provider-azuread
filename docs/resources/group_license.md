@@ -1,5 +1,10 @@
 ---
+page_title: "Resource: azuread_group_license"
 subcategory: "Groups"
+description: |-
+  Manages a single license assignment for a group (group-based licensing).
+  ~> License availability The SKU being assigned must be available in your tenant. You can find the available SKUs and their service plans in the Microsoft 365 admin center https://learn.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference, or by inspecting the subscribedSkus in Microsoft Graph.
+  -> Group-based licensing Licenses assigned to a group are inherited by all members of that group. Assignment to individual members happens asynchronously after the license is assigned to the group, and is managed by Microsoft Entra ID rather than by this resource. This resource only manages the license assignment on the group object itself.
 ---
 
 # Resource: azuread_group_license
@@ -42,23 +47,26 @@ resource "azuread_group_license" "example" {
 }
 ```
 
--> **Tip** For assigning more licenses to a group, create additional instances of this resource.
-
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `disabled_plans` - (Optional) A set of unique identifiers (GUIDs) for the service plans to disable for this license. Changing this forces a new resource to be created.
-* `group_object_id` - (Required) The object ID of the group to which the license should be assigned. Changing this forces a new resource to be created.
-* `sku_id` - (Required) The unique identifier (GUID) for the SKU (license) to assign to the group. Changing this forces a new resource to be created.
+* `group_object_id` - (Required) The object ID of the group to which the license should be assigned. Changing this value forces a new resource to be created.
+* `sku_id` - (Required) The unique identifier (GUID) for the SKU (license) to assign to the group. Changing this value forces a new resource to be created.
+
+---
+
+* `disabled_plans` - (Optional) A set of unique identifiers (GUIDs) for the service plans to disable for this license. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-No additional attributes are exported.
+The following attributes are exported:
+
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -66,7 +74,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Group Licenses can be imported using the object ID of the group and the SKU ID of the license, in the following format.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_group_license.example 00000000-0000-0000-0000-000000000000/license/11111111-1111-1111-1111-111111111111

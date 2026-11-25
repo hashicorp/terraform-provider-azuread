@@ -109,7 +109,7 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"dynamic_membership": {
-				Description: "An optional block to configure dynamic membership for the group. Cannot be used with `members`",
+				Description: "An optional block to configure dynamic membership for the group.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{
@@ -247,7 +247,7 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"visibility": {
-				Description: "The group join policy and group content visibility. Only Microsoft 365 groups can have `Hiddenmembership` visibility.",
+				Description: "The group join policy and group content visibility.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

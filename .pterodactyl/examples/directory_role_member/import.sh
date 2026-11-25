@@ -1,0 +1,1 @@
+terraform import azuread_directory_role_member.example 00000000-0000-0000-0000-000000000000/member/11111111-1111-1111-1111-111111111111

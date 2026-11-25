@@ -1,0 +1,5 @@
+{{ render "builtin/flat/entry" . }}
+{{- if eq .Appearance "input" }}
+
+-> **Creating a Password** The `password` block supports a single password for the application, and is provided so that a password can be generated when a new application is created. This helps to make new applications available for authentication more quickly. To add additional passwords to an application, see the [azuread_application_password](application_password.html) resource.
+{{- end }}

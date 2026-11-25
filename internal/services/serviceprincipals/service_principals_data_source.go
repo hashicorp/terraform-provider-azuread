@@ -96,7 +96,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"account_enabled": {
-							Description: "Whether or not the service principal account is enabled",
+							Description: "Whether the service principal account is enabled",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -114,7 +114,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 						},
 
 						"client_id": {
-							Description: "The application ID (client ID) for the associated application",
+							Description: "The client ID of the application associated with this service principal",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
@@ -159,7 +159,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 						},
 
 						"tags": {
-							Description: "A set of tags to apply to the service principal",
+							Description: "A list of tags applied to the service principal",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{

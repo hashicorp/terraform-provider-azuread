@@ -1,5 +1,9 @@
 ---
+page_title: "Resource: azuread_group_member"
 subcategory: "Groups"
+description: |-
+  Manages a single group membership within Azure Active Directory.
+  ~> Warning Do not use this resource at the same time as the members property of the azuread_group resource for the same group. Doing so will cause a conflict and group members will be removed.
 ---
 
 # Resource: azuread_group_member
@@ -21,7 +25,6 @@ When authenticated with a user principal, this resource requires one of the foll
 ## Example Usage
 
 ```terraform
-
 data "azuread_user" "example" {
   user_principal_name = "jdoe@hashicorp.com"
 }
@@ -37,22 +40,22 @@ resource "azuread_group_member" "example" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `group_object_id` - (Required) The object ID of the group you want to add the member to. Changing this forces a new resource to be created.
-* `member_object_id` - (Required) The object ID of the principal you want to add as a member to the group. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
+* `group_object_id` - (Required) The object ID of the group you want to add the member to. Changing this value forces a new resource to be created.
+* `member_object_id` - (Required) The object ID of the principal you want to add as a member to the group. Supported object types are Users, Groups or Service Principals. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-*No additional attributes are exported*
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
@@ -60,7 +63,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Group members can be imported using the object ID of the group and the object ID of the member, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_group_member.example 00000000-0000-0000-0000-000000000000/member/11111111-1111-1111-1111-111111111111

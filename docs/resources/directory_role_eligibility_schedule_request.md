@@ -1,5 +1,8 @@
 ---
+page_title: "Resource: azuread_directory_role_eligibility_schedule_request"
 subcategory: "Directory Roles"
+description: |-
+  Manages a single directory role eligibility schedule request within Azure Active Directory.
 ---
 
 # Resource: azuread_directory_role_eligibility_schedule_request
@@ -33,34 +36,32 @@ resource "azuread_directory_role_eligibility_schedule_request" "example" {
 }
 ```
 
-~> Note the use of the `template_id` attribute when referencing built-in roles.
-
-## Argument Reference
+## Arguments Reference
 
 The following arguments are supported:
 
-* `directory_scope_id` - (Required) Identifier of the directory object representing the scope of the role eligibility. Changing this forces a new resource to be created.
-* `justification` - (Required) Justification for why the principal is granted the role eligibility. Changing this forces a new resource to be created.
-* `principal_id` - (Required) The object ID of the principal to granted the role eligibility. Changing this forces a new resource to be created.
-* `role_definition_id` - (Required) The template ID (in the case of built-in roles) or object ID (in the case of custom roles) of the directory role you want to assign. Changing this forces a new resource to be created.
+* `directory_scope_id` - (Required) Identifier of the directory object representing the scope of the role eligibility. Changing this value forces a new resource to be created.
+* `justification` - (Required) Justification for why the principal is granted the role eligibility. Changing this value forces a new resource to be created.
+* `principal_id` - (Required) The object ID of the principal to granted the role eligibility. Changing this value forces a new resource to be created.
+* `role_definition_id` - (Required) The template ID (in the case of built-in roles) or object ID (in the case of custom roles) of the directory role you want to assign. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
-*No additional attributes are exported*
+* `id` - The ID of the Resource.
 
 ## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
-* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `create` - (Defaults to 10 minutes) Used when creating the resource.
 * `read` - (Defaults to 5 minutes) Used when retrieving the resource.
 * `delete` - (Defaults to 5 minutes) Used when deleting the resource.
 
 ## Import
 
-Directory role eligibility schedule requests can be imported using the ID of the assignment, e.g.
+This resource can be imported using its resource ID, e.g.
 
 ```shell
 terraform import azuread_directory_role_eligibility_schedule_request.example 822ec710-4c9f-4f71-a27a-451759cc7522
