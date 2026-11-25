@@ -78,21 +78,22 @@ linters:
         type: module
         settings:
           disable: # rules with findings left to fix, each to be switched on once they are
-            - AZP001 # Microsoft docs URLs with a locale in them - 25 findings
+            - AZP001 # Microsoft docs URLs with a locale in them - 26 findings
             - AZP002 # resources with no data source - 48 findings, to decide if they should have one
             - AZP003 # data sources missing their resource's properties - 6 findings
-            - AZP007 # URLs for pages that have moved - 1 finding
+            - AZP007 # URLs for pages that have moved - 23 findings
             - AZR007 # StateChangeConf rather than a custom poller - 13 findings, to migrate over time
-            - AZS003 # blocks that can be empty - 33 findings, 17 of them in state migrations
+            - AZS003 # blocks that can be empty - 16 findings
+            - AZS005 # schema fields out of the agreed order - 90 findings, all fixed by 'make lint-fix' once this is switched on
             - AZS007 # Optional+Computed fields with no '// Note: O+C because ...' comment - 123 findings
-            - AZS010 # properties and blocks with no description - 445 findings, 414 of them in state migrations the rule should skip
+            - AZS010 # properties and blocks with no description - 34 findings
             - AZS012 # a/an before a name - 3 findings
             - AZS013 # acronym case - 2 findings
-            - AZS014 # descriptions repeating what the schema already says - 22 findings
-            - AZS015 # descriptions with no full stop - 178 findings
-            - AZS016 # product names without their capitals - 101 findings
-            - AZS017 # descriptions opening with "Specifies the" and similar - 53 findings
-            - AZS019 # descriptions that ask a question - 2 findings
+            - AZS014 # descriptions repeating what the schema already says - 25 findings
+            - AZS015 # descriptions with no full stop - 192 findings
+            - AZS016 # product names without their capitals - 147 findings
+            - AZS017 # descriptions opening with "Specifies the" and similar - 67 findings
+            - AZS019 # descriptions that ask a question - 14 findings
             - AZT002 # tests reading credentials with os.Getenv - 3 findings
           AZG002:
             use: pointer.To # rather than the go1.26 new(<expr>) builtin
@@ -101,13 +102,9 @@ linters:
             # (e.g. d.Set("key", x)) - among identifier/expression siblings the name adds context
             only-when-literals: true
           AZG010:
-            allow: # aliases that mark an import as the beta Graph API, kept so its use shows at every call
-              - administrativeunitmemberBeta
-              - groupBeta
-              - memberBeta
-              - memberofBeta
-              - ownerBeta
-              - transitivememberBeta
+            allow-pattern: ['Beta$'] # groupBeta, ownerBeta: aliases that mark an import as the beta Graph API, kept so its use shows at every call
+          AZS005:
+            state-migrations: false # a state migration's schema is a copy of what old state looked like, so it is left as written
           AZS004:
             # exact-match only: report hand-written lists that exactly match the enum (a pure
             # PossibleValuesFor<Enum>() swap); deliberate subsets/supersets are left alone
@@ -150,6 +147,7 @@ linters:
           - tfproviderlint
         text: '^V[0-9]+:'
 issues:
+  uniq-by-line: false # show every report on a line: all azproviderlint rules count as one linter, so one rule's report would hide another's
   max-issues-per-linter: 0
   max-same-issues: 0
 formatters:

@@ -50,10 +50,12 @@ $(TOOLS_BIN)/%: .tools/go.mod .tools/go.sum
 	@cd .tools && go build -o bin/$* $$(go list tool | grep "/$*$$")
 
 # explicit rules take precedence over the pattern rule above; golangci-lint custom must run from
-# the directory holding .custom-gcl.yml, hence the cd
+# the directory holding .custom-gcl.yml, hence the cd. The lint cache is cleared after a rebuild as
+# it does not know which plugin versions made its results, so an old version's would be reused
 $(GOLANGCI_LINT_MODULES): .tools/.custom-gcl.yml $(GOLANGCI_LINT)
 	@echo "==> Building golangci-lint with plugins (versions pinned in .tools/.custom-gcl.yml)..."
 	@cd .tools && bin/golangci-lint custom
+	@$(GOLANGCI_LINT_MODULES) cache clean
 
 # tfproviderdocs is built in isolation (go install pkg@version resolves the tool's own go.mod)
 # rather than from the shared module: the goldmark bump the other tools bring in makes v0.12.1's
