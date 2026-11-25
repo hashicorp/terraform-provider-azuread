@@ -90,7 +90,7 @@ func FlattenAppRoleIDs(in *[]stable.AppRole) map[string]string {
 
 func FlattenAppRoles(in *[]stable.AppRole) (result []map[string]interface{}) {
 	if in == nil {
-		return []map[string]interface{}{} //nolint:nakedret
+		return []map[string]interface{}{}
 	}
 
 	for _, role := range *in {
@@ -194,7 +194,7 @@ func FlattenOAuth2PermissionScopeIDs(in *[]stable.PermissionScope) map[string]st
 
 func FlattenOAuth2PermissionScopes(in *[]stable.PermissionScope) (result []map[string]interface{}) {
 	if in == nil {
-		return []map[string]interface{}{} //nolint:nakedret
+		return []map[string]interface{}{}
 	}
 
 	for _, p := range *in {
