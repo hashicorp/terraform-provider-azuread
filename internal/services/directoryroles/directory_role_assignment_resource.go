@@ -72,7 +72,7 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"app_scope_id": {
-				Description:   "Identifier of the app-specific scope when the assignment scope is app-specific. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage.",
+				Description:   "Identifier of the app-specific scope when the assignment scope is app-specific. See [official documentation](https://learn.microsoft.com/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage.",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -82,7 +82,7 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"directory_scope_id": {
-				Description:   "Identifier of the directory object representing the scope of the assignment. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage.",
+				Description:   "Identifier of the directory object representing the scope of the assignment. See [official documentation](https://learn.microsoft.com/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage.",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				Computed:      true,

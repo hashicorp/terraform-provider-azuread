@@ -77,7 +77,7 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"allowed_resource_actions": {
-							Description: "A set of tasks that can be performed on a resource. For more information, see the [Permissions Reference](https://docs.microsoft.com/en-us/azure/active-directory/roles/permissions-reference) documentation.",
+							Description: "A set of tasks that can be performed on a resource. For more information, see the [Permissions Reference](https://learn.microsoft.com/azure/active-directory/roles/permissions-reference) documentation.",
 							Type:        pluginsdk.TypeSet,
 							Required:    true,
 							Elem: &pluginsdk.Schema{

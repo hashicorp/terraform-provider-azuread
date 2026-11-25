@@ -163,7 +163,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"app_roles": {
-				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
+				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://learn.microsoft.com/azure/architecture/multitenant-identity/app-roles).",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{

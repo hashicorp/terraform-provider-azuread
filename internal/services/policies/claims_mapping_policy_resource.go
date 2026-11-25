@@ -57,7 +57,7 @@ func claimsMappingPolicyResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"definition": {
-				Description: "The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://www.terraform.io/language/functions/jsonencode) function can be used.",
+				Description: "The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) function can be used.",
 				Type:        pluginsdk.TypeList,
 				Required:    true,
 				Elem: &pluginsdk.Schema{

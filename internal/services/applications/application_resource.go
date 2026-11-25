@@ -206,7 +206,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"app_role": {
-				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
+				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://learn.microsoft.com/azure/architecture/multitenant-identity/app-roles).",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Resource{
@@ -725,7 +725,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.Resou
 		diff.SetNewComputed("logo_url")
 	}
 
-	// The following validation is taken from https://docs.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation
+	// The following validation is taken from https://learn.microsoft.com/azure/active-directory/develop/supported-accounts-validation
 	// These apply only when personal account sign-ins are enabled for an application, and are enforced at plan time to avoid breaking existing
 	// applications that change from AAD (corporate) account sign-ins to personal account sign-ins
 	if s := diff.Get("sign_in_audience").(string); s == SignInAudienceAzureADandPersonalMicrosoftAccount || s == SignInAudiencePersonalMicrosoftAccount {

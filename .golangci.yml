@@ -78,10 +78,8 @@ linters:
         type: module
         settings:
           disable: # rules with findings left to fix, each to be switched on once they are
-            - AZP001 # Microsoft docs URLs with a locale in them - 26 findings
             - AZP002 # resources with no data source - 48 findings, to decide if they should have one
             - AZP003 # data sources missing their resource's properties - 6 findings
-            - AZP007 # URLs for pages that have moved - 23 findings
             - AZR007 # StateChangeConf rather than a custom poller - 13 findings, to migrate over time
             - AZS003 # blocks that can be empty - 16 findings
             - AZS005 # schema fields out of the agreed order - 90 findings, all fixed by 'make lint-fix' once this is switched on
