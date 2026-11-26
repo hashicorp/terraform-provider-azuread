@@ -66,6 +66,7 @@ func namedLocationResource() *pluginsdk.Resource {
 			},
 
 			"ip": {
+				Description:  "An `ip` block, which configures an IP-based named location.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				ForceNew:     true,
@@ -93,6 +94,7 @@ func namedLocationResource() *pluginsdk.Resource {
 			},
 
 			"country": {
+				Description:  "A `country` block, which configures a country-based named location.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				ForceNew:     true,

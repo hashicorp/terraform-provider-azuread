@@ -8,10 +8,11 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
-func schemaOptionalClaims() *pluginsdk.Schema {
+func schemaOptionalClaims(description string) *pluginsdk.Schema {
 	return &pluginsdk.Schema{
-		Type:     pluginsdk.TypeList,
-		Optional: true,
+		Description: description,
+		Type:        pluginsdk.TypeList,
+		Optional:    true,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"name": {

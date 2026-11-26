@@ -53,25 +53,25 @@ func directoryRolesDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"display_name": {
-							Description: "The display name of the directory role",
+							Description: "The display name of the directory role.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"template_id": {
-							Description: "The object ID of the template associated with the directory role",
+							Description: "The object ID of the template associated with the directory role.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"description": {
-							Description: "The description of the directory role",
+							Description: "The description of the directory role.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"object_id": {
-							Description: "The object ID of the directory role",
+							Description: "The object ID of the directory role.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},

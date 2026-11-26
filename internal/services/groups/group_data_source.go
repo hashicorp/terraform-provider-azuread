@@ -52,7 +52,7 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description:  "Specifies the object ID of the group.",
+				Description:  "The object ID of the group.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -82,13 +82,13 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"assignable_to_role": {
-				Description: "Indicates whether this group can be assigned to an Azure Active Directory role.",
+				Description: "Whether this group can be assigned to an Azure Active Directory role.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"auto_subscribe_new_members": {
-				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Only set for Unified groups.",
+				Description: "Whether new members added to the group will be auto-subscribed to receive email notifications. Only set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
@@ -109,13 +109,13 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"dynamic_membership": {
-				Description: "An optional block to configure dynamic membership for the group. Cannot be used with `members`",
+				Description: "An optional block to configure dynamic membership for the group.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
-							Description: "Whether rule processing is \"On\" (true) or \"Paused\" (false).",
+							Description: "Whether rule processing is `On` (true) or `Paused` (false).",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -130,19 +130,19 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"external_senders_allowed": {
-				Description: "Indicates whether people external to the organization can send messages to the group. Only set for Unified groups.",
+				Description: "Whether people external to the organization can send messages to the group. Only set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"hide_from_address_lists": {
-				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups. Only set for Unified groups.",
+				Description: "Whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups. Only set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"hide_from_outlook_clients": {
-				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Only set for Unified groups.",
+				Description: "Whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Only set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},

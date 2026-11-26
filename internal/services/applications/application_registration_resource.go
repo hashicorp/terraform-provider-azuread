@@ -57,7 +57,7 @@ func (r ApplicationRegistrationResource) ResourceType() string {
 
 func (r ApplicationRegistrationResource) Description() string {
 	return "Manages an application registration within Azure Active Directory.\n\n" +
-		"For a more comprehensive alternative, please see the [azuread_application](application.html) resource. Please note that this resource should not be used together with the `azuread_application` resource when managing the same application."
+		"For a more comprehensive alternative, see the [azuread_application](application.html) resource. This resource should not be used together with the `azuread_application` resource when managing the same application."
 }
 
 func (r ApplicationRegistrationResource) ModelObject() interface{} {
@@ -185,7 +185,7 @@ func (r ApplicationRegistrationResource) Attributes() map[string]*pluginsdk.Sche
 		},
 
 		"disabled_by_microsoft": {
-			Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`",
+			Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},

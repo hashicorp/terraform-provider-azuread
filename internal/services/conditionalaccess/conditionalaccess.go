@@ -16,9 +16,10 @@ import (
 
 func schemaConditionalAccessFilter() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
-		Type:     pluginsdk.TypeList,
-		Optional: true,
-		MaxItems: 1,
+		Description: "A `filter` block, which includes or excludes the items that match a rule.",
+		Type:        pluginsdk.TypeList,
+		Optional:    true,
+		MaxItems:    1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"mode": {

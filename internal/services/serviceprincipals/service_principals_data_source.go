@@ -28,7 +28,7 @@ import (
 
 func servicePrincipalsDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description: "Gets basic information for multiple Azure Active Directory service principals.",
+		Description: "Gets basic information for multiple Azure Active Directory Service Principals.",
 		ReadContext: servicePrincipalsDataSourceRead,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
@@ -37,7 +37,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"client_ids": {
-				Description:  "A list of client IDs of the applications associated with the service principals.",
+				Description:  "A list of client IDs of the applications associated with the Service Principals.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -49,7 +49,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"display_names": {
-				Description:  "A list of display names of the applications associated with the service principals.",
+				Description:  "A list of display names of the applications associated with the Service Principals.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -61,7 +61,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"object_ids": {
-				Description:  "The object IDs of the service principals.",
+				Description:  "The object IDs of the Service Principals.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
@@ -73,7 +73,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"ignore_missing": {
-				Description:   "Ignore missing service principals and return all service principals that are found. The data source will still fail if no service principals are found.",
+				Description:   "Ignore missing Service Principals and return all Service Principals that are found. The data source will still fail if no Service Principals are found.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
@@ -81,7 +81,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"return_all": {
-				Description:   "When `true`, the data source will return all service principals.",
+				Description:   "When `true`, the data source will return all Service Principals.",
 				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
@@ -90,61 +90,61 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 			},
 
 			"service_principals": {
-				Description: "A list of service principals.",
+				Description: "A list of Service Principals.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"account_enabled": {
-							Description: "Whether or not the service principal account is enabled",
+							Description: "Whether the Service Principal account is enabled.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"app_role_assignment_required": {
-							Description: "Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application",
+							Description: "Whether this Service Principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"application_tenant_id": {
-							Description: "The tenant ID where the associated application is registered",
+							Description: "The tenant ID where the associated application is registered.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"client_id": {
-							Description: "The application ID (client ID) for the associated application",
+							Description: "The application ID (client ID) for the associated application.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"display_name": {
-							Description: "The display name of the application associated with this service principal",
+							Description: "The display name of the application associated with this Service Principal.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"object_id": {
-							Description: "The object ID of the service principal",
+							Description: "The object ID of the Service Principal.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"preferred_single_sign_on_mode": {
-							Description: "The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps",
+							Description: "The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"saml_metadata_url": {
-							Description: "The URL where the service exposes SAML metadata for federation",
+							Description: "The URL where the service exposes SAML metadata for federation.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"service_principal_names": {
-							Description: "A list of identifier URI(s), copied over from the associated application",
+							Description: "A list of identifier URI(s), copied over from the associated application.",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{
@@ -153,13 +153,13 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 						},
 
 						"sign_in_audience": {
-							Description: "The Microsoft account types that are supported for the associated application",
+							Description: "The Microsoft account types that are supported for the associated application.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"tags": {
-							Description: "A set of tags to apply to the service principal",
+							Description: "A set of tags to apply to the Service Principal.",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{
@@ -168,7 +168,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 						},
 
 						"type": {
-							Description: "Identifies whether the service principal represents an application or a managed identity",
+							Description: "Identifies whether the Service Principal represents an application or a Managed Identity.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},

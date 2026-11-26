@@ -68,22 +68,24 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"state": {
-				Description:  "Specifies the state of the policy object.",
+				Description:  "The state of the policy object.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessPolicyState(), false),
 			},
 
 			"conditions": {
-				Type:     pluginsdk.TypeList,
-				Required: true,
-				MaxItems: 1,
+				Description: "A `conditions` block, which specifies the rules that must be met for the policy to apply.",
+				Type:        pluginsdk.TypeList,
+				Required:    true,
+				MaxItems:    1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"applications": {
-							Type:     pluginsdk.TypeList,
-							Required: true,
-							MaxItems: 1,
+							Description: "An `applications` block, which specifies applications and user actions included in and excluded from the policy.",
+							Type:        pluginsdk.TypeList,
+							Required:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_applications": {
@@ -137,13 +139,14 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"client_applications": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Description: "A `client_applications` block, which specifies Service Principals included in and excluded from the policy.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_service_principals": {
-										Description: "A list of service principal IDs explicitly included in the policy. Can be set to `ServicePrincipalsInMyTenant` to include all service principals. This is mandatory value when at least one `excluded_service_principals` is set.",
+										Description: "A list of Service Principal IDs explicitly included in the policy. Can be set to `ServicePrincipalsInMyTenant` to include all Service Principals. This is mandatory value when at least one `excluded_service_principals` is set.",
 										Type:        pluginsdk.TypeList,
 										Optional:    true,
 										Elem: &pluginsdk.Schema{
@@ -153,7 +156,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_service_principals": {
-										Description: "A list of service principal IDs explicitly excluded in the policy.",
+										Description: "A list of Service Principal IDs explicitly excluded in the policy.",
 										Type:        pluginsdk.TypeList,
 										Optional:    true,
 										Elem: &pluginsdk.Schema{
@@ -168,9 +171,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"users": {
-							Type:     pluginsdk.TypeList,
-							Required: true,
-							MaxItems: 1,
+							Description: "A `users` block, which specifies users, groups, and roles included in and excluded from the policy.",
+							Type:        pluginsdk.TypeList,
+							Required:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_users": {
@@ -237,6 +241,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"included_guests_or_external_users": {
+										Description:  "An `included_guests_or_external_users` block, which specifies internal guests and external users in scope of the policy.",
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
@@ -253,8 +258,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 												},
 
 												"external_tenants": {
-													Type:     pluginsdk.TypeList,
-													Optional: true,
+													Description: "An `external_tenants` block, which specifies external tenants in the policy scope.",
+													Type:        pluginsdk.TypeList,
+													Optional:    true,
 													Elem: &pluginsdk.Resource{
 														Schema: map[string]*pluginsdk.Schema{
 															"membership_kind": {
@@ -281,8 +287,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_guests_or_external_users": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "An `excluded_guests_or_external_users` block, which specifies internal guests and external users excluded from the scope of the policy.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Resource{
 											Schema: map[string]*pluginsdk.Schema{
 												"guest_or_external_user_types": {
@@ -296,8 +303,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 												},
 
 												"external_tenants": {
-													Type:     pluginsdk.TypeList,
-													Optional: true,
+													Description: "An `external_tenants` block, which specifies external tenants in the policy scope.",
+													Type:        pluginsdk.TypeList,
+													Optional:    true,
 													Elem: &pluginsdk.Resource{
 														Schema: map[string]*pluginsdk.Schema{
 															"membership_kind": {
@@ -353,7 +361,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						// See https://learn.microsoft.com/entra/identity/conditional-access/concept-assignment-network
 						// TODO: consider renaming this block to `network` in v4.0 to align with the portal terminology.
 						"locations": {
-							Description: "A `locations` block as documented below, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/entra/identity/conditional-access/concept-assignment-network) for more information.",
+							Description: "A `locations` block, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/entra/identity/conditional-access/concept-assignment-network) for more information.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							MaxItems:    1,
@@ -383,7 +391,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"platforms": {
-							Description: "A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.",
+							Description: "A `platforms` block, which specifies platforms included in and excluded from the policy.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							MaxItems:    1,
@@ -413,7 +421,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"service_principal_risk_levels": {
-							Description: "A list of service principal sign-in risk levels included in the policy.",
+							Description: "A list of Service Principal sign-in risk levels included in the policy.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							Elem: &pluginsdk.Schema{
@@ -454,6 +462,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"grant_controls": {
+				Description:  "A `grant_controls` block, which specifies the grant controls that must be fulfilled to pass the policy.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				AtLeastOneOf: []string{"grant_controls", "session_controls"},
@@ -461,7 +470,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"operator": {
-							Description:  "Defines the relationship of the grant controls.",
+							Description:  "The relationship of the grant controls.",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"AND", "OR"}, false),
@@ -511,6 +520,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"session_controls": {
+				Description:      "A `session_controls` block, which specifies the session controls that are enforced after sign-in.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				AtLeastOneOf:     []string{"grant_controls", "session_controls"},
@@ -580,7 +590,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description: "The object ID of the policy",
+				Description: "The object ID of the policy.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

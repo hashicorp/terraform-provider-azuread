@@ -121,43 +121,43 @@ func (r DomainsDataSource) Attributes() map[string]*pluginsdk.Schema {
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"admin_managed": {
-						Description: "Whether the DNS for the domain is managed by Microsoft 365",
+						Description: "Whether the DNS for the domain is managed by Microsoft 365.",
 						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},
 
 					"authentication_type": {
-						Description: "The authentication type of the domain. Possible values include `Managed` or `Federated`",
+						Description: "The authentication type of the domain.",
 						Type:        pluginsdk.TypeString,
 						Computed:    true,
 					},
 
 					"default": {
-						Description: "Whether this is the default domain that is used for user creation",
+						Description: "Whether this is the default domain that is used for user creation.",
 						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},
 
 					"domain_name": {
-						Description: "The name of the domain",
+						Description: "The name of the domain.",
 						Type:        pluginsdk.TypeString,
 						Computed:    true,
 					},
 
 					"initial": {
-						Description: "Whether this is the initial domain created by Azure Active Directory",
+						Description: "Whether this is the initial domain created by Azure Active Directory.",
 						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},
 
 					"root": {
-						Description: "Whether the domain is a verified root domain (not a subdomain)",
+						Description: "Whether the domain is a verified root domain (not a subdomain).",
 						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},
 
 					"supported_services": {
-						Description: "A list of capabilities / services supported by the domain. Possible values include `Email`, `Sharepoint`, `EmailInternalRelayOnly`, `OfficeCommunicationsOnline`, `SharePointDefaultDomain`, `FullRedelegation`, `SharePointPublic`, `OrgIdAuthentication`, `Yammer` and `Intune`",
+						Description: "A list of capabilities / services supported by the domain.",
 						Type:        pluginsdk.TypeList,
 						Computed:    true,
 						Elem: &pluginsdk.Schema{
@@ -166,7 +166,7 @@ func (r DomainsDataSource) Attributes() map[string]*pluginsdk.Schema {
 					},
 
 					"verified": {
-						Description: "Whether the domain has completed domain ownership verification",
+						Description: "Whether the domain has completed domain ownership verification.",
 						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},

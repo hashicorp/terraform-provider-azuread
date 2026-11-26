@@ -45,7 +45,7 @@ func (r ApplicationFromTemplateResource) ResourceType() string {
 }
 
 func (r ApplicationFromTemplateResource) Description() string {
-	return "Creates an application registration and associated service principal from a gallery template."
+	return "Creates an application registration and associated Service Principal from a gallery template."
 }
 
 func (r ApplicationFromTemplateResource) ModelObject() interface{} {
@@ -86,13 +86,13 @@ func (r ApplicationFromTemplateResource) Attributes() map[string]*pluginsdk.Sche
 		},
 
 		"service_principal_id": {
-			Description: "The resource ID for the service principal.",
+			Description: "The resource ID for the Service Principal.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"service_principal_object_id": {
-			Description: "The object ID for the service principal.",
+			Description: "The object ID for the Service Principal.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
