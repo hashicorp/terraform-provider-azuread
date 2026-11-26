@@ -27,7 +27,7 @@ import (
 
 func appRoleAssignmentResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages an app role assignment for a group, user or service principal. Can be used to grant admin consent for application permissions.",
+		Description:   "Manages an app role assignment for a group, user or Service Principal. Can be used to grant admin consent for application permissions.",
 		CreateContext: appRoleAssignmentResourceCreate,
 		ReadContext:   appRoleAssignmentResourceRead,
 		DeleteContext: appRoleAssignmentResourceDelete,
@@ -67,7 +67,7 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"principal_object_id": {
-				Description:  "The object ID of the user, group or service principal to be assigned this app role. Supported object types are Users, Groups or Service Principals.",
+				Description:  "The object ID of the user, group or Service Principal to be assigned this app role. Supported object types are Users, Groups or Service Principals.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -75,7 +75,7 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"resource_object_id": {
-				Description:  "The object ID of the service principal representing the resource.",
+				Description:  "The object ID of the Service Principal representing the resource.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,

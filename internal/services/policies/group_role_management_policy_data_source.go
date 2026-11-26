@@ -50,13 +50,13 @@ func (r GroupRoleManagementPolicyDataSource) Arguments() map[string]*schema.Sche
 func (r GroupRoleManagementPolicyDataSource) Attributes() map[string]*schema.Schema {
 	return map[string]*pluginsdk.Schema{
 		"display_name": {
-			Description: "(String) The display name of this policy.",
+			Description: "The display name of this policy.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
 
 		"description": {
-			Description: "(String) The description of this policy.",
+			Description: "The description of this policy.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},

@@ -85,7 +85,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 		},
 
 		"combination_configurations": {
-			Description: "The combination configurations which further constrain the allowed combinations for this policy",
+			Description: "The combination configurations which further constrain the allowed combinations for this policy.",
 			Type:        pluginsdk.TypeList,
 			Computed:    true,
 			Elem: &pluginsdk.Resource{
@@ -97,7 +97,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 					},
 
 					"type": {
-						Description: "The type of this combination configuration, either `fido2CombinationConfiguration` or `x509CertificateCombinationConfiguration`.",
+						Description: "The type of this combination configuration.",
 						Type:        pluginsdk.TypeString,
 						Computed:    true,
 					},

@@ -35,7 +35,7 @@ const servicePrincipalResourceName = "azuread_service_principal"
 
 func servicePrincipalResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages a service principal associated with an application within Azure Active Directory.",
+		Description:   "Manages a Service Principal associated with an application within Azure Active Directory.",
 		CreateContext: servicePrincipalResourceCreate,
 		ReadContext:   servicePrincipalResourceRead,
 		UpdateContext: servicePrincipalResourceUpdate,
@@ -69,7 +69,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"client_id": {
-				Description:  "The client ID of the application for which to create a service principal.",
+				Description:  "The client ID of the application for which to create a Service Principal.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -77,14 +77,14 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"account_enabled": {
-				Description: "Whether or not the service principal account is enabled.",
+				Description: "Whether the Service Principal account is enabled.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     true,
 			},
 
 			"alternative_names": {
-				Description: "A set of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.",
+				Description: "A set of alternative names, used to retrieve Service Principals by subscription, identify Resource Group and full resource IDs for Managed Identities.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Schema{
@@ -94,20 +94,20 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"app_role_assignment_required": {
-				Description: "Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.",
+				Description: "Whether this Service Principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"description": {
-				Description:  "A description of the service principal provided for internal end-users.",
+				Description:  "A description of the Service Principal provided for internal end-users.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
 			"feature_tags": {
-				Description:   "Block of features to configure for this service principal using tags",
+				Description:   "Block of features to configure for this Service Principal using tags.",
 				Type:          pluginsdk.TypeList,
 				Optional:      true,
 				Computed:      true,
@@ -115,19 +115,19 @@ func servicePrincipalResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"custom_single_sign_on": {
-							Description: "Whether this service principal represents a custom SAML application. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag.",
+							Description: "Whether this Service Principal represents a custom SAML application. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"enterprise": {
-							Description: "Whether this service principal represents an Enterprise Application. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag.",
+							Description: "Whether this Service Principal represents an Enterprise Application. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"gallery": {
-							Description: "Whether this service principal represents a gallery application. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag.",
+							Description: "Whether this Service Principal represents a gallery application. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -143,7 +143,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 
 			"features": {
 				Deprecated:    "This block has been renamed to `feature_tags` and will be removed in version 3.0 of the provider",
-				Description:   "Block of features to configure for this service principal using tags",
+				Description:   "Block of features to configure for this Service Principal using tags.",
 				Type:          pluginsdk.TypeList,
 				Optional:      true,
 				Computed:      true,
@@ -151,25 +151,25 @@ func servicePrincipalResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"custom_single_sign_on_app": {
-							Description: "Whether this service principal represents a custom SAML application",
+							Description: "Whether this Service Principal represents a custom SAML application.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"enterprise_application": {
-							Description: "Whether this service principal represents an Enterprise Application",
+							Description: "Whether this Service Principal represents an Enterprise Application.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"gallery_application": {
-							Description: "Whether this service principal represents a gallery application",
+							Description: "Whether this Service Principal represents a gallery application.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"visible_to_users": {
-							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher",
+							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 							Default:     true,
@@ -186,7 +186,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"notes": {
-				Description:  "A free text field to capture information about the service principal, typically used for operational purposes.",
+				Description:  "A free text field to capture information about the Service Principal, typically used for operational purposes.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -203,7 +203,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"owners": {
-				Description: "A set of object IDs of principals that will be granted ownership of the service principal. Supported object types are users or service principals. By default, no owners are assigned.",
+				Description: "A set of object IDs of principals that will be granted ownership of the Service Principal. Supported object types are users or Service Principals. By default, no owners are assigned.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Set:         pluginsdk.HashString,
@@ -221,7 +221,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"tags": {
-				Description:   "A set of tags to apply to the service principal for configuring specific behaviours of the service principal. Note that these are not provided for use by practitioners.",
+				Description:   "A set of tags to apply to the Service Principal for configuring specific behaviours of the Service Principal. These are not provided for use by practitioners.",
 				Type:          pluginsdk.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -233,7 +233,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"use_existing": {
-				Description: "When true, any existing service principal linked to the same application will be automatically imported. When false, an import error will be raised for any pre-existing service principal.",
+				Description: "When true, any existing Service Principal linked to the same application will be automatically imported. When false, an import error will be raised for any pre-existing Service Principal.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
@@ -256,7 +256,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description: "The display name of the application associated with this service principal.",
+				Description: "The display name of the application associated with this Service Principal.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -268,7 +268,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"logout_url": {
-				Description: "The URL that will be used by Microsoft's authorization service to log out an user using OpenId Connect front-channel, back-channel or SAML logout protocols, taken from the associated application.",
+				Description: "The URL that will be used by Microsoft's authorization service to log out a user using OpenId Connect front-channel, back-channel or SAML logout protocols, taken from the associated application.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -285,7 +285,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description: "The object ID of the service principal.",
+				Description: "The object ID of the Service Principal.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -306,7 +306,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"saml_single_sign_on": {
-				Description:      "Settings related to SAML single sign-on",
+				Description:      "Settings related to SAML single sign-on.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -339,7 +339,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"type": {
-				Description: "Identifies whether the service principal represents an application or a managed identity.",
+				Description: "Identifies whether the Service Principal represents an application or a Managed Identity.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

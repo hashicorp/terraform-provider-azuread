@@ -31,15 +31,16 @@ func namedLocationDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:  "Specifies the display named of the named location to look up.",
+				Description:  "The display named of the named location to look up.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"ip": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "An `ip` block, which describes an IP-based named location.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"ip_ranges": {
@@ -61,8 +62,9 @@ func namedLocationDataSource() *pluginsdk.Resource {
 			},
 
 			"country": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A `country` block, which describes a country-based named location.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"countries_and_regions": {
@@ -81,8 +83,9 @@ func namedLocationDataSource() *pluginsdk.Resource {
 						},
 
 						"country_lookup_method": {
-							Type:     pluginsdk.TypeString,
-							Computed: true,
+							Description: "Method of detecting country the user is located in.",
+							Type:        pluginsdk.TypeString,
+							Computed:    true,
 						},
 					},
 				},

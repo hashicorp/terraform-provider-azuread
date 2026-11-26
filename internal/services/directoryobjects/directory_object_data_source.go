@@ -29,7 +29,7 @@ func directoryObjectDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:  "Specifies the Object ID of the directory object to look up.",
+				Description:  "The Object ID of the directory object to look up.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.IsUUID,

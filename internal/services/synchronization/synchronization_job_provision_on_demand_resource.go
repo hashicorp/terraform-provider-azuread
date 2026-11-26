@@ -22,7 +22,7 @@ import (
 
 func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manages synchronization job on demand provisioning associated with a service principal (enterprise application) within Azure Active Directory.",
+		Description:   "Manages synchronization job on demand provisioning associated with a Service Principal (enterprise application) within Azure Active Directory.",
 		CreateContext: synchronizationProvisionOnDemandResourceCreate,
 		ReadContext:   synchronizationProvisionOnDemandResourceRead,
 		DeleteContext: synchronizationProvisionOnDemandResourceDelete,
@@ -34,7 +34,7 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"service_principal_id": {
-				Description:  "The object ID of the service principal for which this synchronization job should be provisioned",
+				Description:  "The object ID of the Service Principal for which this synchronization job should be provisioned.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -90,7 +90,7 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 			},
 
 			"triggers": {
-				Description: "Map of arbitrary keys and values that, when changed, will trigger a re-invocation",
+				Description: "Map of arbitrary keys and values that, when changed, will trigger a re-invocation.",
 				Type:        schema.TypeMap,
 				Optional:    true,
 				ForceNew:    true,

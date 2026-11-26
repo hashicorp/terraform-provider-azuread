@@ -41,7 +41,7 @@ type flexibleFederatedIdentityCredentialModel struct {
 func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application for which this federated identity credential should be created.",
+			Description:  "The resource ID of the application for which this Federated Identity Credential should be created.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -63,7 +63,7 @@ func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*plu
 		},
 
 		"display_name": {
-			Description:  "A unique display name for the federated identity credential.",
+			Description:  "A unique display name for the Federated Identity Credential.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -78,7 +78,7 @@ func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*plu
 		},
 
 		"description": {
-			Description:  "A description for the federated identity credential.",
+			Description:  "A description for the Federated Identity Credential.",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringLenBetween(0, 600),
@@ -89,7 +89,7 @@ func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*plu
 func (f flexibleFederatedIdentityCredentialResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"credential_id": {
-			Description: "A UUID used to uniquely identify this federated identity credential.",
+			Description: "A UUID used to uniquely identify this Federated Identity Credential.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},
@@ -105,7 +105,7 @@ func (f flexibleFederatedIdentityCredentialResource) ResourceType() string {
 }
 
 func (f flexibleFederatedIdentityCredentialResource) Description() string {
-	return "Manages a flexible federated identity credential associated with an application within Azure Active Directory."
+	return "Manages a Flexible Federated Identity Credential associated with an application within Azure Active Directory."
 }
 
 func (f flexibleFederatedIdentityCredentialResource) Create() sdk.ResourceFunc {

@@ -64,9 +64,9 @@ func (r ApplicationOptionalClaimsResource) Arguments() map[string]*pluginsdk.Sch
 			ValidateFunc: stable.ValidateApplicationID,
 		},
 
-		"access_token": schemaOptionalClaims(),
-		"id_token":     schemaOptionalClaims(),
-		"saml2_token":  schemaOptionalClaims(),
+		"access_token": schemaOptionalClaims("One or more `access_token` blocks, each describing an optional claim for access tokens."),
+		"id_token":     schemaOptionalClaims("One or more `id_token` blocks, each describing an optional claim for ID tokens."),
+		"saml2_token":  schemaOptionalClaims("One or more `saml2_token` blocks, each describing an optional claim for SAML tokens."),
 	}
 
 	atLeastOneOf := []string{"access_token", "id_token", "saml2_token"}

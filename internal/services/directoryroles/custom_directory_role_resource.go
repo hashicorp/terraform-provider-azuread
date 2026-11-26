@@ -65,13 +65,13 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			},
 
 			"enabled": {
-				Description: "Indicates whether the role is enabled for assignment.",
+				Description: "Whether the role is enabled for assignment.",
 				Type:        pluginsdk.TypeBool,
 				Required:    true,
 			},
 
 			"permissions": {
-				Description: "List of permissions that are included in the custom directory role",
+				Description: "List of permissions that are included in the custom directory role.",
 				Type:        pluginsdk.TypeSet,
 				Required:    true,
 				Elem: &pluginsdk.Resource{
@@ -90,7 +90,7 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			},
 
 			"version": {
-				Description:  "The version of the role definition. This can be any arbitrary string between 1-128 characters.",
+				Description:  "The version of the role definition. This can be any arbitrary string.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),

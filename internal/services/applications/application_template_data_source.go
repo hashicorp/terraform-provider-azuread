@@ -31,7 +31,7 @@ func applicationTemplateDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"template_id": {
-				Description:      "Specifies the ID of the templated application.",
+				Description:      "The ID of the templated application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -40,7 +40,7 @@ func applicationTemplateDataSource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description:      "Specifies the display name of the templated application.",
+				Description:      "The display name of the templated application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
