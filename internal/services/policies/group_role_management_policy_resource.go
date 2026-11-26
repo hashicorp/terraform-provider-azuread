@@ -260,8 +260,8 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						Type:          pluginsdk.TypeString,
 						Optional:      true,
 						Computed:      true,
-						ConflictsWith: []string{"activation_rules.0.require_multifactor_authentication"},
 						ValidateFunc:  validation.StringIsNotEmpty,
+						ConflictsWith: []string{"activation_rules.0.require_multifactor_authentication"},
 					},
 
 					"require_multifactor_authentication": {

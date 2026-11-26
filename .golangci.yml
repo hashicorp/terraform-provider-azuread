@@ -82,7 +82,6 @@ linters:
             - AZP003 # data sources missing their resource's properties - 6 findings
             - AZR007 # StateChangeConf rather than a custom poller - 13 findings, to migrate over time
             - AZS003 # blocks that can be empty - 16 findings
-            - AZS005 # schema fields out of the agreed order - 90 findings, all fixed by 'make lint-fix' once this is switched on
             - AZS007 # Optional+Computed fields with no '// Note: O+C because ...' comment - 123 findings
             - AZT002 # tests reading credentials with os.Getenv - 3 findings
           AZG002:

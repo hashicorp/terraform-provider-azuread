@@ -57,8 +57,8 @@ func (r ApplicationFallbackPublicClientResource) Arguments() map[string]*plugins
 			Description: "Whether to enable the application as a fallback public client.",
 			Type:        pluginsdk.TypeBool,
 			Optional:    true,
-			Default:     false,
 			ForceNew:    true,
+			Default:     false,
 		},
 	}
 }

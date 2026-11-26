@@ -56,12 +56,11 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"start_date": {
-			Description:           "The date that this assignment starts, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z).",
-			Type:                  pluginsdk.TypeString,
-			Optional:              true,
-			Computed:              true,
-			ValidateDiagFunc:      validation.ValidateDiag(validation.IsRFC3339Time),
-			DiffSuppressOnRefresh: true,
+			Description:      "The date that this assignment starts, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z).",
+			Type:             pluginsdk.TypeString,
+			Optional:         true,
+			Computed:         true,
+			ValidateDiagFunc: validation.ValidateDiag(validation.IsRFC3339Time),
 			DiffSuppressFunc: func(k, old, new string, d *pluginsdk.ResourceData) bool {
 				// Suppress diffs if the start date is in the past
 				oldTime, err := time.Parse(time.RFC3339, old)
@@ -76,6 +75,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 				}
 				return false
 			},
+			DiffSuppressOnRefresh: true,
 		},
 
 		"expiration_date": {
@@ -83,16 +83,16 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
 			Computed:         true,
-			ConflictsWith:    []string{"duration"},
 			ValidateDiagFunc: validation.ValidateDiag(validation.IsRFC3339Time),
+			ConflictsWith:    []string{"duration"},
 		},
 
 		"duration": {
 			Description:      "The duration of the assignment, formatted as an ISO8601 duration string (e.g. P3D for 3 days).",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
-			ConflictsWith:    []string{"expiration_date"},
 			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+			ConflictsWith:    []string{"expiration_date"},
 		},
 
 		"permanent_assignment": {
@@ -113,16 +113,16 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 			Description:      "The ticket number authorising the assignment.",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
-			RequiredWith:     []string{"ticket_system"},
 			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+			RequiredWith:     []string{"ticket_system"},
 		},
 
 		"ticket_system": {
 			Description:      "The ticket system authorising the assignment.",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
-			RequiredWith:     []string{"ticket_number"},
 			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+			RequiredWith:     []string{"ticket_number"},
 		},
 	}
 }

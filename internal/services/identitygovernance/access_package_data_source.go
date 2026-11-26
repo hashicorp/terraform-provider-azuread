@@ -45,9 +45,9 @@ func accessPackageDataSource() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ValidateFunc:  validation.StringIsNotEmpty,
-				AtLeastOneOf:  []string{"object_id", "display_name", "catalog_id"},
-				ConflictsWith: []string{"object_id"},
 				RequiredWith:  []string{"catalog_id"},
+				ConflictsWith: []string{"object_id"},
+				AtLeastOneOf:  []string{"object_id", "display_name", "catalog_id"},
 			},
 
 			"catalog_id": {
@@ -55,9 +55,9 @@ func accessPackageDataSource() *pluginsdk.Resource {
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				ValidateFunc:  validation.IsUUID,
-				AtLeastOneOf:  []string{"object_id", "display_name", "catalog_id"},
-				ConflictsWith: []string{"object_id"},
 				RequiredWith:  []string{"display_name"},
+				ConflictsWith: []string{"object_id"},
+				AtLeastOneOf:  []string{"object_id", "display_name", "catalog_id"},
 			},
 
 			"description": {

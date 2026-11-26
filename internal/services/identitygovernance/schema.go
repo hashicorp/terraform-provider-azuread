@@ -47,10 +47,9 @@ func schemaUserSet() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
 		Schema: map[string]*pluginsdk.Schema{
 			"subject_type": {
-				Description:      "Type of users.",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				DiffSuppressFunc: suppress.CaseDifference,
+				Description: "Type of users.",
+				Type:        pluginsdk.TypeString,
+				Required:    true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"ConnectedOrganizationMembers",
 					"ExternalSponsors",
@@ -60,6 +59,7 @@ func schemaUserSet() *pluginsdk.Resource {
 					"SingleUser",
 					"TargetUserSponsors",
 				}, true),
+				DiffSuppressFunc: suppress.CaseDifference,
 			},
 
 			"backup": {

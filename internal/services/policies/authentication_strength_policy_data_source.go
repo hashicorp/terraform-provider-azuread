@@ -52,8 +52,8 @@ func (r AuthenticationStrengthPolicyDataSource) Arguments() map[string]*schema.S
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ExactlyOneOf: []string{"display_name", "object_id"},
 			ValidateFunc: validation.IsUUID,
+			ExactlyOneOf: []string{"display_name", "object_id"},
 		},
 
 		"display_name": {
@@ -61,8 +61,8 @@ func (r AuthenticationStrengthPolicyDataSource) Arguments() map[string]*schema.S
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ExactlyOneOf: []string{"display_name", "object_id"},
 			ValidateFunc: validation.StringIsNotEmpty,
+			ExactlyOneOf: []string{"display_name", "object_id"},
 		},
 	}
 }

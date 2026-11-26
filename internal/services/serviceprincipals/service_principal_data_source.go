@@ -39,8 +39,8 @@ func servicePrincipalData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_id", "display_name", "object_id"},
 				ValidateFunc: validation.IsUUID,
+				ExactlyOneOf: []string{"client_id", "display_name", "object_id"},
 			},
 
 			"display_name": {
@@ -48,8 +48,8 @@ func servicePrincipalData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_id", "display_name", "object_id"},
 				ValidateFunc: validation.StringIsNotEmpty,
+				ExactlyOneOf: []string{"client_id", "display_name", "object_id"},
 			},
 
 			"client_id": {
@@ -57,8 +57,8 @@ func servicePrincipalData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_id", "display_name", "object_id"},
 				ValidateFunc: validation.IsUUID,
+				ExactlyOneOf: []string{"client_id", "display_name", "object_id"},
 			},
 
 			"account_enabled": {
@@ -139,10 +139,10 @@ func servicePrincipalData() *pluginsdk.Resource {
 			},
 
 			"features": {
-				Deprecated:  "This block has been renamed to `feature_tags` and will be removed in version 3.0 of the provider",
 				Description: "Block of features configured for this Service Principal using tags.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
+				Deprecated:  "This block has been renamed to `feature_tags` and will be removed in version 3.0 of the provider",
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"custom_single_sign_on_app": {

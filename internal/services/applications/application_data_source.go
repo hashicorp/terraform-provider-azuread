@@ -39,8 +39,8 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 			},
 
 			"client_id": {
@@ -48,8 +48,8 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 			},
 
 			"identifier_uri": {
@@ -57,8 +57,8 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 			},
 
 			"disabled_by_microsoft": {
@@ -72,8 +72,8 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 			},
 
 			"api": {

@@ -62,8 +62,8 @@ func groupsDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
 				ValidateFunc: validation.StringIsNotEmpty,
+				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
 			},
 
 			"groups": {

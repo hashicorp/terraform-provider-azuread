@@ -187,8 +187,8 @@ func groupResource() *pluginsdk.Resource {
 				Type:          pluginsdk.TypeSet,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"dynamic_membership"},
 				Set:           pluginsdk.HashString,
+				ConflictsWith: []string{"dynamic_membership"},
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.IsUUID,

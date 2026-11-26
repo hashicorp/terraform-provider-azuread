@@ -35,8 +35,8 @@ func applicationTemplateDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"display_name", "template_id"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				ExactlyOneOf:     []string{"display_name", "template_id"},
 			},
 
 			"display_name": {
@@ -44,8 +44,8 @@ func applicationTemplateDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"display_name", "template_id"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				ExactlyOneOf:     []string{"display_name", "template_id"},
 			},
 
 			"categories": {
