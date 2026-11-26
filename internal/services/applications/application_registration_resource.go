@@ -257,6 +257,21 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 
 			metadata.SetID(stable.NewApplicationID(*app.Id))
 
+			// Wait for the application to be replicated before proceeding
+			// This prevents "Resource does not exist" errors when using Service Principal authentication
+			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				resp, err := client.GetApplication(ctx, id, application.DefaultGetApplicationOperationOptions())
+				if err != nil {
+					if response.WasNotFound(resp.HttpResponse) {
+						return pointer.To(false), nil
+					}
+					return nil, err
+				}
+				return pointer.To(resp.Model != nil), nil
+			}); err != nil {
+				return fmt.Errorf("waiting for replication of %s: %+v", id, err)
+			}
+
 			return nil
 		},
 	}
