@@ -120,7 +120,7 @@ func AzureADProvider() *schema.Provider {
 				Type:        pluginsdk.TypeString,
 				Required:    true,
 				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_ENVIRONMENT", "global"),
-				Description: "The cloud environment which should be used. Possible values are: `global` (also `public`), `usgovernmentl4` (also `usgovernment`), `usgovernmentl5` (also `dod`), and `china`. Defaults to `global`. Not used and should not be specified when `metadata_host` is specified.", // azignore:AZS014 - the default is set by DefaultFunc
+				Description: "The cloud environment which should be used. Possible values are: `global` (also `public`), `usgovernmentl4` (also `usgovernment`), `usgovernmentl5` (also `dod`), and `china`. Defaults to `global`. Not used and should not be specified when `metadata_host` is specified.", // azignore:AZS014 - the default is read from an environment variable, which the schema cannot show
 			},
 
 			"metadata_host": {
@@ -317,7 +317,9 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			}
 		}
 
-		if env.MicrosoftGraph == nil {
+		if env == nil {
+			return nil, pluginsdk.DiagErrorf("cloud environment could not be determined")
+		} else if env.MicrosoftGraph == nil {
 			return nil, pluginsdk.DiagErrorf("Microsoft Graph was not configured for the specified environment")
 		} else if endpoint, ok := env.MicrosoftGraph.Endpoint(); !ok || *endpoint == "" {
 			return nil, pluginsdk.DiagErrorf("Microsoft Graph endpoint could not be determined for the specified environment")

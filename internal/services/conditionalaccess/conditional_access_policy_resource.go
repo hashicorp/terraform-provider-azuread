@@ -56,7 +56,6 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceConditionalAccessPolicyInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceConditionalAccessPolicyInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -76,15 +75,17 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"conditions": {
-				Type:     pluginsdk.TypeList,
-				Required: true,
-				MaxItems: 1,
+				Description: "A `conditions` block, which specifies the rules that must be met for the policy to apply.",
+				Type:        pluginsdk.TypeList,
+				Required:    true,
+				MaxItems:    1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"applications": {
-							Type:     pluginsdk.TypeList,
-							Required: true,
-							MaxItems: 1,
+							Description: "An `applications` block, which specifies applications and user actions included in and excluded from the policy.",
+							Type:        pluginsdk.TypeList,
+							Required:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_applications": {
@@ -138,9 +139,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"client_applications": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Description: "A `client_applications` block, which specifies Service Principals included in and excluded from the policy.",
+							Type:        pluginsdk.TypeList,
+							Optional:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_service_principals": {
@@ -169,9 +171,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"users": {
-							Type:     pluginsdk.TypeList,
-							Required: true,
-							MaxItems: 1,
+							Description: "A `users` block, which specifies users, groups, and roles included in and excluded from the policy.",
+							Type:        pluginsdk.TypeList,
+							Required:    true,
+							MaxItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"included_users": {
@@ -238,6 +241,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"included_guests_or_external_users": {
+										Description:  "An `included_guests_or_external_users` block, which specifies internal guests and external users in scope of the policy.",
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
@@ -254,8 +258,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 												},
 
 												"external_tenants": {
-													Type:     pluginsdk.TypeList,
-													Optional: true,
+													Description: "An `external_tenants` block, which specifies external tenants in the policy scope.",
+													Type:        pluginsdk.TypeList,
+													Optional:    true,
 													Elem: &pluginsdk.Resource{
 														Schema: map[string]*pluginsdk.Schema{
 															"membership_kind": {
@@ -282,8 +287,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"excluded_guests_or_external_users": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
+										Description: "An `excluded_guests_or_external_users` block, which specifies internal guests and external users excluded from the scope of the policy.",
+										Type:        pluginsdk.TypeList,
+										Optional:    true,
 										Elem: &pluginsdk.Resource{
 											Schema: map[string]*pluginsdk.Schema{
 												"guest_or_external_user_types": {
@@ -297,8 +303,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 												},
 
 												"external_tenants": {
-													Type:     pluginsdk.TypeList,
-													Optional: true,
+													Description: "An `external_tenants` block, which specifies external tenants in the policy scope.",
+													Type:        pluginsdk.TypeList,
+													Optional:    true,
 													Elem: &pluginsdk.Resource{
 														Schema: map[string]*pluginsdk.Schema{
 															"membership_kind": {
@@ -351,10 +358,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 
 						// The Microsoft Entra admin center renamed this condition from "Location" to "Network", however this is
 						// a portal label change only and the underlying Microsoft Graph API is unchanged (still `locations`).
-						// See https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network
+						// See https://learn.microsoft.com/entra/identity/conditional-access/concept-assignment-network
 						// TODO: consider renaming this block to `network` in v4.0 to align with the portal terminology.
 						"locations": {
-							Description: "A `locations` block, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network) for more information.",
+							Description: "A `locations` block, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/entra/identity/conditional-access/concept-assignment-network) for more information.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							MaxItems:    1,
@@ -455,6 +462,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"grant_controls": {
+				Description:  "A `grant_controls` block, which specifies the grant controls that must be fulfilled to pass the policy.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				AtLeastOneOf: []string{"grant_controls", "session_controls"},
@@ -512,6 +520,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"session_controls": {
+				Description:      "A `session_controls` block, which specifies the session controls that are enforced after sign-in.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				AtLeastOneOf:     []string{"grant_controls", "session_controls"},
@@ -533,7 +542,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"disable_resilience_defaults": {
-							Description: "Disables [resilience defaults](https://learn.microsoft.com/en-us/azure/active-directory/conditional-access/resilience-defaults).",
+							Description: "Disables [resilience defaults](https://learn.microsoft.com/azure/active-directory/conditional-access/resilience-defaults).",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -678,7 +687,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 
 	properties := stable.ConditionalAccessPolicy{
 		DisplayName:     pointer.To(d.Get("display_name").(string)),
-		State:           pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
+		State:           pointer.ToEnum[stable.ConditionalAccessPolicyState](d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   grantControls,
 		SessionControls: sessionControls,
@@ -742,7 +751,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 
 	properties := stable.ConditionalAccessPolicy{
 		DisplayName:     pointer.To(d.Get("display_name").(string)),
-		State:           pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
+		State:           pointer.ToEnum[stable.ConditionalAccessPolicyState](d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   grantControls,
 		SessionControls: sessionControls,
@@ -756,7 +765,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 	// in a timeout loop, instead we're hoping that this allows enough time/activity for the update to be reflected.
 	log.Printf("[DEBUG] Waiting for conditional access policy %q to be updated", d.Id())
 	timeout, _ := ctx.Deadline()
-	stateConf := &pluginsdk.StateChangeConf{ //nolint:staticcheck
+	stateConf := &pluginsdk.StateChangeConf{
 		Pending:                   []string{"Pending"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),

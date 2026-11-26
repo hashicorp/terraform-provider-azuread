@@ -7,7 +7,7 @@ import "github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/plug
 
 func schemaAppRolesComputed() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
-		Description: "For more information [official documentation](https://learn.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
+		Description: "For more information [official documentation](https://learn.microsoft.com/azure/architecture/multitenant-identity/app-roles).",
 		Type:        pluginsdk.TypeList,
 		Computed:    true,
 		Elem: &pluginsdk.Resource{
@@ -19,7 +19,7 @@ func schemaAppRolesComputed() *pluginsdk.Schema {
 				},
 
 				"allowed_member_types": {
-					Description: "Whether this app Role Definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios).",
+					Description: "Whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios).",
 					Type:        pluginsdk.TypeList,
 					Computed:    true,
 					Elem: &pluginsdk.Schema{
@@ -87,7 +87,7 @@ func schemaOauth2PermissionScopesComputed() *pluginsdk.Schema {
 				},
 
 				"type": {
-					Description: "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions.",
+					Description: "Whether this delegated permission is considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator is required for consent to the permissions.",
 					Type:        pluginsdk.TypeString,
 					Computed:    true,
 				},

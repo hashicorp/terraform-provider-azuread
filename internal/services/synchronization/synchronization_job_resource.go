@@ -55,7 +55,6 @@ func synchronizationJobResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceSynchronizationJobInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceSynchronizationJobInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -83,8 +82,9 @@ func synchronizationJobResource() *pluginsdk.Resource {
 			},
 
 			"schedule": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A `schedule` block, which describes when the synchronization job runs.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"expiration": {

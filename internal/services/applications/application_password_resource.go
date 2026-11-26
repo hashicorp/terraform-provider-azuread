@@ -44,7 +44,6 @@ func applicationPasswordResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceApplicationPasswordInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceApplicationPasswordInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -120,7 +119,7 @@ func applicationPasswordResource() *pluginsdk.Resource {
 	}
 }
 
-func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
+func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationClient
 
 	applicationId, err := stable.ParseApplicationID(d.Get("application_id").(string))
@@ -181,7 +180,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 
 	// Wait for the credential to appear in the application manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+	polledForCredential, err := (&pluginsdk.StateChangeConf{
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -217,7 +216,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	return applicationPasswordResourceRead(ctx, d, meta)
 }
 
-func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
+func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationClient
 
 	id, err := parse.PasswordID(d.Id())
@@ -268,7 +267,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	return nil
 }
 
-func applicationPasswordResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
+func applicationPasswordResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationClient
 
 	id, err := parse.PasswordID(d.Id())

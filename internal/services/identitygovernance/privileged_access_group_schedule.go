@@ -96,7 +96,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"permanent_assignment": {
-			Description: "Is the assignment permanent?",
+			Description: "Whether the assignment is permanent.",
 			Type:        pluginsdk.TypeBool,
 			Optional:    true,
 			Computed:    true,

@@ -131,7 +131,7 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+	polledForCredential, err := (&pluginsdk.StateChangeConf{
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),

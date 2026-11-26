@@ -18,8 +18,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
 
 jobs:
   check-team-membership:
@@ -96,6 +94,9 @@ jobs:
             return isAllowedUser;
 
   run-tests:
+    permissions:
+      pull-requests: write
+      issues: write
     runs-on: ubuntu-latest
     needs: check-team-membership
     if: needs.check-team-membership.outputs.is-team-member == 'true' || needs.check-team-membership.outputs.is-allowed-user == 'true'
@@ -108,23 +109,25 @@ jobs:
       TCTEST_BUILD_TYPE_ID_ADD_SERVICE_SUFFIX: true
       TCTEST_REPO: terraform-providers/terraform-provider-azuread
     steps:
-      - name: Setup Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
-        with:
-          go-version: '1.26'
-
       # tctest is pinned in .tools/go.mod; only that directory is checked out (from main, this is a
       # comment-triggered workflow so PR code is never built) and make builds the binary from it
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: |
             .tools
             GNUmakefile
           sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: .tools/go.mod
+          cache: false
 
       - name: Cache tctest binary
         id: cache-tctest
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .tools/bin/tctest
           key: tctest-${{ runner.os }}-${{ hashFiles('.tools/go.mod', '.tools/go.sum') }}
@@ -161,9 +164,10 @@ jobs:
           # tctest reads GITHUB_TOKEN for its GitHub API calls - without it, test
           # discovery runs unauthenticated (60 req/hr per runner IP) and hits 403s
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STEPS_GET_PR_SHA_OUTPUTS_SHA: ${{ steps.get-pr-sha.outputs.sha }}
         run: |
           PR_NUMBER=${{ github.event.issue.number }}
-          PR_SHA="${{ steps.get-pr-sha.outputs.sha }}"
+          PR_SHA="${STEPS_GET_PR_SHA_OUTPUTS_SHA}"
 
           # Parse flags from comment
           # Extract everything after /test (read -ra below ignores the leading whitespace)
@@ -359,6 +363,9 @@ jobs:
             });
 
   unauthorized-comment:
+    permissions:
+      pull-requests: write
+      issues: write
     runs-on: ubuntu-latest
     needs: check-team-membership
     if: needs.check-team-membership.outputs.is-team-member == 'false' && needs.check-team-membership.outputs.is-allowed-user == 'false'

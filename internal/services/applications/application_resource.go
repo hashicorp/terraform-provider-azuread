@@ -34,13 +34,13 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
-	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 )
 
 func applicationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
 		Description: "Manages an application registration within Azure Active Directory.\n\n" +
-			"For a more lightweight alternative, please see the [azuread_application_registration](application_registration.html) resource. Please note that this resource should not be used together with the `azuread_application_registration` resource when managing the same application.",
+			"For a more lightweight alternative, see the [azuread_application_registration](application_registration.html) resource. This resource should not be used together with the `azuread_application_registration` resource when managing the same application.",
 		CreateContext: applicationResourceCreate,
 		ReadContext:   applicationResourceRead,
 		UpdateContext: applicationResourceUpdate,
@@ -71,7 +71,6 @@ func applicationResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceApplicationInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceApplicationInstanceStateUpgradeV0,
-				Version: 0,
 			},
 			{
 				Type:    migrations.ResourceApplicationInstanceResourceV1().CoreConfigSchema().ImpliedType(),
@@ -89,6 +88,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"api": {
+				Description:      "An `api` block, which configures API related settings for this application.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -171,7 +171,7 @@ func applicationResource() *pluginsdk.Resource {
 										Description:      "The value that is used for the `scp` claim in OAuth 2.0 access tokens.",
 										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
+										ValidateDiagFunc: validate.RoleScopeClaimValue,
 									},
 								},
 							},
@@ -207,7 +207,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"app_role": {
-				Description: "A collection of `app_role` blocks. For more information see [official documentation on Application Roles](https://learn.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
+				Description: "A collection of `app_role` blocks. For more information see [official documentation on Application Roles](https://learn.microsoft.com/azure/architecture/multitenant-identity/app-roles).",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Resource{
@@ -220,7 +220,7 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"allowed_member_types": {
-							Description: "Whether this app Role Definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both.",
+							Description: "Whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both.",
 							Type:        pluginsdk.TypeSet,
 							Required:    true,
 							MinItems:    1,
@@ -238,7 +238,7 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"display_name": {
-							Description:  "Display name for the app role that appears during app Role Assignment and in consent experiences.",
+							Description:  "Display name for the app role that appears during app role assignment and in consent experiences.",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringIsNotEmpty,
@@ -255,7 +255,7 @@ func applicationResource() *pluginsdk.Resource {
 							Description:      "The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.",
 							Type:             pluginsdk.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
+							ValidateDiagFunc: validate.RoleScopeClaimValue,
 						},
 					},
 				},
@@ -310,7 +310,7 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"gallery": {
-							Description: "Whether this application represents a Gallery Application for linked Service Principals. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag.",
+							Description: "Whether this application represents a gallery application for linked Service Principals. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -347,7 +347,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"logo_image": {
-				Description:  "A logo image to upload for the application, as a raw base64-encoded string. The image should be in gif, jpeg or png format. Note that once an image has been uploaded, it is not possible to remove it without replacing it with another image.",
+				Description:  "A logo image to upload for the application, as a raw base64-encoded string. The image should be in gif, jpeg or png format. Once an image has been uploaded, it is not possible to remove it without replacing it with another image.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringIsBase64,
@@ -383,15 +383,16 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"optional_claims": {
+				Description:      "An `optional_claims` block, which configures the optional claims included in tokens issued to this application.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: applicationDiffSuppress,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
-						"access_token": schemaOptionalClaims(),
-						"id_token":     schemaOptionalClaims(),
-						"saml2_token":  schemaOptionalClaims(),
+						"access_token": schemaOptionalClaims("One or more `access_token` blocks, each describing an optional claim for access tokens."),
+						"id_token":     schemaOptionalClaims("One or more `id_token` blocks, each describing an optional claim for ID tokens."),
+						"saml2_token":  schemaOptionalClaims("One or more `saml2_token` blocks, each describing an optional claim for SAML tokens."),
 					},
 				},
 			},
@@ -461,6 +462,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"public_client": {
+				Description:      "A `public_client` block, which configures non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -482,8 +484,9 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"required_resource_access": {
-				Type:     pluginsdk.TypeSet,
-				Optional: true,
+				Description: "A collection of `required_resource_access` blocks, each describing a resource and the permissions this application requires from it.",
+				Type:        pluginsdk.TypeSet,
+				Optional:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"resource_app_id": {
@@ -493,7 +496,7 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"resource_access": {
-							Description: "",
+							Description: "A collection of `resource_access` blocks describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.",
 							Type:        pluginsdk.TypeList,
 							Required:    true,
 							Elem: &pluginsdk.Resource{
@@ -533,6 +536,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"single_page_application": {
+				Description:      "A `single_page_application` block, which configures single-page application (SPA) related settings for this application.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -560,7 +564,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"tags": {
-				Description:   "A set of tags to apply to the application for configuring specific behaviours of the application and linked Service Principals. Note that these are not provided for use by practitioners.",
+				Description:   "A set of tags to apply to the application for configuring specific behaviours of the application and linked Service Principals. These are not provided for use by practitioners.",
 				Type:          pluginsdk.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -587,6 +591,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"web": {
+				Description:      "A `web` block, which configures web related settings for this application.",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -619,6 +624,7 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"implicit_grant": {
+							Description:      "An `implicit_grant` block, which configures whether tokens can be requested using the OAuth 2.0 implicit flow.",
 							Type:             pluginsdk.TypeList,
 							Optional:         true,
 							MaxItems:         1,
@@ -727,7 +733,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.Resou
 		diff.SetNewComputed("logo_url")
 	}
 
-	// The following validation is taken from https://learn.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation
+	// The following validation is taken from https://learn.microsoft.com/azure/active-directory/develop/supported-accounts-validation
 	// These apply only when personal account sign-ins are enabled for an application, and are enforced at plan time to avoid breaking existing
 	// applications that change from AAD (corporate) account sign-ins to personal account sign-ins
 	if s := diff.Get("sign_in_audience").(string); s == SignInAudienceAzureADandPersonalMicrosoftAccount || s == SignInAudiencePersonalMicrosoftAccount {
@@ -1033,7 +1039,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 		// Since the API response can't be trusted, because we might have received a 404, or the response model might be missing,
 		// we'll proceed to poll for an application and service principal by listing them and looking for a match.
-		pollingResult, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+		pollingResult, err := (&pluginsdk.StateChangeConf{
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Found"},
 			Timeout:    time.Until(deadline),
@@ -1229,14 +1235,12 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	d.SetId(id.ID())
 
 	// Save the password key ID and generated value to state
-	if app.PasswordCredentials != nil {
-		if password := d.Get("password").(*pluginsdk.Set).List(); len(password) == 1 {
-			pw := password[0].(map[string]interface{})
-			if creds := flattenApplicationPasswordCredentials(app.PasswordCredentials); len(creds) == 1 {
-				pw["key_id"] = creds[0]["key_id"]
-				pw["value"] = creds[0]["value"]
-				tf.Set(d, "password", []interface{}{pw})
-			}
+	if password := d.Get("password").(*pluginsdk.Set).List(); len(password) == 1 {
+		pw := password[0].(map[string]interface{})
+		if creds := flattenApplicationPasswordCredentials(app.PasswordCredentials); len(creds) == 1 {
+			pw["key_id"] = creds[0]["key_id"]
+			pw["value"] = creds[0]["value"]
+			tf.Set(d, "password", []interface{}{pw})
 		}
 	}
 
@@ -1436,7 +1440,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 			// Wait for the credential to appear in the application manifest, this can take several minutes
 			timeout, _ := ctx.Deadline()
-			polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+			polledForCredential, err := (&pluginsdk.StateChangeConf{
 				Pending:                   []string{"Waiting"},
 				Target:                    []string{"Done"},
 				Timeout:                   time.Until(timeout),
@@ -1662,6 +1666,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl.GetOrZero())
 	}
 
+	// The nil check is deliberate: when the API omits passwordCredentials the existing state is retained
 	if app.PasswordCredentials != nil {
 		currentPassword := d.Get("password").(*pluginsdk.Set).List()
 		passwordToSave := make([]interface{}, 0)
@@ -1672,7 +1677,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 			keyIdToMatch = currentPassword[0].(map[string]interface{})["key_id"].(string)
 			existingValue = currentPassword[0].(map[string]interface{})["value"].(string)
 
-			for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) {
+			for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) { // azignore:AZR010 - the outer nil check intentionally retains state, see above
 				// Match against the known key ID, or select the first returned password if not present in state
 				if credential["key_id"] == keyIdToMatch {
 					// Retain the value from state, if known

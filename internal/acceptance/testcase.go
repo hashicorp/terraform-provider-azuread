@@ -161,7 +161,7 @@ func (td TestData) runAcceptanceSequentialTest(t *testing.T, testCase resource.T
 
 func (td TestData) providers() map[string]func() (*schema.Provider, error) {
 	return map[string]func() (*schema.Provider, error){
-		"azuread": func() (*schema.Provider, error) { //nolint:unparam
+		"azuread": func() (*schema.Provider, error) {
 			azurerm := provider.AzureADProvider()
 			return azurerm, nil
 		},

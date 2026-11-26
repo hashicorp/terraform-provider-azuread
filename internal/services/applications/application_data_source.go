@@ -53,7 +53,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"identifier_uri": {
-				Description:      "The identifier URI of the application. See also the `identifier_uris` attribute which contains a list of all identifier URIs for the application.",
+				Description:      "Any identifier URI of the application. See also the `identifier_uris` attribute which contains a list of all identifier URIs for the application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -77,8 +77,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"api": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "An `api` block, which describes API related settings for this application.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"known_client_applications": {
@@ -127,7 +128,7 @@ func applicationDataSource() *pluginsdk.Resource {
 									},
 
 									"type": {
-										Description: "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions.",
+										Description: "Whether this delegated permission is considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator is required for consent to the permissions.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
@@ -163,7 +164,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"app_roles": {
-				Description: "A collection of `app_role` blocks. For more information see [official documentation on Application Roles](https://learn.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
+				Description: "A collection of `app_role` blocks. For more information see [official documentation on Application Roles](https://learn.microsoft.com/azure/architecture/multitenant-identity/app-roles).",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{
@@ -175,7 +176,7 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"allowed_member_types": {
-							Description: "Whether this app Role Definition can be assigned to users and groups, or to other applications (that are accessing this application in a standalone scenario).",
+							Description: "Whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in a standalone scenario).",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{
@@ -246,26 +247,25 @@ func applicationDataSource() *pluginsdk.Resource {
 						"custom_single_sign_on": {
 							Description: "Whether this application represents a custom SAML application for linked Service Principals.",
 							Type:        pluginsdk.TypeBool,
-							Optional:    true,
+							Computed:    true,
 						},
 
 						"enterprise": {
 							Description: "Whether this application represents an Enterprise Application for linked Service Principals.",
 							Type:        pluginsdk.TypeBool,
-							Optional:    true,
+							Computed:    true,
 						},
 
 						"gallery": {
-							Description: "Whether this application represents a Gallery Application for linked Service Principals.",
+							Description: "Whether this application represents a gallery application for linked Service Principals.",
 							Type:        pluginsdk.TypeBool,
-							Optional:    true,
+							Computed:    true,
 						},
 
 						"hide": {
 							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher.",
 							Type:        pluginsdk.TypeBool,
-							Optional:    true,
-							Default:     true,
+							Computed:    true,
 						},
 					},
 				},
@@ -323,13 +323,14 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"optional_claims": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "An `optional_claims` block, which describes the optional claims included in tokens issued to this application.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
-						"access_token": schemaOptionalClaims(),
-						"id_token":     schemaOptionalClaims(),
-						"saml2_token":  schemaOptionalClaims(),
+						"access_token": schemaOptionalClaims("One or more `access_token` blocks, each describing an optional claim for access tokens."),
+						"id_token":     schemaOptionalClaims("One or more `id_token` blocks, each describing an optional claim for ID tokens."),
+						"saml2_token":  schemaOptionalClaims("One or more `saml2_token` blocks, each describing an optional claim for SAML tokens."),
 					},
 				},
 			},
@@ -350,8 +351,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"public_client": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A `public_client` block, which describes non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"redirect_uris": {
@@ -373,8 +375,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"required_resource_access": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A collection of `required_resource_access` blocks, each describing a resource and the permissions this application requires from it.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"resource_app_id": {
@@ -420,8 +423,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"single_page_application": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A `single_page_application` block, which describes single-page application (SPA) related settings for this application.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"redirect_uris": {
@@ -458,8 +462,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"web": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A `web` block, which describes web related settings for this application.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"homepage_url": {
@@ -484,8 +489,9 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"implicit_grant": {
-							Type:     pluginsdk.TypeList,
-							Computed: true,
+							Description: "An `implicit_grant` block, which describes whether tokens can be requested using the OAuth 2.0 implicit flow.",
+							Type:        pluginsdk.TypeList,
+							Computed:    true,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"access_token_issuance_enabled": {
@@ -554,14 +560,15 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 			return tf.ErrorDiagF(err, "Listing applications for filter %q", *options.Filter)
 		}
 
+		apps := pointer.From(resp.Model)
 		switch {
-		case resp.Model == nil || len(*resp.Model) == 0:
+		case len(apps) == 0:
 			return tf.ErrorDiagF(fmt.Errorf("no applications found matching filter: %q", *options.Filter), "Application not found")
-		case len(*resp.Model) > 1:
-			return tf.ErrorDiagF(fmt.Errorf("dound multiple applications matching filter: %q", *options.Filter), "Multiple applications found")
+		case len(apps) > 1:
+			return tf.ErrorDiagF(fmt.Errorf("found multiple applications matching filter: %q", *options.Filter), "Multiple applications found")
 		}
 
-		app = &(*resp.Model)[0]
+		app = &apps[0]
 		switch fieldName {
 		case "appId":
 			if appId := app.AppId.GetOrZero(); !strings.EqualFold(appId, fieldValue) {

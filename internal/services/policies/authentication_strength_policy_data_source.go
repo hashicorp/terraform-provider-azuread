@@ -97,7 +97,7 @@ func (r AuthenticationStrengthPolicyDataSource) Attributes() map[string]*schema.
 					},
 
 					"type": {
-						Description: "The type of this combination configuration, either `fido2CombinationConfiguration` or `x509CertificateCombinationConfiguration`.",
+						Description: "The type of this combination configuration.",
 						Type:        pluginsdk.TypeString,
 						Computed:    true,
 					},

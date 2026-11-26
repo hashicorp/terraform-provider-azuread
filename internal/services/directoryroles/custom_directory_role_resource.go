@@ -53,7 +53,6 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceCustomDirectoryRoleInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceCustomDirectoryRoleInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -78,7 +77,7 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"allowed_resource_actions": {
-							Description: "A set of tasks that can be performed on a resource. For more information, see the [Permissions Reference](https://learn.microsoft.com/en-us/azure/active-directory/roles/permissions-reference) documentation.",
+							Description: "A set of tasks that can be performed on a resource. For more information, see the [Permissions Reference](https://learn.microsoft.com/azure/active-directory/roles/permissions-reference) documentation.",
 							Type:        pluginsdk.TypeSet,
 							Required:    true,
 							Elem: &pluginsdk.Schema{
@@ -91,7 +90,7 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			},
 
 			"version": {
-				Description:  "The version of the Role Definition.",
+				Description:  "The version of the role definition. This can be any arbitrary string.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),

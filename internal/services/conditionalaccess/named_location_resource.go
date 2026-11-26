@@ -54,7 +54,6 @@ func namedLocationResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceNamedLocationInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceNamedLocationInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -67,6 +66,7 @@ func namedLocationResource() *pluginsdk.Resource {
 			},
 
 			"ip": {
+				Description:  "An `ip` block, which configures an IP-based named location.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				ForceNew:     true,
@@ -94,6 +94,7 @@ func namedLocationResource() *pluginsdk.Resource {
 			},
 
 			"country": {
+				Description:  "A `country` block, which configures a country-based named location.",
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				ForceNew:     true,
@@ -142,6 +143,9 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 
 	if v, ok := d.GetOk("ip"); ok {
 		properties := expandIPNamedLocation(v.([]interface{}))
+		if properties == nil {
+			return tf.ErrorDiagF(errors.New("expanding `ip` block returned nil"), "Could not create named location")
+		}
 		properties.DisplayName = pointer.To(d.Get("display_name").(string))
 
 		resp, err := client.CreateConditionalAccessNamedLocation(ctx, *properties, conditionalaccessnamedlocation.DefaultCreateConditionalAccessNamedLocationOperationOptions())
@@ -171,6 +175,9 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		d.SetId(id.ID())
 	} else if v, ok = d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
+		if properties == nil {
+			return tf.ErrorDiagF(errors.New("expanding `country` block returned nil"), "Could not create named location")
+		}
 		properties.DisplayName = pointer.To(d.Get("display_name").(string))
 
 		resp, err := client.CreateConditionalAccessNamedLocation(ctx, *properties, conditionalaccessnamedlocation.DefaultCreateConditionalAccessNamedLocationOperationOptions())
@@ -213,6 +220,9 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 
 	if v, ok := d.GetOk("ip"); ok {
 		properties := expandIPNamedLocation(v.([]interface{}))
+		if properties == nil {
+			return tf.ErrorDiagF(errors.New("expanding `ip` block returned nil"), "Updating %s", id)
+		}
 
 		if d.HasChange("display_name") {
 			properties.DisplayName = pointer.To(d.Get("display_name").(string))
@@ -227,6 +237,9 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 		}
 	} else if v, ok := d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
+		if properties == nil {
+			return tf.ErrorDiagF(errors.New("expanding `country` block returned nil"), "Updating %s", id)
+		}
 
 		if d.HasChange("display_name") {
 			properties.DisplayName = pointer.To(d.Get("display_name").(string))

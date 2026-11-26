@@ -95,7 +95,7 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"behaviors": {
-				Description: "A set of behaviors for a Microsoft 365 group. See [official documentation](https://learn.microsoft.com/en-us/graph/group-set-options) for more details.",
+				Description: "A set of behaviors for a Microsoft 365 group. See [official documentation](https://learn.microsoft.com/graph/group-set-options) for more details.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
@@ -119,13 +119,13 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
-							Description: "Whether rule processing is \"On\" (true) or \"Paused\" (false).",
+							Description: "Whether rule processing is `On` (true) or `Paused` (false).",
 							Type:        pluginsdk.TypeBool,
 							Required:    true,
 						},
 
 						"rule": {
-							Description:  "The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://learn.microsoft.com/en-gb/azure/active-directory/enterprise-users/groups-dynamic-membership).",
+							Description:  "The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://learn.microsoft.com/azure/active-directory/enterprise-users/groups-dynamic-membership).",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 3072),
@@ -201,7 +201,7 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"provisioning_options": {
-				Description: "A set of provisioning options for a Microsoft 365 group. See [official documentation](https://learn.microsoft.com/en-us/graph/group-set-options) for details.",
+				Description: "A set of provisioning options for a Microsoft 365 group. See [official documentation](https://learn.microsoft.com/graph/group-set-options) for details.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
@@ -582,14 +582,14 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 					if response.WasBadRequest(resp.HttpResponse) && regexp.MustCompile(groupDuplicateValueError).MatchString(err.Error()) {
 						// Retry the group creation, without the calling principal as owner
 						ownersWithoutCallingPrincipal := make([]string, 0)
-						for _, o := range *properties.Owners_ODataBind {
+						for _, o := range pointer.From(properties.Owners_ODataBind) {
 							if o != callerODataId {
 								ownersWithoutCallingPrincipal = append(ownersWithoutCallingPrincipal, o)
 							}
 						}
 
 						// No point in retrying if the caller wasn't specified as an owner
-						if len(ownersWithoutCallingPrincipal) == len(*properties.Owners) {
+						if len(ownersWithoutCallingPrincipal) == len(pointer.From(properties.Owners_ODataBind)) {
 							log.Printf("[DEBUG] Not retrying group creation for %q within %s as owner was not specified", displayName, administrativeUnitId)
 							return tf.ErrorDiagF(err, "Creating group in %s", administrativeUnitId)
 						}
@@ -650,14 +650,14 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 			if response.WasBadRequest(resp.HttpResponse) && regexp.MustCompile(groupDuplicateValueError).MatchString(err.Error()) {
 				// Retry the group creation, without the calling principal as owner
 				ownersWithoutCallingPrincipal := make([]string, 0)
-				for _, o := range *properties.Owners_ODataBind {
+				for _, o := range pointer.From(properties.Owners_ODataBind) {
 					if o != callerODataId {
 						ownersWithoutCallingPrincipal = append(ownersWithoutCallingPrincipal, o)
 					}
 				}
 
 				// No point in retrying if the caller wasn't specified as an owner
-				if len(ownersWithoutCallingPrincipal) == len(pointer.From(properties.Owners)) {
+				if len(ownersWithoutCallingPrincipal) == len(pointer.From(properties.Owners_ODataBind)) {
 					log.Printf("[DEBUG] Not retrying group creation for %q as owner was not specified", displayName)
 					return tf.ErrorDiagF(err, "Creating group %q", displayName)
 				}
@@ -778,7 +778,7 @@ func groupWithoutMembersResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 		// The following unified group properties in this block only support delegated authentication.
 		// Application-authenticated requests will return a 4xx error, so we only
 		// set these when explicitly configured, as they each default to false anyway
-		// See https://learn.microsoft.com/en-us/graph/known-issues#groups
+		// See https://learn.microsoft.com/graph/known-issues#groups
 
 		// AllowExternalSenders can only be set in its own PATCH request; including other properties returns a 400
 		if allowExternalSenders, ok := d.GetOkExists("external_senders_allowed"); ok { //nolint:staticcheck
@@ -964,7 +964,7 @@ func groupWithoutMembersResourceUpdate(ctx context.Context, d *pluginsdk.Resourc
 		// The unified group properties in this block only support delegated auth
 		// Application-authenticated requests will return a 403 or 404 error, so we
 		// only set these when explicitly configured, and when the value differs.
-		// See https://learn.microsoft.com/en-us/graph/known-issues#groups
+		// See https://learn.microsoft.com/graph/known-issues#groups
 		extra, err := groupGetAdditional(ctx, client, *id)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Retrieving extra fields for %s", id)

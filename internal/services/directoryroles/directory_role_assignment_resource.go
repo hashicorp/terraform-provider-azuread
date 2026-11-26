@@ -24,7 +24,7 @@ import (
 
 func directoryRoleAssignmentResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages a single directory Role Assignment within Azure Active Directory.",
+		Description:   "Manages a single directory role assignment within Azure Active Directory.",
 		CreateContext: directoryRoleAssignmentResourceCreate,
 		ReadContext:   directoryRoleAssignmentResourceRead,
 		DeleteContext: directoryRoleAssignmentResourceDelete,
@@ -51,7 +51,6 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceDirectoryRoleAssignmentInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceDirectoryRoleAssignmentInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -65,7 +64,7 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"principal_object_id": {
-				Description:  "The object ID of the principal for you want to create a Role Assignment. Supported object types are Users, Groups or Service Principals.",
+				Description:  "The object ID of the principal for you want to create a role assignment. Supported object types are Users, Groups or Service Principals.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -73,7 +72,7 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"app_scope_id": {
-				Description:   "Identifier of the app-specific scope when the assignment scope is app-specific. See [official documentation](https://learn.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage.",
+				Description:   "Identifier of the app-specific scope when the assignment scope is app-specific. See [official documentation](https://learn.microsoft.com/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage.",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -83,7 +82,7 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 			},
 
 			"directory_scope_id": {
-				Description:   "Identifier of the directory object representing the scope of the assignment. See [official documentation](https://learn.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage.",
+				Description:   "Identifier of the directory object representing the scope of the assignment. See [official documentation](https://learn.microsoft.com/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage.",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -137,7 +136,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.Res
 		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for directory role %q assignment to principal %q to take effect", roleId, principalId)
 	}
 	timeout := time.Until(deadline)
-	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+	if _, err = (&pluginsdk.StateChangeConf{
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
@@ -153,8 +152,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.Res
 			}
 			return "stub", "Done", nil
 		},
-	}).WaitForStateContext(ctx)
-	if err != nil {
+	}).WaitForStateContext(ctx); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for role assignment for %q to reflect in directory role %q", principalId, roleId)
 	}
 

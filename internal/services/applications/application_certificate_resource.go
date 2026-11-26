@@ -180,7 +180,7 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 
 	// Wait for the credential to appear in the application manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+	polledForCredential, err := (&pluginsdk.StateChangeConf{
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),

@@ -77,7 +77,7 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"account_enabled": {
-				Description: "Whether or not the account is enabled.",
+				Description: "Whether the account is enabled.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
@@ -287,7 +287,7 @@ func userDataSource() *pluginsdk.Resource {
 			},
 
 			"show_in_address_list": {
-				Description: "Whether or not the Outlook global address list should include this user.",
+				Description: "Whether the Outlook global address list includes this user.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},

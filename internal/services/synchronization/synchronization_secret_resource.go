@@ -53,7 +53,6 @@ func synchronizationSecretResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceSynchronizationSecretInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceSynchronizationSecretInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -67,8 +66,9 @@ func synchronizationSecretResource() *pluginsdk.Resource {
 			},
 
 			"credential": {
-				Type:     pluginsdk.TypeList,
-				Optional: true,
+				Description: "One or more `credential` blocks, each holding the key and value of one secret.",
+				Type:        pluginsdk.TypeList,
+				Optional:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"key": {

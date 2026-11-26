@@ -64,7 +64,6 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceServicePrincipalInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceServicePrincipalInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -78,7 +77,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"account_enabled": {
-				Description: "Whether or not the Service Principal account is enabled.",
+				Description: "Whether the Service Principal account is enabled.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     true,
@@ -95,7 +94,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"app_role_assignment_required": {
-				Description: "Whether this Service Principal requires an app Role Assignment to a user or group before Azure AD will issue a user or access token to the application.",
+				Description: "Whether this Service Principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
@@ -128,7 +127,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 						},
 
 						"gallery": {
-							Description: "Whether this Service Principal represents a Gallery Application. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag.",
+							Description: "Whether this Service Principal represents a gallery application. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -164,7 +163,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 						},
 
 						"gallery_application": {
-							Description: "Whether this Service Principal represents a Gallery Application.",
+							Description: "Whether this Service Principal represents a gallery application.",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -194,7 +193,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"notification_email_addresses": {
-				Description: "A set of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery Applications.",
+				Description: "A set of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Schema{
@@ -222,7 +221,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"tags": {
-				Description:   "A set of tags to apply to the Service Principal for configuring specific behaviours of the Service Principal. Note that these are not provided for use by practitioners.",
+				Description:   "A set of tags to apply to the Service Principal for configuring specific behaviours of the Service Principal. These are not provided for use by practitioners.",
 				Type:          pluginsdk.TypeSet,
 				Optional:      true,
 				Computed:      true,

@@ -94,7 +94,7 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"behaviors": {
-				Description: "A list of behaviors for a Microsoft 365 group, such as `AllowOnlyMembersToPost`, `HideGroupInOutlook`, `SubscribeNewGroupMembers` and `WelcomeEmailDisabled`. See [official documentation](https://learn.microsoft.com/en-us/graph/group-set-options) for more details.",
+				Description: "A list of behaviors for a Microsoft 365 group, such as `AllowOnlyMembersToPost`, `HideGroupInOutlook`, `SubscribeNewGroupMembers` and `WelcomeEmailDisabled`. See [official documentation](https://learn.microsoft.com/graph/group-set-options) for more details.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -115,7 +115,7 @@ func groupDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
-							Description: "Whether rule processing is \"On\" (true) or \"Paused\" (false).",
+							Description: "Whether rule processing is `On` (true) or `Paused` (false).",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -214,7 +214,7 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"provisioning_options": {
-				Description: "A list of provisioning options for a Microsoft 365 group, such as `Team`. See [official documentation](https://learn.microsoft.com/en-us/graph/group-set-options) for details.",
+				Description: "A list of provisioning options for a Microsoft 365 group, such as `Team`. See [official documentation](https://learn.microsoft.com/graph/group-set-options) for details.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
@@ -491,7 +491,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		return tf.ErrorDiagF(err, "Could not retrieve group owners for group with object ID: %q", d.Id())
 	}
 	owners := make([]string, 0)
-	for _, object := range *resp.Model {
+	for _, object := range pointer.From(resp.Model) {
 		owners = append(owners, pointer.From(object.DirectoryObject().Id))
 	}
 	tf.Set(d, "owners", owners)

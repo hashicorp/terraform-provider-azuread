@@ -159,7 +159,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"approval_timeout_in_days": {
-										Description: "Decision must be made in how many days? If a request is not approved within this time period after it is made, it will be automatically rejected.",
+										Description: "The number of days in which a decision must be made. If a request is not approved within this time period after it is made, it will be automatically rejected.",
 										Type:        pluginsdk.TypeInt,
 										Required:    true,
 									},
@@ -171,13 +171,13 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 									},
 
 									"alternative_approval_enabled": {
-										Description: "If no action taken, forward to alternate approvers?",
+										Description: "Whether to forward to alternate approvers if no action is taken.",
 										Type:        pluginsdk.TypeBool,
 										Optional:    true,
 									},
 
 									"enable_alternative_approval_in_days": {
-										Description: "Forward to alternate approver(s) after how many days?",
+										Description: "The number of days after which to forward to alternate approvers.",
 										Type:        pluginsdk.TypeInt,
 										Optional:    true,
 									},
@@ -231,7 +231,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 						},
 
 						"starting_on": {
-							Description:  "This is the date the access review campaign will start on, formatted as an RFC3339 date string in UTC(e.g. 2018-01-01T01:02:03Z), default is now. Once an access review has been created, you cannot update its start date.",
+							Description:  "This is the date the access review campaign will start on, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z), default is now. Once an access review has been created, you cannot update its start date.",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.IsRFC3339Time,
@@ -385,6 +385,9 @@ func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *plugins
 
 	if resp.Model == nil {
 		return tf.ErrorDiagF(errors.New("model was nil"), "Creating access package assignment policy")
+	}
+	if resp.Model.Id == nil {
+		return tf.ErrorDiagF(errors.New("model ID was nil"), "Creating access package assignment policy")
 	}
 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageAssignmentPolicyID(*resp.Model.Id)

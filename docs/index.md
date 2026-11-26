@@ -1,6 +1,6 @@
 # Azure Active Directory Provider
 
-The Azure Provider can be used to configure infrastructure in [Azure Active Directory](https://azure.microsoft.com/en-us/services/active-directory/) using the [Microsoft Graph](https://docs.microsoft.com/en-us/graph/overview) API. Documentation regarding the [Data Sources](https://www.terraform.io/docs/language/data-sources/index.html) and [Resources](https://www.terraform.io/docs/language/resources/index.html) supported by the Azure Active Directory Provider can be found in the navigation to the left.
+The Azure Provider can be used to configure infrastructure in [Azure Active Directory](https://learn.microsoft.com/entra/fundamentals/what-is-entra) using the [Microsoft Graph](https://docs.microsoft.com/en-us/graph/overview) API. Documentation regarding the [Data Sources](https://www.terraform.io/docs/language/data-sources/index.html) and [Resources](https://www.terraform.io/docs/language/resources/index.html) supported by the Azure Active Directory Provider can be found in the navigation to the left.
 
 In October 2023 [Azure Active Directory was renamed to Microsoft Entra ID](https://learn.microsoft.com/entra/fundamentals/new-name). All references to both names in this documentation are interchangeable.
 

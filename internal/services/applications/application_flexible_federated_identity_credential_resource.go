@@ -59,7 +59,7 @@ func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*plu
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotWhiteSpace,
-			Description:  "The expression to match for claims. See the [Preview Documentation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-flexible-federated-identity-credentials?tabs=terraformcloud#flexible-federated-identity-credential-expression-language-functionality) for more information.",
+			Description:  "The expression to match for claims. See the [Preview Documentation](https://learn.microsoft.com/entra/workload-id/workload-identities-flexible-federated-identity-credentials?tabs=terraformcloud#flexible-federated-identity-credential-expression-language-functionality) for more information.",
 		},
 
 		"display_name": {
@@ -105,7 +105,7 @@ func (f flexibleFederatedIdentityCredentialResource) ResourceType() string {
 }
 
 func (f flexibleFederatedIdentityCredentialResource) Description() string {
-	return "Manages a flexible Federated Identity Credential associated with an application within Azure Active Directory."
+	return "Manages a Flexible Federated Identity Credential associated with an application within Azure Active Directory."
 }
 
 func (f flexibleFederatedIdentityCredentialResource) Create() sdk.ResourceFunc {

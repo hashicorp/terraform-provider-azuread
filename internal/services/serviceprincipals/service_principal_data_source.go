@@ -77,7 +77,7 @@ func servicePrincipalData() *pluginsdk.Resource {
 			},
 
 			"app_role_assignment_required": {
-				Description: "Whether this Service Principal requires an app Role Assignment to a user or group before Azure AD will issue a user or access token to the application.",
+				Description: "Whether this Service Principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
@@ -124,7 +124,7 @@ func servicePrincipalData() *pluginsdk.Resource {
 						},
 
 						"gallery": {
-							Description: "Whether this Service Principal represents a Gallery Application.",
+							Description: "Whether this Service Principal represents a gallery application.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -158,7 +158,7 @@ func servicePrincipalData() *pluginsdk.Resource {
 						},
 
 						"gallery_application": {
-							Description: "Whether this Service Principal represents a Gallery Application.",
+							Description: "Whether this Service Principal represents a gallery application.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -197,7 +197,7 @@ func servicePrincipalData() *pluginsdk.Resource {
 			},
 
 			"notification_email_addresses": {
-				Description: "A list of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery Applications.",
+				Description: "A list of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{

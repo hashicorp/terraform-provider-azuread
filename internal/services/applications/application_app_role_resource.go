@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 )
 
 type ApplicationAppRoleModel struct {
@@ -99,7 +99,7 @@ func (r ApplicationAppRoleResource) Arguments() map[string]*pluginsdk.Schema {
 			Description:      "The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
-			ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
+			ValidateDiagFunc: validate.RoleScopeClaimValue,
 		},
 	}
 }
@@ -148,7 +148,7 @@ func (r ApplicationAppRoleResource) Create() sdk.ResourceFunc {
 
 			// Check for existing role ID
 			for _, role := range newRoles {
-				if strings.EqualFold(*role.Id, id.RoleID) {
+				if strings.EqualFold(pointer.From(role.Id), id.RoleID) {
 					return metadata.ResourceRequiresImport(r.ResourceType(), id)
 				}
 			}
@@ -213,7 +213,7 @@ func (r ApplicationAppRoleResource) Read() sdk.ResourceFunc {
 			// Identify the role by ID
 			var role *stable.AppRole
 			for _, existingRole := range *app.AppRoles {
-				if strings.EqualFold(*existingRole.Id, id.RoleID) {
+				if strings.EqualFold(pointer.From(existingRole.Id), id.RoleID) {
 					role = &existingRole
 					break
 				}
@@ -282,7 +282,7 @@ func (r ApplicationAppRoleResource) Update() sdk.ResourceFunc {
 			newRoles := make([]stable.AppRole, 0)
 			found := false
 			for _, existingRole := range *app.AppRoles {
-				if strings.EqualFold(*existingRole.Id, id.RoleID) {
+				if strings.EqualFold(pointer.From(existingRole.Id), id.RoleID) {
 					newRoles = append(newRoles, role)
 					found = true
 				} else {
@@ -348,7 +348,7 @@ func (r ApplicationAppRoleResource) Delete() sdk.ResourceFunc {
 			newRoles := make([]stable.AppRole, 0)
 			found := false
 			for _, existingRole := range *app.AppRoles {
-				if strings.EqualFold(*existingRole.Id, id.RoleID) {
+				if strings.EqualFold(pointer.From(existingRole.Id), id.RoleID) {
 					found = true
 				} else {
 					newRoles = append(newRoles, existingRole)

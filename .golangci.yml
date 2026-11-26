@@ -1,9 +1,10 @@
 # Copyright IBM Corp. 2019, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-# NOTE: this config enables the tfproviderlint module plugin, which only exists in the
-# custom-built binary produced by 'make golangci-with-modules' (see .tools/.custom-gcl.yml)
-# — run lints via 'make lint' / '.tools/bin/golangci-with-modules run', not stock golangci-lint.
+# NOTE: this config enables the azproviderlint and tfproviderlint module plugins, which only
+# exist in the custom-built binary produced by 'make golangci-with-modules' (see
+# .tools/.custom-gcl.yml) — run lints via 'make lint' / '.tools/bin/golangci-with-modules run',
+# not stock golangci-lint.
 version: "2"
 run:
   modules-download-mode: vendor
@@ -12,6 +13,7 @@ linters:
   enable:
     - asasalint                 # check for pass []any as any in variadic func(...any)
     - asciicheck                # ensure code does not contain non-ASCII identifiers
+    - azproviderlint            # custom azure provider checks (AZG/AZP/AZR/AZS/AZT), module plugin - see .tools/.custom-gcl.yml
     - bidichk                   # checks for dangerous unicode character sequences
     - copyloopvar               # detects redundant x := x copies of loop variables (unnecessary since Go 1.22)
     - decorder                  # check declaration order and count of types, constants, variables and functions
@@ -30,6 +32,7 @@ linters:
     - modernize                 # suggests modern Go idioms (range-over-int, slices/maps/strings helpers), autofixable - see settings below
     - nilerr                    # finds code that returns nil after it checks that the error is not nil
     - nilnesserr                # finds code that checks one error but mistakenly returns a different nil error
+    - nolintlint                # checks nolint comments are well formed, name a linter and still suppress something - see settings below
     - noctx                     # finds http requests and exec commands made without a context.Context
     - nosprintfhostport         # checks for misuse of Sprintf to construct host:port in a URL
     - predeclared               # find code that shadows one of Go's predeclared identifiers
@@ -57,6 +60,8 @@ linters:
       disable:
         - any # interface{} -> any: ~740 findings, to be flipped on in a dedicated mechanical pr
         - newexpr # flags pointer.To(x) -> new(x), azuread standardises on pointer.To
+    nolintlint:
+      require-specific: true # a nolint that names no linter switches off every linter for the code below it
     predeclared:
       ignore: # widely used as ordinary variable/parameter names across the provider (old/new in diffs, min/max in validation)
         - new
@@ -69,6 +74,42 @@ linters:
         - tfschema
         - computed
     custom:
+      azproviderlint:
+        type: module
+        settings:
+          disable: # rules with findings left to fix, each to be switched on once they are
+            - AZP002 # resources with no data source - 48 findings, to decide if they should have one
+            - AZP003 # data sources missing their resource's properties - 6 findings
+            - AZR007 # StateChangeConf rather than a custom poller - 13 findings, to migrate over time
+            - AZS003 # blocks that can be empty - 16 findings
+            - AZS005 # schema fields out of the agreed order - 90 findings, all fixed by 'make lint-fix' once this is switched on
+            - AZS007 # Optional+Computed fields with no '// Note: O+C because ...' comment - 123 findings
+            - AZT002 # tests reading credentials with os.Getenv - 3 findings
+          AZG002:
+            use: pointer.To # rather than the go1.26 new(<expr>) builtin
+          AZG006:
+            # only inline temporaries into calls whose other arguments are all basic literals
+            # (e.g. d.Set("key", x)) - among identifier/expression siblings the name adds context
+            only-when-literals: true
+          AZG010:
+            allow-pattern: ['Beta$'] # groupBeta, ownerBeta: aliases that mark an import as the beta Graph API, kept so its use shows at every call
+          AZS005:
+            state-migrations: false # a state migration's schema is a copy of what old state looked like, so it is left as written
+          AZS004:
+            # exact-match only: report hand-written lists that exactly match the enum (a pure
+            # PossibleValuesFor<Enum>() swap); deliberate subsets/supersets are left alone
+            allow-missing-values: true
+            allow-extra-values: true
+          AZS007:
+            exclude-packages: "migrations"
+          AZS015:
+            line-break: properties # a resource's own description keeps its paragraphs, a property's stays on one line
+          AZS016:
+            ignore: # azurerm product names that mean something else here: an app role's assignment or definition, the Entra app gallery, a licence's service plans
+              - Role Assignment
+              - Role Definition
+              - Gallery Application
+              - Service Plan
       tfproviderlint:
         type: module
         settings: # all checks run (including the tfproviderlintx X* checks, via extended) except those disabled below
@@ -104,6 +145,7 @@ linters:
           - tfproviderlint
         text: '^V[0-9]+:'
 issues:
+  uniq-by-line: false # show every report on a line: all azproviderlint rules count as one linter, so one rule's report would hide another's
   max-issues-per-linter: 0
   max-same-issues: 0
 formatters:

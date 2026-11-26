@@ -1,9 +1,14 @@
 name: Workflow Action Lint
 
-# Lints .github/workflows/ with rhysd/actionlint (expression/context errors, shellcheck on run:
+# Lints .github/workflows/ with actionlint (expression/context errors, shellcheck on run:
 # blocks, action input validation). make builds actionlint at the version pinned in .tools/go.mod
 # (a separate module, so its dependencies stay out of vendor/; dependabot bumps it there); its
 # config lives in .github/actionlint.yaml.
+#
+# We build katbyte/actionlint, a fork of rhysd/actionlint carrying two upstream PRs that have not
+# been merged: #732 (support for GitHub's `$/` self-repository `uses:` syntax, without which this
+# repo's workflows fail to lint) and #735 (go.yaml.in/yaml/v4 rc.6, so actionlint and golangci-lint
+# can share a dependency). Upstream has had no commits since April 2026.
 
 permissions:
   contents: read
@@ -25,8 +30,10 @@ jobs:
   workflow-actionlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: ./.go-version
           cache: false

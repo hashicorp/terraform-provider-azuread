@@ -128,7 +128,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"expiration_required": {
-						Description: "Must an assignment have an expiry date? `false` allows permanent assignment.",
+						Description: "Whether an assignment must have an expiry date. `false` allows permanent assignment.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
@@ -154,7 +154,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"expiration_required": {
-						Description: "Must an assignment have an expiry date? `false` allows permanent assignment.",
+						Description: "Whether an assignment must have an expiry date. `false` allows permanent assignment.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
@@ -169,21 +169,21 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"require_multifactor_authentication": {
-						Description: "Is multi-factor authentication required to create new assignments?",
+						Description: "Whether multi-factor authentication is required to create new assignments.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
 					},
 
 					"require_justification": {
-						Description: "Is a justification required to create new assignments?",
+						Description: "Whether a justification is required to create new assignments.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
 					},
 
 					"require_ticket_info": {
-						Description: "Is ticket information required to create new assignments?",
+						Description: "Whether ticket information is required to create new assignments.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
@@ -214,7 +214,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"require_approval": {
-						Description: "Is approval required for activation? If `true` an `approval_stage` block must be provided.",
+						Description: "Whether approval is required for activation. If `true` an `approval_stage` block must be provided.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
@@ -265,7 +265,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"require_multifactor_authentication": {
-						Description:   "Is multi-factor authentication required to activate the role?",
+						Description:   "Whether multi-factor authentication is required to activate the role.",
 						Type:          pluginsdk.TypeBool,
 						Optional:      true,
 						Computed:      true,
@@ -273,14 +273,14 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 					},
 
 					"require_justification": {
-						Description: "Is a justification required during activation of the role?",
+						Description: "Whether a justification is required during activation of the role.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
 					},
 
 					"require_ticket_info": {
-						Description: "Is ticket information required during activation of the role?",
+						Description: "Whether ticket information is required during activation of the role.",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 						Computed:    true,
@@ -1012,7 +1012,7 @@ func notificationSettingsSchema() map[string]*pluginsdk.Schema {
 			ValidateFunc: validation.StringInSlice([]string{"All", "Critical"}, false),
 		},
 		"default_recipients": {
-			Description: "Should the default recipients receive these notifications?",
+			Description: "Whether the default recipients should receive these notifications.",
 			Type:        pluginsdk.TypeBool,
 			Required:    true,
 		},

@@ -96,13 +96,13 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"account_enabled": {
-							Description: "Whether or not the Service Principal account is enabled.",
+							Description: "Whether the Service Principal account is enabled.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"app_role_assignment_required": {
-							Description: "Whether this Service Principal requires an app Role Assignment to a user or group before Azure AD will issue a user or access token to the application.",
+							Description: "Whether this Service Principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
