@@ -81,14 +81,14 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"assignable_to_role": {
-				Description: "Indicates whether this group can be assigned to an Azure Active Directory role. Can only be set to `true` for security-enabled groups.",
+				Description: "Whether this group can be assigned to an Azure Active Directory role. Can only be set to `true` for security-enabled groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 			},
 
 			"auto_subscribe_new_members": {
-				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Can only be set for Unified groups.",
+				Description: "Whether new members added to the group will be auto-subscribed to receive email notifications. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
@@ -119,7 +119,7 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
-							Description: "Whether rule processing is \"On\" (true) or \"Paused\" (false).",
+							Description: "Whether rule processing is `On` (true) or `Paused` (false).",
 							Type:        pluginsdk.TypeBool,
 							Required:    true,
 						},
@@ -135,28 +135,28 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"external_senders_allowed": {
-				Description: "Indicates whether people external to the organization can send messages to the group. Can only be set for Unified groups.",
+				Description: "Whether people external to the organization can send messages to the group. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"hide_from_address_lists": {
-				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups. Can only be set for Unified groups.",
+				Description: "Whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"hide_from_outlook_clients": {
-				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Can only be set for Unified groups.",
+				Description: "Whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Can only be set for Unified groups.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"mail_enabled": {
-				Description:  "Whether the group is a mail enabled, with a shared group mailbox. At least one of `mail_enabled` or `security_enabled` must be specified. Only Microsoft 365 groups can be mail enabled (see the `types` property).",
+				Description:  "Whether the group is a mail enabled, with a shared group mailbox. Only Microsoft 365 groups can be mail enabled (see the `types` property).",
 				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},
@@ -180,7 +180,7 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"owners": {
-				Description: "A set of object IDs of principals that will be granted ownership of the group. Supported object types are users or service principals. By default, the principal being used to execute Terraform is assigned as the sole owner. Groups cannot be created with no owners or have all their owners removed.",
+				Description: "A set of object IDs of principals that will be granted ownership of the group. Supported object types are users or Service Principals. By default, the principal being used to execute Terraform is assigned as the sole owner. Groups cannot be created with no owners or have all their owners removed.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Computed:    true,
@@ -212,7 +212,7 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 			},
 
 			"security_enabled": {
-				Description:  "Whether the group is a security group for controlling access to in-app resources. At least one of `security_enabled` or `mail_enabled` must be specified. A Microsoft 365 group can be security enabled _and_ mail enabled (see the `types` property).",
+				Description:  "Whether the group is a security group for controlling access to in-app resources. A Microsoft 365 group can be security enabled _and_ mail enabled (see the `types` property).",
 				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},

@@ -83,14 +83,6 @@ linters:
             - AZR007 # StateChangeConf rather than a custom poller - 13 findings, to migrate over time
             - AZS003 # blocks that can be empty - 16 findings
             - AZS007 # Optional+Computed fields with no '// Note: O+C because ...' comment - 123 findings
-            - AZS010 # properties and blocks with no description - 34 findings
-            - AZS012 # a/an before a name - 3 findings
-            - AZS013 # acronym case - 2 findings
-            - AZS014 # descriptions repeating what the schema already says - 25 findings
-            - AZS015 # descriptions with no full stop - 192 findings
-            - AZS016 # product names without their capitals - 147 findings
-            - AZS017 # descriptions opening with "Specifies the" and similar - 67 findings
-            - AZS019 # descriptions that ask a question - 14 findings
             - AZT002 # tests reading credentials with os.Getenv - 3 findings
           AZG002:
             use: pointer.To # rather than the go1.26 new(<expr>) builtin
@@ -109,6 +101,14 @@ linters:
             allow-extra-values: true
           AZS007:
             exclude-packages: "migrations"
+          AZS015:
+            line-break: properties # a resource's own description keeps its paragraphs, a property's stays on one line
+          AZS016:
+            ignore: # azurerm product names that mean something else here: an app role's assignment or definition, the Entra app gallery, a licence's service plans
+              - Role Assignment
+              - Role Definition
+              - Gallery Application
+              - Service Plan
       tfproviderlint:
         type: module
         settings: # all checks run (including the tfproviderlintx X* checks, via extended) except those disabled below

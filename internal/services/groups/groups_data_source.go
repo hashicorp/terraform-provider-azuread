@@ -73,25 +73,25 @@ func groupsDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"display_name": {
-							Description: "The display name of the group",
+							Description: "The display name of the group.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"mail_enabled": {
-							Description: "Whether the group is mail-enabled",
+							Description: "Whether the group is mail-enabled.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"object_id": {
-							Description: "The object ID of the group",
+							Description: "The object ID of the group.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"security_enabled": {
-							Description: "Whether the group is security-enabled",
+							Description: "Whether the group is security-enabled.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},

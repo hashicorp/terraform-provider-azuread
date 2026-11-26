@@ -72,7 +72,7 @@ func administrativeUnitRoleMemberResource() *pluginsdk.Resource {
 			},
 
 			"member_object_id": {
-				Description:      "The object ID of the user, group or service principal you want to add as a member of the administrative unit.",
+				Description:      "The object ID of the user, group or Service Principal you want to add as a member of the administrative unit.",
 				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,

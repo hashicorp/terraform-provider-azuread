@@ -95,7 +95,7 @@ func administrativeUnitResource() *pluginsdk.Resource {
 			},
 
 			"prevent_duplicate_names": {
-				Description: "If `true`, will return an error if an existing administrative unit is found with the same name",
+				Description: "If `true`, will return an error if an existing administrative unit is found with the same name.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     false,

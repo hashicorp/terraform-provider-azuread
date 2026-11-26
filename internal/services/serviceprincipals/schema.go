@@ -19,7 +19,7 @@ func schemaAppRolesComputed() *pluginsdk.Schema {
 				},
 
 				"allowed_member_types": {
-					Description: "Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios).",
+					Description: "Whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios).",
 					Type:        pluginsdk.TypeList,
 					Computed:    true,
 					Elem: &pluginsdk.Schema{
@@ -40,13 +40,13 @@ func schemaAppRolesComputed() *pluginsdk.Schema {
 				},
 
 				"enabled": {
-					Description: "The unique identifier of the app role",
+					Description: "The unique identifier of the app role.",
 					Type:        pluginsdk.TypeBool,
 					Computed:    true,
 				},
 
 				"value": {
-					Description: "Specifies the value of the roles claim that the application should expect in the authentication and access tokens.",
+					Description: "The value of the roles claim that the application should expect in the authentication and access tokens.",
 					Type:        pluginsdk.TypeString,
 					Computed:    true,
 				},
@@ -81,13 +81,13 @@ func schemaOauth2PermissionScopesComputed() *pluginsdk.Schema {
 				},
 
 				"enabled": {
-					Description: "Determines if the permission scope is enabled.",
+					Description: "Whether the permission scope is enabled.",
 					Type:        pluginsdk.TypeBool,
 					Computed:    true,
 				},
 
 				"type": {
-					Description: "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions.",
+					Description: "Whether this delegated permission is considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator is required for consent to the permissions.",
 					Type:        pluginsdk.TypeString,
 					Computed:    true,
 				},

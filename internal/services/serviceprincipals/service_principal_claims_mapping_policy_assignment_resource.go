@@ -62,7 +62,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource
 			},
 
 			"service_principal_id": {
-				Description:  "The ID of the service principal for the policy assignment.",
+				Description:  "The ID of the Service Principal for the policy assignment.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,

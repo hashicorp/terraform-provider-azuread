@@ -35,7 +35,7 @@ func applicationDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:      "Specifies the Object ID of the application.",
+				Description:      "The Object ID of the application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -44,7 +44,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"client_id": {
-				Description:      "Specifies the Client ID of the application.",
+				Description:      "The Client ID of the application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -53,7 +53,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"identifier_uri": {
-				Description:      "Specifies any identifier URI of the application. See also the `identifier_uris` attribute which contains a list of all identifier URIs for the application.",
+				Description:      "Any identifier URI of the application. See also the `identifier_uris` attribute which contains a list of all identifier URIs for the application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -62,13 +62,13 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"disabled_by_microsoft": {
-				Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`",
+				Description: "Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"display_name": {
-				Description:      "Specifies the display name of the application.",
+				Description:      "The display name of the application.",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -77,8 +77,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"api": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "An `api` block, which describes API related settings for this application.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"known_client_applications": {
@@ -97,7 +98,7 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"oauth2_permission_scopes": {
-							Description: "List of OAuth2 permission scopes published by the application",
+							Description: "List of OAuth2 permission scopes published by the application.",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Resource{
@@ -121,13 +122,13 @@ func applicationDataSource() *pluginsdk.Resource {
 									},
 
 									"enabled": {
-										Description: "Determines if the permission scope is enabled.",
+										Description: "Whether the permission scope is enabled.",
 										Type:        pluginsdk.TypeBool,
 										Computed:    true,
 									},
 
 									"type": {
-										Description: "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions.",
+										Description: "Whether this delegated permission is considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator is required for consent to the permissions.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
@@ -163,7 +164,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"app_roles": {
-				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://learn.microsoft.com/azure/architecture/multitenant-identity/app-roles).",
+				Description: "A collection of `app_role` blocks. For more information see [official documentation on Application Roles](https://learn.microsoft.com/azure/architecture/multitenant-identity/app-roles).",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{
@@ -175,7 +176,7 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"allowed_member_types": {
-							Description: "Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in a standalone scenario).",
+							Description: "Whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in a standalone scenario).",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Schema{
@@ -196,7 +197,7 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"enabled": {
-							Description: "Determines if the app role is enabled.",
+							Description: "Whether the app role is enabled.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -226,7 +227,7 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"device_only_auth_enabled": {
-				Description: "Specifies whether this application supports device authentication without a user.",
+				Description: "Whether this application supports device authentication without a user.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
@@ -238,25 +239,25 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"feature_tags": {
-				Description: "Block of features configured for this application using tags",
+				Description: "Block of features configured for this application using tags.",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"custom_single_sign_on": {
-							Description: "Whether this application represents a custom SAML application for linked service principals.",
+							Description: "Whether this application represents a custom SAML application for linked Service Principals.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"enterprise": {
-							Description: "Whether this application represents an Enterprise Application for linked service principals.",
+							Description: "Whether this application represents an Enterprise Application for linked Service Principals.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"gallery": {
-							Description: "Whether this application represents a gallery application for linked service principals.",
+							Description: "Whether this application represents a gallery application for linked Service Principals.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
@@ -316,19 +317,20 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"oauth2_post_response_required": {
-				Description: "Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. When `false`, only GET requests are allowed.",
+				Description: "Whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. When `false`, only GET requests are allowed.",
 				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"optional_claims": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "An `optional_claims` block, which describes the optional claims included in tokens issued to this application.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
-						"access_token": schemaOptionalClaims(),
-						"id_token":     schemaOptionalClaims(),
-						"saml2_token":  schemaOptionalClaims(),
+						"access_token": schemaOptionalClaims("One or more `access_token` blocks, each describing an optional claim for access tokens."),
+						"id_token":     schemaOptionalClaims("One or more `id_token` blocks, each describing an optional claim for ID tokens."),
+						"saml2_token":  schemaOptionalClaims("One or more `saml2_token` blocks, each describing an optional claim for SAML tokens."),
 					},
 				},
 			},
@@ -349,8 +351,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"public_client": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A `public_client` block, which describes non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"redirect_uris": {
@@ -372,8 +375,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"required_resource_access": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A collection of `required_resource_access` blocks, each describing a resource and the permissions this application requires from it.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"resource_app_id": {
@@ -383,7 +387,7 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"resource_access": {
-							Description: "A collection of `resource_access` blocks describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource",
+							Description: "A collection of `resource_access` blocks describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.",
 							Type:        pluginsdk.TypeList,
 							Computed:    true,
 							Elem: &pluginsdk.Resource{
@@ -395,7 +399,7 @@ func applicationDataSource() *pluginsdk.Resource {
 									},
 
 									"type": {
-										Description: "Specifies whether the `id` property references an app role or an OAuth2 permission scope.",
+										Description: "Whether the `id` property references an app role or an OAuth2 permission scope.",
 										Type:        pluginsdk.TypeString,
 										Computed:    true,
 									},
@@ -419,8 +423,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"single_page_application": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A `single_page_application` block, which describes single-page application (SPA) related settings for this application.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"redirect_uris": {
@@ -457,8 +462,9 @@ func applicationDataSource() *pluginsdk.Resource {
 			},
 
 			"web": {
-				Type:     pluginsdk.TypeList,
-				Computed: true,
+				Description: "A `web` block, which describes web related settings for this application.",
+				Type:        pluginsdk.TypeList,
+				Computed:    true,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"homepage_url": {
@@ -483,8 +489,9 @@ func applicationDataSource() *pluginsdk.Resource {
 						},
 
 						"implicit_grant": {
-							Type:     pluginsdk.TypeList,
-							Computed: true,
+							Description: "An `implicit_grant` block, which describes whether tokens can be requested using the OAuth 2.0 implicit flow.",
+							Type:        pluginsdk.TypeList,
+							Computed:    true,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"access_token_issuance_enabled": {

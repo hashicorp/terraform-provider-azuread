@@ -81,7 +81,7 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"account_enabled": {
-				Description: "Whether or not the account should be enabled.",
+				Description: "Whether the account should be enabled.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     true,
@@ -188,7 +188,7 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"job_title": {
-				Description: "The user’s job title.",
+				Description: "The user's job title.",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
@@ -242,7 +242,7 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"password": {
-				Description:  "The password for the user. The password must satisfy minimum requirements as specified by the password policy. The maximum length is 256 characters. This property is required when creating a new user.",
+				Description:  "The password for the user. The password must satisfy minimum requirements as specified by the password policy. This property is required when creating a new user.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -277,7 +277,7 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"show_in_address_list": {
-				Description: "Whether or not the Outlook global address list should include this user.",
+				Description: "Whether the Outlook global address list should include this user.",
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     true,
@@ -308,7 +308,7 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"about_me": {
-				Description: "A freeform field for the user to describe themselves",
+				Description: "A freeform field for the user to describe themselves.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -320,7 +320,7 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"creation_type": {
-				Description: "Indicates whether the user account was created as a regular school or work account (`null`), an external account (`Invitation`), a local account for an Azure Active Directory B2C tenant (`LocalAccount`) or self-service sign-up using email verification (`EmailVerified`).",
+				Description: "Whether the user account was created as a regular school or work account (`null`), an external account (`Invitation`), a local account for an Azure Active Directory B2C tenant (`LocalAccount`) or self-service sign-up using email verification (`EmailVerified`).",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

@@ -27,7 +27,7 @@ import (
 
 func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		Description:   "Manages a token signing certificate associated with a service principal within Azure Active Directory.",
+		Description:   "Manages a token signing certificate associated with a Service Principal within Azure Active Directory.",
 		CreateContext: servicePrincipalTokenSigningCertificateResourceCreate,
 		ReadContext:   servicePrincipalTokenSigningCertificateResourceRead,
 		DeleteContext: servicePrincipalTokenSigningCertificateResourceDelete,
@@ -45,7 +45,7 @@ func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:  "The ID of the service principal for which this certificate should be created.",
+				Description:  "The ID of the Service Principal for which this certificate should be created.",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -53,7 +53,7 @@ func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
 			},
 
 			"display_name": {
-				Description:  "Specifies a friendly name for the certificate. Must start with `CN=`.",
+				Description:  "A friendly name for the certificate. Must start with `CN=`.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -77,7 +77,7 @@ func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
 			},
 
 			"thumbprint": {
-				Description: "A SHA-1 generated thumbprint of the token signing certificate, which can be used to set the preferred signing certificate for a service principal.",
+				Description: "A SHA-1 generated thumbprint of the token signing certificate, which can be used to set the preferred signing certificate for a Service Principal.",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},

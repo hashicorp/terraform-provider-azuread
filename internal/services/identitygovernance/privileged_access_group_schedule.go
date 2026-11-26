@@ -32,7 +32,7 @@ type PrivilegedAccessGroupScheduleModel struct {
 func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"group_id": {
-			Description:      "The ID of the Group representing the scope of the assignment",
+			Description:      "The ID of the Group representing the scope of the assignment.",
 			Type:             pluginsdk.TypeString,
 			Required:         true,
 			ForceNew:         true,
@@ -40,7 +40,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"principal_id": {
-			Description:      "The ID of the Principal assigned to the schedule",
+			Description:      "The ID of the Principal assigned to the schedule.",
 			Type:             pluginsdk.TypeString,
 			Required:         true,
 			ForceNew:         true,
@@ -48,7 +48,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"assignment_type": {
-			Description:      "The ID of the assignment to the group",
+			Description:      "The ID of the assignment to the group.",
 			Type:             pluginsdk.TypeString,
 			Required:         true,
 			ForceNew:         true,
@@ -56,7 +56,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"start_date": {
-			Description:      "The date that this assignment starts, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z)",
+			Description:      "The date that this assignment starts, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z).",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
 			Computed:         true,
@@ -79,7 +79,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"expiration_date": {
-			Description:      "The date that this assignment expires, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z)",
+			Description:      "The date that this assignment expires, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z).",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
 			Computed:         true,
@@ -88,7 +88,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"duration": {
-			Description:      "The duration of the assignment, formatted as an ISO8601 duration string (e.g. P3D for 3 days)",
+			Description:      "The duration of the assignment, formatted as an ISO8601 duration string (e.g. P3D for 3 days).",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -96,21 +96,21 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"permanent_assignment": {
-			Description: "Is the assignment permanent",
+			Description: "Whether the assignment is permanent.",
 			Type:        pluginsdk.TypeBool,
 			Optional:    true,
 			Computed:    true,
 		},
 
 		"justification": {
-			Description:      "The justification for the assignment",
+			Description:      "The justification for the assignment.",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 		},
 
 		"ticket_number": {
-			Description:      "The ticket number authorising the assignment",
+			Description:      "The ticket number authorising the assignment.",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -118,7 +118,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"ticket_system": {
-			Description:      "The ticket system authorising the assignment",
+			Description:      "The ticket system authorising the assignment.",
 			Type:             pluginsdk.TypeString,
 			Optional:         true,
 			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -130,7 +130,7 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 func privilegedAccessGroupScheduleAttributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"status": {
-			Description: "(String) The provisioning status of this request.",
+			Description: "The provisioning status of this request.",
 			Type:        pluginsdk.TypeString,
 			Computed:    true,
 		},

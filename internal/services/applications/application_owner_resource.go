@@ -57,7 +57,7 @@ func (r ApplicationOwnerResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"owner_object_id": {
-			Description:  "The object ID of the owner to assign to the application, typically a user or service principal.",
+			Description:  "The object ID of the owner to assign to the application, typically a user or Service Principal.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,

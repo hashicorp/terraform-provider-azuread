@@ -117,67 +117,67 @@ func usersData() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"account_enabled": {
-							Description: "Whether or not the account is enabled",
+							Description: "Whether the account is enabled.",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"display_name": {
-							Description: "The display name of the user",
+							Description: "The display name of the user.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"employee_id": {
-							Description: "The employee identifier assigned to the user by the organisation",
+							Description: "The employee identifier assigned to the user by the organisation.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"mail": {
-							Description: "The primary email address of the user",
+							Description: "The primary email address of the user.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"mail_nickname": {
-							Description: "The email alias of the user",
+							Description: "The email alias of the user.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"object_id": {
-							Description: "The object ID of the user",
+							Description: "The object ID of the user.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"onpremises_immutable_id": {
-							Description: "The value used to associate an on-premises Active Directory user account with their Azure AD user object",
+							Description: "The value used to associate an on-premises Active Directory user account with their Azure AD user object.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"onpremises_sam_account_name": {
-							Description: "The on-premise SAM account name of the user",
+							Description: "The on-premise SAM account name of the user.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"onpremises_user_principal_name": {
-							Description: "The on-premise user principal name of the user",
+							Description: "The on-premise user principal name of the user.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"usage_location": {
-							Description: "The usage location of the user",
+							Description: "The usage location of the user.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"user_principal_name": {
-							Description: "The user principal name (UPN) of the user",
+							Description: "The user principal name (UPN) of the user.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
