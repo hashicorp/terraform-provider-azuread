@@ -142,12 +142,12 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"features": {
-				Deprecated:    "This block has been renamed to `feature_tags` and will be removed in version 3.0 of the provider",
 				Description:   "Block of features to configure for this service principal using tags",
 				Type:          pluginsdk.TypeList,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"feature_tags", "tags"},
+				Deprecated:    "This block has been renamed to `feature_tags` and will be removed in version 3.0 of the provider",
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"custom_single_sign_on_app": {

@@ -35,27 +35,27 @@ func userDataSource() *pluginsdk.Resource {
 				Description:  "The employee identifier assigned to the user by the organisation.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				Computed:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 			},
 
 			"mail": {
 				Description:  "The SMTP address for the user.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				Computed:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 			},
 
 			"mail_nickname": {
 				Description:  "The email alias of the user.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				Computed:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 			},
 
 			"object_id": {
@@ -63,8 +63,8 @@ func userDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				ValidateFunc: validation.IsUUID,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 			},
 
 			"user_principal_name": {
@@ -72,8 +72,8 @@ func userDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				ValidateFunc: validation.StringIsNotEmpty,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 			},
 
 			"account_enabled": {

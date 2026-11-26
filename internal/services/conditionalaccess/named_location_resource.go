@@ -119,9 +119,9 @@ func namedLocationResource() *pluginsdk.Resource {
 						"country_lookup_method": {
 							Description:  "Method of detecting country the user is located in.",
 							Type:         pluginsdk.TypeString,
+							Optional:     true,
 							Default:      stable.CountryLookupMethodType_ClientIPAddress,
 							ValidateFunc: validation.StringInSlice(stable.PossibleValuesForCountryLookupMethodType(), false),
-							Optional:     true,
 						},
 					},
 				},

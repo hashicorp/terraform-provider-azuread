@@ -87,8 +87,8 @@ func applicationCertificateResource() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"end_date_relative"},
 				ValidateFunc:  validation.IsRFC3339Time,
+				ConflictsWith: []string{"end_date_relative"},
 			},
 
 			"end_date_relative": {
@@ -96,8 +96,8 @@ func applicationCertificateResource() *pluginsdk.Resource {
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"end_date"},
 				ValidateFunc:  validation.StringIsNotEmpty,
+				ConflictsWith: []string{"end_date"},
 				Deprecated:    "The `end_date_relative` property is deprecated and will be removed in a future version of the AzureAD provider. Please instead use the Terraform `timeadd()` function to calculate a value for the `end_date` property.",
 			},
 

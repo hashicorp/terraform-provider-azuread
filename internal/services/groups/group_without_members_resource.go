@@ -185,8 +185,8 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 				Optional:    true,
 				Computed:    true,
 				MaxItems:    100,
-				Set:         pluginsdk.HashString,
 				ConfigMode:  pluginsdk.SchemaConfigModeAttr,
+				Set:         pluginsdk.HashString,
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.IsUUID,

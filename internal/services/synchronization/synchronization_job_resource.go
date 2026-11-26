@@ -77,8 +77,8 @@ func synchronizationJobResource() *pluginsdk.Resource {
 			"enabled": {
 				Description: "Whether the provisioning job is enabled.",
 				Type:        pluginsdk.TypeBool,
-				Default:     true,
 				Optional:    true,
+				Default:     true,
 			},
 
 			"schedule": {

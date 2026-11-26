@@ -76,16 +76,16 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 				Description:   "How many days this assignment is valid for",
 				Type:          pluginsdk.TypeInt,
 				Optional:      true,
-				ConflictsWith: []string{"expiration_date"},
 				ValidateFunc:  validation.IntBetween(0, 3660),
+				ConflictsWith: []string{"expiration_date"},
 			},
 
 			"expiration_date": {
 				Description:   "The date that this assignment expires, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z)",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"duration_in_days"},
 				ValidateFunc:  validation.IsRFC3339Time,
+				ConflictsWith: []string{"duration_in_days"},
 				// DiffSuppressFunc: assignmentPolicyDiffSuppress,
 			},
 
@@ -99,8 +99,8 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 				Description:      "This block configures the users who can request access",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
-				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				MaxItems:         1,
+				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"requests_accepted": {
@@ -130,8 +130,8 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 				Description:      "Settings of whether approvals are required and how they are obtained",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
-				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				MaxItems:         1,
+				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"approval_required": {
@@ -206,8 +206,8 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 				Description:      "The settings of whether assignment review is needed and how it's conducted",
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
-				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				MaxItems:         1,
+				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
@@ -275,8 +275,8 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 			"question": {
 				Description:      "One or more questions to the requestor",
 				Type:             pluginsdk.TypeList,
-				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				Optional:         true,
+				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"required": {

@@ -72,9 +72,9 @@ func (r DirectoryRoleResource) Arguments() map[string]*pluginsdk.Schema {
 			Optional:         true,
 			Computed:         true,
 			ForceNew:         true,
-			ExactlyOneOf:     []string{"display_name", "template_id"},
-			DiffSuppressFunc: suppress.CaseDifference,
 			ValidateFunc:     validation.StringIsNotEmpty,
+			DiffSuppressFunc: suppress.CaseDifference,
+			ExactlyOneOf:     []string{"display_name", "template_id"},
 		},
 
 		"template_id": {
@@ -83,8 +83,8 @@ func (r DirectoryRoleResource) Arguments() map[string]*pluginsdk.Schema {
 			Optional:     true,
 			Computed:     true,
 			ForceNew:     true,
-			ExactlyOneOf: []string{"display_name", "template_id"},
 			ValidateFunc: validation.IsUUID,
+			ExactlyOneOf: []string{"display_name", "template_id"},
 		},
 	}
 }

@@ -35,8 +35,8 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_name", "object_id"},
 				ValidateFunc: validation.StringIsNotEmpty,
+				ExactlyOneOf: []string{"display_name", "object_id"},
 			},
 
 			"object_id": {
@@ -44,8 +44,8 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_name", "object_id"},
 				ValidateFunc: validation.IsUUID,
+				ExactlyOneOf: []string{"display_name", "object_id"},
 			},
 
 			"description": {

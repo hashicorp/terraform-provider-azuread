@@ -399,8 +399,8 @@ func applicationResource() *pluginsdk.Resource {
 				Description: "A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
-				Set:         pluginsdk.HashString,
 				MaxItems:    100,
+				Set:         pluginsdk.HashString,
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.IsUUID,

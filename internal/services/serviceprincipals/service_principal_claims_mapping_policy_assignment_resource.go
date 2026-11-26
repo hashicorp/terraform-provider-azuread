@@ -56,16 +56,16 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource
 			"claims_mapping_policy_id": {
 				Description:  "The ID of the claims mapping policy to assign.",
 				Type:         pluginsdk.TypeString,
-				ForceNew:     true,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: stable.ValidatePolicyClaimsMappingPolicyID,
 			},
 
 			"service_principal_id": {
 				Description:  "The ID of the service principal for the policy assignment.",
 				Type:         pluginsdk.TypeString,
-				ForceNew:     true,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: stable.ValidateServicePrincipalID,
 			},
 		},

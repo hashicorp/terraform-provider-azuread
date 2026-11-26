@@ -456,8 +456,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			"grant_controls": {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
-				AtLeastOneOf: []string{"grant_controls", "session_controls"},
 				MaxItems:     1,
+				AtLeastOneOf: []string{"grant_controls", "session_controls"},
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"operator": {
@@ -480,10 +480,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 
 						"authentication_strength_policy_id": {
 							Description:  "ID of an Authentication Strength Policy to use in this policy. When using a hard-coded ID, the UUID value should be prefixed with: `/policies/authenticationStrengthPolicies/`.",
-							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							ValidateFunc: stable.ValidatePolicyAuthenticationStrengthPolicyID,
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
 						},
 
 						"custom_authentication_factors": {
@@ -513,9 +513,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			"session_controls": {
 				Type:             pluginsdk.TypeList,
 				Optional:         true,
-				AtLeastOneOf:     []string{"grant_controls", "session_controls"},
 				MaxItems:         1,
 				DiffSuppressFunc: conditionalAccessPolicyDiffSuppress,
+				AtLeastOneOf:     []string{"grant_controls", "session_controls"},
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"application_enforced_restrictions_enabled": {
@@ -548,8 +548,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							Description:  "Number of days or hours to enforce sign-in frequency.",
 							Type:         pluginsdk.TypeInt,
 							Optional:     true,
-							RequiredWith: []string{"session_controls.0.sign_in_frequency_period"},
 							ValidateFunc: validation.IntAtLeast(0),
+							RequiredWith: []string{"session_controls.0.sign_in_frequency_period"},
 						},
 
 						"sign_in_frequency_authentication_type": {
@@ -572,8 +572,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							Description:  "The time period to enforce sign-in frequency.",
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
-							RequiredWith: []string{"session_controls.0.sign_in_frequency"},
 							ValidateFunc: validation.StringInSlice(stable.PossibleValuesForSigninFrequencyType(), false),
+							RequiredWith: []string{"session_controls.0.sign_in_frequency"},
 						},
 					},
 				},

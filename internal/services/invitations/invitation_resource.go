@@ -87,16 +87,16 @@ func invitationResource() *pluginsdk.Resource {
 							Description:   "Customized message body you want to send if you don't want to send the default message.",
 							Type:          pluginsdk.TypeString,
 							Optional:      true,
-							ConflictsWith: []string{"message.0.language"},
 							ValidateFunc:  validation.StringIsNotEmpty,
+							ConflictsWith: []string{"message.0.language"},
 						},
 
 						"language": {
 							Description:   "The language you want to send the default message in. The value specified must be in ISO 639 format.",
 							Type:          pluginsdk.TypeString,
 							Optional:      true,
-							ConflictsWith: []string{"message.0.body"},
 							ValidateFunc:  validation.ISO639Language,
+							ConflictsWith: []string{"message.0.body"},
 						},
 					},
 				},

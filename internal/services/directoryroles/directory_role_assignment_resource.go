@@ -77,8 +77,8 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"directory_scope_id"},
 				ValidateFunc:  validation.StringIsNotEmpty,
+				ConflictsWith: []string{"directory_scope_id"},
 			},
 
 			"directory_scope_id": {
@@ -87,8 +87,8 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"app_scope_id"},
 				ValidateFunc:  validation.StringIsNotEmpty,
+				ConflictsWith: []string{"app_scope_id"},
 			},
 		},
 	}

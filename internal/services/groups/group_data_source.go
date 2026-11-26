@@ -39,8 +39,8 @@ func groupDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_name", "object_id", "mail_nickname"},
 				ValidateFunc: validation.StringIsNotEmpty,
+				ExactlyOneOf: []string{"display_name", "object_id", "mail_nickname"},
 			},
 
 			"mail_nickname": {
@@ -56,15 +56,15 @@ func groupDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_name", "object_id", "mail_nickname"},
 				ValidateFunc: validation.IsUUID,
+				ExactlyOneOf: []string{"display_name", "object_id", "mail_nickname"},
 			},
 
 			"mail_enabled": {
 				Description: "Whether the group is mail-enabled.",
 				Type:        pluginsdk.TypeBool,
-				Computed:    true,
 				Optional:    true,
+				Computed:    true,
 			},
 
 			"security_enabled": {

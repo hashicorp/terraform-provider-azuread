@@ -103,15 +103,14 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			},
 
 			"template_id": {
-				Description:  "Custom template identifier that is typically used if one needs an identifier to be the same across different directories.",
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IsUUID,
-
+				Description: "Custom template identifier that is typically used if one needs an identifier to be the same across different directories.",
+				Type:        pluginsdk.TypeString,
+				Optional:    true,
+				Computed:    true,
 				// The template ID _can_ technically be changed but doing so mutates the role ID - essentially
 				// causing the equivalent of a ForceNew by the API :/
-				ForceNew: true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"object_id": {
