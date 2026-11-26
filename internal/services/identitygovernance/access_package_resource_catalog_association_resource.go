@@ -96,7 +96,7 @@ func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, 
 		return tf.ErrorDiagF(err, "Checking for existing Access Package Resource Catalog Association")
 	}
 	if existingResp.Model != nil && len(*existingResp.Model) > 0 {
-		importId := parse.NewAccessPackageResourceCatalogAssociationID(resourceOriginId, resourceOriginId)
+		importId := parse.NewAccessPackageResourceCatalogAssociationID(catalogId.AccessPackageCatalogId, resourceOriginId)
 		return tf.ImportAsExistsDiag("azuread_access_package_resource_catalog_association", importId.ID())
 	}
 
