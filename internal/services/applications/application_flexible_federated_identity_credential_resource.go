@@ -59,7 +59,7 @@ func (f flexibleFederatedIdentityCredentialResource) Arguments() map[string]*plu
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringIsNotWhiteSpace,
-			Description:  "The expression to match for claims. See the [Preview Documentation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-flexible-federated-identity-credentials?tabs=terraformcloud#flexible-federated-identity-credential-expression-language-functionality) for more information.",
+			Description:  "The expression to match for claims. See the [Preview Documentation](https://learn.microsoft.com/entra/workload-id/workload-identities-flexible-federated-identity-credentials?tabs=terraformcloud#flexible-federated-identity-credential-expression-language-functionality) for more information.",
 		},
 
 		"display_name": {

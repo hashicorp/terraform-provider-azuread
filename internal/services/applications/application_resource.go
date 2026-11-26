@@ -34,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
-	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 )
 
 func applicationResource() *pluginsdk.Resource {
@@ -71,7 +71,6 @@ func applicationResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceApplicationInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceApplicationInstanceStateUpgradeV0,
-				Version: 0,
 			},
 			{
 				Type:    migrations.ResourceApplicationInstanceResourceV1().CoreConfigSchema().ImpliedType(),
@@ -171,7 +170,7 @@ func applicationResource() *pluginsdk.Resource {
 										Description:      "The value that is used for the `scp` claim in OAuth 2.0 access tokens.",
 										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
+										ValidateDiagFunc: validate.RoleScopeClaimValue,
 									},
 								},
 							},
@@ -207,7 +206,7 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"app_role": {
-				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
+				Description: "A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://learn.microsoft.com/azure/architecture/multitenant-identity/app-roles).",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Resource{
@@ -255,7 +254,7 @@ func applicationResource() *pluginsdk.Resource {
 							Description:      "The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.",
 							Type:             pluginsdk.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
+							ValidateDiagFunc: validate.RoleScopeClaimValue,
 						},
 					},
 				},
@@ -493,9 +492,8 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"resource_access": {
-							Description: "",
-							Type:        pluginsdk.TypeList,
-							Required:    true,
+							Type:     pluginsdk.TypeList,
+							Required: true,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"id": {
@@ -727,7 +725,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.Resou
 		diff.SetNewComputed("logo_url")
 	}
 
-	// The following validation is taken from https://docs.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation
+	// The following validation is taken from https://learn.microsoft.com/azure/active-directory/develop/supported-accounts-validation
 	// These apply only when personal account sign-ins are enabled for an application, and are enforced at plan time to avoid breaking existing
 	// applications that change from AAD (corporate) account sign-ins to personal account sign-ins
 	if s := diff.Get("sign_in_audience").(string); s == SignInAudienceAzureADandPersonalMicrosoftAccount || s == SignInAudiencePersonalMicrosoftAccount {
@@ -1229,14 +1227,12 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	d.SetId(id.ID())
 
 	// Save the password key ID and generated value to state
-	if app.PasswordCredentials != nil {
-		if password := d.Get("password").(*pluginsdk.Set).List(); len(password) == 1 {
-			pw := password[0].(map[string]interface{})
-			if creds := flattenApplicationPasswordCredentials(app.PasswordCredentials); len(creds) == 1 {
-				pw["key_id"] = creds[0]["key_id"]
-				pw["value"] = creds[0]["value"]
-				tf.Set(d, "password", []interface{}{pw})
-			}
+	if password := d.Get("password").(*pluginsdk.Set).List(); len(password) == 1 {
+		pw := password[0].(map[string]interface{})
+		if creds := flattenApplicationPasswordCredentials(app.PasswordCredentials); len(creds) == 1 {
+			pw["key_id"] = creds[0]["key_id"]
+			pw["value"] = creds[0]["value"]
+			tf.Set(d, "password", []interface{}{pw})
 		}
 	}
 
@@ -1662,6 +1658,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl.GetOrZero())
 	}
 
+	// The nil check is deliberate: when the API omits passwordCredentials the existing state is retained
 	if app.PasswordCredentials != nil {
 		currentPassword := d.Get("password").(*pluginsdk.Set).List()
 		passwordToSave := make([]interface{}, 0)
@@ -1672,7 +1669,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 			keyIdToMatch = currentPassword[0].(map[string]interface{})["key_id"].(string)
 			existingValue = currentPassword[0].(map[string]interface{})["value"].(string)
 
-			for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) {
+			for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) { // azignore:AZR010 - the outer nil check intentionally retains state, see above
 				// Match against the known key ID, or select the first returned password if not present in state
 				if credential["key_id"] == keyIdToMatch {
 					// Retain the value from state, if known

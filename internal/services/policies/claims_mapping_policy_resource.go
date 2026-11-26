@@ -52,13 +52,12 @@ func claimsMappingPolicyResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceClaimsMappingPolicyInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceClaimsMappingPolicyInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"definition": {
-				Description: "The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://www.terraform.io/language/functions/jsonencode) function can be used.",
+				Description: "The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) function can be used.",
 				Type:        pluginsdk.TypeList,
 				Required:    true,
 				Elem: &pluginsdk.Schema{

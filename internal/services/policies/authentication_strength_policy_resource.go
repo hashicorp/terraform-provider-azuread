@@ -57,7 +57,6 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceAuthenticationStrengthPolicyInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceAuthenticationStrengthPolicyInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

@@ -54,7 +54,6 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceAppRoleAssignmentInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceAppRoleAssignmentInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

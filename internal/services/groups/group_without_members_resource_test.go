@@ -307,7 +307,7 @@ func TestAccGroupWithoutMembers_unifiedExtraSettings(t *testing.T) {
 	})
 }
 
-func TestAccGroupWithoutMembers_preventDuplicateNamesFail(t *testing.T) {
+func TestAccGroupWithoutMembers_preventDuplicateNamesFail(t *testing.T) { // azignore:AZT008 - the expected error is built from this name and the resource's duplicate name error says azuread_group
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupWithoutMembersResource{}
 

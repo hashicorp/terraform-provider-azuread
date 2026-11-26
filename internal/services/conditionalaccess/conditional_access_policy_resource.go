@@ -56,7 +56,6 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceConditionalAccessPolicyInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceConditionalAccessPolicyInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -351,10 +350,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 
 						// The Microsoft Entra admin center renamed this condition from "Location" to "Network", however this is
 						// a portal label change only and the underlying Microsoft Graph API is unchanged (still `locations`).
-						// See https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network
+						// See https://learn.microsoft.com/entra/identity/conditional-access/concept-assignment-network
 						// TODO: consider renaming this block to `network` in v4.0 to align with the portal terminology.
 						"locations": {
-							Description: "A `locations` block as documented below, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network) for more information.",
+							Description: "A `locations` block as documented below, which specifies locations included in and excluded from the policy. In the Microsoft Entra admin center this condition was renamed from **Location** to **Network**; this is a portal label change only and the underlying API is unchanged. See [Conditional Access Policy: Using Network Signals](https://learn.microsoft.com/entra/identity/conditional-access/concept-assignment-network) for more information.",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							MaxItems:    1,
@@ -533,7 +532,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"disable_resilience_defaults": {
-							Description: "Disables [resilience defaults](https://learn.microsoft.com/en-us/azure/active-directory/conditional-access/resilience-defaults).",
+							Description: "Disables [resilience defaults](https://learn.microsoft.com/azure/active-directory/conditional-access/resilience-defaults).",
 							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
@@ -678,7 +677,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 
 	properties := stable.ConditionalAccessPolicy{
 		DisplayName:     pointer.To(d.Get("display_name").(string)),
-		State:           pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
+		State:           pointer.ToEnum[stable.ConditionalAccessPolicyState](d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   grantControls,
 		SessionControls: sessionControls,
@@ -742,7 +741,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 
 	properties := stable.ConditionalAccessPolicy{
 		DisplayName:     pointer.To(d.Get("display_name").(string)),
-		State:           pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
+		State:           pointer.ToEnum[stable.ConditionalAccessPolicyState](d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   grantControls,
 		SessionControls: sessionControls,

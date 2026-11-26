@@ -434,10 +434,10 @@ jobs:
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: .go-version
-      # The tfproviderlint module plugin requires a custom-built golangci-lint binary (see
-      # .tools/.custom-gcl.yml); cache .tools/bin so it is only rebuilt when the pins
-      # (.tools/go.mod for golangci-lint, .custom-gcl.yml for the plugin) change. make rebuilds
-      # the binary when it is missing or older than either file.
+      # The azproviderlint/tfproviderlint module plugins require a custom-built golangci-lint
+      # binary (see .tools/.custom-gcl.yml); cache .tools/bin so it is only rebuilt when the
+      # pins (.tools/go.mod for golangci-lint, .custom-gcl.yml for the plugins) change. make
+      # rebuilds the binary when it is missing or older than either file.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .tools/bin
@@ -451,7 +451,7 @@ jobs:
         run: |
           echo "::error::GoLangCI Linting failed."
           echo ""
-          echo "Run the Go linter locally: make lint (builds .tools/bin/golangci-with-modules with the tfproviderlint plugin)"
+          echo "Run the Go linter locally: make lint (builds .tools/bin/golangci-with-modules with the azproviderlint/tfproviderlint plugins)"
           echo "Fix any reported issues before pushing. Common issues include:"
           echo "  - Unused variables or imports"
           echo "  - Error return values not checked"

@@ -49,7 +49,6 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource
 			{
 				Type:    migrations.ResourceServicePrincipalClaimsMappingPolicyAssignmentInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceServicePrincipalClaimsMappingPolicyAssignmentInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 

@@ -135,7 +135,7 @@ func (r ApplicationApiAccessResource) Create() sdk.ResourceFunc {
 
 			// Check for existing API
 			for _, api := range newApis {
-				if strings.EqualFold(*api.ResourceAppId, id.ApiClientId) {
+				if strings.EqualFold(pointer.From(api.ResourceAppId), id.ApiClientId) {
 					return metadata.ResourceRequiresImport(r.ResourceType(), id)
 				}
 			}
@@ -210,7 +210,7 @@ func (r ApplicationApiAccessResource) Read() sdk.ResourceFunc {
 			// Identify the API
 			var api *stable.RequiredResourceAccess
 			for _, existingApi := range *app.RequiredResourceAccess {
-				if strings.EqualFold(*existingApi.ResourceAppId, id.ApiClientId) {
+				if strings.EqualFold(pointer.From(existingApi.ResourceAppId), id.ApiClientId) {
 					api = &existingApi
 					break
 				}
@@ -300,7 +300,7 @@ func (r ApplicationApiAccessResource) Update() sdk.ResourceFunc {
 			newApis := make([]stable.RequiredResourceAccess, 0)
 			found := false
 			for _, existingApi := range *app.RequiredResourceAccess {
-				if strings.EqualFold(*existingApi.ResourceAppId, id.ApiClientId) {
+				if strings.EqualFold(pointer.From(existingApi.ResourceAppId), id.ApiClientId) {
 					newApis = append(newApis, api)
 					found = true
 				} else {
@@ -361,7 +361,7 @@ func (r ApplicationApiAccessResource) Delete() sdk.ResourceFunc {
 			newApis := make([]stable.RequiredResourceAccess, 0)
 			found := false
 			for _, existingApi := range *app.RequiredResourceAccess {
-				if strings.EqualFold(*existingApi.ResourceAppId, id.ApiClientId) {
+				if strings.EqualFold(pointer.From(existingApi.ResourceAppId), id.ApiClientId) {
 					found = true
 				} else {
 					newApis = append(newApis, existingApi)

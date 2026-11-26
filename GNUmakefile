@@ -36,9 +36,9 @@ TYPOS=$(TOOLS_BIN)/typos
 YAMLLINT=$(TOOLS_BIN)/yamllint
 ZIZMOR=$(TOOLS_BIN)/zizmor
 
-# golangci-lint with the tfproviderlint module plugin compiled in (.tools/.custom-gcl.yml); the
-# lint targets use this binary, the plain one bootstraps `golangci-lint custom` and runs the
-# formatters
+# golangci-lint with the azproviderlint/tfproviderlint module plugins compiled in
+# (.tools/.custom-gcl.yml); the lint targets use this binary, the plain one bootstraps
+# `golangci-lint custom` and runs the formatters
 GOLANGCI_LINT_MODULES=$(TOOLS_BIN)/golangci-with-modules
 
 .EXPORT_ALL_VARIABLES:
@@ -50,10 +50,12 @@ $(TOOLS_BIN)/%: .tools/go.mod .tools/go.sum
 	@cd .tools && go build -o bin/$* $$(go list tool | grep "/$*$$")
 
 # explicit rules take precedence over the pattern rule above; golangci-lint custom must run from
-# the directory holding .custom-gcl.yml, hence the cd
+# the directory holding .custom-gcl.yml, hence the cd. The lint cache is cleared after a rebuild as
+# it does not know which plugin versions made its results, so an old version's would be reused
 $(GOLANGCI_LINT_MODULES): .tools/.custom-gcl.yml $(GOLANGCI_LINT)
 	@echo "==> Building golangci-lint with plugins (versions pinned in .tools/.custom-gcl.yml)..."
 	@cd .tools && bin/golangci-lint custom
+	@$(GOLANGCI_LINT_MODULES) cache clean
 
 # tfproviderdocs is built in isolation (go install pkg@version resolves the tool's own go.mod)
 # rather than from the shared module: the goldmark bump the other tools bring in makes v0.12.1's
@@ -163,9 +165,9 @@ terrafmt: $(TERRAFMT) ## Fix terraform blocks in acceptance tests and docs
 	@$(TERRAFMT) fmt -p "*.md" ./docs
 
 ##@ Linting & Dependencies
-# golangci-lint module plugins (tfproviderlint) only exist in a custom-built binary, so the lint
-# targets use .tools/bin/golangci-with-modules, rebuilt automatically whenever
-# .tools/.custom-gcl.yml or the golangci-lint pin in .tools/go.mod changes
+# golangci-lint module plugins (azproviderlint, tfproviderlint) only exist in a custom-built
+# binary, so the lint targets use .tools/bin/golangci-with-modules, rebuilt automatically
+# whenever .tools/.custom-gcl.yml or the golangci-lint pin in .tools/go.mod changes
 golangci-with-modules: $(GOLANGCI_LINT_MODULES) ## Build golangci-lint with plugins into .tools/bin (automatic when the pins change)
 
 lint: $(GOLANGCI_LINT_MODULES) ## Check source code with the golangci linters
@@ -190,10 +192,14 @@ lint-fix-diff: $(GOLANGCI_LINT_MODULES) ## Fix only packages changed vs main
 	[ -z "$$pkgs" ] && echo "No changed packages." && exit 0; \
 	$(GOLANGCI_LINT_MODULES) run --fix $$pkgs
 
-# tfproviderlint runs as part of lint; this target runs just its checks
+# tfproviderlint and azproviderlint run as part of lint; these targets run just their checks
 tfproviderlint: $(GOLANGCI_LINT_MODULES) ## Check terraform schema definitions with only the tfproviderlint checks
 	@echo "==> Checking terraform schemas with tfproviderlint (via golangci-lint)..."
 	@$(GOLANGCI_LINT_MODULES) run -v --enable-only tfproviderlint ./...
+
+azproviderlint: $(GOLANGCI_LINT_MODULES) ## Check source code with only the azproviderlint checks
+	@echo "==> Checking source code with azproviderlint (via golangci-lint)..."
+	@$(GOLANGCI_LINT_MODULES) run -v --enable-only azproviderlint ./...
 
 typos: $(TYPOS) ## Check spelling in code, docs and examples with typos (config in .typos.toml)
 	@echo "==> Checking spelling with typos..."
@@ -321,4 +327,4 @@ todo: ## List all TODOs in the codebase
 
 pr-check: generate build test lint docs-lint ## Run the same set of checks CI runs against a PR
 
-.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix lint-diff lint-fix-diff golangci-with-modules actionlint yamllint zizmor markdownlint linkcheck linkcheck-local linkcheck-external typos typos-fix shellcheck copyright copyright-fix depscheck gencheck tfproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check
+.PHONY: default help tools build debug fmt goimports quick-checks fmtcheck terrafmt generate lint lint-fix lint-diff lint-fix-diff golangci-with-modules actionlint yamllint zizmor markdownlint linkcheck linkcheck-local linkcheck-external typos typos-fix shellcheck copyright copyright-fix depscheck gencheck tfproviderlint azproviderlint tflint test testacc acctests debugacc docs-lint validate-examples teamcity-test todo pr-check

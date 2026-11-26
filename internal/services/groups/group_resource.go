@@ -69,7 +69,6 @@ func groupResource() *pluginsdk.Resource {
 			{
 				Type:    migrations.ResourceGroupInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceGroupInstanceStateUpgradeV0,
-				Version: 0,
 			},
 		},
 
@@ -106,7 +105,7 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"behaviors": {
-				Description: "A set of behaviors for a Microsoft 365 group. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for more details.",
+				Description: "A set of behaviors for a Microsoft 365 group. See [official documentation](https://learn.microsoft.com/graph/group-set-options) for more details.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
@@ -137,7 +136,7 @@ func groupResource() *pluginsdk.Resource {
 						},
 
 						"rule": {
-							Description:  "The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://docs.microsoft.com/en-gb/azure/active-directory/enterprise-users/groups-dynamic-membership).",
+							Description:  "The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://learn.microsoft.com/azure/active-directory/enterprise-users/groups-dynamic-membership).",
 							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 3072),
@@ -226,7 +225,7 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"provisioning_options": {
-				Description: "A set of provisioning options for a Microsoft 365 group. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for details.",
+				Description: "A set of provisioning options for a Microsoft 365 group. See [official documentation](https://learn.microsoft.com/graph/group-set-options) for details.",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
@@ -608,14 +607,14 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 					if response.WasBadRequest(resp.HttpResponse) && regexp.MustCompile(groupDuplicateValueError).MatchString(err.Error()) {
 						// Retry the group creation, without the calling principal as owner
 						ownersWithoutCallingPrincipal := make([]string, 0)
-						for _, o := range *properties.Owners_ODataBind {
+						for _, o := range pointer.From(properties.Owners_ODataBind) {
 							if o != callerODataId {
 								ownersWithoutCallingPrincipal = append(ownersWithoutCallingPrincipal, o)
 							}
 						}
 
 						// No point in retrying if the caller wasn't specified as an owner
-						if len(ownersWithoutCallingPrincipal) == len(*properties.Owners) {
+						if len(ownersWithoutCallingPrincipal) == len(pointer.From(properties.Owners_ODataBind)) {
 							log.Printf("[DEBUG] Not retrying group creation for %q within %s as owner was not specified", displayName, administrativeUnitId)
 							return tf.ErrorDiagF(err, "Creating group in %s", administrativeUnitId)
 						}
@@ -804,7 +803,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		// The following unified group properties in this block only support delegated authentication.
 		// Application-authenticated requests will return a 4xx error, so we only
 		// set these when explicitly configured, as they each default to false anyway
-		// See https://docs.microsoft.com/en-us/graph/known-issues#groups
+		// See https://learn.microsoft.com/graph/known-issues#groups
 
 		// AllowExternalSenders can only be set in its own PATCH request; including other properties returns a 400
 		if allowExternalSenders, ok := d.GetOkExists("external_senders_allowed"); ok { //nolint:staticcheck
@@ -1003,7 +1002,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		// The unified group properties in this block only support delegated auth
 		// Application-authenticated requests will return a 403 or 404 error, so we
 		// only set these when explicitly configured, and when the value differs.
-		// See https://docs.microsoft.com/en-us/graph/known-issues#groups
+		// See https://learn.microsoft.com/graph/known-issues#groups
 		extra, err := groupGetAdditional(ctx, client, *id)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Retrieving extra fields for %s", id)
