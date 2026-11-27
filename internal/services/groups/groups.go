@@ -13,7 +13,35 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
 	memberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/member"
+	ownerBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner"
+	transitivememberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/transitivemember"
 )
+
+// Group members and owners are only ever read for their object IDs, so ask Graph for nothing
+// else. Besides the saving on the wire (a 39-user group returns 819KB of directory objects
+// unfiltered, 694 bytes with $select=id), the unfiltered projection is what trips a beta
+// serialization bug for app-only callers lacking User.Read.All: the member's non-nullable
+// isProvisionedToOnPremises comes back null, Graph aborts mid-object, and the truncated body
+// fails to unmarshal.
+var listMemberFields = pointer.To([]string{"id"})
+
+func listMembersOptions() memberBeta.ListMembersOperationOptions {
+	options := memberBeta.DefaultListMembersOperationOptions()
+	options.Select = listMemberFields
+	return options
+}
+
+func listOwnersOptions() ownerBeta.ListOwnersOperationOptions {
+	options := ownerBeta.DefaultListOwnersOperationOptions()
+	options.Select = listMemberFields
+	return options
+}
+
+func listTransitiveMembersOptions() transitivememberBeta.ListTransitiveMembersOperationOptions {
+	options := transitivememberBeta.DefaultListTransitiveMembersOperationOptions()
+	options.Select = listMemberFields
+	return options
+}
 
 func groupDefaultMailNickname() string {
 	charSet := "0123456789abcdef"
@@ -73,9 +101,8 @@ func groupGetAdditional(ctx context.Context, client *groupBeta.GroupClient, id b
 }
 
 func groupGetMember(ctx context.Context, client *memberBeta.MemberClient, id beta.GroupIdMemberId) (*beta.DirectoryObject, error) {
-	options := memberBeta.ListMembersOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
-	}
+	options := listMembersOptions()
+	options.Filter = pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId))
 
 	resp, err := client.ListMembers(ctx, beta.NewGroupID(id.GroupId), options)
 	if err != nil {
