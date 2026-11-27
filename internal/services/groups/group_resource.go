@@ -123,7 +123,7 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"dynamic_membership": {
-				Description:   "An optional block to configure dynamic membership for the group. Cannot be used with `members`",
+				Description:   "An optional block to configure dynamic membership for the group.",
 				Type:          pluginsdk.TypeList,
 				Optional:      true,
 				MaxItems:      1,
@@ -168,7 +168,7 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"mail_enabled": {
-				Description:  "Whether the group is a mail enabled, with a shared group mailbox. At least one of `mail_enabled` or `security_enabled` must be specified. Only Microsoft 365 groups can be mail enabled (see the `types` property).",
+				Description:  "Whether the group is a mail enabled, with a shared group mailbox. Only Microsoft 365 groups can be mail enabled (see the `types` property).",
 				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},
@@ -237,7 +237,7 @@ func groupResource() *pluginsdk.Resource {
 			},
 
 			"security_enabled": {
-				Description:  "Whether the group is a security group for controlling access to in-app resources. At least one of `security_enabled` or `mail_enabled` must be specified. A Microsoft 365 group can be security enabled _and_ mail enabled (see the `types` property).",
+				Description:  "Whether the group is a security group for controlling access to in-app resources. A Microsoft 365 group can be security enabled _and_ mail enabled (see the `types` property).",
 				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},

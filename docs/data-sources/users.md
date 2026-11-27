@@ -29,15 +29,15 @@ data "azuread_users" "users" {
 
 The following arguments are supported:
 
-* `employee_ids` - (Optional) The employee identifiers assigned to the users by the organisation. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
+* `employee_ids` - (Optional) The employee identifiers assigned to the users by the organisation. For each element: Value must not be empty. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
 * `ignore_missing` - (Optional) Ignore missing users and return users that were found. The data source will still fail if no users are found. Defaults to `false`. Conflicts with `return_all`.
-* `mail_nicknames` - (Optional) The email aliases of the users. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
+* `mail_nicknames` - (Optional) The email aliases of the users. For each element: Value must not be empty. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
 
 -> **Note:** `mail_nicknames` are not a unique identifier for users. If multiple users share the same `mail_nickname`, all matching users will be returned.
-* `mails` - (Optional) The SMTP email addresses of the users. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
+* `mails` - (Optional) The SMTP email addresses of the users. For each element: Value must not be empty. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
 * `object_ids` - (Optional) The object IDs of the users. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
 * `return_all` - (Optional) When `true`, the data source will return all users. Defaults to `false`. Conflicts with `ignore_missing`. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
-* `user_principal_names` - (Optional) The user principal names (UPNs) of the users. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
+* `user_principal_names` - (Optional) The user principal names (UPNs) of the users. For each element: Value must not be empty. Exactly one of `object_ids`, `user_principal_names`, `mail_nicknames`, `mails`, `employee_ids`, or `return_all` must be specified.
 
 ## Attributes Reference
 

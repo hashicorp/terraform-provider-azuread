@@ -138,8 +138,9 @@ func servicePrincipalData() *pluginsdk.Resource {
 				},
 			},
 
+			// TODO: 4.0 remove
 			"features": {
-				Deprecated:  "This block has been renamed to `feature_tags` and will be removed in version 3.0 of the provider",
+				Deprecated:  "This block has been renamed to `feature_tags` and will be removed in version 4.0 of the provider",
 				Description: "Block of features configured for this service principal using tags",
 				Type:        pluginsdk.TypeList,
 				Computed:    true,

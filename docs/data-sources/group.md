@@ -30,7 +30,7 @@ data "azuread_group" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Optional) The display name for the group. Exactly one of `display_name`, `object_id`, or `mail_nickname` must be specified.
+* `display_name` - (Optional) The display name for the group. Value must not be empty. Exactly one of `display_name`, `object_id`, or `mail_nickname` must be specified.
 * `include_transitive_members` - (Optional) Whether to include transitive members (a flat list of all nested members). Defaults to `false`.
 * `mail_enabled` - (Optional) Whether the group is mail-enabled.
 * `mail_nickname` - (Optional) The mail alias for the group, unique in the organisation. Exactly one of `display_name`, `object_id`, or `mail_nickname` must be specified.
@@ -64,7 +64,7 @@ The following attributes are exported:
 * `proxy_addresses` - List of email addresses for the group that direct to the same group mailbox.
 * `theme` - The colour theme for a Microsoft 365 group. When no theme is set, the value is `null`.
 * `types` - A list of group types configured for the group.
-* `visibility` - The group join policy and group content visibility. Only Microsoft 365 groups can have `Hiddenmembership` visibility.
+* `visibility` - The group join policy and group content visibility.
 * `writeback_enabled` - Whether the group will be written back to the configured on-premises Active Directory when Azure AD Connect is used.
 
 ---

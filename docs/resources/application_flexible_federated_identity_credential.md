@@ -48,7 +48,7 @@ The following arguments are supported:
 
 ---
 
-* `description` - (Optional) A description for the federated identity credential.
+* `description` - (Optional) A description for the federated identity credential. String length must be between `0` and `600` characters inclusive.
 
 ## Attributes Reference
 

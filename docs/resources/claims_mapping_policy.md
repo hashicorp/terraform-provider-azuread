@@ -53,8 +53,8 @@ resource "azuread_claims_mapping_policy" "my_policy" {
 
 The following arguments are supported:
 
-* `definition` - (Required) The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://www.terraform.io/language/functions/jsonencode) function can be used.
-* `display_name` - (Required) The display name for this Claims Mapping Policy.
+* `definition` - (Required) The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://www.terraform.io/language/functions/jsonencode) function can be used. For each element: Value must not be empty.
+* `display_name` - (Required) The display name for this Claims Mapping Policy. Value must not be empty.
 
 ## Attributes Reference
 

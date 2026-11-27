@@ -65,7 +65,7 @@ func (r ApplicationPermissionScopeResource) Arguments() map[string]*pluginsdk.Sc
 		},
 
 		"scope_id": {
-			Description:  "The unique identifier of the permission scope.",
+			Description:  "The unique identifier of the permission scope. Must be a UUID.",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,

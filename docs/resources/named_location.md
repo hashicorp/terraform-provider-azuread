@@ -50,7 +50,7 @@ resource "azuread_named_location" "example-country" {
 
 The following arguments are supported:
 
-* `display_name` - (Required) The friendly name for this named location.
+* `display_name` - (Required) The friendly name for this named location. Value must not be empty.
 
 ---
 
@@ -64,7 +64,7 @@ The following arguments are supported:
 <a id="schema-6e6573746564-696e707574-636f756e747279"></a>
 The `country` block supports the following:
 
-* `countries_and_regions` - (Required) List of countries and/or regions in two-letter format specified by ISO 3166-2.
+* `countries_and_regions` - (Required) List of countries and/or regions in two-letter format specified by ISO 3166-2. For each element: Value must not be empty.
 * `country_lookup_method` - (Optional) Method of detecting country the user is located in. Possible values include `authenticatorAppGps` and `clientIpAddress`. Defaults to `clientIpAddress`.
 * `include_unknown_countries_and_regions` - (Optional) Whether IP addresses that don't map to a country or region should be included in the named location.
 

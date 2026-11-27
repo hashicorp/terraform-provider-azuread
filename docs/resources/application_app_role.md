@@ -69,8 +69,8 @@ The following arguments are supported:
 
 * `allowed_member_types` - (Required) A set of values to specify whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications by setting to `Application`, or to both. For each element: Possible values include `Application` and `User`.
 * `application_id` - (Required) The resource ID of the application registration. Changing this value forces a new resource to be created.
-* `description` - (Required) Description of the app role that appears when the role is being assigned, and if the role functions as an application permissions, during the consent experiences.
-* `display_name` - (Required) Display name for the app role that appears during app role assignment and in consent experiences.
+* `description` - (Required) Description of the app role that appears when the role is being assigned, and if the role functions as an application permissions, during the consent experiences. Value must not be empty.
+* `display_name` - (Required) Display name for the app role that appears during app role assignment and in consent experiences. Value must not be empty.
 * `role_id` - (Required) The unique identifier of the app role. Changing this value forces a new resource to be created.
 
 -> **Tip** Use the `random_uuid` resource to generate UUIDs and save them to state for app roles within your Terraform configuration

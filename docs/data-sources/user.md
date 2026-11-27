@@ -29,11 +29,11 @@ data "azuread_user" "example" {
 
 The following arguments are supported:
 
-* `employee_id` - (Optional) The employee identifier assigned to the user by the organisation. Exactly one of `employee_id`, `mail`, `mail_nickname`, `object_id`, or `user_principal_name` must be specified.
-* `mail` - (Optional) The SMTP address for the user. Exactly one of `employee_id`, `mail`, `mail_nickname`, `object_id`, or `user_principal_name` must be specified.
-* `mail_nickname` - (Optional) The email alias of the user. Exactly one of `employee_id`, `mail`, `mail_nickname`, `object_id`, or `user_principal_name` must be specified.
+* `employee_id` - (Optional) The employee identifier assigned to the user by the organisation. Value must not be empty. Exactly one of `employee_id`, `mail`, `mail_nickname`, `object_id`, or `user_principal_name` must be specified.
+* `mail` - (Optional) The SMTP address for the user. Value must not be empty. Exactly one of `employee_id`, `mail`, `mail_nickname`, `object_id`, or `user_principal_name` must be specified.
+* `mail_nickname` - (Optional) The email alias of the user. Value must not be empty. Exactly one of `employee_id`, `mail`, `mail_nickname`, `object_id`, or `user_principal_name` must be specified.
 * `object_id` - (Optional) The object ID of the user. Exactly one of `employee_id`, `mail`, `mail_nickname`, `object_id`, or `user_principal_name` must be specified.
-* `user_principal_name` - (Optional) The user principal name (UPN) of the user. Exactly one of `employee_id`, `mail`, `mail_nickname`, `object_id`, or `user_principal_name` must be specified.
+* `user_principal_name` - (Optional) The user principal name (UPN) of the user. Value must not be empty. Exactly one of `employee_id`, `mail`, `mail_nickname`, `object_id`, or `user_principal_name` must be specified.
 
 ## Attributes Reference
 

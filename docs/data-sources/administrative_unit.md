@@ -39,8 +39,8 @@ data "azuread_administrative_unit" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Optional) Specifies the display name of the administrative unit.
-* `object_id` - (Optional) Specifies the object ID of the administrative unit.
+* `display_name` - (Optional) Specifies the display name of the administrative unit. Value must not be empty.
+* `object_id` - (Optional) Specifies the object ID of the administrative unit. Value must not be empty.
 
 ## Attributes Reference
 

@@ -109,7 +109,7 @@ resource "azuread_service_principal_delegated_permission_grant" "example" {
 
 The following arguments are supported:
 
-* `claim_values` - (Required) A set of claim values for delegated permission scopes which should be included in access tokens for the resource.
+* `claim_values` - (Required) A set of claim values for delegated permission scopes which should be included in access tokens for the resource. For each element: Value must not be empty.
 * `resource_service_principal_object_id` - (Required) The object ID of the service principal representing the resource to be accessed. Changing this value forces a new resource to be created.
 * `service_principal_object_id` - (Required) The object ID of the service principal for which this delegated permission grant should be created. Changing this value forces a new resource to be created.
 

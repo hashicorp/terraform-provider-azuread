@@ -37,8 +37,8 @@ resource "azuread_access_package" "example" {
 The following arguments are supported:
 
 * `catalog_id` - (Required) The ID of the Catalog this access package will be created in. Changing this value forces a new resource to be created.
-* `description` - (Required) The description of the access package.
-* `display_name` - (Required) The display name of the access package.
+* `description` - (Required) The description of the access package. Value must not be empty.
+* `display_name` - (Required) The display name of the access package. Value must not be empty.
 
 ---
 

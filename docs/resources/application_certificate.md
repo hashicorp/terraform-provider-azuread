@@ -132,7 +132,7 @@ The following arguments are supported:
 
 -> **Tip for Azure Key Vault** The `hex` encoding option is useful for consuming certificate data from the [azurerm_key_vault_certificate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) resource.
 * `end_date` - (Optional) The end date until which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If omitted, the API will decide a suitable expiry date, which is typically around 2 years from the start date. Conflicts with `end_date_relative`. Changing this value forces a new resource to be created.
-* `end_date_relative` - (Optional) A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`. Conflicts with `end_date`. Changing this value forces a new resource to be created.
+* `end_date_relative` - (Optional) A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`. Value must not be empty. Conflicts with `end_date`. Changing this value forces a new resource to be created.
 
 ~> The maximum allowed duration is determined by Azure AD and is typically around 2 years from the creation date.
 * `key_id` - (Optional) A UUID used to uniquely identify this certificate. If omitted, a random UUID will be automatically generated. Changing this value forces a new resource to be created.

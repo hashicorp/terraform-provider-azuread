@@ -66,8 +66,8 @@ data "azuread_groups" "security_only" {
 
 The following arguments are supported:
 
-* `display_name_prefix` - (Optional) A common display name prefix to match when returning groups. Exactly one of `display_names`, `display_name_prefix`, `object_ids`, or `return_all` must be specified.
-* `display_names` - (Optional) The display names of the groups. Exactly one of `display_names`, `display_name_prefix`, `object_ids`, or `return_all` must be specified.
+* `display_name_prefix` - (Optional) A common display name prefix to match when returning groups. Value must not be empty. Exactly one of `display_names`, `display_name_prefix`, `object_ids`, or `return_all` must be specified.
+* `display_names` - (Optional) The display names of the groups. For each element: Value must not be empty. Exactly one of `display_names`, `display_name_prefix`, `object_ids`, or `return_all` must be specified.
 * `ignore_missing` - (Optional) Ignore missing groups and return groups that were found. The data source will still fail if no groups are found. Defaults to `false`. Conflicts with `return_all`.
 * `mail_enabled` - (Optional) Whether the returned groups should be mail-enabled. By itself this does not exclude security-enabled groups. Setting this to `true` ensures all groups are mail-enabled, and setting to `false` ensures that all groups are _not_ mail-enabled. To ignore this filter, omit the property or set it to null. Conflicts with `object_ids`.
 * `object_ids` - (Optional) The object IDs of the groups. Exactly one of `display_names`, `display_name_prefix`, `object_ids`, or `return_all` must be specified.

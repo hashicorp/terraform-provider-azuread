@@ -56,7 +56,7 @@ The `domains` object exports the following:
 * `domain_name` - The name of the domain.
 * `initial` - Whether this is the initial domain created by Azure Active Directory.
 * `root` - Whether the domain is a verified root domain (not a subdomain).
-* `supported_services` - A list of capabilities / services supported by the domain. Possible values include `Email`, `Sharepoint`, `EmailInternalRelayOnly`, `OfficeCommunicationsOnline`, `SharePointDefaultDomain`, `FullRedelegation`, `SharePointPublic`, `OrgIdAuthentication`, `Yammer` and `Intune`.
+* `supported_services` - A list of capabilities / services supported by the domain.
 * `verified` - Whether the domain has completed domain ownership verification.
 
 ## Timeouts

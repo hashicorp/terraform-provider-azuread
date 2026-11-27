@@ -6,6 +6,7 @@ package policies
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
@@ -69,6 +70,7 @@ func (r GroupRoleManagementPolicyDataSource) ModelObject() interface{} {
 
 func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			policyClient := metadata.Client.Policies.RoleManagementPolicyClient
 			assignmentClient := metadata.Client.Policies.RoleManagementPolicyAssignmentClient

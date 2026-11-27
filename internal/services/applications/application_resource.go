@@ -410,10 +410,9 @@ func applicationResource() *pluginsdk.Resource {
 
 			// lintignore:S018 // We are intentionally using TypeSet here to effect a replace-style representation in the diff for this block
 			"password": {
-				Description: "The password is generated during creation. By default, no password is generated.",
-				Type:        pluginsdk.TypeSet,
-				Optional:    true,
-				MaxItems:    1,
+				Type:     pluginsdk.TypeSet,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"display_name": {

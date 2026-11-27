@@ -84,7 +84,7 @@ The `activation_rules` block supports the following:
 * `require_justification` - (Optional) Is a justification required during activation of the role.
 * `require_multifactor_authentication` - (Optional) Is multi-factor authentication required to activate the role. Conflicts with `activation_rules.0.required_conditional_access_authentication_context`.
 * `require_ticket_info` - (Optional) Is ticket information required during activation of the role.
-* `required_conditional_access_authentication_context` - (Optional) The Entra ID Conditional Access context that must be present for activation (e.g `c1`). Conflicts with `activation_rules.0.require_multifactor_authentication`.
+* `required_conditional_access_authentication_context` - (Optional) The Entra ID Conditional Access context that must be present for activation (e.g `c1`). Value must not be empty. Conflicts with `activation_rules.0.require_multifactor_authentication`.
 
 ---
 

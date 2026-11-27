@@ -42,8 +42,8 @@ resource "azuread_access_package_resource_catalog_association" "example" {
 The following arguments are supported:
 
 * `catalog_id` - (Required) The unique ID of the access package catalog. Changing this value forces a new resource to be created.
-* `resource_origin_id` - (Required) The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group. Changing this value forces a new resource to be created.
-* `resource_origin_system` - (Required) The type of the resource in the origin system, such as `SharePointOnline`, `AadApplication` or `AadGroup`. Changing this value forces a new resource to be created.
+* `resource_origin_id` - (Required) The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group. Value must not be empty. Changing this value forces a new resource to be created.
+* `resource_origin_system` - (Required) The type of the resource in the origin system, such as `SharePointOnline`, `AadApplication` or `AadGroup`. Value must not be empty. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 

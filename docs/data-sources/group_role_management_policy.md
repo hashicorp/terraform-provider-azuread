@@ -50,4 +50,4 @@ The following attributes are exported:
 
 The `timeouts` block allows you to specify [timeouts](https://developer.hashicorp.com/terraform/language/resources/configure#define-operation-timeouts) for certain actions:
 
-* `read` - (Defaults to 0s) Used when retrieving the data source.
+* `read` - (Defaults to 5 minutes) Used when retrieving the data source.

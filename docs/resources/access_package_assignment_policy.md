@@ -80,8 +80,8 @@ resource "azuread_access_package_assignment_policy" "example" {
 The following arguments are supported:
 
 * `access_package_id` - (Required) The ID of the access package that will contain the policy.
-* `description` - (Required) The description of the policy.
-* `display_name` - (Required) The display name of the policy.
+* `description` - (Required) The description of the policy. Value must not be empty.
+* `display_name` - (Required) The display name of the policy. Value must not be empty.
 
 ---
 

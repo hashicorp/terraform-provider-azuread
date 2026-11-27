@@ -34,8 +34,8 @@ output "application_object_id" {
 The following arguments are supported:
 
 * `client_id` - (Optional) Specifies the Client ID of the application. Exactly one of `client_id`, `display_name`, `object_id`, or `identifier_uri` must be specified.
-* `display_name` - (Optional) Specifies the display name of the application. Exactly one of `client_id`, `display_name`, `object_id`, or `identifier_uri` must be specified.
-* `identifier_uri` - (Optional) Specifies any identifier URI of the application. See also the `identifier_uris` attribute which contains a list of all identifier URIs for the application. Exactly one of `client_id`, `display_name`, `object_id`, or `identifier_uri` must be specified.
+* `display_name` - (Optional) Specifies the display name of the application. Value must not be empty. Exactly one of `client_id`, `display_name`, `object_id`, or `identifier_uri` must be specified.
+* `identifier_uri` - (Optional) Specifies any identifier URI of the application. See also the `identifier_uris` attribute which contains a list of all identifier URIs for the application. Value must not be empty. Exactly one of `client_id`, `display_name`, `object_id`, or `identifier_uri` must be specified.
 * `object_id` - (Optional) Specifies the Object ID of the application. Exactly one of `client_id`, `display_name`, `object_id`, or `identifier_uri` must be specified.
 
 ## Attributes Reference

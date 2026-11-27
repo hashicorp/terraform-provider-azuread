@@ -53,7 +53,7 @@ resource "azuread_access_package_resource_package_association" "example" {
 The following arguments are supported:
 
 * `access_package_id` - (Required) The ID of access package this resource association is configured to. Changing this value forces a new resource to be created.
-* `catalog_resource_association_id` - (Required) The ID of the catalog association from the `azuread_access_package_resource_catalog_association` resource. Changing this value forces a new resource to be created.
+* `catalog_resource_association_id` - (Required) The ID of the catalog association from the `azuread_access_package_resource_catalog_association` resource. Value must not be empty. Changing this value forces a new resource to be created.
 
 ---
 

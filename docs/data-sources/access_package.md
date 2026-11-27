@@ -41,7 +41,7 @@ data "azuread_access_package" "example" {
 The following arguments are supported:
 
 * `catalog_id` - (Optional) The ID of the Catalog this access package is in. Conflicts with `object_id`. At least one of `object_id`, `display_name`, or `catalog_id` must be specified. Required when using `display_name`.
-* `display_name` - (Optional) The display name of the access package. Conflicts with `object_id`. At least one of `object_id`, `display_name`, or `catalog_id` must be specified. Required when using `catalog_id`.
+* `display_name` - (Optional) The display name of the access package. Value must not be empty. Conflicts with `object_id`. At least one of `object_id`, `display_name`, or `catalog_id` must be specified. Required when using `catalog_id`.
 * `object_id` - (Optional) The ID of this access package. At least one of `object_id`, `display_name`, or `catalog_id` must be specified.
 
 ## Attributes Reference

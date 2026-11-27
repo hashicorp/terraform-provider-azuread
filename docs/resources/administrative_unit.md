@@ -31,7 +31,7 @@ resource "azuread_administrative_unit" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Required) The display name of the administrative unit.
+* `display_name` - (Required) The display name of the administrative unit. Value must not be empty.
 
 ---
 

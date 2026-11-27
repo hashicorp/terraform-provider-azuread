@@ -98,9 +98,9 @@ The following arguments are supported:
 ---
 
 * `account_enabled` - (Optional) Whether the service principal account is enabled. Defaults to `true`.
-* `alternative_names` - (Optional) A set of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.
+* `alternative_names` - (Optional) A set of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities. For each element: Value must not be empty.
 * `app_role_assignment_required` - (Optional) Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.
-* `description` - (Optional) A description of the service principal provided for internal end-users.
+* `description` - (Optional) A description of the service principal provided for internal end-users. String length must be between `0` and `1024` characters inclusive.
 * `feature_tags` - (Optional) Block of features to configure for this service principal using tags. Conflicts with `features` and `tags`.
    (see [nested schema](#schema-6e6573746564-696e707574-666561747572655f74616773))
 
@@ -108,8 +108,8 @@ The following arguments are supported:
 * `features` - (Optional) Block of features to configure for this service principal using tags. Conflicts with `feature_tags` and `tags`.
    (see [nested schema](#schema-6e6573746564-696e707574-6665617475726573))
 * `login_url` - (Optional) The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on.
-* `notes` - (Optional) A free text field to capture information about the service principal, typically used for operational purposes.
-* `notification_email_addresses` - (Optional) A set of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications.
+* `notes` - (Optional) A free text field to capture information about the service principal, typically used for operational purposes. String length must be between `0` and `1024` characters inclusive.
+* `notification_email_addresses` - (Optional) A set of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications. For each element: Value must not be empty.
 * `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the service principal. Supported object types are users or service principals. By default, no owners are assigned.
 
 -> **Ownership of Service Principals** It's recommended to always specify one or more service principal owners, including the principal being used to execute Terraform, such as in the example above.
@@ -147,7 +147,7 @@ The `features` block supports the following:
 <a id="schema-6e6573746564-696e707574-73616d6c5f73696e676c655f7369676e5f6f6e"></a>
 The `saml_single_sign_on` block supports the following:
 
-* `relay_state` - (Optional) The relative URI the service provider would redirect to after completion of the single sign-on flow.
+* `relay_state` - (Optional) The relative URI the service provider would redirect to after completion of the single sign-on flow. Value must not be empty.
 
 ## Attributes Reference
 
@@ -155,7 +155,7 @@ The following attributes are exported:
 
 * `id` - The ID of the Resource.
 * `app_role_ids` - A mapping of app role values to app role IDs, as published by the associated application, intended to be useful when referencing app roles in other resources in your configuration.
-* `app_roles` - For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles). (see [nested schema](#schema-6e6573746564-6f7574707574-6170705f726f6c6573))
+* `app_roles` - A list of app roles published by the associated application. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles). (see [nested schema](#schema-6e6573746564-6f7574707574-6170705f726f6c6573))
 * `application_tenant_id` - The tenant ID where the associated application is registered.
 * `display_name` - The display name of the application associated with this service principal.
 * `homepage_url` - Home page or landing page of the associated application.
@@ -177,7 +177,7 @@ The `app_roles` object exports the following:
 * `allowed_member_types` - Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios).
 * `description` - Permission help text that appears in the admin app assignment and consent experiences.
 * `display_name` - Display name for the permission that appears in the admin consent and app assignment experiences.
-* `enabled` - The unique identifier of the app role.
+* `enabled` - Whether the app role is enabled.
 * `id` - The unique identifier of the app role.
 * `value` - Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
 

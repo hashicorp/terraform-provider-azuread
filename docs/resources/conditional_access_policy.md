@@ -151,7 +151,7 @@ resource "azuread_conditional_access_policy" "example" {
 The following arguments are supported:
 
 * `conditions` - (Required) The `conditions` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-636f6e646974696f6e73))
-* `display_name` - (Required) The friendly name for this Conditional Access Policy.
+* `display_name` - (Required) The friendly name for this Conditional Access Policy. Value must not be empty.
 * `state` - (Required) Specifies the state of the policy object. Possible values include `disabled`, `enabled`, and `enabledForReportingButNotEnforced`.
 
 ---
@@ -186,12 +186,12 @@ The `conditions` block supports the following:
 <a id="schema-6e6573746564-696e707574-636f6e646974696f6e73-6170706c69636174696f6e73"></a>
 The `conditions.applications` block supports the following:
 
-* `excluded_applications` - (Optional) A list of application IDs explicitly excluded from the policy. Can also be set to `Office365`.
+* `excluded_applications` - (Optional) A list of application IDs explicitly excluded from the policy. Can also be set to `Office365`. For each element: Value must not be empty.
 * `filter` - (Optional) The `filter` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-636f6e646974696f6e73-6170706c69636174696f6e73-66696c746572))
 
 ~> **Note:** Specifying `filter` requires the `Attribute Definition Reader` role, this is not included in the `Global Administrator` or other administrator roles and must be separately assigned.
-* `included_applications` - (Optional) A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`, `None` or `Office365`. Exactly one of `conditions.0.applications.0.included_applications` or `conditions.0.applications.0.included_user_actions` must be specified.
-* `included_user_actions` - (Optional) A list of user actions to include. Exactly one of `conditions.0.applications.0.included_applications` or `conditions.0.applications.0.included_user_actions` must be specified.
+* `included_applications` - (Optional) A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`, `None` or `Office365`. For each element: Value must not be empty. Exactly one of `conditions.0.applications.0.included_applications` or `conditions.0.applications.0.included_user_actions` must be specified.
+* `included_user_actions` - (Optional) A list of user actions to include. For each element: Value must not be empty. Exactly one of `conditions.0.applications.0.included_applications` or `conditions.0.applications.0.included_user_actions` must be specified.
 
 ---
 
@@ -199,18 +199,18 @@ The `conditions.applications` block supports the following:
 The `conditions.applications.filter` block supports the following:
 
 * `mode` - (Required) Whether to include in, or exclude from, matching items from the policy. Possible values include `exclude` and `include`.
-* `rule` - (Required) Condition filter to match items.
+* `rule` - (Required) Condition filter to match items. Value must not be empty.
 
 ---
 
 <a id="schema-6e6573746564-696e707574-636f6e646974696f6e73-636c69656e745f6170706c69636174696f6e73"></a>
 The `conditions.client_applications` block supports the following:
 
-* `excluded_service_principals` - (Optional) A list of service principal IDs explicitly excluded in the policy.
+* `excluded_service_principals` - (Optional) A list of service principal IDs explicitly excluded in the policy. For each element: Value must not be empty.
 * `filter` - (Optional) The `filter` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-636f6e646974696f6e73-636c69656e745f6170706c69636174696f6e73-66696c746572))
 
 ~> **Note:** Specifying `filter` requires the `Attribute Definition Reader` role, this is not included in the `Global Administrator` or other administrator roles and must be separately assigned.
-* `included_service_principals` - (Optional) A list of service principal IDs explicitly included in the policy. Can be set to `ServicePrincipalsInMyTenant` to include all service principals. This is mandatory value when at least one `excluded_service_principals` is set.
+* `included_service_principals` - (Optional) A list of service principal IDs explicitly included in the policy. Can be set to `ServicePrincipalsInMyTenant` to include all service principals. This is mandatory value when at least one `excluded_service_principals` is set. For each element: Value must not be empty.
 
 ---
 
@@ -218,7 +218,7 @@ The `conditions.client_applications` block supports the following:
 The `conditions.client_applications.filter` block supports the following:
 
 * `mode` - (Required) Whether to include in, or exclude from, matching items from the policy. Possible values include `exclude` and `include`.
-* `rule` - (Required) Condition filter to match items.
+* `rule` - (Required) Condition filter to match items. Value must not be empty.
 
 ---
 
@@ -235,15 +235,15 @@ The `conditions.devices` block supports the following:
 The `conditions.devices.filter` block supports the following:
 
 * `mode` - (Required) Whether to include in, or exclude from, matching items from the policy. Possible values include `exclude` and `include`.
-* `rule` - (Required) Condition filter to match items.
+* `rule` - (Required) Condition filter to match items. Value must not be empty.
 
 ---
 
 <a id="schema-6e6573746564-696e707574-636f6e646974696f6e73-6c6f636174696f6e73"></a>
 The `conditions.locations` block supports the following:
 
-* `included_locations` - (Required) A list of location IDs in scope of policy unless explicitly excluded. Can also be set to `All`, or `AllTrusted`.
-* `excluded_locations` - (Optional) A list of location IDs excluded from scope of policy. Can also be set to `AllTrusted`.
+* `included_locations` - (Required) A list of location IDs in scope of policy unless explicitly excluded. Can also be set to `All`, or `AllTrusted`. For each element: Value must not be empty.
+* `excluded_locations` - (Optional) A list of location IDs excluded from scope of policy. Can also be set to `AllTrusted`. For each element: Value must not be empty.
 
 ---
 
@@ -258,15 +258,15 @@ The `conditions.platforms` block supports the following:
 <a id="schema-6e6573746564-696e707574-636f6e646974696f6e73-7573657273"></a>
 The `conditions.users` block supports the following:
 
-* `excluded_groups` - (Optional) A list of group IDs excluded from scope of policy.
+* `excluded_groups` - (Optional) A list of group IDs excluded from scope of policy. For each element: Value must not be empty.
 * `excluded_guests_or_external_users` - (Optional) The `excluded_guests_or_external_users` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-636f6e646974696f6e73-7573657273-6578636c756465645f6775657374735f6f725f65787465726e616c5f7573657273))
-* `excluded_roles` - (Optional) A list of role template IDs excluded from scope of policy.
-* `excluded_users` - (Optional) A list of user IDs excluded from scope of policy and/or `GuestsOrExternalUsers`.
-* `included_groups` - (Optional) A list of group IDs in scope of policy unless explicitly excluded. At least one of `conditions.0.users.0.included_groups`, `conditions.0.users.0.included_roles`, `conditions.0.users.0.included_users`, or `conditions.0.users.0.included_guests_or_external_users` must be specified.
+* `excluded_roles` - (Optional) A list of role template IDs excluded from scope of policy. For each element: Value must not be empty.
+* `excluded_users` - (Optional) A list of user IDs excluded from scope of policy and/or `GuestsOrExternalUsers`. For each element: Value must not be empty.
+* `included_groups` - (Optional) A list of group IDs in scope of policy unless explicitly excluded. For each element: Value must not be empty. At least one of `conditions.0.users.0.included_groups`, `conditions.0.users.0.included_roles`, `conditions.0.users.0.included_users`, or `conditions.0.users.0.included_guests_or_external_users` must be specified.
 * `included_guests_or_external_users` - (Optional) The `included_guests_or_external_users` block as defined below. At least one of `conditions.0.users.0.included_groups`, `conditions.0.users.0.included_roles`, `conditions.0.users.0.included_users`, or `conditions.0.users.0.included_guests_or_external_users` must be specified.
    (see [nested schema](#schema-6e6573746564-696e707574-636f6e646974696f6e73-7573657273-696e636c756465645f6775657374735f6f725f65787465726e616c5f7573657273))
-* `included_roles` - (Optional) A list of role template IDs in scope of policy unless explicitly excluded. At least one of `conditions.0.users.0.included_groups`, `conditions.0.users.0.included_roles`, `conditions.0.users.0.included_users`, or `conditions.0.users.0.included_guests_or_external_users` must be specified.
-* `included_users` - (Optional) A list of user IDs in scope of policy unless explicitly excluded, or `None` or `All` or `GuestsOrExternalUsers`. At least one of `conditions.0.users.0.included_groups`, `conditions.0.users.0.included_roles`, `conditions.0.users.0.included_users`, or `conditions.0.users.0.included_guests_or_external_users` must be specified.
+* `included_roles` - (Optional) A list of role template IDs in scope of policy unless explicitly excluded. For each element: Value must not be empty. At least one of `conditions.0.users.0.included_groups`, `conditions.0.users.0.included_roles`, `conditions.0.users.0.included_users`, or `conditions.0.users.0.included_guests_or_external_users` must be specified.
+* `included_users` - (Optional) A list of user IDs in scope of policy unless explicitly excluded, or `None` or `All` or `GuestsOrExternalUsers`. For each element: Value must not be empty. At least one of `conditions.0.users.0.included_groups`, `conditions.0.users.0.included_roles`, `conditions.0.users.0.included_users`, or `conditions.0.users.0.included_guests_or_external_users` must be specified.
 
 ---
 
@@ -282,7 +282,7 @@ The `conditions.users.excluded_guests_or_external_users` block supports the foll
 The `conditions.users.excluded_guests_or_external_users.external_tenants` block supports the following:
 
 * `membership_kind` - (Required) The external tenant membership kind. Possible values include `all` and `enumerated`.
-* `members` - (Optional) A list tenant IDs. Can only be specified if `membership_kind` is `enumerated`.
+* `members` - (Optional) A list tenant IDs. Can only be specified if `membership_kind` is `enumerated`. For each element: Value must not be empty.
 
 ---
 
@@ -298,7 +298,7 @@ The `conditions.users.included_guests_or_external_users` block supports the foll
 The `conditions.users.included_guests_or_external_users.external_tenants` block supports the following:
 
 * `membership_kind` - (Required) The external tenant membership kind. Possible values include `all` and `enumerated`.
-* `members` - (Optional) A list tenant IDs. Can only be specified if `membership_kind` is `enumerated`.
+* `members` - (Optional) A list tenant IDs. Can only be specified if `membership_kind` is `enumerated`. For each element: Value must not be empty.
 
 ---
 
@@ -308,8 +308,8 @@ The `grant_controls` block supports the following:
 * `operator` - (Required) Defines the relationship of the grant controls. Possible values include `AND` and `OR`.
 * `authentication_strength_policy_id` - (Optional) ID of an Authentication Strength Policy to use in this policy. When using a hard-coded ID, the UUID value should be prefixed with: `/policies/authenticationStrengthPolicies/`. At least one of `grant_controls.0.built_in_controls`, `grant_controls.0.authentication_strength_policy_id`, or `grant_controls.0.terms_of_use` must be specified.
 * `built_in_controls` - (Optional) List of built-in controls required by the policy. For each element: Possible values include `approvedApplication`, `block`, `compliantApplication`, `compliantDevice`, `domainJoinedDevice`, `mfa`, and `passwordChange`. At least one of `grant_controls.0.built_in_controls`, `grant_controls.0.authentication_strength_policy_id`, or `grant_controls.0.terms_of_use` must be specified.
-* `custom_authentication_factors` - (Optional) List of custom controls IDs required by the policy.
-* `terms_of_use` - (Optional) List of terms of use IDs required by the policy. At least one of `grant_controls.0.built_in_controls`, `grant_controls.0.authentication_strength_policy_id`, or `grant_controls.0.terms_of_use` must be specified.
+* `custom_authentication_factors` - (Optional) List of custom controls IDs required by the policy. For each element: Value must not be empty.
+* `terms_of_use` - (Optional) List of terms of use IDs required by the policy. For each element: Value must not be empty. At least one of `grant_controls.0.built_in_controls`, `grant_controls.0.authentication_strength_policy_id`, or `grant_controls.0.terms_of_use` must be specified.
 
 ---
 

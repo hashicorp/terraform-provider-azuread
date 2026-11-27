@@ -29,7 +29,7 @@ data "azuread_named_location" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Required) Specifies the display named of the named location to look up.
+* `display_name` - (Required) Specifies the display named of the named location to look up. Value must not be empty.
 
 ## Attributes Reference
 

@@ -45,19 +45,19 @@ resource "azuread_privileged_access_group_eligibility_schedule" "example" {
 
 The following arguments are supported:
 
-* `assignment_type` - (Required) The ID of the assignment to the group. Changing this value forces a new resource to be created.
+* `assignment_type` - (Required) The ID of the assignment to the group. Possible values include `member` and `owner`. Changing this value forces a new resource to be created.
 * `group_id` - (Required) The ID of the Group representing the scope of the assignment. Changing this value forces a new resource to be created.
 * `principal_id` - (Required) The ID of the Principal assigned to the schedule. Changing this value forces a new resource to be created.
 
 ---
 
-* `duration` - (Optional) The duration of the assignment, formatted as an ISO8601 duration string (e.g. P3D for 3 days). Conflicts with `expiration_date`.
+* `duration` - (Optional) The duration of the assignment, formatted as an ISO8601 duration string (e.g. P3D for 3 days). Value must not be empty. Conflicts with `expiration_date`.
 * `expiration_date` - (Optional) The date that this assignment expires, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z). Conflicts with `duration`.
-* `justification` - (Optional) The justification for the assignment.
+* `justification` - (Optional) The justification for the assignment. Value must not be empty.
 * `permanent_assignment` - (Optional) Is the assignment permanent.
 * `start_date` - (Optional) The date that this assignment starts, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z).
-* `ticket_number` - (Optional) The ticket number authorising the assignment. Required when using `ticket_system`.
-* `ticket_system` - (Optional) The ticket system authorising the assignment. Required when using `ticket_number`.
+* `ticket_number` - (Optional) The ticket number authorising the assignment. Value must not be empty. Required when using `ticket_system`.
+* `ticket_system` - (Optional) The ticket system authorising the assignment. Value must not be empty. Required when using `ticket_number`.
 
 ## Attributes Reference
 

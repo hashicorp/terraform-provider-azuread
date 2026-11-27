@@ -114,7 +114,7 @@ resource "azuread_group" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Required) The display name for the group.
+* `display_name` - (Required) The display name for the group. Value must not be empty.
 
 -> **Group Name Uniqueness** Group names are not unique within Azure Active Directory. Use the `prevent_duplicate_names` argument to check for existing groups if you want to avoid name collisions.
 
@@ -129,7 +129,7 @@ The following arguments are supported:
 ~> **Known Permissions Issue** The `auto_subscribe_new_members` property can only be set when authenticating as a Member user of the tenant and _not_ when authenticating as a Guest user or as a service principal. Please see the [Microsoft Graph Known Issues](https://docs.microsoft.com/en-us/graph/known-issues#groups) documentation.
 * `behaviors` - (Optional) A set of behaviors for a Microsoft 365 group. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for more details. For each element: Possible values include `AllowOnlyMembersToPost`, `CalendarMemberReadOnly`, `ConnectorsDisabled`, `HideGroupInOutlook`, `SkipExchangeInstantOn`, `SubscribeMembersToCalendarEventsDisabled`, `SubscribeNewGroupMembers`, and `WelcomeEmailDisabled`. Changing this value forces a new resource to be created.
 * `description` - (Optional) The description for the group.
-* `dynamic_membership` - (Optional) An optional block to configure dynamic membership for the group. Cannot be used with `members`. Conflicts with `members`.
+* `dynamic_membership` - (Optional) An optional block to configure dynamic membership for the group. Conflicts with `members`.
    (see [nested schema](#schema-6e6573746564-696e707574-64796e616d69635f6d656d62657273686970))
 * `external_senders_allowed` - (Optional) Indicates whether people external to the organization can send messages to the group. Can only be set for Unified groups.
 
@@ -140,7 +140,7 @@ The following arguments are supported:
 * `hide_from_outlook_clients` - (Optional) Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Can only be set for Unified groups.
 
 ~> **Known Permissions Issue** The `hide_from_outlook_clients` property can only be set when authenticating as a Member user of the tenant and _not_ when authenticating as a Guest user or as a service principal. Please see the [Microsoft Graph Known Issues](https://docs.microsoft.com/en-us/graph/known-issues#groups) documentation.
-* `mail_enabled` - (Optional) Whether the group is a mail enabled, with a shared group mailbox. At least one of `mail_enabled` or `security_enabled` must be specified. Only Microsoft 365 groups can be mail enabled (see the `types` property). At least one of `mail_enabled` or `security_enabled` must be specified.
+* `mail_enabled` - (Optional) Whether the group is a mail enabled, with a shared group mailbox. Only Microsoft 365 groups can be mail enabled (see the `types` property). At least one of `mail_enabled` or `security_enabled` must be specified.
 * `mail_nickname` - (Optional) The mail alias for the group, unique in the organisation. Required for mail-enabled groups. Changing this value forces a new resource to be created.
 * `members` - (Optional) A set of members who should be present in this group. Supported object types are Users, Groups or Service Principals. Conflicts with `dynamic_membership`.
 
@@ -151,7 +151,7 @@ The following arguments are supported:
 -> **Group Ownership**  It's recommended to always specify one or more group owners, including the principal being used to execute Terraform, such as in the example above. When removing group owners, if a user principal has been assigned ownership, the last user cannot be removed as an owner. Microsoft 365 groups are required to always have at least one owner which _must be a user_ (i.e. not a service principal).
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing group is found with the same name. Defaults to `false`.
 * `provisioning_options` - (Optional) A set of provisioning options for a Microsoft 365 group. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for details. For each element: The only possible value is `Team`. Changing this value forces a new resource to be created.
-* `security_enabled` - (Optional) Whether the group is a security group for controlling access to in-app resources. At least one of `security_enabled` or `mail_enabled` must be specified. A Microsoft 365 group can be security enabled _and_ mail enabled (see the `types` property). At least one of `mail_enabled` or `security_enabled` must be specified.
+* `security_enabled` - (Optional) Whether the group is a security group for controlling access to in-app resources. A Microsoft 365 group can be security enabled _and_ mail enabled (see the `types` property). At least one of `mail_enabled` or `security_enabled` must be specified.
 * `theme` - (Optional) The colour theme for a Microsoft 365 group. By default, no theme is set. Possible values include `""`, `Blue`, `Green`, `Orange`, `Pink`, `Purple`, `Red`, and `Teal`.
 * `types` - (Optional) A set of group types to configure for the group. For each element: Possible values include `DynamicMembership` and `Unified`. Changing this value forces a new resource to be created.
 
@@ -165,7 +165,7 @@ The following arguments are supported:
 The `dynamic_membership` block supports the following:
 
 * `enabled` - (Required) Whether rule processing is "On" (true) or "Paused" (false).
-* `rule` - (Required) The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://docs.microsoft.com/en-gb/azure/active-directory/enterprise-users/groups-dynamic-membership).
+* `rule` - (Required) The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://docs.microsoft.com/en-gb/azure/active-directory/enterprise-users/groups-dynamic-membership). String length must be between `0` and `3072` characters inclusive.
 
 ~> **Dynamic Group Memberships** Remember to include `DynamicMembership` in the set of `types` for the group when configuring a dynamic membership rule. Dynamic membership is a premium feature which requires an Azure Active Directory P1 or P2 license.
 

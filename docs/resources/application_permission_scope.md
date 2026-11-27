@@ -66,10 +66,10 @@ resource "azuread_application_permission_scope" "example" {
 
 The following arguments are supported:
 
-* `admin_consent_description` - (Required) Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.
-* `admin_consent_display_name` - (Required) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.
+* `admin_consent_description` - (Required) Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users. Value must not be empty.
+* `admin_consent_display_name` - (Required) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users. Value must not be empty.
 * `application_id` - (Required) The resource ID of the application registration. Changing this value forces a new resource to be created.
-* `scope_id` - (Required) The unique identifier of the permission scope. Changing this value forces a new resource to be created.
+* `scope_id` - (Required) The unique identifier of the permission scope. Must be a UUID. Changing this value forces a new resource to be created.
 
 -> **Tip** Use the `random_uuid` resource to generate UUIDs and save them to state for permission scopes within your Terraform configuration
 * `value` - (Required) The value that is used for the `scp` claim in OAuth access tokens.
@@ -79,8 +79,8 @@ The following arguments are supported:
 ---
 
 * `type` - (Optional) Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions. Possible values include `Admin` and `User`. Defaults to `User`.
-* `user_consent_description` - (Optional) Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.
-* `user_consent_display_name` - (Optional) Display name for the delegated permission that appears in the end user consent experience.
+* `user_consent_description` - (Optional) Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf. Value must not be empty.
+* `user_consent_display_name` - (Optional) Display name for the delegated permission that appears in the end user consent experience. Value must not be empty.
 
 ## Attributes Reference
 

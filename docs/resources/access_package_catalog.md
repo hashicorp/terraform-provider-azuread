@@ -30,8 +30,8 @@ resource "azuread_access_package_catalog" "example" {
 
 The following arguments are supported:
 
-* `description` - (Required) The description of the access package catalog.
-* `display_name` - (Required) The display name of the access package catalog.
+* `description` - (Required) The description of the access package catalog. Value must not be empty.
+* `display_name` - (Required) The display name of the access package catalog. Value must not be empty.
 
 ---
 

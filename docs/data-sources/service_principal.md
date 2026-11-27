@@ -48,7 +48,7 @@ data "azuread_service_principal" "example" {
 The following arguments are supported:
 
 * `client_id` - (Optional) The client ID of the application associated with this service principal. Exactly one of `client_id`, `display_name`, or `object_id` must be specified.
-* `display_name` - (Optional) The display name of the application associated with this service principal. Exactly one of `client_id`, `display_name`, or `object_id` must be specified.
+* `display_name` - (Optional) The display name of the application associated with this service principal. Value must not be empty. Exactly one of `client_id`, `display_name`, or `object_id` must be specified.
 * `object_id` - (Optional) The object ID of the service principal. Exactly one of `client_id`, `display_name`, or `object_id` must be specified.
 
 ## Attributes Reference
@@ -60,7 +60,7 @@ The following attributes are exported:
 * `alternative_names` - A list of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.
 * `app_role_assignment_required` - Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.
 * `app_role_ids` - A mapping of app role values to app role IDs, as published by the associated application, intended to be useful when referencing app roles in other resources in your configuration.
-* `app_roles` - For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles). (see [nested schema](#schema-6e6573746564-6f7574707574-6170705f726f6c6573))
+* `app_roles` - A list of app roles published by the associated application. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles). (see [nested schema](#schema-6e6573746564-6f7574707574-6170705f726f6c6573))
 * `application_tenant_id` - The tenant ID where the associated application is registered.
 * `description` - A description of the service principal provided for internal end-users.
 * `feature_tags` - Block of features configured for this service principal using tags. (see [nested schema](#schema-6e6573746564-6f7574707574-666561747572655f74616773))
@@ -89,7 +89,7 @@ The `app_roles` object exports the following:
 * `allowed_member_types` - Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios).
 * `description` - Permission help text that appears in the admin app assignment and consent experiences.
 * `display_name` - Display name for the permission that appears in the admin consent and app assignment experiences.
-* `enabled` - The unique identifier of the app role.
+* `enabled` - Whether the app role is enabled.
 * `id` - The unique identifier of the app role.
 * `value` - Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
 

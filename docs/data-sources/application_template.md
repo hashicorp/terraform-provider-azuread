@@ -29,7 +29,7 @@ output "application_template_id" {
 
 The following arguments are supported:
 
-* `display_name` - (Optional) Specifies the display name of the templated application. Exactly one of `display_name` or `template_id` must be specified.
+* `display_name` - (Optional) Specifies the display name of the templated application. Value must not be empty. Exactly one of `display_name` or `template_id` must be specified.
 * `template_id` - (Optional) Specifies the ID of the templated application. Exactly one of `display_name` or `template_id` must be specified.
 
 ## Attributes Reference

@@ -95,8 +95,8 @@ The following arguments are supported:
 
 ---
 
-* `app_scope_id` - (Optional) Identifier of the app-specific scope when the assignment scope is app-specific. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage. Conflicts with `directory_scope_id`. Changing this value forces a new resource to be created.
-* `directory_scope_id` - (Optional) Identifier of the directory object representing the scope of the assignment. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage. Conflicts with `app_scope_id`. Changing this value forces a new resource to be created.
+* `app_scope_id` - (Optional) Identifier of the app-specific scope when the assignment scope is app-specific. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage. Value must not be empty. Conflicts with `directory_scope_id`. Changing this value forces a new resource to be created.
+* `directory_scope_id` - (Optional) Identifier of the directory object representing the scope of the assignment. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage. Value must not be empty. Conflicts with `app_scope_id`. Changing this value forces a new resource to be created.
 
 ## Attributes Reference
 

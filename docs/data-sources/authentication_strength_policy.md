@@ -53,7 +53,7 @@ data "azuread_authentication_strength_policy" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Optional) The display name of the authentication strength policy. Exactly one of `display_name` or `object_id` must be specified.
+* `display_name` - (Optional) The display name of the authentication strength policy. Value must not be empty. Exactly one of `display_name` or `object_id` must be specified.
 
 ~> **Tip** Display names are expected to be unique within a tenant, however this is not guaranteed by the API. Specify `object_id` where you need to be certain of matching a specific policy.
 * `object_id` - (Optional) The object ID of the authentication strength policy. Exactly one of `display_name` or `object_id` must be specified.

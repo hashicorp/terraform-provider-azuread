@@ -53,10 +53,10 @@ resource "azuread_custom_directory_role" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Required) The display name of the custom directory role.
+* `display_name` - (Required) The display name of the custom directory role. Value must not be empty.
 * `enabled` - (Required) Indicates whether the role is enabled for assignment.
 * `permissions` - (Required) List of permissions that are included in the custom directory role. (see [nested schema](#schema-6e6573746564-696e707574-7065726d697373696f6e73))
-* `version` - (Required) The version of the role definition. This can be any arbitrary string between 1-128 characters. String length must be between `1` and `128` characters inclusive.
+* `version` - (Required) The version of the role definition. String length must be between `1` and `128` characters inclusive.
 
 ---
 
@@ -68,7 +68,7 @@ The following arguments are supported:
 <a id="schema-6e6573746564-696e707574-7065726d697373696f6e73"></a>
 The `permissions` block supports the following:
 
-* `allowed_resource_actions` - (Required) A set of tasks that can be performed on a resource. For more information, see the [Permissions Reference](https://docs.microsoft.com/en-us/azure/active-directory/roles/permissions-reference) documentation.
+* `allowed_resource_actions` - (Required) A set of tasks that can be performed on a resource. For more information, see the [Permissions Reference](https://docs.microsoft.com/en-us/azure/active-directory/roles/permissions-reference) documentation. For each element: Value must not be empty.
 
 ## Attributes Reference
 

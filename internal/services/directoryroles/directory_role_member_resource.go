@@ -28,7 +28,7 @@ func directoryRoleMemberResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
 		// TODO: Once an SDKv2 documentation metadata object exists, add notes to that instead of this description
 		Description: "Manages a single directory role membership (assignment) within Azure Active Directory.\n\n" +
-			"-> **Deprecation Warning:** This resource has been superseded by the [azuread_directory_role_assignment](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/directory_role_assignment) resource and will be removed in version 3.0 of the AzureAD provider",
+			"-> **Deprecation Warning:** This resource has been superseded by the [azuread_directory_role_assignment](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/directory_role_assignment) resource and will be removed in version 4.0 of the AzureAD provider",
 		CreateContext: directoryRoleMemberResourceCreate,
 		ReadContext:   directoryRoleMemberResourceRead,
 		DeleteContext: directoryRoleMemberResourceDelete,
@@ -59,7 +59,8 @@ func directoryRoleMemberResource() *pluginsdk.Resource {
 			},
 		},
 
-		DeprecationMessage: "This resource is deprecated and will be removed in version 3.0 of the AzureAD provider. Please use the `azuread_directory_role_assignment` resource instead.",
+		// TODO: remove this in 4.0
+		DeprecationMessage: "This resource is deprecated and will be removed in version 4.0 of the AzureAD provider. Please use the `azuread_directory_role_assignment` resource instead.",
 
 		Schema: map[string]*pluginsdk.Schema{
 			"role_object_id": {

@@ -67,7 +67,7 @@ The following arguments are supported:
 
 * `message` - (Optional) A `message` block as documented below, which configures the message being sent to the invited user. If this block is omitted, no message will be sent. Changing this value forces a new resource to be created.
    (see [nested schema](#schema-6e6573746564-696e707574-6d657373616765))
-* `user_display_name` - (Optional) The display name of the user being invited. Changing this value forces a new resource to be created.
+* `user_display_name` - (Optional) The display name of the user being invited. Value must not be empty. Changing this value forces a new resource to be created.
 * `user_type` - (Optional) The user type of the user being invited. Only Global Administrators can invite users as members. Possible values include `Guest` and `Member`. Defaults to `Guest`. Changing this value forces a new resource to be created.
 
 ---
@@ -75,8 +75,8 @@ The following arguments are supported:
 <a id="schema-6e6573746564-696e707574-6d657373616765"></a>
 The `message` block supports the following:
 
-* `additional_recipients` - (Optional) Email addresses of additional recipients the invitation message should be sent to. Only 1 additional recipient is currently supported by Azure.
-* `body` - (Optional) Customized message body you want to send if you don't want to send the default message. Conflicts with `message.0.language`.
+* `additional_recipients` - (Optional) Email addresses of additional recipients the invitation message should be sent to. Only 1 additional recipient is currently supported by Azure. For each element: Value must not be empty.
+* `body` - (Optional) Customized message body you want to send if you don't want to send the default message. Value must not be empty. Conflicts with `message.0.language`.
 * `language` - (Optional) The language you want to send the default message in. The value specified must be in ISO 639 format. Conflicts with `message.0.body`.
 
 ## Attributes Reference

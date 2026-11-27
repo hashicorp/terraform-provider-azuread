@@ -39,7 +39,7 @@ data "azuread_access_package_catalog_role" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Optional) Specifies the display name of the role. Exactly one of `display_name` or `object_id` must be specified.
+* `display_name` - (Optional) Specifies the display name of the role. Value must not be empty. Exactly one of `display_name` or `object_id` must be specified.
 * `object_id` - (Optional) Specifies the object ID of the role. Exactly one of `display_name` or `object_id` must be specified.
 
 ## Attributes Reference

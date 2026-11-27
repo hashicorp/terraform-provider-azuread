@@ -63,7 +63,7 @@ resource "azuread_authentication_strength_policy" "example2" {
 The following arguments are supported:
 
 * `allowed_combinations` - (Required) List of allowed authentication methods for this authentication strength policy.
-* `display_name` - (Required) The friendly name for this authentication strength policy.
+* `display_name` - (Required) The friendly name for this authentication strength policy. Value must not be empty.
 
 ---
 

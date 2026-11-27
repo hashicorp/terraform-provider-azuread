@@ -45,7 +45,7 @@ resource "azuread_directory_role" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Optional) The display name of the directory role to activate. Exactly one of `display_name` or `template_id` must be specified. Changing this value forces a new resource to be created.
+* `display_name` - (Optional) The display name of the directory role to activate. Value must not be empty. Exactly one of `display_name` or `template_id` must be specified. Changing this value forces a new resource to be created.
 * `template_id` - (Optional) The object ID of the role template from which to activate the directory role. Exactly one of `display_name` or `template_id` must be specified. Changing this value forces a new resource to be created.
 
 ## Attributes Reference

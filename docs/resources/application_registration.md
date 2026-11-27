@@ -41,21 +41,21 @@ resource "azuread_application_registration" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Required) The display name for the application.
+* `display_name` - (Required) The display name for the application. Value must not be empty.
 
 ---
 
-* `description` - (Optional) A description of the application, as shown to end users.
+* `description` - (Optional) A description of the application, as shown to end users. String length must be between `0` and `1024` characters inclusive.
 * `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth access token that the app expects. For each element: Possible values include `All`, `None`, `ApplicationGroup`, `DirectoryRole`, and `SecurityGroup`.
 * `homepage_url` - (Optional) Home page or landing page of the application.
 * `implicit_access_token_issuance_enabled` - (Optional) Whether this web application can request an access token using OAuth implicit flow.
 * `implicit_id_token_issuance_enabled` - (Optional) Whether this web application can request an ID token using OAuth implicit flow.
 * `logout_url` - (Optional) The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols.
 * `marketing_url` - (Optional) URL of the marketing page for the application.
-* `notes` - (Optional) User-specified notes relevant for the management of the application.
+* `notes` - (Optional) User-specified notes relevant for the management of the application. Value must not be empty.
 * `privacy_statement_url` - (Optional) URL of the privacy statement for the application.
 * `requested_access_token_version` - (Optional) The access token version expected by this resource. Value must be between `1` and `2` inclusive. Defaults to `2`.
-* `service_management_reference` - (Optional) References application context information from a Service or Asset Management database.
+* `service_management_reference` - (Optional) References application context information from a Service or Asset Management database. Value must not be empty.
 * `sign_in_audience` - (Optional) The Microsoft account types that are supported for the current application. Possible values include `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount`, and `PersonalMicrosoftAccount`. Defaults to `AzureADMyOrg`.
 * `support_url` - (Optional) URL of the support page for the application.
 * `terms_of_service_url` - (Optional) URL of the terms of service statement for the application.

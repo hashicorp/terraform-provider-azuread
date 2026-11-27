@@ -56,8 +56,8 @@ The following arguments are supported:
 
 ---
 
-* `allowed_issuer_skis` - (Optional) A set of allowed certificate issuer subject key identifier (SKI) values. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
-* `allowed_policy_oids` - (Optional) A set of allowed certificate policy OIDs. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
+* `allowed_issuer_skis` - (Optional) A set of allowed certificate issuer subject key identifier (SKI) values. For each element: Value must not be empty. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
+* `allowed_policy_oids` - (Optional) A set of allowed certificate policy OIDs. For each element: Value must not be empty. At least one of `allowed_issuer_skis` or `allowed_policy_oids` must be specified.
 
 ## Attributes Reference
 

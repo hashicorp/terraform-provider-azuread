@@ -7,7 +7,7 @@ import "github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/plug
 
 func schemaAppRolesComputed() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
-		Description: "For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
+		Description: "A list of app roles published by the associated application. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).",
 		Type:        pluginsdk.TypeList,
 		Computed:    true,
 		Elem: &pluginsdk.Resource{
@@ -40,7 +40,7 @@ func schemaAppRolesComputed() *pluginsdk.Schema {
 				},
 
 				"enabled": {
-					Description: "The unique identifier of the app role",
+					Description: "Whether the app role is enabled.",
 					Type:        pluginsdk.TypeBool,
 					Computed:    true,
 				},

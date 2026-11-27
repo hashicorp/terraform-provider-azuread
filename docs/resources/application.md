@@ -196,7 +196,7 @@ resource "azuread_service_principal" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Required) The display name for the application.
+* `display_name` - (Required) The display name for the application. Value must not be empty.
 
 -> **Application Name Uniqueness** Application names are not unique within Azure Active Directory. Use the `prevent_duplicate_names` argument to check for existing applications if you want to avoid name collisions.
 
@@ -204,7 +204,7 @@ The following arguments are supported:
 
 * `api` - (Optional) The `api` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-617069))
 * `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles). (see [nested schema](#schema-6e6573746564-696e707574-6170705f726f6c65))
-* `description` - (Optional) A description of the application, as shown to end users.
+* `description` - (Optional) A description of the application, as shown to end users. String length must be between `0` and `1024` characters inclusive.
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user.
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI.
 * `feature_tags` - (Optional) Block of features to configure for this application using tags. Conflicts with `tags`.
@@ -212,16 +212,16 @@ The following arguments are supported:
 
 -> **Features and Tags** Features are configured for an application using tags, and are provided as a shortcut to set the corresponding magic tag value for each feature. You cannot configure `feature_tags` and `tags` for an application at the same time, so if you need to assign additional custom tags it's recommended to use the `tags` property instead. Tag values also propagate to any linked service principals.
 * `group_membership_claims` - (Optional) A set of strings containing membership claims issued in a user or OAuth 2.0 access token that the app expects. For each element: Possible values include `All`, `None`, `ApplicationGroup`, `DirectoryRole`, and `SecurityGroup`.
-* `identifier_uris` - (Optional) A set of user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
+* `identifier_uris` - (Optional) A set of user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant. For each element: Value must not be empty.
 * `logo_image` - (Optional) A logo image to upload for the application, as a raw base64-encoded string. The image should be in gif, jpeg or png format. Note that once an image has been uploaded, it is not possible to remove it without replacing it with another image.
 * `marketing_url` - (Optional) URL of the application's marketing page.
-* `notes` - (Optional) User-specified notes relevant for the management of the application.
+* `notes` - (Optional) User-specified notes relevant for the management of the application. Value must not be empty.
 * `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests.
 * `optional_claims` - (Optional) The `optional_claims` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-6f7074696f6e616c5f636c61696d73))
 * `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.
 
 -> **Ownership of Applications** It's recommended to always specify one or more application owners, including the principal being used to execute Terraform, such as in the example above.
-* `password` - (Optional) The password is generated during creation. By default, no password is generated. (see [nested schema](#schema-6e6573746564-696e707574-70617373776f7264))
+* `password` - (Optional) The `password` block as defined below. (see [nested schema](#schema-6e6573746564-696e707574-70617373776f7264))
 
 -> **Creating a Password** The `password` block supports a single password for the application, and is provided so that a password can be generated when a new application is created. This helps to make new applications available for authentication more quickly. To add additional passwords to an application, see the [azuread_application_password](application_password.html) resource.
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
@@ -261,12 +261,12 @@ The `api.oauth2_permission_scope` block supports the following:
 * `id` - (Required) The unique identifier of the delegated permission.
 
 -> **Tip: Generating a UUID for the `id` field** To generate a value for the `id` field in cases where the actual UUID is not important, you can use the `random_uuid` resource. See the [application example](https://github.com/hashicorp/terraform-provider-azuread/tree/main/examples/application) in the provider repository.
-* `admin_consent_description` - (Optional) Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.
-* `admin_consent_display_name` - (Optional) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.
+* `admin_consent_description` - (Optional) Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users. Value must not be empty.
+* `admin_consent_display_name` - (Optional) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users. Value must not be empty.
 * `enabled` - (Optional) Determines if the permission scope is enabled. Defaults to `true`.
 * `type` - (Optional) Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions. Possible values include `Admin` and `User`. Defaults to `User`.
-* `user_consent_description` - (Optional) Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.
-* `user_consent_display_name` - (Optional) Display name for the delegated permission that appears in the end user consent experience.
+* `user_consent_description` - (Optional) Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf. Value must not be empty.
+* `user_consent_display_name` - (Optional) Display name for the delegated permission that appears in the end user consent experience. Value must not be empty.
 * `value` - (Optional) The value that is used for the `scp` claim in OAuth 2.0 access tokens.
 
 ~> **Default `user_impersonation` Scope** Unlike the Azure Portal, applications created with the Terraform AzureAD provider do not get assigned a default `user_impersonation` scope. You will need to include a block for the `user_impersonation` scope if you need it for your application.
@@ -279,8 +279,8 @@ The `api.oauth2_permission_scope` block supports the following:
 The `app_role` block supports the following:
 
 * `allowed_member_types` - (Required) Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both. For each element: Possible values include `Application` and `User`.
-* `description` - (Required) Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences.
-* `display_name` - (Required) Display name for the app role that appears during app role assignment and in consent experiences.
+* `description` - (Required) Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences. Value must not be empty.
+* `display_name` - (Required) Display name for the app role that appears during app role assignment and in consent experiences. Value must not be empty.
 * `id` - (Required) The unique identifier of the app role.
 
 -> **Tip: Generating a UUID for the `id` field** To generate a value for the `id` field in cases where the actual UUID is not important, you can use the `random_uuid` resource. See the [application example](https://github.com/hashicorp/terraform-provider-azuread/tree/main/examples/application) in the provider repository.
@@ -408,7 +408,7 @@ The following attributes are exported:
 * `logo_url` - CDN URL to the application's logo, as uploaded with the `logo_image` property.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `object_id` - The application's object ID.
-* `password` - The password is generated during creation. By default, no password is generated. (see [nested schema](#schema-6e6573746564-6f7574707574-70617373776f7264))
+* `password` - The `password` block as defined below. (see [nested schema](#schema-6e6573746564-6f7574707574-70617373776f7264))
 * `publisher_domain` - The verified publisher domain for the application.
 
 ---

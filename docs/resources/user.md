@@ -32,7 +32,7 @@ resource "azuread_user" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Required) The name to display in the address book for the user.
+* `display_name` - (Required) The name to display in the address book for the user. Value must not be empty.
 * `user_principal_name` - (Required) The user principal name (UPN) of the user.
 
 ---

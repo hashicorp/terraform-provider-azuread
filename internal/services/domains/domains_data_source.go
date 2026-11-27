@@ -156,7 +156,7 @@ func (r DomainsDataSource) Attributes() map[string]*pluginsdk.Schema {
 					},
 
 					"supported_services": {
-						Description: "A list of capabilities / services supported by the domain. Possible values include `Email`, `Sharepoint`, `EmailInternalRelayOnly`, `OfficeCommunicationsOnline`, `SharePointDefaultDomain`, `FullRedelegation`, `SharePointPublic`, `OrgIdAuthentication`, `Yammer` and `Intune`",
+						Description: "A list of capabilities / services supported by the domain.",
 						Type:        pluginsdk.TypeList,
 						Computed:    true,
 						Elem: &pluginsdk.Schema{

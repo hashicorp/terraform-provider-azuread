@@ -59,7 +59,7 @@ data "azuread_service_principals" "example" {
 The following arguments are supported:
 
 * `client_ids` - (Optional) A list of client IDs of the applications associated with the service principals. Exactly one of `client_ids`, `display_names`, `object_ids`, or `return_all` must be specified.
-* `display_names` - (Optional) A list of display names of the applications associated with the service principals. Exactly one of `client_ids`, `display_names`, `object_ids`, or `return_all` must be specified.
+* `display_names` - (Optional) A list of display names of the applications associated with the service principals. For each element: Value must not be empty. Exactly one of `client_ids`, `display_names`, `object_ids`, or `return_all` must be specified.
 * `ignore_missing` - (Optional) Ignore missing service principals and return all service principals that are found. The data source will still fail if no service principals are found. Defaults to `false`. Conflicts with `return_all`.
 * `object_ids` - (Optional) The object IDs of the service principals. Exactly one of `client_ids`, `display_names`, `object_ids`, or `return_all` must be specified.
 * `return_all` - (Optional) When `true`, the data source will return all service principals. Defaults to `false`. Conflicts with `ignore_missing`. Exactly one of `client_ids`, `display_names`, `object_ids`, or `return_all` must be specified.
