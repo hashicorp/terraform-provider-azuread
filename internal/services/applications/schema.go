@@ -51,6 +51,7 @@ func schemaOptionalClaims(description string) *pluginsdk.Schema {
 								"emit_as_roles",
 								"include_externally_authenticated_upn_without_hash",
 								"include_externally_authenticated_upn",
+								"include_user_token",
 								"max_size_limit",
 								"netbios_domain_and_sam_account_name",
 								"on_premise_security_identifier",

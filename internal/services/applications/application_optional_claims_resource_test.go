@@ -202,6 +202,11 @@ resource "azuread_application_optional_claims" "test" {
     essential = false
   }
 
+  access_token {
+    name                  = "idtyp"
+    additional_properties = ["include_user_token"]
+  }
+
   id_token {
     name                  = "idclaim"
     source                = "user"
